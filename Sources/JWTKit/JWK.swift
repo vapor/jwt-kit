@@ -7,6 +7,32 @@ public struct JWKS: Decodable {
     public var keys: [JWK]
 }
 
+public struct JWKIdentifier: Hashable, Equatable {
+    public let string: String
+
+    public init(string: String) {
+        self.string = string
+    }
+}
+
+extension JWKIdentifier: Codable {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        try self.init(string: container.decode(String.self))
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.string)
+    }
+}
+
+extension JWKIdentifier: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self.init(string: value)
+    }
+}
+
 /// A JSON Web Key.
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
@@ -77,7 +103,7 @@ public struct JWK: Decodable {
     /// equivalent alternatives by the application using them.)
     ///
     /// The `kid` value is a case-sensitive string.
-    public var keyIdentifier: String?
+    public var keyIdentifier: JWKIdentifier?
     
     /// `n` Modulus.
     public var modulus: String?
