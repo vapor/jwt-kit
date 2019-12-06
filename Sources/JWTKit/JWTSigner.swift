@@ -1,5 +1,3 @@
-import class Foundation.JSONEncoder
-
 /// A JWT signer.
 public final class JWTSigner {
     public let algorithm: JWTAlgorithm
@@ -9,35 +7,48 @@ public final class JWTSigner {
     }
 
     public func sign<Payload>(
-        _ payload: Payload,
-        kid: JWKIdentifier? = nil
+        _ payload: Payload
     ) throws -> String
         where Payload: JWTPayload
     {
-        let jsonEncoder = JSONEncoder()
-        jsonEncoder.dateEncodingStrategy = .secondsSince1970
+        try JWTSerializer().sign(payload, using: self, kid: nil)
+    }
 
-        // encode header, copying header struct to mutate alg
-        var header = JWTHeader()
-        header.kid = kid
-        header.alg = self.algorithm.name
+    public func unverified<Payload>(
+        _ token: String,
+        as payload: Payload.Type = Payload.self
+    ) throws -> Payload
+        where Payload: JWTPayload
+    {
+        try self.unverified([UInt8](token.utf8))
+    }
 
-        let headerData = try jsonEncoder.encode(header)
-        let encodedHeader = headerData.base64URLEncodedBytes()
+    public func unverified<Message, Payload>(
+        _ token: Message,
+        as payload: Payload.Type = Payload.self
+    ) throws -> Payload
+        where Message: DataProtocol, Payload: JWTPayload
+    {
+        try JWTParser(token: token).payload(as: Payload.self)
+    }
 
-        // encode payload
-        let payloadData = try jsonEncoder.encode(payload)
-        let encodedPayload = payloadData.base64URLEncodedBytes()
+    public func verify<Payload>(
+        _ token: String,
+        as payload: Payload.Type = Payload.self
+    ) throws -> Payload
+        where Payload: JWTPayload
+    {
+        try self.verify([UInt8](token.utf8), as: Payload.self)
+    }
 
-        // combine header and payload to create signature
-        let signatureData = try self.algorithm.sign(encodedHeader + [.period] + encodedPayload)
-
-        // yield complete jwt
-        let bytes = encodedHeader
-                + [.period]
-                + encodedPayload
-                + [.period]
-                + signatureData.base64URLEncodedBytes()
-        return String(decoding: bytes, as: UTF8.self)
+    public func verify<Message, Payload>(
+        _ token: Message,
+        as payload: Payload.Type = Payload.self
+    ) throws -> Payload
+        where Message: DataProtocol, Payload: JWTPayload
+    {
+        let parser = try JWTParser(token: token)
+        try parser.verify(using: self)
+        return try parser.payload(as: Payload.self)
     }
 }

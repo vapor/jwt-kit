@@ -37,53 +37,47 @@ public final class JWTSigners {
         }
     }
 
-    public func verify<Message, Payload>(
-        _ message: Message,
+    public func unverified<Payload>(
+        _ token: String,
         as payload: Payload.Type = Payload.self
     ) throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
+        where Payload: JWTPayload
     {
-        let messageParts = message.copyBytes().split(separator: .period)
-        guard messageParts.count == 3 else {
-            throw JWTError.malformedToken
-        }
-
-        let encodedHeader = messageParts[0]
-        let encodedPayload = messageParts[1]
-        let encodedSignature = messageParts[2]
-
-        let jsonDecoder = JSONDecoder()
-        jsonDecoder.dateDecodingStrategy = .secondsSince1970
-        let header = try jsonDecoder.decode(JWTHeader.self, from: Data(encodedHeader.base64URLDecodedBytes()))
-        guard let signer = self.get(kid: header.kid) else {
-            fatalError()
-        }
-        let payload = try jsonDecoder.decode(Payload.self, from: Data(encodedPayload.base64URLDecodedBytes()))
-        guard try signer.algorithm.verify(
-            encodedSignature.base64URLDecodedBytes(),
-            signs: encodedHeader + [.period] + encodedPayload
-        ) else {
-            throw JWTError.signatureVerifictionFailed
-        }
-        try payload.verify(using: signer)
-        return payload
+        try self.unverified([UInt8](token.utf8))
     }
 
     public func unverified<Message, Payload>(
-        _ message: Message,
+        _ token: Message,
         as payload: Payload.Type = Payload.self
     ) throws -> Payload
         where Message: DataProtocol, Payload: JWTPayload
     {
-        let messageParts = message.copyBytes().split(separator: .period)
-        guard messageParts.count == 3 else {
-            throw JWTError.malformedToken
+        try JWTParser(token: token).payload(as: Payload.self)
+    }
+
+
+    public func verify<Payload>(
+        _ token: String,
+        as payload: Payload.Type = Payload.self
+    ) throws -> Payload
+        where Payload: JWTPayload
+    {
+        try self.verify([UInt8](token.utf8), as: Payload.self)
+    }
+
+    public func verify<Message, Payload>(
+        _ token: Message,
+        as payload: Payload.Type = Payload.self
+    ) throws -> Payload
+        where Message: DataProtocol, Payload: JWTPayload
+    {
+        let parser = try JWTParser(token: token)
+        let header = try parser.header()
+        guard let signer = self.get(kid: header.kid) else {
+            fatalError()
         }
-        let encodedPayload = messageParts[1]
-        let jsonDecoder = JSONDecoder()
-        jsonDecoder.dateDecodingStrategy = .secondsSince1970
-        let payload = try jsonDecoder.decode(Payload.self, from: Data(encodedPayload.base64URLDecodedBytes()))
-        return payload
+        try parser.verify(using: signer)
+        return try parser.payload(as: Payload.self)
     }
 
     public func sign<Payload>(
@@ -95,6 +89,6 @@ public final class JWTSigners {
         guard let signer = self.get(kid: kid) else {
             fatalError()
         }
-        return try signer.sign(payload, kid: kid)
+        return try JWTSerializer().sign(payload, using: signer, kid: kid)
     }
 }
