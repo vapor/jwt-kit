@@ -37,6 +37,17 @@ public final class JWTSigners {
         }
     }
 
+    public func require(kid: JWKIdentifier? = nil) throws -> JWTSigner {
+        guard let signer = self.get(kid: kid) else {
+            if let kid = kid {
+                throw JWTError.unknownKID(kid)
+            } else {
+                throw JWTError.missingKIDHeader
+            }
+        }
+        return signer
+    }
+
     public func unverified<Payload>(
         _ token: String,
         as payload: Payload.Type = Payload.self
@@ -73,10 +84,7 @@ public final class JWTSigners {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header()
-        guard let signer = self.get(kid: header.kid) else {
-            fatalError()
-        }
-        try parser.verify(using: signer)
+        try parser.verify(using: self.require(kid: header.kid))
         return try parser.payload(as: Payload.self)
     }
 
@@ -86,9 +94,10 @@ public final class JWTSigners {
     ) throws -> String
         where Payload: JWTPayload
     {
-        guard let signer = self.get(kid: kid) else {
-            fatalError()
-        }
-        return try JWTSerializer().sign(payload, using: signer, kid: kid)
+        return try JWTSerializer().sign(
+            payload,
+            using: self.require(kid: kid),
+            kid: kid
+        )
     }
 }

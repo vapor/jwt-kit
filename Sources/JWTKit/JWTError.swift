@@ -5,7 +5,7 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
     case malformedToken
     case signatureVerifictionFailed
     case missingKIDHeader
-    case unknownKID(String)
+    case unknownKID(JWKIdentifier)
     case invalidJWK
 
     public var reason: String {
