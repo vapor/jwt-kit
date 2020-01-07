@@ -232,20 +232,30 @@ class JWTKitTests: XCTestCase {
     }
 
     func testJWTPayloadVerification() throws {
+        struct NotBar: Error {
+            let foo: String
+        }
         struct Payload: JWTPayload {
             let foo: String
-            static var didVerify = false
             func verify(using signer: JWTSigner) throws {
-                Self.didVerify = true
+                guard self.foo == "bar" else {
+                    throw NotBar(foo: self.foo)
+                }
             }
         }
 
         let signer = try JWTSigner.es256(key: .generate())
-        let token = try signer.sign(Payload(foo: "bar"))
-        XCTAssertEqual(Payload.didVerify, false)
-        let payload = try signer.verify(token, as: Payload.self)
-        XCTAssertEqual(payload.foo, "bar")
-        XCTAssertEqual(Payload.didVerify, true)
+        do {
+            let token = try signer.sign(Payload(foo: "qux"))
+            _ = try signer.verify(token, as: Payload.self)
+        } catch let error as NotBar {
+            XCTAssertEqual(error.foo, "qux")
+        }
+        do {
+            let token = try signer.sign(Payload(foo: "bar"))
+            let payload = try signer.verify(token, as: Payload.self)
+            XCTAssertEqual(payload.foo, "bar")
+        }
     }
 }
 
