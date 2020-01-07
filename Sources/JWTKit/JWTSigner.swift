@@ -48,7 +48,15 @@ public final class JWTSigner {
         where Message: DataProtocol, Payload: JWTPayload
     {
         let parser = try JWTParser(token: token)
+        return try self.verify(parser: parser)
+    }
+
+    func verify<Payload>(parser: JWTParser) throws -> Payload
+        where Payload: JWTPayload
+    {
         try parser.verify(using: self)
-        return try parser.payload(as: Payload.self)
+        let payload = try parser.payload(as: Payload.self)
+        try payload.verify(using: self)
+        return payload
     }
 }
