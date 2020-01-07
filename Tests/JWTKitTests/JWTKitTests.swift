@@ -230,6 +230,33 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(a.algorithm.name, "RS256")
         XCTAssertEqual(b.algorithm.name, "RS512")
     }
+
+    func testJWTPayloadVerification() throws {
+        struct NotBar: Error {
+            let foo: String
+        }
+        struct Payload: JWTPayload {
+            let foo: String
+            func verify(using signer: JWTSigner) throws {
+                guard self.foo == "bar" else {
+                    throw NotBar(foo: self.foo)
+                }
+            }
+        }
+
+        let signer = try JWTSigner.es256(key: .generate())
+        do {
+            let token = try signer.sign(Payload(foo: "qux"))
+            _ = try signer.verify(token, as: Payload.self)
+        } catch let error as NotBar {
+            XCTAssertEqual(error.foo, "qux")
+        }
+        do {
+            let token = try signer.sign(Payload(foo: "bar"))
+            let payload = try signer.verify(token, as: Payload.self)
+            XCTAssertEqual(payload.foo, "bar")
+        }
+    }
 }
 
 struct TestPayload: JWTPayload, Equatable {

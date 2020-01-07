@@ -84,8 +84,7 @@ public final class JWTSigners {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header()
-        try parser.verify(using: self.require(kid: header.kid))
-        return try parser.payload(as: Payload.self)
+        return try self.require(kid: header.kid).verify(parser: parser)
     }
 
     public func sign<Payload>(
