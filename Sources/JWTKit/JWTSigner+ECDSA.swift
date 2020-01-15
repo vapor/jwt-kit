@@ -102,7 +102,9 @@ private struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
         var sBytes = [UInt8](repeating: 0, count: Int(BN_num_bits(s) + 7) / 8)
         let rCount = Int(BN_bn2bin(r, &rBytes))
         let sCount = Int(BN_bn2bin(s, &sBytes))
-        return .init(rBytes.prefix(rCount) + sBytes.prefix(sCount))
+        rBytes = rBytes.prefix(rCount).zeroPrefixed(by: max(sCount - rCount, 0))
+        sBytes = sBytes.prefix(sCount).zeroPrefixed(by: max(rCount - sCount, 0))
+        return .init(rBytes + sBytes)
     }
 
     func verify<Signature, Plaintext>(
@@ -140,5 +142,11 @@ private struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
             signature,
             self.key.c
         ) == 1
+    }
+}
+
+private extension Collection where Element == UInt8 {
+    func zeroPrefixed(by count: Int) -> [UInt8] {
+        return [UInt8](repeating: 0, count: count) + self
     }
 }
