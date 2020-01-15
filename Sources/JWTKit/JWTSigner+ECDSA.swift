@@ -29,13 +29,31 @@ extension JWTSigner {
 }
 
 public final class ECDSAKey: OpenSSLKey {
-    public static func generate() throws -> ECDSAKey {
-        guard let c = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1) else {
+    public enum Curve {
+        case p256
+        case p384
+        case p521
+
+        var cName: Int32 {
+            switch self {
+            case .p256:
+                return NID_X9_62_prime256v1
+            case .p384:
+                return NID_secp384r1
+            case .p521:
+                return NID_secp521r1
+            }
+        }
+    }
+
+    public static func generate(curve: Curve = .p521) throws -> ECDSAKey {
+        guard let c = EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
         guard EC_KEY_generate_key(c) != 0 else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.generateKeyFailure)
         }
+
         return .init(c)
     }
 
@@ -81,6 +99,18 @@ private struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
     let algorithm: OpaquePointer
     let name: String
 
+    var curveResultSize: Int {
+        let curveName = EC_GROUP_get_curve_name(EC_KEY_get0_group(key.c))
+        switch curveName {
+        case NID_X9_62_prime256v1, NID_secp384r1:
+            return 32
+        case NID_secp521r1:
+            return 66
+        default:
+            fatalError("Unsupported ECDSA key curve: \(curveName)")
+        }
+    }
+
     func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
         where Plaintext: DataProtocol
     {
@@ -98,13 +128,14 @@ private struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
         // see: https://tools.ietf.org/html/rfc7515#appendix-A.3
         let r = jwtkit_ECDSA_SIG_get0_r(signature)
         let s = jwtkit_ECDSA_SIG_get0_s(signature)
-        var rBytes = [UInt8](repeating: 0, count: Int(BN_num_bits(r) + 7) / 8)
-        var sBytes = [UInt8](repeating: 0, count: Int(BN_num_bits(s) + 7) / 8)
+        let rsSize = self.curveResultSize
+        var rBytes = [UInt8](repeating: 0, count: rsSize)
+        var sBytes = [UInt8](repeating: 0, count: rsSize)
         let rCount = Int(BN_bn2bin(r, &rBytes))
         let sCount = Int(BN_bn2bin(s, &sBytes))
-        rBytes = rBytes.prefix(rCount).zeroPrefixed(by: max(sCount - rCount, 0))
-        sBytes = sBytes.prefix(sCount).zeroPrefixed(by: max(rCount - sCount, 0))
-        return .init(rBytes + sBytes)
+        // zero-padding may be on wrong side after write
+        return rBytes.prefix(rCount).zeroPrefixed(upTo: rsSize)
+            + sBytes.prefix(sCount).zeroPrefixed(upTo: rsSize)
     }
 
     func verify<Signature, Plaintext>(
@@ -118,7 +149,10 @@ private struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
         // parse r+s values
         // see: https://tools.ietf.org/html/rfc7515#appendix-A.3
         let signatureBytes = signature.copyBytes()
-        let rsSize = signatureBytes.count / 2
+        let rsSize = self.curveResultSize
+        guard signatureBytes.count == rsSize * 2 else {
+            return false
+        }
         let signature = ECDSA_SIG_new()
         defer { ECDSA_SIG_free(signature) }
 
@@ -146,7 +180,11 @@ private struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
 }
 
 private extension Collection where Element == UInt8 {
-    func zeroPrefixed(by count: Int) -> [UInt8] {
-        return [UInt8](repeating: 0, count: count) + self
+    func zeroPrefixed(upTo count: Int) -> [UInt8] {
+        if self.count < count {
+            return [UInt8](repeating: 0, count: count - self.count) + self
+        } else {
+            return .init(self)
+        }
     }
 }
