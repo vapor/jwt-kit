@@ -12,13 +12,9 @@ public struct StringClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// Throws an error if the claim's value is not one of the accepted values.
     /// - Parameter oneOf: The accepted values.
     public func verify(claim name: String, oneOf: String...) throws {
-        for value in oneOf {
-            if value == self.value {
-                return
-            }
+        guard oneOf.contains(name) else {
+            throw JWTError.claimVerificationFailure(name: name, reason: "Not one of the allowed values.")
         }
-
-        throw JWTError.claimVerificationFailure(name: name, reason: "Not one of the allowed values.")
     }
 }
 
