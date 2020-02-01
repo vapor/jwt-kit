@@ -18,7 +18,7 @@ public struct StringClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
             }
         }
 
-        throw JWTError.claimVerificationFailure(name: name, reason: "Not of of the allowed values.")
+        throw JWTError.claimVerificationFailure(name: name, reason: "Not one of the allowed values.")
     }
 }
 
