@@ -1,16 +1,32 @@
-/// The "iss" (issuer) claim identifies the principal that issued the
-/// JWT.  The processing of this claim is generally application specific.
-/// The "iss" value is a case-sensitive string containing a StringOrURI
-/// value.  Use of this claim is OPTIONAL.
-public struct IssuerClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
+/// Most claims are going to be string based.  Many, such as the iss and aud claims, want to verify
+/// the claim against a known set of values.
+public struct StringClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// See `JWTClaim`.
     public var value: String
-    
+
     /// See `JWTClaim`.
     public init(value: String) {
         self.value = value
     }
+
+    /// Throws an error if the claim's value is not one of the accepted values.
+    /// - Parameter oneOf: The accepted values.
+    public func verify(claim name: String, oneOf: String...) throws {
+        for value in oneOf {
+            if value == self.value {
+                return
+            }
+        }
+
+        throw JWTError.claimVerificationFailure(name: name, reason: "Not of of the allowed values.")
+    }
 }
+
+/// The "iss" (issuer) claim identifies the principal that issued the
+/// JWT.  The processing of this claim is generally application specific.
+/// The "iss" value is a case-sensitive string containing a StringOrURI
+/// value.  Use of this claim is OPTIONAL.
+public typealias IssuerClaim = StringClaim
 
 /// The "sub" (subject) claim identifies the principal that is the
 /// subject of the JWT.  The claims in a JWT are normally statements
@@ -19,15 +35,7 @@ public struct IssuerClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
 /// The processing of this claim is generally application specific.  The
 /// "sub" value is a case-sensitive string containing a StringOrURI
 /// value.  Use of this claim is OPTIONAL.
-public struct SubjectClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
-    public var value: String
-    
-    /// See `JWTClaim`.
-    public init(value: String) {
-        self.value = value
-    }
-}
+public typealias SubjectClaim = StringClaim
 
 /// The "aud" (audience) claim identifies the recipients that the JWT is
 /// intended for.  Each principal intended to process the JWT MUST
@@ -40,15 +48,7 @@ public struct SubjectClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
 /// single case-sensitive string containing a StringOrURI value.  The
 /// interpretation of audience values is generally application specific.
 /// Use of this claim is OPTIONAL.
-public struct AudienceClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
-    public var value: String
-    
-    /// See `JWTClaim`.
-    public init(value: String) {
-        self.value = value
-    }
-}
+public typealias AudienceClaim = StringClaim
 
 /// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
 /// The identifier value MUST be assigned in a manner that ensures that
@@ -58,15 +58,7 @@ public struct AudienceClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
 /// produced by different issuers as well.  The "jti" claim can be used
 /// to prevent the JWT from being replayed.  The "jti" value is a case-
 /// sensitive string.  Use of this claim is OPTIONAL.
-public struct IDClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
-    public var value: String
-    
-    /// See `JWTClaim`.
-    public init(value: String) {
-        self.value = value
-    }
-}
+public typealias IDClaim = StringClaim
 
 /// The "iat" (issued at) claim identifies the time at which the JWT was
 /// issued.  This claim can be used to determine the age of the JWT.  Its
