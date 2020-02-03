@@ -160,19 +160,19 @@ public struct StringClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
         self.value = value
     }
 
-    public func verify(claim: String, is desired: Value) throws {
+    public func verify(claim: String, is desired: String) throws {
         guard desired == self.value else {
             throw JWTError.claimVerificationFailure(name: claim, reason: "Value is incorrect.")
         }
     }
 
-    public func verify(claim: String, oneOf desired: Value...) throws {
+    public func verify(claim: String, oneOf desired: String...) throws {
         guard desired.contains(self.value) else {
             throw JWTError.claimVerificationFailure(name: claim, reason: "Not one of the allowed values.")
         }
     }
 
-    public func verify(claim: String, oneOf desired: [Value]) throws {
+    public func verify(claim: String, oneOf desired: [String]) throws {
         guard desired.contains(self.value) else {
             throw JWTError.claimVerificationFailure(name: claim, reason: "Not one of the allowed values.")
         }
