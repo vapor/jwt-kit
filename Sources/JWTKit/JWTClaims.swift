@@ -162,7 +162,7 @@ public struct StringClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
 
     public func verify(claim: String, is desired: Value) throws {
         guard desired == self.value else {
-            throw JWTError.claimVerificationFailure(name: claim, reason: "Issuer is incorrect.")
+            throw JWTError.claimVerificationFailure(name: claim, reason: "Value is incorrect.")
         }
     }
 
