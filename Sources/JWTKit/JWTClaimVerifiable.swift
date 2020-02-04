@@ -9,7 +9,7 @@ public protocol JWTClaimVerifiable: JWTClaim, Equatable, ExpressibleByStringLite
 public extension JWTClaimVerifiable {
     func verify(is desired: Value) throws {
         guard desired == self.value else {
-            throw JWTError.claimVerificationFailure(name: Self.claimName, reason: "Issuer is incorrect.")
+            throw JWTError.claimVerificationFailure(name: Self.claimName, reason: "Value is incorrect.")
         }
     }
 
