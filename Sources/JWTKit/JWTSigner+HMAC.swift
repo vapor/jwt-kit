@@ -1,4 +1,6 @@
 import CJWTKitCrypto
+import Crypto
+import Foundation
 
 extension JWTSigner {
     // MARK: HMAC
@@ -6,9 +8,8 @@ extension JWTSigner {
     public static func hs256<Key>(key: Key) -> JWTSigner
         where Key: DataProtocol
     {
-        return .init(algorithm: HMACSigner(
+        return .init(algorithm: HMACSigner<SHA256>(
             key: key.copyBytes(),
-            algorithm: convert(EVP_sha256()),
             name: "HS256"
         ))
     }
@@ -16,9 +17,8 @@ extension JWTSigner {
     public static func hs384<Key>(key: Key) -> JWTSigner
         where Key: DataProtocol
     {
-        return .init(algorithm: HMACSigner(
+        return .init(algorithm: HMACSigner<SHA384>(
             key: key.copyBytes(),
-            algorithm: convert(EVP_sha384()),
             name: "HS384"
         ))
     }
@@ -26,11 +26,12 @@ extension JWTSigner {
     public static func hs512<Key>(key: Key) -> JWTSigner
         where Key: DataProtocol
     {
-        return .init(algorithm: HMACSigner(
-            key: key.copyBytes(),
-            algorithm: convert(EVP_sha512()),
-            name: "HS512"
-        ))
+//        return .init(algorithm: HMACSigner(
+//            key: key.copyBytes(),
+//            algorithm: convert(EVP_sha512()),
+//            name: "HS512"
+//        ))
+        return .init(algorithm: HMACSigner<SHA512>(key: key.copyBytes(), name: "HS512"))
     }
 }
 
@@ -42,36 +43,17 @@ private enum HMACError: Error {
     case finalizationFailure
 }
 
-private struct HMACSigner: JWTAlgorithm {
+private struct HMACSigner<SHA_TYPE>: JWTAlgorithm where SHA_TYPE: HashFunction {
+    #warning("Key should probably be a Cyrpto key")
     let key: [UInt8]
-    let algorithm: OpaquePointer
     let name: String
     
     func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
         where Plaintext: DataProtocol
     {
-        let context = jwtkit_HMAC_CTX_new()
-        defer { jwtkit_HMAC_CTX_free(context) }
-        
-        guard self.key.withUnsafeBytes({
-            return HMAC_Init_ex(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32($0.count), convert(self.algorithm), nil)
-        }) == 1 else {
-            throw JWTError.signingAlgorithmFailure(HMACError.initializationFailure)
-        }
-        
-        guard plaintext.copyBytes().withUnsafeBytes({
-            return HMAC_Update(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), $0.count)
-        }) == 1 else {
-            throw JWTError.signingAlgorithmFailure(HMACError.updateFailure)
-        }
-        var hash = [UInt8](repeating: 0, count: Int(EVP_MAX_MD_SIZE))
-        var count: UInt32 = 0
-        
-        guard hash.withUnsafeMutableBytes({
-            return HMAC_Final(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), &count)
-        }) == 1 else {
-            throw JWTError.signingAlgorithmFailure(HMACError.finalizationFailure)
-        }
-        return .init(hash[0..<Int(count)])
+        let key = SymmetricKey(data: self.key)
+        let authentication = Crypto.HMAC<SHA_TYPE>.authenticationCode(for: plaintext, using: key)
+        #warning("Change return type to Data")
+        return Data(authentication).copyBytes()
     }
 }
