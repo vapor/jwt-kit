@@ -92,7 +92,7 @@ public final class ECDSAKey: OpenSSLKey  {
     }
 
     public static func `private`(der: [UInt8]) throws -> ECDSAKey {
-        let key = try P256.Signing.PrivateKey(rawRepresentation: der)
+        let key = try P256.Signing.PrivateKey(x963Representation: der)
         return .init(key)
     }
 
