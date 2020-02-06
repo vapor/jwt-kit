@@ -2,15 +2,7 @@
 /// JWT.  The processing of this claim is generally application specific.
 /// The "iss" value is a case-sensitive string containing a StringOrURI
 /// value.  Use of this claim is OPTIONAL.
-public struct IssuerClaim: JWTClaimVerifiable {
-    public static let claimName = "iss"
-
-    public var value: String
-
-    public init(value: String) {
-        self.value = value
-    }
-}
+public typealias IssuerClaim = StringClaim<IssuerTag>
 
 /// The "sub" (subject) claim identifies the principal that is the
 /// subject of the JWT.  The claims in a JWT are normally statements
@@ -19,15 +11,8 @@ public struct IssuerClaim: JWTClaimVerifiable {
 /// The processing of this claim is generally application specific.  The
 /// "sub" value is a case-sensitive string containing a StringOrURI
 /// value.  Use of this claim is OPTIONAL.
-public struct SubjectClaim: JWTClaimVerifiable {
-    public static let claimName = "sub"
+public typealias SubjectClaim = StringClaim<SubjectTag>
 
-    public var value: String
-
-    public init(value: String) {
-        self.value = value
-    }
-}
 /// The "aud" (audience) claim identifies the recipients that the JWT is
 /// intended for.  Each principal intended to process the JWT MUST
 /// identify itself with a value in the audience claim.  If the principal
@@ -39,15 +24,8 @@ public struct SubjectClaim: JWTClaimVerifiable {
 /// single case-sensitive string containing a StringOrURI value.  The
 /// interpretation of audience values is generally application specific.
 /// Use of this claim is OPTIONAL.
-public struct AudienceClaim: JWTClaimVerifiable {
-    public static let claimName = "aud"
+public typealias AudienceClaim = StringClaim<AudienceTag>
 
-    public var value: String
-
-    public init(value: String) {
-        self.value = value
-    }
-}
 /// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
 /// The identifier value MUST be assigned in a manner that ensures that
 /// there is a negligible probability that the same value will be
@@ -56,15 +34,8 @@ public struct AudienceClaim: JWTClaimVerifiable {
 /// produced by different issuers as well.  The "jti" claim can be used
 /// to prevent the JWT from being replayed.  The "jti" value is a case-
 /// sensitive string.  Use of this claim is OPTIONAL.
-public struct IDClaim: JWTClaimVerifiable {
-    public static let claimName = "jti"
+public typealias IDClaim = StringClaim<IdTag>
 
-    public var value: String
-
-    public init(value: String) {
-        self.value = value
-    }
-}
 /// The "iat" (issued at) claim identifies the time at which the JWT was
 /// issued.  This claim can be used to determine the age of the JWT.  Its
 /// value MUST be a number containing a NumericDate value.  Use of this
@@ -146,35 +117,5 @@ extension JWTUnixEpochClaim {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(value.timeIntervalSince1970)
-    }
-}
-
-/// A generic claim type for strings which implements verification of desired value.
-/// Can't just implement JWTClaimVerifiable because there isn't a known name for the claim.
-public struct StringClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
-    public var value: String
-
-    /// See `JWTClaim`.
-    public init(value: String) {
-        self.value = value
-    }
-
-    public func verify(claim: String, is desired: String) throws {
-        guard desired == self.value else {
-            throw JWTError.claimVerificationFailure(name: claim, reason: "Value is incorrect.")
-        }
-    }
-
-    public func verify(claim: String, oneOf desired: String...) throws {
-        guard desired.contains(self.value) else {
-            throw JWTError.claimVerificationFailure(name: claim, reason: "Not one of the allowed values.")
-        }
-    }
-
-    public func verify(claim: String, oneOf desired: [String]) throws {
-        guard desired.contains(self.value) else {
-            throw JWTError.claimVerificationFailure(name: claim, reason: "Not one of the allowed values.")
-        }
     }
 }
