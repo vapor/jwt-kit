@@ -20,6 +20,7 @@ extension UInt8 {
 }
 
 // pointer hacks
+#warning("Remove all")
 
 func convert(_ pointer: OpaquePointer) -> OpaquePointer {
     return pointer
