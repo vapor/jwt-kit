@@ -5,6 +5,36 @@
 public struct JWKS: Decodable {
     /// All JSON Web Keys
     public var keys: [JWK]
+
+    /// Retrieves the desired key from the JSON Web Key Set
+    /// - Parameters:
+    ///   - keyIdentifier: The `kid` value to lookup.
+    ///   - keyType: The `kty` value.
+    public func find(keyIdentifier: String, keyType: JWK.KeyType) -> JWK? {
+        keys.filter { $0.keyType == keyType && $0.keyIdentifier?.string == keyIdentifier }.first
+    }
+
+    /// Retrieves the desired key from the JSON Web Key Set
+    /// - Parameters:
+    ///   - keyIdentifier: The `kid` value to lookup.
+    ///   - keyType: The `kty` value.
+    public func find(keyIdentifier: JWKIdentifier, keyType: JWK.KeyType) -> JWK? {
+        find(keyIdentifier: keyIdentifier.string, keyType: keyType)
+    }
+
+    /// Retrieves the desired keys from the JSON Web Key Set
+    /// Multiple keys can have the same `kid` if they have different `kty` values.
+    /// - Parameter keyIdentifier: The `kid` value to lookup.
+    public func find(keyIdentifier: String) -> [JWK]? {
+        keys.filter { $0.keyIdentifier?.string == keyIdentifier }
+    }
+
+    /// Retrieves the desired keys from the JSON Web Key Set
+    /// Multiple keys can have the same `kid` if they have different `kty` values.
+    /// - Parameter keyIdentifier: The `kid` value to lookup.
+    public func find(keyIdentifier: JWKIdentifier) -> [JWK]? {
+        find(keyIdentifier: keyIdentifier.string)
+    }
 }
 
 public struct JWKIdentifier: Hashable, Equatable {
