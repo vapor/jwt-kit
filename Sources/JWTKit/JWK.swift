@@ -8,32 +8,32 @@ public struct JWKS: Decodable {
 
     /// Retrieves the desired key from the JSON Web Key Set
     /// - Parameters:
-    ///   - keyIdentifier: The `kid` value to lookup.
-    ///   - keyType: The `kty` value.
-    public func find(keyIdentifier: String, keyType: JWK.KeyType) -> JWK? {
-        keys.filter { $0.keyType == keyType && $0.keyIdentifier?.string == keyIdentifier }.first
+    ///   - identifier: The `kid` value to lookup.
+    ///   - type: The `kty` value.
+    public func find(identifier: String, type: JWK.KeyType) -> JWK? {
+        self.keys.filter { $0.keyType == type && $0.keyIdentifier?.string == identifier }.first
     }
 
     /// Retrieves the desired key from the JSON Web Key Set
     /// - Parameters:
-    ///   - keyIdentifier: The `kid` value to lookup.
-    ///   - keyType: The `kty` value.
-    public func find(keyIdentifier: JWKIdentifier, keyType: JWK.KeyType) -> JWK? {
-        find(keyIdentifier: keyIdentifier.string, keyType: keyType)
+    ///   - identifier: The `kid` value to lookup.
+    ///   - type: The `kty` value.
+    public func find(identifier: JWKIdentifier, type: JWK.KeyType) -> JWK? {
+        self.find(identifier: identifier.string, type: type)
     }
 
     /// Retrieves the desired keys from the JSON Web Key Set
     /// Multiple keys can have the same `kid` if they have different `kty` values.
-    /// - Parameter keyIdentifier: The `kid` value to lookup.
-    public func find(keyIdentifier: String) -> [JWK]? {
-        keys.filter { $0.keyIdentifier?.string == keyIdentifier }
+    /// - Parameter identifier: The `kid` value to lookup.
+    public func find(identifier: JWKIdentifier) -> [JWK]? {
+        self.find(identifier: identifier.string)
     }
 
     /// Retrieves the desired keys from the JSON Web Key Set
     /// Multiple keys can have the same `kid` if they have different `kty` values.
-    /// - Parameter keyIdentifier: The `kid` value to lookup.
-    public func find(keyIdentifier: JWKIdentifier) -> [JWK]? {
-        find(keyIdentifier: keyIdentifier.string)
+    /// - Parameter identifier: The `kid` value to lookup.
+    public func find(identifier: String) -> [JWK]? {
+        self.keys.filter { $0.keyIdentifier?.string == identifier }
     }
 }
 
