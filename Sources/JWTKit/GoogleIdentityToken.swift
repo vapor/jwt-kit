@@ -2,7 +2,14 @@
 /// [An ID token's payload](https://developers.google.com/identity/protocols/OpenIDConnect#an-id-tokens-payload)
 public struct GoogleIdentityToken: JWTPayload {
     enum CodingKeys: String, CodingKey {
-        case iss, sub, aud, azp, iat, exp, hd, email, name, picture, locale, nonce, profile
+        case email, name, picture, locale, nonce, profile
+        case issuer = "iss"
+        case subject = "sub"
+        case audience = "aud"
+        case authorizedPresenter = "azp"
+        case issuedAt = "iat"
+        case expires = "exp"
+        case hostedDomain = "hd"
         case emailVerified = "email_verified"
         case givenName = "given_name"
         case familyName = "family_name"
@@ -10,29 +17,29 @@ public struct GoogleIdentityToken: JWTPayload {
     }
 
     /// The Issuer Identifier for the Issuer of the response. Always https://accounts.google.com or accounts.google.com for Google ID tokens.
-    public let iss: IssuerClaim
+    public let issuer: IssuerClaim
 
     /// An identifier for the user, unique among all Google accounts and never reused.
     ///
     /// A Google account can have multiple email addresses at different
     /// points in time, but the sub value is never changed. Use sub within your application as the unique-identifier key for the user. Maximum length of
     /// 255 case-sensitive ASCII characters.
-    public let sub: SubjectClaim
+    public let subject: SubjectClaim
 
     /// The audience that this ID token is intended for. It must be one of the OAuth 2.0 client IDs of your application.
-    public let aud: AudienceClaim
+    public let audience: AudienceClaim
 
     /// The client_id of the authorized presenter.
     ///
     /// This claim is only needed when the party requesting the ID token is not the same as the audience of the ID token. This may be the case at
     /// Google for hybrid apps where a web application and Android app have a different OAuth 2.0 client_id but share the same Google APIs project.
-    public let azp: String
+    public let authorizedPresenter: String
 
     /// The time the ID token was issued.
-    public let iat: IssuedAtClaim
+    public let issuedAt: IssuedAtClaim
 
     /// Expiration time on or after which the ID token must not be accepted.
-    public let exp: ExpirationClaim
+    public let expires: ExpirationClaim
 
     /// Access token hash.
     ///
@@ -42,7 +49,7 @@ public struct GoogleIdentityToken: JWTPayload {
     public let atHash: String?
 
     /// The hosted G Suite domain of the user. Provided only if the user belongs to a hosted domain.
-    public let hd: GoogleHostedDomainClaim?
+    public let hostedDomain: GoogleHostedDomainClaim?
 
     /// The user's email address.
     ///
@@ -92,14 +99,14 @@ public struct GoogleIdentityToken: JWTPayload {
     public let nonce: String?
 
     public func verify(using signer: JWTSigner) throws {
-        guard ["accounts.google.com", "https://accounts.google.com"].contains(iss.value) else {
+        guard ["accounts.google.com", "https://accounts.google.com"].contains(self.issuer.value) else {
             throw JWTError.claimVerificationFailure(name: "iss", reason: "Claim wasn't issued by Google")
         }
 
-        guard self.sub.value.count <= 255 else {
+        guard self.subject.value.count <= 255 else {
             throw JWTError.claimVerificationFailure(name: "sub", reason: "Subject claim beyond 255 ASCII characters long.")
         }
 
-        try self.exp.verifyNotExpired()
+        try self.expires.verifyNotExpired()
     }
 }
