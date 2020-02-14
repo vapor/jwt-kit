@@ -1,7 +1,3 @@
-
-
-
-
 /// A claim which represents a bool
 ///
 /// If a string is provided, and the string doesn't represent a bool, then `false` will be used.
