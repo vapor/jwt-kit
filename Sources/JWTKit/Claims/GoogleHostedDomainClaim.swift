@@ -1,4 +1,4 @@
-public struct GoogleHdClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
+public struct GoogleHostedDomainClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// See `JWTClaim`.
     public var value: String
 

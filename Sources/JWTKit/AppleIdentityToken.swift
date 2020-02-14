@@ -1,3 +1,5 @@
+/// - See Also:
+/// [Retrieve the User’s Information from Apple ID Servers](https://developer.apple.com/documentation/signinwithapplerestapi/authenticating_users_with_sign_in_with_apple)
 public struct AppleIdentityToken: JWTPayload {
     enum CodingKeys: String, CodingKey {
         case iss, aud, exp, iat, sub, nonce, email
@@ -29,7 +31,7 @@ public struct AppleIdentityToken: JWTPayload {
     public let emailVerified: BoolClaim?
 
     public func verify(using signer: JWTSigner) throws {
-        guard iss.value == "https://appleid.apple.com" else {
+        guard self.iss.value == "https://appleid.apple.com" else {
             throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Apple")
         }
 

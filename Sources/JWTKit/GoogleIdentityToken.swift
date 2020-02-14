@@ -1,3 +1,5 @@
+/// - See Also:
+/// [An ID token's payload](https://developers.google.com/identity/protocols/OpenIDConnect#an-id-tokens-payload)
 public struct GoogleIdentityToken: JWTPayload {
     enum CodingKeys: String, CodingKey {
         case iss, sub, aud, azp, iat, exp, hd, email, name, picture, locale, nonce, profile
@@ -40,7 +42,7 @@ public struct GoogleIdentityToken: JWTPayload {
     public let atHash: String?
 
     /// The hosted G Suite domain of the user. Provided only if the user belongs to a hosted domain.
-    public let hd: GoogleHdClaim?
+    public let hd: GoogleHostedDomainClaim?
 
     /// The user's email address.
     ///
@@ -94,10 +96,10 @@ public struct GoogleIdentityToken: JWTPayload {
             throw JWTError.claimVerificationFailure(name: "iss", reason: "Claim wasn't issued by Google")
         }
 
-        guard sub.value.count <= 255 else {
+        guard self.sub.value.count <= 255 else {
             throw JWTError.claimVerificationFailure(name: "sub", reason: "Subject claim beyond 255 ASCII characters long.")
         }
 
-        try exp.verifyNotExpired()
+        try self.exp.verifyNotExpired()
     }
 }
