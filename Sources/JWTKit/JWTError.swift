@@ -1,4 +1,5 @@
 import Foundation
+
 public enum JWTError: Error, CustomStringConvertible, LocalizedError {
     case claimVerificationFailure(name: String, reason: String)
     case signingAlgorithmFailure(Error)
