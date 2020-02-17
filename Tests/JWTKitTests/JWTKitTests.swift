@@ -257,6 +257,31 @@ class JWTKitTests: XCTestCase {
             XCTAssertEqual(payload.foo, "bar")
         }
     }
+
+    func testBoolClaim() throws {
+        let str = #"{"trueStr":"true","trueBool":true,"falseStr":"false","falseBool":false}"#
+        var data = str.data(using: .utf8)!
+        let decoded = try! JSONDecoder().decode(BoolPayload.self, from: data)
+
+        XCTAssertTrue(decoded.trueStr.value)
+        XCTAssertTrue(decoded.trueBool.value)
+        XCTAssertFalse(decoded.falseBool.value)
+        XCTAssertFalse(decoded.falseStr.value)
+
+        data = #"{"bad":"Not boolean"}"#.data(using: .utf8)!
+        XCTAssertThrowsError(try JSONDecoder().decode(BoolPayload.self, from: data))
+    }
+}
+
+struct BoolPayload: Decodable {
+    var trueStr: BoolClaim
+    var trueBool: BoolClaim
+    var falseStr: BoolClaim
+    var falseBool: BoolClaim
+}
+
+struct BadBoolPayload: Decodable {
+    var bad: BoolClaim
 }
 
 struct TestPayload: JWTPayload, Equatable {
