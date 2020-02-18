@@ -17,4 +17,19 @@ public struct BoolClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, Expres
     public init(booleanLiteral value: Bool) {
         self.value = value
     }
+
+    public init(from decoder: Decoder) throws {
+        let single = try decoder.singleValueContainer()
+
+        do {
+            try self.init(value: single.decode(Bool.self))
+        } catch {
+            let str = try single.decode(String.self)
+            guard let bool = Bool(str) else {
+                throw JWTError.invalidBool(str)
+            }
+
+            self.init(value: bool)
+        }
+    }
 }
