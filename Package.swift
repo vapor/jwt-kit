@@ -8,6 +8,9 @@ let package = Package(
     ],
     products: [
         .library(name: "JWTKit", targets: ["JWTKit"]),
+        /* This target is used only for symbol mangling. It's added and removed automatically because it emits build warnings. MANGLE_START
+        .library(name: "CVaporJWTBoringSSL", type: .static, targets: ["CVaporJWTBoringSSL"]),
+        MANGLE_END */
     ],
     dependencies: [ ],
     targets: [
@@ -19,8 +22,9 @@ let package = Package(
                 .brew(["openssl@1.1"])
             ]
         ),
+        .target(name: "CVaporJWTBoringSSL"),
         .target(name: "CJWTKitCrypto", dependencies: ["CJWTKitOpenSSL"]),
-        .target(name: "JWTKit", dependencies: ["CJWTKitCrypto"]),
+        .target(name: "JWTKit", dependencies: ["CJWTKitCrypto", "CVaporJWTBoringSSL"]),
         .testTarget(name: "JWTKitTests", dependencies: ["JWTKit"]),
     ]
 )
