@@ -15,7 +15,6 @@ let package = Package(
     dependencies: [ ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
-//        .target(name: "CJWTKitCrypto", dependencies: ["CJWTKitOpenSSL"]),
         .target(name: "JWTKit", dependencies: ["CJWTKitBoringSSL"]),
         .testTarget(name: "JWTKitTests", dependencies: ["JWTKit"]),
     ]
