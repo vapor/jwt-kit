@@ -1,4 +1,4 @@
-import CVaporJWTBoringSSL
+import CJWTKitBoringSSL
 
 extension JWTSigner {
     public static func hs256<Key>(key: Key) -> JWTSigner
@@ -6,7 +6,7 @@ extension JWTSigner {
     {
         return .init(algorithm: HMACSigner(
             key: key.copyBytes(),
-            algorithm: convert(CVaporJWTBoringSSL_EVP_sha256()),
+            algorithm: convert(CJWTKitBoringSSL_EVP_sha256()),
             name: "HS256"
         ))
     }
@@ -16,7 +16,7 @@ extension JWTSigner {
     {
         return .init(algorithm: HMACSigner(
             key: key.copyBytes(),
-            algorithm: convert(CVaporJWTBoringSSL_EVP_sha384()),
+            algorithm: convert(CJWTKitBoringSSL_EVP_sha384()),
             name: "HS384"
         ))
     }
@@ -26,7 +26,7 @@ extension JWTSigner {
     {
         return .init(algorithm: HMACSigner(
             key: key.copyBytes(),
-            algorithm: convert(CVaporJWTBoringSSL_EVP_sha512()),
+            algorithm: convert(CJWTKitBoringSSL_EVP_sha512()),
             name: "HS512"
         ))
     }

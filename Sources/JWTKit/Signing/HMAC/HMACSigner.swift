@@ -1,4 +1,4 @@
-import CVaporJWTBoringSSL
+import CJWTKitBoringSSL
 
 internal struct HMACSigner: JWTAlgorithm {
     let key: [UInt8]
@@ -8,17 +8,17 @@ internal struct HMACSigner: JWTAlgorithm {
     func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
         where Plaintext: DataProtocol
     {
-        let context = CVaporJWTBoringSSL_HMAC_CTX_new()
-        defer { CVaporJWTBoringSSL_HMAC_CTX_free(context) }
+        let context = CJWTKitBoringSSL_HMAC_CTX_new()
+        defer { CJWTKitBoringSSL_HMAC_CTX_free(context) }
 
         guard self.key.withUnsafeBytes({
-            return CVaporJWTBoringSSL_HMAC_Init_ex(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), $0.count, convert(self.algorithm), nil)
+            return CJWTKitBoringSSL_HMAC_Init_ex(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), $0.count, convert(self.algorithm), nil)
         }) == 1 else {
             throw JWTError.signingAlgorithmFailure(HMACError.initializationFailure)
         }
 
         guard plaintext.copyBytes().withUnsafeBytes({
-            return CVaporJWTBoringSSL_HMAC_Update(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), $0.count)
+            return CJWTKitBoringSSL_HMAC_Update(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), $0.count)
         }) == 1 else {
             throw JWTError.signingAlgorithmFailure(HMACError.updateFailure)
         }
@@ -26,7 +26,7 @@ internal struct HMACSigner: JWTAlgorithm {
         var count: UInt32 = 0
 
         guard hash.withUnsafeMutableBytes({
-            return CVaporJWTBoringSSL_HMAC_Final(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), &count)
+            return CJWTKitBoringSSL_HMAC_Final(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), &count)
         }) == 1 else {
             throw JWTError.signingAlgorithmFailure(HMACError.finalizationFailure)
         }
