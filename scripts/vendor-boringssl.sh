@@ -1,0 +1,345 @@
+#!/bin/bash
+##===----------------------------------------------------------------------===##
+##
+## This source file is part of the Vapor open source project
+##
+## Copyright (c) 2017-2020 Vapor project authors
+## Licensed under MIT
+##
+## See LICENSE for license information
+##
+## SPDX-License-Identifier: MIT
+##
+##===----------------------------------------------------------------------===##
+# This was substantially adapted from SwiftCyrpto's vendor-boringssl.sh script.
+# The license for the original work is reproduced below. See NOTICES.txt for
+# more.
+#
+# Copyright (c) 2019 Apple Inc. and the SwiftCrypto project authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This script creates a vendored copy of BoringSSL that is
+# suitable for building with the Swift Package Manager.
+#
+# Usage:
+#   1. Run this script in the package root. It will place
+#      a local copy of the BoringSSL sources in Sources/CVaporJWTBoringSSL.
+#      Any prior contents of Sources/CVaporJWTBoringSSL will be deleted.
+#
+set -eou pipefail
+
+HERE=$(pwd)
+DSTROOT=Sources/CVaporJWTBoringSSL
+TMPDIR=$(mktemp -d /tmp/.workingXXXXXX)
+SRCROOT="${TMPDIR}/src/boringssl.googlesource.com/boringssl"
+CROSS_COMPILE_TARGET_LOCATION="/Library/Developer/Destinations"
+CROSS_COMPILE_VERSION="5.1.1"
+
+# This function namespaces the awkward inline functions declared in OpenSSL
+# and BoringSSL.
+function namespace_inlines {
+    # Pull out all STACK_OF functions.
+    STACKS=$(grep --no-filename -rE -e "DEFINE_(SPECIAL_)?STACK_OF\([A-Z_0-9a-z]+\)" -e "DEFINE_NAMED_STACK_OF\([A-Z_0-9a-z]+, +[A-Z_0-9a-z:]+\)" "$1/"* | grep -v '//' | grep -v '#' | gsed -e 's/DEFINE_\(SPECIAL_\)\?STACK_OF(\(.*\))/\2/' -e 's/DEFINE_NAMED_STACK_OF(\(.*\), .*)/\1/')
+    STACK_FUNCTIONS=("call_free_func" "call_copy_func" "call_cmp_func" "new" "new_null" "num" "zero" "value" "set" "free" "pop_free" "insert" "delete" "delete_ptr" "find" "shift" "push" "pop" "dup" "sort" "is_sorted" "set_cmp_func" "deep_copy")
+
+    for s in $STACKS; do
+        for f in "${STACK_FUNCTIONS[@]}"; do
+            echo "#define sk_${s}_${f} BORINGSSL_ADD_PREFIX(BORINGSSL_PREFIX, sk_${s}_${f})" >> "$1/include/openssl/boringssl_prefix_symbols.h"
+        done
+    done
+
+    # Now pull out all LHASH_OF functions.
+    LHASHES=$(grep --no-filename -rE "DEFINE_LHASH_OF\([A-Z_0-9a-z]+\)" "$1/"* | grep -v '//' | grep -v '#' | grep -v '\\$' | gsed 's/DEFINE_LHASH_OF(\(.*\))/\1/')
+    LHASH_FUNCTIONS=("call_cmp_func" "call_hash_func" "new" "free" "num_items" "retrieve" "call_cmp_key" "retrieve_key" "insert" "delete" "call_doall" "call_doall_arg" "doall" "doall_arg")
+
+    for l in $LHASHES; do
+        for f in "${LHASH_FUNCTIONS[@]}"; do
+            echo "#define lh_${l}_${f} BORINGSSL_ADD_PREFIX(BORINGSSL_PREFIX, lh_${l}_${f})" >> "$1/include/openssl/boringssl_prefix_symbols.h"
+        done
+    done
+}
+
+
+# This function handles mangling the symbols in BoringSSL.
+function mangle_symbols {
+    echo "GENERATING mangled symbol list"
+    (
+        # We need a .a: may as well get SwiftPM to give it to us.
+        # Temporarily enable the product we need.
+        echo "Enabling mangled target in Package.swift"
+        $sed -i -e 's/MANGLE_START/MANGLE_START*\//' -e 's/MANGLE_END/\/*MANGLE_END/' "${HERE}/Package.swift"
+
+        export GOPATH="${TMPDIR}"
+
+        # Begin by building for macOS.
+        swift build --product CVaporJWTBoringSSL --enable-test-discovery
+        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCVaporJWTBoringSSL.a"
+
+        # Now cross compile for our targets.
+        # If you have trouble with the script around this point, consider
+        # https://github.com/CSCIX65G/SwiftCrossCompilers to obtain cross
+        # compilers for the architectures we care about.
+        for cc_target in "${CROSS_COMPILE_TARGET_LOCATION}"/*"${CROSS_COMPILE_VERSION}"*.json; do
+            echo "Cross compiling for ${cc_target}"
+            swift build --product CVaporJWTBoringSSL --destination "${cc_target}" --enable-test-discovery
+        done;
+
+        # Now we need to generate symbol mangles for Linux. We can do this in
+        # one go for all of them.
+        go run "${SRCROOT}/util/read_symbols.go" -obj-file-format elf -out "${TMPDIR}/symbols-linux-all.txt" "${HERE}"/.build/*-unknown-linux/debug/libCVaporJWTBoringSSL.a
+
+        # Now we concatenate all the symbols together and uniquify it.
+        cat "${TMPDIR}"/symbols-*.txt | sort | uniq > "${TMPDIR}/symbols.txt"
+
+        # Use this as the input to the mangle.
+        go run "${SRCROOT}/util/make_prefix_headers.go" -out "${HERE}/${DSTROOT}/include/openssl" "${TMPDIR}/symbols.txt"
+
+        echo "Disabling mangled target in Package.swift"
+        # Remove the product, as we no longer need it.
+        $sed -i -e 's/MANGLE_START\*\//MANGLE_START/' -e 's/\/\*MANGLE_END/MANGLE_END/' "${HERE}/Package.swift"
+    )
+
+    # Now remove any weird symbols that got in and would emit warnings.
+    $sed -i -e '/#define .*\..*/d' "${DSTROOT}"/include/openssl/boringssl_prefix_symbols*.h
+
+    # Now edit the headers again to add the symbol mangling.
+    echo "ADDING symbol mangling"
+    perl -pi -e '$_ .= qq(\n#define BORINGSSL_PREFIX CVaporJWTBoringSSL\n) if /#define OPENSSL_HEADER_BASE_H/' "$DSTROOT/include/openssl/base.h"
+
+    for assembly_file in $(find "$DSTROOT" -name "*.S")
+    do
+        $sed -i '1 i #define BORINGSSL_PREFIX CVaporJWTBoringSSL' "$assembly_file"
+    done
+    namespace_inlines "$DSTROOT"
+}
+
+case "$(uname -s)" in
+    Darwin)
+        sed=gsed
+        ;;
+    *)
+        sed=sed
+        ;;
+esac
+
+if ! hash ${sed} 2>/dev/null; then
+    echo "You need sed \"${sed}\" to run this script ..."
+    echo
+    echo "On macOS: brew install gnu-sed"
+    exit 43
+fi
+
+echo "REMOVING any previously-vendored BoringSSL code"
+rm -rf $DSTROOT/include
+rm -rf $DSTROOT/ssl
+rm -rf $DSTROOT/crypto
+rm -rf $DSTROOT/third_party
+rm -rf $DSTROOT/err_data.c
+
+echo "CLONING boringssl"
+mkdir -p "$SRCROOT"
+git clone https://boringssl.googlesource.com/boringssl "$SRCROOT"
+cd "$SRCROOT"
+BORINGSSL_REVISION=$(git rev-parse HEAD)
+cd "$HERE"
+echo "CLONED boringssl@${BORINGSSL_REVISION}"
+
+echo "OBTAINING submodules"
+(
+    cd "$SRCROOT"
+    git submodule update --init
+)
+
+echo "GENERATING assembly helpers"
+(
+    cd "$SRCROOT"
+    cd ..
+    mkdir -p "${SRCROOT}/crypto/third_party/sike/asm"
+    python "${HERE}/scripts/build-asm.py"
+)
+
+PATTERNS=(
+'include/openssl/*.h'
+'ssl/*.h'
+'ssl/*.cc'
+'crypto/*.h'
+'crypto/*.c'
+'crypto/*/*.h'
+'crypto/*/*.c'
+'crypto/*/*.S'
+'crypto/*/*/*.h'
+'crypto/*/*/*.c'
+'crypto/*/*/*.S'
+'crypto/*/*/*/*.c'
+'third_party/fiat/*.h'
+'third_party/fiat/*.c'
+)
+
+EXCLUDES=(
+'*_test.*'
+'test_*.*'
+'test'
+'example_*.c'
+)
+
+echo "COPYING boringssl"
+for pattern in "${PATTERNS[@]}"
+do
+  for i in $SRCROOT/$pattern; do
+    path=${i#$SRCROOT}
+    dest="$DSTROOT$path"
+    dest_dir=$(dirname "$dest")
+    mkdir -p "$dest_dir"
+    cp "$SRCROOT/$path" "$dest"
+  done
+done
+
+for exclude in "${EXCLUDES[@]}"
+do
+  echo "EXCLUDING $exclude"
+  find $DSTROOT -d -name "$exclude" -exec rm -rf {} \;
+done
+
+echo "GENERATING err_data.c"
+(
+    cd "$SRCROOT/crypto/err"
+    go run err_data_generate.go > "${HERE}/${DSTROOT}/crypto/err/err_data.c"
+)
+
+echo "DELETING crypto/fipsmodule/bcm.c"
+rm -f $DSTROOT/crypto/fipsmodule/bcm.c
+
+echo "FIXING missing include"
+perl -pi -e '$_ .= qq(\n#include <openssl/cpu.h>\n) if /#include <openssl\/err.h>/' "$DSTROOT/crypto/fipsmodule/ec/p256-x86_64.c"
+
+echo "REMOVING libssl"
+(
+    cd "$DSTROOT"
+    rm "include/openssl/ssl.h" "include/openssl/srtp.h" "include/openssl/ssl3.h" "include/openssl/tls1.h"
+    rm -rf "ssl"
+)
+
+mangle_symbols
+
+# Removing ASM on 32 bit Apple platforms
+echo "REMOVING assembly on 32-bit Apple platforms"
+gsed -i "/#define OPENSSL_HEADER_BASE_H/a#if defined(__APPLE__) && defined(__i386__)\n#define OPENSSL_NO_ASM\n#endif" "$DSTROOT/include/openssl/base.h"
+
+echo "RENAMING header files"
+(
+    # We need to rearrange a coouple of things here, the end state will be:
+    # - Headers from 'include/openssl/' will be moved up a level to 'include/'
+    # - Their names will be prefixed with 'CVaporJWTBoringSSL_'
+    # - The headers prefixed with 'boringssl_prefix_symbols' will also be prefixed with 'CVaporJWTBoringSSL_'
+    # - Any include of another header in the 'include/' directory will use quotation marks instead of angle brackets
+
+    # Let's move the headers up a level first.
+    cd "$DSTROOT"
+    mv include/openssl/* include/
+    rmdir "include/openssl"
+
+    # Now change the imports from "<openssl/X> to "<CVaporJWTBoringSSL_X>", apply the same prefix to the 'boringssl_prefix_symbols' headers.
+    find . -name "*.[ch]" -or -name "*.cc" -or -name "*.S" | xargs $sed -i -e 's+include <openssl/+include <CVaporJWTBoringSSL_+' -e 's+include <boringssl_prefix_symbols+include <CVaporJWTBoringSSL_boringssl_prefix_symbols+'
+
+    # Okay now we need to rename the headers adding the prefix "CVaporJWTBoringSSL_".
+    pushd include
+    find . -name "*.h" | $sed -e "s_./__" | xargs -I {} mv {} CVaporJWTBoringSSL_{}
+    # Finally, make sure we refer to them by their prefixed names, and change any includes from angle brackets to quotation marks.
+    find . -name "*.h" | xargs $sed -i -e 's/include "/include "CVaporJWTBoringSSL_/' -e 's/include <CVaporJWTBoringSSL_\(.*\)>/include "CVaporJWTBoringSSL_\1"/'
+    popd
+)
+
+# We need to avoid having the stack be executable. BoringSSL does this in its build system, but we can't.
+echo "PROTECTING against executable stacks"
+(
+    cd "$DSTROOT"
+    find . -name "*.S" | xargs $sed -i '$ a #if defined(__linux__) && defined(__ELF__)\n.section .note.GNU-stack,"",%progbits\n#endif\n'
+)
+
+echo "PATCHING BoringSSL"
+git apply "${HERE}/scripts/patch-1-inttypes.patch"
+git apply "${HERE}/scripts/patch-2-arm-arch.patch"
+
+# We need BoringSSL to be modularised
+echo "MODULARISING BoringSSL"
+cat << EOF > "$DSTROOT/include/CVaporJWTBoringSSL.h"
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Vapor open source project
+//
+// Copyright (c) 2017-2020 Vapor project authors
+// Licensed under MIT
+//
+// See LICENSE for license information
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+#ifndef C_VAPORJWT_BORINGSSL_H
+#define C_VAPORJWT_BORINGSSL_H
+
+#include "CVaporJWTBoringSSL_aes.h"
+#include "CVaporJWTBoringSSL_arm_arch.h"
+#include "CVaporJWTBoringSSL_asn1_mac.h"
+#include "CVaporJWTBoringSSL_asn1t.h"
+#include "CVaporJWTBoringSSL_base.h"
+#include "CVaporJWTBoringSSL_bio.h"
+#include "CVaporJWTBoringSSL_blowfish.h"
+#include "CVaporJWTBoringSSL_boringssl_prefix_symbols.h"
+#include "CVaporJWTBoringSSL_boringssl_prefix_symbols_asm.h"
+#include "CVaporJWTBoringSSL_cast.h"
+#include "CVaporJWTBoringSSL_chacha.h"
+#include "CVaporJWTBoringSSL_cmac.h"
+#include "CVaporJWTBoringSSL_conf.h"
+#include "CVaporJWTBoringSSL_cpu.h"
+#include "CVaporJWTBoringSSL_curve25519.h"
+#include "CVaporJWTBoringSSL_des.h"
+#include "CVaporJWTBoringSSL_dtls1.h"
+#include "CVaporJWTBoringSSL_e_os2.h"
+#include "CVaporJWTBoringSSL_ec.h"
+#include "CVaporJWTBoringSSL_ec_key.h"
+#include "CVaporJWTBoringSSL_ecdsa.h"
+#include "CVaporJWTBoringSSL_err.h"
+#include "CVaporJWTBoringSSL_evp.h"
+#include "CVaporJWTBoringSSL_hkdf.h"
+#include "CVaporJWTBoringSSL_hmac.h"
+#include "CVaporJWTBoringSSL_hrss.h"
+#include "CVaporJWTBoringSSL_md4.h"
+#include "CVaporJWTBoringSSL_md5.h"
+#include "CVaporJWTBoringSSL_obj_mac.h"
+#include "CVaporJWTBoringSSL_objects.h"
+#include "CVaporJWTBoringSSL_opensslv.h"
+#include "CVaporJWTBoringSSL_ossl_typ.h"
+#include "CVaporJWTBoringSSL_pem.h"
+#include "CVaporJWTBoringSSL_pkcs12.h"
+#include "CVaporJWTBoringSSL_poly1305.h"
+#include "CVaporJWTBoringSSL_rand.h"
+#include "CVaporJWTBoringSSL_rc4.h"
+#include "CVaporJWTBoringSSL_ripemd.h"
+#include "CVaporJWTBoringSSL_rsa.h"
+#include "CVaporJWTBoringSSL_safestack.h"
+#include "CVaporJWTBoringSSL_sha.h"
+#include "CVaporJWTBoringSSL_siphash.h"
+#include "CVaporJWTBoringSSL_x509v3.h"
+
+#endif  // C_VAPORJWT_BORINGSSL_H
+EOF
+
+echo "RECORDING BoringSSL revision"
+$sed -i -e "s/BoringSSL Commit: [0-9a-f]\+/BoringSSL Commit: ${BORINGSSL_REVISION}/" "$HERE/Package.swift"
+echo "This directory is derived from BoringSSL cloned from https://boringssl.googlesource.com/boringssl at revision ${BORINGSSL_REVISION}" > "$DSTROOT/hash.txt"
+
+echo "CLEANING temporary directory"
+rm -rf "${TMPDIR}"
+
