@@ -1,22 +1,22 @@
-diff --git a/Sources/CAPNSwiftBoringSSL/crypto/hrss/hrss.c b/Sources/CAPNSwiftBoringSSL/crypto/hrss/hrss.c
+diff --git a/Sources/CVaporJWTBoringSSL/crypto/hrss/hrss.c b/Sources/CVaporJWTBoringSSL/crypto/hrss/hrss.c
 index 93a214e..eee4e58 100644
---- a/Sources/CAPNSwiftBoringSSL/crypto/hrss/hrss.c
-+++ b/Sources/CAPNSwiftBoringSSL/crypto/hrss/hrss.c
+--- a/Sources/CVaporJWTBoringSSL/crypto/hrss/hrss.c
++++ b/Sources/CVaporJWTBoringSSL/crypto/hrss/hrss.c
 @@ -13,6 +13,7 @@
   * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
  
- #include <CAPNSwiftBoringSSL_hrss.h>
+ #include <CVaporJWTBoringSSL_hrss.h>
 +#include <inttypes.h>
  
  #include <assert.h>
  #include <stdio.h>
-diff --git a/Sources/CAPNSwiftBoringSSL/include/CAPNSwiftBoringSSL_bn.h b/Sources/CAPNSwiftBoringSSL/include/CAPNSwiftBoringSSL_bn.h
+diff --git a/Sources/CVaporJWTBoringSSL/include/CVaporJWTBoringSSL_bn.h b/Sources/CVaporJWTBoringSSL/include/CVaporJWTBoringSSL_bn.h
 index c86c1ef..7013140 100644
---- a/Sources/CAPNSwiftBoringSSL/include/CAPNSwiftBoringSSL_bn.h
-+++ b/Sources/CAPNSwiftBoringSSL/include/CAPNSwiftBoringSSL_bn.h
+--- a/Sources/CVaporJWTBoringSSL/include/CVaporJWTBoringSSL_bn.h
++++ b/Sources/CVaporJWTBoringSSL/include/CVaporJWTBoringSSL_bn.h
 @@ -126,7 +126,7 @@
- #include "CAPNSwiftBoringSSL_base.h"
- #include "CAPNSwiftBoringSSL_thread.h"
+ #include "CVaporJWTBoringSSL_base.h"
+ #include "CVaporJWTBoringSSL_thread.h"
  
 -#include <inttypes.h>  // for PRIu64 and friends
 +#include <sys/types.h>
