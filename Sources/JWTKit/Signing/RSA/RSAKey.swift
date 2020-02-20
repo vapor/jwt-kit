@@ -1,4 +1,4 @@
-import CJWTKitCrypto
+import CVaporJWTBoringSSL
 import struct Foundation.Data
 
 public final class RSAKey: OpenSSLKey {
@@ -6,11 +6,11 @@ public final class RSAKey: OpenSSLKey {
         where Data: DataProtocol
     {
         let pkey = try self.load(pem: data) { bio in
-            PEM_read_bio_PUBKEY(convert(bio), nil, nil, nil)
+            CVaporJWTBoringSSL_PEM_read_bio_PUBKEY(convert(bio), nil, nil, nil)
         }
-        defer { EVP_PKEY_free(pkey) }
+        defer { CVaporJWTBoringSSL_EVP_PKEY_free(pkey) }
 
-        guard let c = EVP_PKEY_get1_RSA(pkey) else {
+        guard let c = CVaporJWTBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
         return self.init(convert(c), .public)
@@ -20,11 +20,11 @@ public final class RSAKey: OpenSSLKey {
         where Data: DataProtocol
     {
         let pkey = try self.load(pem: data) { bio in
-            PEM_read_bio_PrivateKey(convert(bio), nil, nil, nil)
+            CVaporJWTBoringSSL_PEM_read_bio_PrivateKey(convert(bio), nil, nil, nil)
         }
-        defer { EVP_PKEY_free(pkey) }
+        defer { CVaporJWTBoringSSL_EVP_PKEY_free(pkey) }
 
-        guard let c = EVP_PKEY_get1_RSA(pkey) else {
+        guard let c = CVaporJWTBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
         return self.init(convert(c), .private)
@@ -42,15 +42,15 @@ public final class RSAKey: OpenSSLKey {
         let e = decode(exponent)
         let d = privateExponent.flatMap { decode($0) }
 
-        guard let rsa = RSA_new() else {
+        guard let rsa = CVaporJWTBoringSSL_RSA_new() else {
             return nil
         }
 
-        jwtkit_RSA_set0_key(
+        CVaporJWTBoringSSL_RSA_set0_key(
             rsa,
-            BN_bin2bn(n, numericCast(n.count), nil),
-            BN_bin2bn(e, numericCast(e.count), nil),
-            d.flatMap { BN_bin2bn($0, numericCast($0.count), nil) }
+            CVaporJWTBoringSSL_BN_bin2bn(n, numericCast(n.count), nil),
+            CVaporJWTBoringSSL_BN_bin2bn(e, numericCast(e.count), nil),
+            d.flatMap { CVaporJWTBoringSSL_BN_bin2bn($0, numericCast($0.count), nil) }
         )
         self.init(convert(rsa), d == nil ? .public : .private)
     }
@@ -68,6 +68,6 @@ public final class RSAKey: OpenSSLKey {
     }
 
     deinit {
-        RSA_free(convert(self.c))
+        CVaporJWTBoringSSL_RSA_free(convert(self.c))
     }
 }
