@@ -34,13 +34,13 @@
 #
 # Usage:
 #   1. Run this script in the package root. It will place
-#      a local copy of the BoringSSL sources in Sources/CVaporJWTBoringSSL.
-#      Any prior contents of Sources/CVaporJWTBoringSSL will be deleted.
+#      a local copy of the BoringSSL sources in Sources/CJWTKitBoringSSL.
+#      Any prior contents of Sources/CJWTKitBoringSSL will be deleted.
 #
 set -eou pipefail
 
 HERE=$(pwd)
-DSTROOT=Sources/CVaporJWTBoringSSL
+DSTROOT=Sources/CJWTKitBoringSSL
 TMPDIR=$(mktemp -d /tmp/.workingXXXXXX)
 SRCROOT="${TMPDIR}/src/boringssl.googlesource.com/boringssl"
 CROSS_COMPILE_TARGET_LOCATION="/Library/Developer/Destinations"
@@ -83,8 +83,8 @@ function mangle_symbols {
         export GOPATH="${TMPDIR}"
 
         # Begin by building for macOS.
-        swift build --product CVaporJWTBoringSSL --enable-test-discovery
-        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCVaporJWTBoringSSL.a"
+        swift build --product CJWTKitBoringSSL --enable-test-discovery
+        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCJWTKitBoringSSL.a"
 
         # Now cross compile for our targets.
         # If you have trouble with the script around this point, consider
@@ -92,12 +92,12 @@ function mangle_symbols {
         # compilers for the architectures we care about.
         for cc_target in "${CROSS_COMPILE_TARGET_LOCATION}"/*"${CROSS_COMPILE_VERSION}"*.json; do
             echo "Cross compiling for ${cc_target}"
-            swift build --product CVaporJWTBoringSSL --destination "${cc_target}" --enable-test-discovery
+            swift build --product CJWTKitBoringSSL --destination "${cc_target}" --enable-test-discovery
         done;
 
         # Now we need to generate symbol mangles for Linux. We can do this in
         # one go for all of them.
-        go run "${SRCROOT}/util/read_symbols.go" -obj-file-format elf -out "${TMPDIR}/symbols-linux-all.txt" "${HERE}"/.build/*-unknown-linux/debug/libCVaporJWTBoringSSL.a
+        go run "${SRCROOT}/util/read_symbols.go" -obj-file-format elf -out "${TMPDIR}/symbols-linux-all.txt" "${HERE}"/.build/*-unknown-linux/debug/libCJWTKitBoringSSL.a
 
         # Now we concatenate all the symbols together and uniquify it.
         cat "${TMPDIR}"/symbols-*.txt | sort | uniq > "${TMPDIR}/symbols.txt"
@@ -115,11 +115,11 @@ function mangle_symbols {
 
     # Now edit the headers again to add the symbol mangling.
     echo "ADDING symbol mangling"
-    perl -pi -e '$_ .= qq(\n#define BORINGSSL_PREFIX CVaporJWTBoringSSL\n) if /#define OPENSSL_HEADER_BASE_H/' "$DSTROOT/include/openssl/base.h"
+    perl -pi -e '$_ .= qq(\n#define BORINGSSL_PREFIX CJWTKitBoringSSL\n) if /#define OPENSSL_HEADER_BASE_H/' "$DSTROOT/include/openssl/base.h"
 
     for assembly_file in $(find "$DSTROOT" -name "*.S")
     do
-        $sed -i '1 i #define BORINGSSL_PREFIX CVaporJWTBoringSSL' "$assembly_file"
+        $sed -i '1 i #define BORINGSSL_PREFIX CJWTKitBoringSSL' "$assembly_file"
     done
     namespace_inlines "$DSTROOT"
 }
@@ -240,8 +240,8 @@ echo "RENAMING header files"
 (
     # We need to rearrange a coouple of things here, the end state will be:
     # - Headers from 'include/openssl/' will be moved up a level to 'include/'
-    # - Their names will be prefixed with 'CVaporJWTBoringSSL_'
-    # - The headers prefixed with 'boringssl_prefix_symbols' will also be prefixed with 'CVaporJWTBoringSSL_'
+    # - Their names will be prefixed with 'CJWTKitBoringSSL_'
+    # - The headers prefixed with 'boringssl_prefix_symbols' will also be prefixed with 'CJWTKitBoringSSL_'
     # - Any include of another header in the 'include/' directory will use quotation marks instead of angle brackets
 
     # Let's move the headers up a level first.
@@ -249,14 +249,14 @@ echo "RENAMING header files"
     mv include/openssl/* include/
     rmdir "include/openssl"
 
-    # Now change the imports from "<openssl/X> to "<CVaporJWTBoringSSL_X>", apply the same prefix to the 'boringssl_prefix_symbols' headers.
-    find . -name "*.[ch]" -or -name "*.cc" -or -name "*.S" | xargs $sed -i -e 's+include <openssl/+include <CVaporJWTBoringSSL_+' -e 's+include <boringssl_prefix_symbols+include <CVaporJWTBoringSSL_boringssl_prefix_symbols+'
+    # Now change the imports from "<openssl/X> to "<CJWTKitBoringSSL_X>", apply the same prefix to the 'boringssl_prefix_symbols' headers.
+    find . -name "*.[ch]" -or -name "*.cc" -or -name "*.S" | xargs $sed -i -e 's+include <openssl/+include <CJWTKitBoringSSL_+' -e 's+include <boringssl_prefix_symbols+include <CJWTKitBoringSSL_boringssl_prefix_symbols+'
 
-    # Okay now we need to rename the headers adding the prefix "CVaporJWTBoringSSL_".
+    # Okay now we need to rename the headers adding the prefix "CJWTKitBoringSSL_".
     pushd include
-    find . -name "*.h" | $sed -e "s_./__" | xargs -I {} mv {} CVaporJWTBoringSSL_{}
+    find . -name "*.h" | $sed -e "s_./__" | xargs -I {} mv {} CJWTKitBoringSSL_{}
     # Finally, make sure we refer to them by their prefixed names, and change any includes from angle brackets to quotation marks.
-    find . -name "*.h" | xargs $sed -i -e 's/include "/include "CVaporJWTBoringSSL_/' -e 's/include <CVaporJWTBoringSSL_\(.*\)>/include "CVaporJWTBoringSSL_\1"/'
+    find . -name "*.h" | xargs $sed -i -e 's/include "/include "CJWTKitBoringSSL_/' -e 's/include <CJWTKitBoringSSL_\(.*\)>/include "CJWTKitBoringSSL_\1"/'
     popd
 )
 
@@ -273,7 +273,7 @@ git apply "${HERE}/scripts/patch-2-arm-arch.patch"
 
 # We need BoringSSL to be modularised
 echo "MODULARISING BoringSSL"
-cat << EOF > "$DSTROOT/include/CVaporJWTBoringSSL.h"
+cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Vapor open source project
@@ -289,49 +289,49 @@ cat << EOF > "$DSTROOT/include/CVaporJWTBoringSSL.h"
 #ifndef C_VAPORJWT_BORINGSSL_H
 #define C_VAPORJWT_BORINGSSL_H
 
-#include "CVaporJWTBoringSSL_aes.h"
-#include "CVaporJWTBoringSSL_arm_arch.h"
-#include "CVaporJWTBoringSSL_asn1_mac.h"
-#include "CVaporJWTBoringSSL_asn1t.h"
-#include "CVaporJWTBoringSSL_base.h"
-#include "CVaporJWTBoringSSL_bio.h"
-#include "CVaporJWTBoringSSL_blowfish.h"
-#include "CVaporJWTBoringSSL_boringssl_prefix_symbols.h"
-#include "CVaporJWTBoringSSL_boringssl_prefix_symbols_asm.h"
-#include "CVaporJWTBoringSSL_cast.h"
-#include "CVaporJWTBoringSSL_chacha.h"
-#include "CVaporJWTBoringSSL_cmac.h"
-#include "CVaporJWTBoringSSL_conf.h"
-#include "CVaporJWTBoringSSL_cpu.h"
-#include "CVaporJWTBoringSSL_curve25519.h"
-#include "CVaporJWTBoringSSL_des.h"
-#include "CVaporJWTBoringSSL_dtls1.h"
-#include "CVaporJWTBoringSSL_e_os2.h"
-#include "CVaporJWTBoringSSL_ec.h"
-#include "CVaporJWTBoringSSL_ec_key.h"
-#include "CVaporJWTBoringSSL_ecdsa.h"
-#include "CVaporJWTBoringSSL_err.h"
-#include "CVaporJWTBoringSSL_evp.h"
-#include "CVaporJWTBoringSSL_hkdf.h"
-#include "CVaporJWTBoringSSL_hmac.h"
-#include "CVaporJWTBoringSSL_hrss.h"
-#include "CVaporJWTBoringSSL_md4.h"
-#include "CVaporJWTBoringSSL_md5.h"
-#include "CVaporJWTBoringSSL_obj_mac.h"
-#include "CVaporJWTBoringSSL_objects.h"
-#include "CVaporJWTBoringSSL_opensslv.h"
-#include "CVaporJWTBoringSSL_ossl_typ.h"
-#include "CVaporJWTBoringSSL_pem.h"
-#include "CVaporJWTBoringSSL_pkcs12.h"
-#include "CVaporJWTBoringSSL_poly1305.h"
-#include "CVaporJWTBoringSSL_rand.h"
-#include "CVaporJWTBoringSSL_rc4.h"
-#include "CVaporJWTBoringSSL_ripemd.h"
-#include "CVaporJWTBoringSSL_rsa.h"
-#include "CVaporJWTBoringSSL_safestack.h"
-#include "CVaporJWTBoringSSL_sha.h"
-#include "CVaporJWTBoringSSL_siphash.h"
-#include "CVaporJWTBoringSSL_x509v3.h"
+#include "CJWTKitBoringSSL_aes.h"
+#include "CJWTKitBoringSSL_arm_arch.h"
+#include "CJWTKitBoringSSL_asn1_mac.h"
+#include "CJWTKitBoringSSL_asn1t.h"
+#include "CJWTKitBoringSSL_base.h"
+#include "CJWTKitBoringSSL_bio.h"
+#include "CJWTKitBoringSSL_blowfish.h"
+#include "CJWTKitBoringSSL_boringssl_prefix_symbols.h"
+#include "CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h"
+#include "CJWTKitBoringSSL_cast.h"
+#include "CJWTKitBoringSSL_chacha.h"
+#include "CJWTKitBoringSSL_cmac.h"
+#include "CJWTKitBoringSSL_conf.h"
+#include "CJWTKitBoringSSL_cpu.h"
+#include "CJWTKitBoringSSL_curve25519.h"
+#include "CJWTKitBoringSSL_des.h"
+#include "CJWTKitBoringSSL_dtls1.h"
+#include "CJWTKitBoringSSL_e_os2.h"
+#include "CJWTKitBoringSSL_ec.h"
+#include "CJWTKitBoringSSL_ec_key.h"
+#include "CJWTKitBoringSSL_ecdsa.h"
+#include "CJWTKitBoringSSL_err.h"
+#include "CJWTKitBoringSSL_evp.h"
+#include "CJWTKitBoringSSL_hkdf.h"
+#include "CJWTKitBoringSSL_hmac.h"
+#include "CJWTKitBoringSSL_hrss.h"
+#include "CJWTKitBoringSSL_md4.h"
+#include "CJWTKitBoringSSL_md5.h"
+#include "CJWTKitBoringSSL_obj_mac.h"
+#include "CJWTKitBoringSSL_objects.h"
+#include "CJWTKitBoringSSL_opensslv.h"
+#include "CJWTKitBoringSSL_ossl_typ.h"
+#include "CJWTKitBoringSSL_pem.h"
+#include "CJWTKitBoringSSL_pkcs12.h"
+#include "CJWTKitBoringSSL_poly1305.h"
+#include "CJWTKitBoringSSL_rand.h"
+#include "CJWTKitBoringSSL_rc4.h"
+#include "CJWTKitBoringSSL_ripemd.h"
+#include "CJWTKitBoringSSL_rsa.h"
+#include "CJWTKitBoringSSL_safestack.h"
+#include "CJWTKitBoringSSL_sha.h"
+#include "CJWTKitBoringSSL_siphash.h"
+#include "CJWTKitBoringSSL_x509v3.h"
 
 #endif  // C_VAPORJWT_BORINGSSL_H
 EOF
