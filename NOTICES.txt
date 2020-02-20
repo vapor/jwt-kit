@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-This product contains a derivation of the of the Vendor BoringSSL and Build ASM scripts
+This product contains a derivation of the Vendor BoringSSL and Build ASM scripts
 from Swift Crypto.
 
   * LICENSE (Apache License 2.0):
