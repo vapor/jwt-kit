@@ -1,8 +1,26 @@
 import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
-    public static func generate() throws -> ECDSAKey {
-        guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(NID_X9_62_prime256v1) else {
+    
+    public enum Curve {
+        case p256
+        case p384
+        case p521
+
+        var cName: Int32 {
+            switch self {
+            case .p256:
+                return NID_X9_62_prime256v1
+            case .p384:
+                return NID_secp384r1
+            case .p521:
+                return NID_secp521r1
+            }
+        }
+    }
+    
+    public static func generate(curve: Curve = .p521) throws -> ECDSAKey {
+        guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
         guard CJWTKitBoringSSL_EC_KEY_generate_key(c) != 0 else {
