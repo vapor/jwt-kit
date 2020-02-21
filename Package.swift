@@ -14,17 +14,8 @@ let package = Package(
     ],
     dependencies: [ ],
     targets: [
-        .systemLibrary(
-            name: "CJWTKitOpenSSL",
-            pkgConfig: "openssl",
-            providers: [
-                .apt(["openssl libssl-dev"]),
-                .brew(["openssl@1.1"])
-            ]
-        ),
         .target(name: "CJWTKitBoringSSL"),
-        .target(name: "CJWTKitCrypto", dependencies: ["CJWTKitOpenSSL"]),
-        .target(name: "JWTKit", dependencies: ["CJWTKitCrypto", "CJWTKitBoringSSL"]),
+        .target(name: "JWTKit", dependencies: ["CJWTKitBoringSSL"]),
         .testTarget(name: "JWTKitTests", dependencies: ["JWTKit"]),
     ]
 )

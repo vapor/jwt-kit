@@ -1,4 +1,4 @@
-import CJWTKitCrypto
+import CJWTKitBoringSSL
 
 protocol OpenSSLSigner {
     var algorithm: OpaquePointer { get }
@@ -16,20 +16,20 @@ extension OpenSSLSigner {
     func digest<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
         where Plaintext: DataProtocol
     {
-        let context = jwtkit_EVP_MD_CTX_new()
-        defer { jwtkit_EVP_MD_CTX_free(context) }
+        let context = CJWTKitBoringSSL_EVP_MD_CTX_new()
+        defer { CJWTKitBoringSSL_EVP_MD_CTX_free(context) }
 
-        guard EVP_DigestInit_ex(context, convert(self.algorithm), nil) == 1 else {
+        guard CJWTKitBoringSSL_EVP_DigestInit_ex(context, self.algorithm, nil) == 1 else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.digestInitializationFailure)
         }
         let plaintext = plaintext.copyBytes()
-        guard EVP_DigestUpdate(context, plaintext, plaintext.count) == 1 else {
+        guard CJWTKitBoringSSL_EVP_DigestUpdate(context, plaintext, plaintext.count) == 1 else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.digestUpdateFailure)
         }
         var digest: [UInt8] = .init(repeating: 0, count: Int(EVP_MAX_MD_SIZE))
         var digestLength: UInt32 = 0
 
-        guard EVP_DigestFinal_ex(context, &digest, &digestLength) == 1 else {
+        guard CJWTKitBoringSSL_EVP_DigestFinal_ex(context, &digest, &digestLength) == 1 else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.digestFinalizationFailure)
         }
         return .init(digest[0..<Int(digestLength)])
@@ -39,19 +39,19 @@ extension OpenSSLSigner {
 protocol OpenSSLKey { }
 
 extension OpenSSLKey {
-    static func load<Data, T>(pem data: Data, _ closure: (OpaquePointer) -> (T?)) throws -> T
+    static func load<Data, T>(pem data: Data, _ closure: (UnsafeMutablePointer<BIO>) -> (T?)) throws -> T
         where Data: DataProtocol
     {
-        let bio = BIO_new(BIO_s_mem())
-        defer { BIO_free(bio) }
+        let bio = CJWTKitBoringSSL_BIO_new(CJWTKitBoringSSL_BIO_s_mem())
+        defer { CJWTKitBoringSSL_BIO_free(bio) }
 
         guard (data.copyBytes() + [0]).withUnsafeBytes({ pointer in
-            BIO_puts(bio, pointer.baseAddress?.assumingMemoryBound(to: Int8.self))
+            CJWTKitBoringSSL_BIO_puts(bio, pointer.baseAddress?.assumingMemoryBound(to: Int8.self))
         }) >= 0 else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.bioPutsFailure)
         }
 
-        guard let c = closure(convert(bio!)) else {
+        guard let bioPtr = bio, let c = closure(bioPtr) else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.bioConversionFailure)
         }
         return c
