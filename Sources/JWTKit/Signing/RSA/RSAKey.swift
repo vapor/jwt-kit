@@ -6,28 +6,28 @@ public final class RSAKey: OpenSSLKey {
         where Data: DataProtocol
     {
         let pkey = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_PUBKEY(convert(bio), nil, nil, nil)
+            CJWTKitBoringSSL_PEM_read_bio_PUBKEY(bio, nil, nil, nil)
         }
         defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
 
         guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
-        return self.init(convert(c), .public)
+        return self.init(c, .public)
     }
 
     public static func `private`<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
         let pkey = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_PrivateKey(convert(bio), nil, nil, nil)
+            CJWTKitBoringSSL_PEM_read_bio_PrivateKey(bio, nil, nil, nil)
         }
         defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
 
         guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
-        return self.init(convert(c), .private)
+        return self.init(c, .private)
     }
 
     public convenience init?(
@@ -52,7 +52,7 @@ public final class RSAKey: OpenSSLKey {
             CJWTKitBoringSSL_BN_bin2bn(e, numericCast(e.count), nil),
             d.flatMap { CJWTKitBoringSSL_BN_bin2bn($0, numericCast($0.count), nil) }
         )
-        self.init(convert(rsa), d == nil ? .public : .private)
+        self.init(rsa, d == nil ? .public : .private)
     }
 
     enum KeyType {
@@ -60,14 +60,14 @@ public final class RSAKey: OpenSSLKey {
     }
 
     let type: KeyType
-    let c: OpaquePointer
+    let c: UnsafeMutablePointer<RSA>
 
-    init(_ c: OpaquePointer, _ type: KeyType) {
+    init(_ c: UnsafeMutablePointer<RSA>, _ type: KeyType) {
         self.type = type
         self.c = c
     }
 
     deinit {
-        CJWTKitBoringSSL_RSA_free(convert(self.c))
+        CJWTKitBoringSSL_RSA_free(self.c)
     }
 }

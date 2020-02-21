@@ -12,7 +12,7 @@ internal struct HMACSigner: JWTAlgorithm {
         defer { CJWTKitBoringSSL_HMAC_CTX_free(context) }
 
         guard self.key.withUnsafeBytes({
-            return CJWTKitBoringSSL_HMAC_Init_ex(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), $0.count, convert(self.algorithm), nil)
+            return CJWTKitBoringSSL_HMAC_Init_ex(context, $0.baseAddress?.assumingMemoryBound(to: UInt8.self), $0.count, self.algorithm, nil)
         }) == 1 else {
             throw JWTError.signingAlgorithmFailure(HMACError.initializationFailure)
         }

@@ -15,7 +15,7 @@ public final class ECDSAKey: OpenSSLKey {
         where Data: DataProtocol
     {
         let c = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_EC_PUBKEY(convert(bio), nil, nil, nil)
+            CJWTKitBoringSSL_PEM_read_bio_EC_PUBKEY(bio, nil, nil, nil)
         }
         return self.init(c)
     }
@@ -24,7 +24,7 @@ public final class ECDSAKey: OpenSSLKey {
         where Data: DataProtocol
     {
         let c = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_ECPrivateKey(convert(bio), nil, nil, nil)
+            CJWTKitBoringSSL_PEM_read_bio_ECPrivateKey(bio, nil, nil, nil)
         }
         return self.init(c)
     }

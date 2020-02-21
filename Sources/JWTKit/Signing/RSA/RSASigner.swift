@@ -15,17 +15,17 @@ internal struct RSASigner: JWTAlgorithm, OpenSSLSigner {
         var signatureLength: UInt32 = 0
         var signature = [UInt8](
             repeating: 0,
-            count: Int(CJWTKitBoringSSL_RSA_size(convert(key.c)))
+            count: Int(CJWTKitBoringSSL_RSA_size(key.c))
         )
 
         let digest = try self.digest(plaintext)
         guard CJWTKitBoringSSL_RSA_sign(
-            CJWTKitBoringSSL_EVP_MD_type(convert(self.algorithm)),
+            CJWTKitBoringSSL_EVP_MD_type(self.algorithm),
             digest,
             numericCast(digest.count),
             &signature,
             &signatureLength,
-            convert(self.key.c)
+            self.key.c
         ) == 1 else {
             throw JWTError.signingAlgorithmFailure(RSAError.signFailure)
         }
@@ -42,12 +42,12 @@ internal struct RSASigner: JWTAlgorithm, OpenSSLSigner {
         let digest = try self.digest(plaintext)
         let signature = signature.copyBytes()
         return CJWTKitBoringSSL_RSA_verify(
-            CJWTKitBoringSSL_EVP_MD_type(convert(self.algorithm)),
+            CJWTKitBoringSSL_EVP_MD_type(self.algorithm),
             digest,
             numericCast(digest.count),
             signature,
             numericCast(signature.count),
-            convert(self.key.c)
+            self.key.c
         ) == 1
     }
 }

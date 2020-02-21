@@ -19,7 +19,7 @@ extension OpenSSLSigner {
         let context = CJWTKitBoringSSL_EVP_MD_CTX_new()
         defer { CJWTKitBoringSSL_EVP_MD_CTX_free(context) }
 
-        guard CJWTKitBoringSSL_EVP_DigestInit_ex(context, convert(self.algorithm), nil) == 1 else {
+        guard CJWTKitBoringSSL_EVP_DigestInit_ex(context, self.algorithm, nil) == 1 else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.digestInitializationFailure)
         }
         let plaintext = plaintext.copyBytes()
@@ -39,7 +39,7 @@ extension OpenSSLSigner {
 protocol OpenSSLKey { }
 
 extension OpenSSLKey {
-    static func load<Data, T>(pem data: Data, _ closure: (OpaquePointer) -> (T?)) throws -> T
+    static func load<Data, T>(pem data: Data, _ closure: (UnsafeMutablePointer<BIO>) -> (T?)) throws -> T
         where Data: DataProtocol
     {
         let bio = CJWTKitBoringSSL_BIO_new(CJWTKitBoringSSL_BIO_s_mem())
@@ -51,7 +51,7 @@ extension OpenSSLKey {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.bioPutsFailure)
         }
 
-        guard let c = closure(convert(bio!)) else {
+        guard let bioPtr = bio, let c = closure(bioPtr) else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.bioConversionFailure)
         }
         return c
