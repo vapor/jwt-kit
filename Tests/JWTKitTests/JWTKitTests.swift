@@ -271,6 +271,33 @@ class JWTKitTests: XCTestCase {
         data = #"{"bad":"Not boolean"}"#.data(using: .utf8)!
         XCTAssertThrowsError(try JSONDecoder().decode(BoolPayload.self, from: data))
     }
+
+    func testLocaleClaim() throws {
+        let ptBR = #"{"locale":"pt-BR"}"#
+
+        let plainEnglish = try LocalePayload.from(#"{"locale":"en"}"#)
+        let brazillianPortugese = try LocalePayload.from(ptBR)
+        let nadizaDialectSlovenia = try LocalePayload.from(#"{"locale":"sl-nedis"}"#)
+        let germanSwissPost1996 = try LocalePayload.from(#"{"locale":"de-CH-1996"}"#)
+        let chineseTraditionalTwoPrivate = try LocalePayload.from(#"{"locale":"zh-Hant-CN-x-private1-private2"}"#)
+
+        XCTAssertTrue(plainEnglish.locale.value.identifier == "en")
+        XCTAssertTrue(brazillianPortugese.locale.value.identifier == "pt-BR")
+        XCTAssertTrue(nadizaDialectSlovenia.locale.value.identifier == "sl-nedis")
+        XCTAssertTrue(germanSwissPost1996.locale.value.identifier == "de-CH-1996")
+        XCTAssertTrue(chineseTraditionalTwoPrivate.locale.value.identifier == "zh-Hant-CN-x-private1-private2")
+    }
+}
+
+struct LocalePayload: Codable {
+    var locale: LocaleClaim
+}
+
+extension LocalePayload {
+    static func from(_ string: String) throws -> LocalePayload {
+        let data = string.data(using: .utf8)!
+        return try JSONDecoder().decode(LocalePayload.self, from: data)
+    }
 }
 
 struct BoolPayload: Decodable {

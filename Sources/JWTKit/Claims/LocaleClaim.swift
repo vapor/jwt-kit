@@ -12,4 +12,16 @@ public struct LocaleClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     public init(stringLiteral value: String) {
         self.value = Locale(identifier: value)
     }
+
+    /// See `Decodable`.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        try self.init(value: Locale(identifier: container.decode(String.self)))
+    }
+
+    /// See `Encodable`.
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(value.identifier)
+    }
 }
