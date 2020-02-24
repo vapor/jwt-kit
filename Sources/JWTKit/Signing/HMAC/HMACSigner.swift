@@ -9,6 +9,6 @@ internal struct HMACSigner<SHA_TYPE>: JWTAlgorithm where SHA_TYPE: HashFunction 
         where Plaintext: DataProtocol
     {
         let authentication = Crypto.HMAC<SHA_TYPE>.authenticationCode(for: plaintext, using: self.key)
-        return Data(authentication).copyBytes()
+        return Array(authentication)
     }
 }
