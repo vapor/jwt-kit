@@ -281,11 +281,15 @@ class JWTKitTests: XCTestCase {
         let germanSwissPost1996 = try LocalePayload.from(#"{"locale":"de-CH-1996"}"#)
         let chineseTraditionalTwoPrivate = try LocalePayload.from(#"{"locale":"zh-Hant-CN-x-private1-private2"}"#)
 
-        XCTAssertTrue(plainEnglish.locale.value.identifier == "en")
-        XCTAssertTrue(brazillianPortugese.locale.value.identifier == "pt-BR")
-        XCTAssertTrue(nadizaDialectSlovenia.locale.value.identifier == "sl-nedis")
-        XCTAssertTrue(germanSwissPost1996.locale.value.identifier == "de-CH-1996")
-        XCTAssertTrue(chineseTraditionalTwoPrivate.locale.value.identifier == "zh-Hant-CN-x-private1-private2")
+        XCTAssertEqual(plainEnglish.locale.value.identifier, "en")
+        XCTAssertEqual(brazillianPortugese.locale.value.identifier, "pt-BR")
+        XCTAssertEqual(nadizaDialectSlovenia.locale.value.identifier, "sl-nedis")
+        XCTAssertEqual(germanSwissPost1996.locale.value.identifier, "de-CH-1996")
+        XCTAssertEqual(chineseTraditionalTwoPrivate.locale.value.identifier, "zh-Hant-CN-x-private1-private2")
+
+        let encoded = try JSONEncoder().encode(brazillianPortugese)
+        let string = String(bytes: encoded, encoding: .utf8)!
+        XCTAssertEqual(string, ptBR)
     }
 }
 
