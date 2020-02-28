@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.2
 import PackageDescription
 
 let package = Package(
@@ -17,7 +17,12 @@ let package = Package(
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
-        .target(name: "JWTKit", dependencies: ["CJWTKitBoringSSL", "Crypto"]),
-        .testTarget(name: "JWTKitTests", dependencies: ["JWTKit"]),
+        .target(name: "JWTKit", dependencies: [
+            .target(name: "CJWTKitBoringSSL"),
+            .product(name: "Crypto", package: "swift-crypto"),
+        ]),
+        .testTarget(name: "JWTKitTests", dependencies: [
+            .target(name: "JWTKit"),
+        ]),
     ]
 )
