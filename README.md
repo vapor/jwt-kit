@@ -1,5 +1,9 @@
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/1342803/59471117-1c77b300-8e08-11e9-838e-441b280855b3.png" alt="JWTKit">
+    <img 
+        src="https://user-images.githubusercontent.com/1342803/59471117-1c77b300-8e08-11e9-838e-441b280855b3.png" 
+        height="64" 
+        alt="JWTKit"
+    >
     <br>
     <br>
     <a href="https://docs.vapor.codes/4.0/">
