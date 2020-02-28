@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "jwt-kit",
     platforms: [
-        .macOS(.v10_14)
+        .macOS(.v10_15)
     ],
     products: [
         .library(name: "JWTKit", targets: ["JWTKit"]),
@@ -12,10 +12,12 @@ let package = Package(
         .library(name: "CJWTKitBoringSSL", type: .static, targets: ["CJWTKitBoringSSL"]),
         MANGLE_END */
     ],
-    dependencies: [ ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0")
+    ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
-        .target(name: "JWTKit", dependencies: ["CJWTKitBoringSSL"]),
+        .target(name: "JWTKit", dependencies: ["CJWTKitBoringSSL", "Crypto"]),
         .testTarget(name: "JWTKitTests", dependencies: ["JWTKit"]),
     ]
 )
