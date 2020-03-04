@@ -9,6 +9,7 @@ public struct AppleIdentityToken: JWTPayload {
         case issuedAt = "iat"
         case expires = "exp"
         case emailVerified = "email_verified"
+        case nonceSupported = "nonce_supported"
     }
 
     /// The issuer-registered claim key, which has the value https://appleid.apple.com.
@@ -26,7 +27,13 @@ public struct AppleIdentityToken: JWTPayload {
     /// The unique identifier for the user.
     public let subject: SubjectClaim
 
-    /// A string value used to associate a client session and an ID token. This value is used to mitigate replay attacks and is present only if passed during the authorization request.
+    /// A Boolean value that indicates whether the transaction is on a nonce-supported platform. If you sent a nonce in the authorization
+    /// request but do not see the nonce claim in the ID token, check this claim to determine how to proceed. If this claim returns true you
+    /// should treat nonce as mandatory and fail the transaction; otherwise, you can proceed treating the nonce as optional.
+    public let nonceSupported: BoolClaim?
+
+    /// A string value used to associate a client session and an ID token. This value is used to mitigate replay attacks and is present only
+    /// if passed during the authorization request.
     public let nonce: String?
 
     /// The user's email address.
