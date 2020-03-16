@@ -291,6 +291,47 @@ class JWTKitTests: XCTestCase {
         let string = String(bytes: encoded, encoding: .utf8)!
         XCTAssertEqual(string, ptBR)
     }
+    
+    func testSingleAudienceClaim() throws {
+        let id = UUID()
+        let str = "{\"audience\":\"\(id.uuidString)\"}"
+        let data = str.data(using: .utf8)!
+        let decoded = try! JSONDecoder().decode(AudiencePayload.self, from: data)
+        
+        XCTAssertEqual(decoded.audience.value, [id.uuidString])
+        XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id.uuidString))
+        XCTAssertThrowsError(try decoded.audience.verifyIntendedAudience(includes: UUID().uuidString)) {
+            guard let jwtError = try? XCTUnwrap($0 as? JWTError) else { return }
+            guard case let .claimVerificationFailure(name, _) = jwtError else {
+                XCTFail("Unexpectedly got \(jwtError) instead of claim verification failure.")
+                return
+            }
+            XCTAssertEqual(name, "aud")
+        }
+    }
+
+    func testMultipleAudienceClaim() throws {
+        let id1 = UUID(), id2 = UUID()
+        let str = "{\"audience\":[\"\(id1.uuidString)\", \"\(id2.uuidString)\"]}"
+        let data = str.data(using: .utf8)!
+        let decoded = try! JSONDecoder().decode(AudiencePayload.self, from: data)
+        
+        XCTAssertEqual(decoded.audience.value, [id1.uuidString, id2.uuidString])
+        XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id1.uuidString))
+        XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id2.uuidString))
+        XCTAssertThrowsError(try decoded.audience.verifyIntendedAudience(includes: UUID().uuidString)) {
+            guard let jwtError = try? XCTUnwrap($0 as? JWTError) else { return }
+            guard case let .claimVerificationFailure(name, _) = jwtError else {
+                XCTFail("Unexpectedly got \(jwtError) instead of claim verification failure.")
+                return
+            }
+            XCTAssertEqual(name, "aud")
+        }
+    }
+}
+
+struct AudiencePayload: Codable {
+    var audience: AudienceClaim
 }
 
 struct LocalePayload: Codable {
