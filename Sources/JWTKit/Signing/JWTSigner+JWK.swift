@@ -3,34 +3,34 @@ import Foundation
 extension JWTSigners {
     /// Adds a `JWKS` (JSON Web Key Set) to this signers collection
     /// by first decoding the JSON string.
-    public func use(jwksJSON json: String) throws {
+    public func use(jwksJSON json: String, defaultAlgorithm: JWK.Algorithm? = nil) throws {
         let jwks = try JSONDecoder().decode(JWKS.self, from: Data(json.utf8))
-        try self.use(jwks: jwks)
+        try self.use(jwks: jwks, defaultAlgorithm: defaultAlgorithm)
     }
     
     /// Adds a `JWKS` (JSON Web Key Set) to this signers collection.
-    public func use(jwks: JWKS) throws {
-        try jwks.keys.forEach { try self.use(jwk: $0) }
+    public func use(jwks: JWKS, defaultAlgorithm: JWK.Algorithm? = nil) throws {
+        try jwks.keys.forEach { try self.use(jwk: $0, defaultAlgorithm: defaultAlgorithm) }
     }
     
     /// Adds a `JWK` (JSON Web Key) to this signers collection.
-    public func use(jwk: JWK) throws {
+    public func use(jwk: JWK, defaultAlgorithm: JWK.Algorithm? = nil) throws {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK
         }
-        try self.use(.jwk(jwk), kid: kid)
+        try self.use(.jwk(jwk, defaultAlgorithm: defaultAlgorithm), kid: kid)
     }
 }
 
 extension JWTSigner {
     /// Creates a JWT sign from the supplied JWK json string.
-    public static func jwk(json: String) throws -> JWTSigner {
+    public static func jwk(json: String, defaultAlgorithm: JWK.Algorithm? = nil) throws -> JWTSigner {
         let jwk = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
-        return try self.jwk(jwk)
+        return try self.jwk(jwk, defaultAlgorithm: defaultAlgorithm)
     }
     
     /// Creates a JWT signer with the supplied JWK
-    public static func jwk(_ key: JWK) throws -> JWTSigner {
+    public static func jwk(_ key: JWK, defaultAlgorithm: JWK.Algorithm? = nil) throws -> JWTSigner {
         switch key.keyType {
         case .rsa:
             guard let modulus = key.modulus else {
@@ -39,7 +39,7 @@ extension JWTSigner {
             guard let exponent = key.exponent else {
                 throw JWTError.invalidJWK
             }
-            guard let algorithm = key.algorithm else {
+            guard let algorithm = (key.algorithm ?? defaultAlgorithm) else {
                 throw JWTError.invalidJWK
             }
             
