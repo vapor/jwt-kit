@@ -1,5 +1,6 @@
 /// A claim is a codable, top-level property of a JWT payload. Multiple claims form a payload.
-/// See `JWTVerifiable` for claims that can be inherently verified, such as expiration claims.
+/// Some claims, such as expiration claims, are inherently verifiable. Each claim able to verify
+/// itself provides an appropriate method for doing so, depending on the specific claim.
 public protocol JWTClaim: Codable {
     /// The associated value type.
     associatedtype Value: Codable
