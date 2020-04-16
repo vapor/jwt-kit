@@ -1,3 +1,5 @@
+import Foundation
+
 /// - See Also:
 /// [Retrieve the User’s Information from Microsoft Servers](https://docs.microsoft.com/pl-pl/azure/active-directory/develop/id-tokens)
 public struct MicrosoftIdentityToken: JWTPayload {
@@ -82,7 +84,7 @@ public struct MicrosoftIdentityToken: JWTPayload {
     /// correlate users, the profile scope is required to receive this claim. Note that if a single user exists in multiple tenants, the user
     /// will contain a different object ID in each tenant - they're considered different accounts, even though the user logs into each
     /// account with the same credentials. The oid claim is a GUID and cannot be reused.
-    public let objectId: String
+    public let objectId: UUID
     
     /// The set of roles that were assigned to the user who is logging in.
     public let roles: [String]?
@@ -96,7 +98,7 @@ public struct MicrosoftIdentityToken: JWTPayload {
     /// A GUID that represents the Azure AD tenant that the user is from. For work and school accounts, the GUID is the
     /// immutable tenant ID of the organization that the user belongs to. For personal accounts, the value is
     /// 9188040d-6c67-4c5b-b112-36a304b66dad. The profile scope is required to receive this claim.
-    public let tenantId: String?
+    public let tenantId: UUID
     
     /// Provides a human readable value that identifies the subject of the token. This value is unique at any given point in time
     ///  but as emails and other identifiers can be reused, this value can reappear on other accounts, and should therefore be
@@ -107,14 +109,12 @@ public struct MicrosoftIdentityToken: JWTPayload {
     public let version: String?
 
     public func verify(using signer: JWTSigner) throws {
-        guard let tenantId = self.tenantId else {
-            throw JWTError.claimVerificationFailure(name: "tid", reason: "Token must contain tenant Id")
-        }
-        
-        guard self.issuer.value == "https://login.microsoftonline.com/\(tenantId)/v2.0" else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Apple")
+        let expectedIssuer = "https://login.microsoftonline.com/\(tenantId.uuidString)/v2.0"
+        guard self.issuer.value.caseInsensitiveCompare(expectedIssuer) == .orderedSame else {
+            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Microsoft")
         }
 
         try self.expires.verifyNotExpired()
+        try self.notBefore.verifyNotBefore()
     }
 }
