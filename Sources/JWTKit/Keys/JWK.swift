@@ -26,28 +26,24 @@ public struct JWK: Decodable {
     public var keyType: KeyType
     
     /// Supported `alg` algorithms
-    public enum Algorithm: Decodable {
+    public enum Algorithm: String, Decodable {
         /// RSA with SHA256
-        case rs256
+        case rs256 = "RS256"
         /// RSA with SHA384
-        case rs384
+        case rs384 = "RS384"
         /// RSA with SHA512
-        case rs512
+        case rs512 = "RS512"
         
         /// Decodes from a lowercased string.
         public init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
-            let value = try container.decode(String.self).lowercased()
-            switch value {
-            case "rs256":
-                self = .rs256
-            case "rs384":
-                self = .rs384
-            case "rs512":
-                self = .rs512
-            default:
+            let value = try container.decode(String.self).uppercased()
+            
+            guard let algorithm = Algorithm.init(rawValue: value) else {
                 throw JWTError.invalidJWK
             }
+            
+            self = algorithm
         }
     }
     
