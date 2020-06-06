@@ -4,6 +4,7 @@ struct JWTSerializer {
     func sign<Payload>(
         _ payload: Payload,
         using signer: JWTSigner,
+        typ: String = "JWT",
         kid: JWKIdentifier? = nil
     ) throws -> String
         where Payload: JWTPayload
@@ -14,6 +15,7 @@ struct JWTSerializer {
         // encode header, copying header struct to mutate alg
         var header = JWTHeader()
         header.kid = kid
+        header.typ = typ
         header.alg = signer.algorithm.name
 
         let headerData = try jsonEncoder.encode(header)
