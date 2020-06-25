@@ -5,7 +5,8 @@ struct JWTSerializer {
         _ payload: Payload,
         using signer: JWTSigner,
         typ: String = "JWT",
-        kid: JWKIdentifier? = nil
+        kid: JWKIdentifier? = nil,
+        cty: String? = nil
     ) throws -> String
         where Payload: JWTPayload
     {
@@ -16,6 +17,7 @@ struct JWTSerializer {
         var header = JWTHeader()
         header.kid = kid
         header.typ = typ
+        header.cty = cty
         header.alg = signer.algorithm.name
 
         let headerData = try jsonEncoder.encode(header)
