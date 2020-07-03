@@ -338,6 +338,7 @@ cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 #include "CJWTKitBoringSSL_safestack.h"
 #include "CJWTKitBoringSSL_sha.h"
 #include "CJWTKitBoringSSL_siphash.h"
+#include "CJWTKitBoringSSL_trust_token.h"
 #include "CJWTKitBoringSSL_x509v3.h"
 
 #endif  // C_VAPORJWT_BORINGSSL_H
