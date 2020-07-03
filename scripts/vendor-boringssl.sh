@@ -90,8 +90,8 @@ function mangle_symbols {
         # meaningfully support it. Unfortunately we must archive ourselves.
         # This also builds for Apple Silicon
         xcodebuild -sdk iphoneos -scheme CJWTKitBoringSSL -derivedDataPath "${TMPDIR}/iphoneos-deriveddata"
-        ar -r "${TMPDIR}/libCCryptoBoringSSL-ios.a" "${TMPDIR}/iphoneos-deriveddata/Build/Products/Debug-iphoneos/CCryptoBoringSSL.o"
-        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-iOS.txt" "${TMPDIR}/libCCryptoBoringSSL-ios.a"
+        ar -r "${TMPDIR}/libCJWTKitBoringSSL-ios.a" "${TMPDIR}/iphoneos-deriveddata/Build/Products/Debug-iphoneos/CJWTKitBoringSSL.o"
+        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-iOS.txt" "${TMPDIR}/libCJWTKitBoringSSL-ios.a"
 
         # Now cross compile for our targets.
         # If you have trouble with the script around this point, consider

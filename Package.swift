@@ -24,6 +24,7 @@ let package = Package(
         ]),
         .testTarget(name: "JWTKitTests", dependencies: [
             .target(name: "JWTKit"),
-        ]),
+        ],
+        cxxLanguageStandard: .cxx11),
     ]
 )
