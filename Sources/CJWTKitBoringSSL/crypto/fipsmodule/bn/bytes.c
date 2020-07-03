@@ -54,7 +54,7 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_bn.h>
+#include <openssl/bn.h>
 
 #include <assert.h>
 #include <limits.h>

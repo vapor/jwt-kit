@@ -52,13 +52,13 @@
  * Hudson (tjh@cryptsoft.com). */
 
 
-#include <CJWTKitBoringSSL_bn.h>
+#include <openssl/bn.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 #include "../../internal.h"
 

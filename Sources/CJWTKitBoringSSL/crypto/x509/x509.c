@@ -54,11 +54,11 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/x509.h>
 
-#include <CJWTKitBoringSSL_bio.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 
 /* |X509_R_UNSUPPORTED_ALGORITHM| is no longer emitted, but continue to define

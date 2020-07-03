@@ -56,10 +56,10 @@
 
 #include <stdio.h>
 
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/asn1t.h>
+#include <openssl/evp.h>
+#include <openssl/obj.h>
+#include <openssl/x509.h>
 
 /*
  * X509_CERT_AUX routines. These are used to encode additional user

@@ -15,7 +15,7 @@
 #ifndef OPENSSL_HEADER_CRYPTO_RAND_GETRANDOM_FILLIN_H
 #define OPENSSL_HEADER_CRYPTO_RAND_GETRANDOM_FILLIN_H
 
-#include <CJWTKitBoringSSL_base.h>
+#include <openssl/base.h>
 
 
 #if defined(OPENSSL_LINUX)

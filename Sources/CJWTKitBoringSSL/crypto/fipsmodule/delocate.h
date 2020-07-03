@@ -15,7 +15,7 @@
 #ifndef OPENSSL_HEADER_FIPSMODULE_DELOCATE_H
 #define OPENSSL_HEADER_FIPSMODULE_DELOCATE_H
 
-#include <CJWTKitBoringSSL_base.h>
+#include <openssl/base.h>
 
 #include "../internal.h"
 

@@ -106,13 +106,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_rsa.h>
+#include <openssl/rsa.h>
 
 #include <string.h>
 
-#include <CJWTKitBoringSSL_bn.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_err.h>
+#include <openssl/bn.h>
+#include <openssl/mem.h>
+#include <openssl/err.h>
 
 #include "internal.h"
 #include "../../internal.h"
@@ -165,6 +165,10 @@ void BN_BLINDING_free(BN_BLINDING *r) {
   BN_free(r->A);
   BN_free(r->Ai);
   OPENSSL_free(r);
+}
+
+void BN_BLINDING_invalidate(BN_BLINDING *b) {
+  b->counter = BN_BLINDING_COUNTER - 1;
 }
 
 static int bn_blinding_update(BN_BLINDING *b, const BIGNUM *e,

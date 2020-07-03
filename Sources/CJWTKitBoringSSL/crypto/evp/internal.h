@@ -57,9 +57,9 @@
 #ifndef OPENSSL_HEADER_EVP_INTERNAL_H
 #define OPENSSL_HEADER_EVP_INTERNAL_H
 
-#include <CJWTKitBoringSSL_base.h>
+#include <openssl/base.h>
 
-#include <CJWTKitBoringSSL_rsa.h>
+#include <openssl/rsa.h>
 
 #if defined(__cplusplus)
 extern "C" {

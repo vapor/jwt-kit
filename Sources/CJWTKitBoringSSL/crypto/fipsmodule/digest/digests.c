@@ -54,15 +54,15 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_digest.h>
+#include <openssl/digest.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_md4.h>
-#include <CJWTKitBoringSSL_md5.h>
-#include <CJWTKitBoringSSL_nid.h>
-#include <CJWTKitBoringSSL_sha.h>
+#include <openssl/md4.h>
+#include <openssl/md5.h>
+#include <openssl/nid.h>
+#include <openssl/sha.h>
 
 #include "internal.h"
 #include "../delocate.h"
@@ -236,6 +236,22 @@ DEFINE_METHOD_FUNCTION(EVP_MD, EVP_sha512) {
   out->md_size = SHA512_DIGEST_LENGTH;
   out->flags = 0;
   out->init = sha512_init;
+  out->update = sha512_update;
+  out->final = sha512_final;
+  out->block_size = 128;
+  out->ctx_size = sizeof(SHA512_CTX);
+}
+
+
+static void sha512_256_init(EVP_MD_CTX *ctx) {
+  CHECK(SHA512_256_Init(ctx->md_data));
+}
+
+DEFINE_METHOD_FUNCTION(EVP_MD, EVP_sha512_256) {
+  out->type = NID_sha512_256;
+  out->md_size = SHA512_256_DIGEST_LENGTH;
+  out->flags = 0;
+  out->init = sha512_256_init;
   out->update = sha512_update;
   out->final = sha512_final;
   out->block_size = 128;

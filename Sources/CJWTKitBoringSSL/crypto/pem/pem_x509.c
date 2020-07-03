@@ -57,9 +57,9 @@
 
 #include <stdio.h>
 
-#include <CJWTKitBoringSSL_bio.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_pem.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
+#include <openssl/pem.h>
+#include <openssl/x509.h>
 
 IMPLEMENT_PEM_rw(X509, X509, PEM_STRING_X509, X509)

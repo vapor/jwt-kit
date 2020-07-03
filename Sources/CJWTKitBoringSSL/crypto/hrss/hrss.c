@@ -12,18 +12,17 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <CJWTKitBoringSSL_hrss.h>
-#include <inttypes.h>
+#include <openssl/hrss.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <CJWTKitBoringSSL_bn.h>
-#include <CJWTKitBoringSSL_cpu.h>
-#include <CJWTKitBoringSSL_hmac.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_sha.h>
+#include <openssl/bn.h>
+#include <openssl/cpu.h>
+#include <openssl/hmac.h>
+#include <openssl/mem.h>
+#include <openssl/sha.h>
 
 #if defined(_MSC_VER)
 #define RESTRICT

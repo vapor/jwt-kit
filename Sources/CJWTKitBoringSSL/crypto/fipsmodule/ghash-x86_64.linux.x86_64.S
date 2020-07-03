@@ -1,4 +1,3 @@
-#define BORINGSSL_PREFIX CJWTKitBoringSSL
 #if defined(__x86_64__) && defined(__linux__)
 # This file is generated from a similarly-named Perl script in the BoringSSL
 # source tree. Do not edit by hand.
@@ -11,7 +10,7 @@
 
 #if defined(__x86_64__) && !defined(OPENSSL_NO_ASM)
 #if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
+#include <boringssl_prefix_symbols_asm.h>
 #endif
 .text	
 .extern	OPENSSL_ia32cap_P
@@ -1121,8 +1120,6 @@ gcm_ghash_avx:
 .byte	1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0xc2
 .L7_mask:
 .long	7,0,7,0
-.L7_mask_poly:
-.long	7,0,450,0
 .align	64
 
 .byte	71,72,65,83,72,32,102,111,114,32,120,56,54,95,54,52,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
@@ -1130,7 +1127,3 @@ gcm_ghash_avx:
 #endif
 .section	.note.GNU-stack,"",@progbits
 #endif  // defined(__x86_64__) && defined(__linux__)
-#if defined(__linux__) && defined(__ELF__)
-.section .note.GNU-stack,"",%progbits
-#endif
-

@@ -15,8 +15,8 @@
 #undef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200112L
 
-#include <CJWTKitBoringSSL_bio.h>
-#include <CJWTKitBoringSSL_err.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
 
 #if !defined(OPENSSL_TRUSTY)
 

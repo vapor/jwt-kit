@@ -55,7 +55,7 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_bio.h>
+#include <openssl/bio.h>
 
 #if !defined(OPENSSL_TRUSTY)
 

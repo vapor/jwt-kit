@@ -46,11 +46,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * ==================================================================== */
 
-#include <CJWTKitBoringSSL_aes.h>
+#include <openssl/aes.h>
 
 #include <assert.h>
 
-#include <CJWTKitBoringSSL_cpu.h>
+#include <openssl/cpu.h>
 
 #include "internal.h"
 #include "../modes/internal.h"

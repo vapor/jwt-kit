@@ -58,10 +58,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_conf.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_x509v3.h>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/obj.h>
+#include <openssl/x509v3.h>
 
 static const BIT_STRING_BITNAME ns_cert_type_table[] = {
     {0, "SSL Client", "client"},

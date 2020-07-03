@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_digest.h>
+#include <openssl/digest.h>
 
 #include <string.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_bytestring.h>
-#include <CJWTKitBoringSSL_nid.h>
+#include <openssl/asn1.h>
+#include <openssl/bytestring.h>
+#include <openssl/nid.h>
 
 #include "../internal.h"
 

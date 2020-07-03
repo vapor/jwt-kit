@@ -89,7 +89,7 @@ function mangle_symbols {
         # Now build for iOS. We use xcodebuild for this because SwiftPM doesn't
         # meaningfully support it. Unfortunately we must archive ourselves.
         # This also builds for Apple Silicon
-        xcodebuild -sdk iphoneos -scheme CCryptoBoringSSL -derivedDataPath "${TMPDIR}/iphoneos-deriveddata"
+        xcodebuild -sdk iphoneos -scheme CJWTKitBoringSSL -derivedDataPath "${TMPDIR}/iphoneos-deriveddata"
         ar -r "${TMPDIR}/libCCryptoBoringSSL-ios.a" "${TMPDIR}/iphoneos-deriveddata/Build/Products/Debug-iphoneos/CCryptoBoringSSL.o"
         go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-iOS.txt" "${TMPDIR}/libCCryptoBoringSSL-ios.a"
 
@@ -190,7 +190,7 @@ PATTERNS=(
 'crypto/*/*/*.S'
 'crypto/*/*/*/*.c'
 'third_party/fiat/*.h'
-'third_party/fiat/*.c'
+#'third_party/fiat/*.c'
 )
 
 EXCLUDES=(

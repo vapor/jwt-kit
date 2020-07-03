@@ -54,11 +54,11 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
-#include <CJWTKitBoringSSL_bio.h>
+#include <openssl/bio.h>
 
-int i2a_ASN1_STRING(BIO *bp, ASN1_STRING *a, int type)
+int i2a_ASN1_STRING(BIO *bp, const ASN1_STRING *a, int type)
 {
     int i, n = 0;
     static const char *h = "0123456789ABCDEF";

@@ -54,14 +54,14 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
 #include <string.h>
 #include <time.h>
 
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/asn1t.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 #include "asn1_locl.h"
 
@@ -100,7 +100,7 @@ ASN1_TIME *ASN1_TIME_adj(ASN1_TIME *s, time_t t,
     return ASN1_GENERALIZEDTIME_adj(s, t, offset_day, offset_sec);
 }
 
-int ASN1_TIME_check(ASN1_TIME *t)
+int ASN1_TIME_check(const ASN1_TIME *t)
 {
     if (t->type == V_ASN1_GENERALIZEDTIME)
         return ASN1_GENERALIZEDTIME_check(t);
@@ -110,7 +110,7 @@ int ASN1_TIME_check(ASN1_TIME *t)
 }
 
 /* Convert an ASN1_TIME structure to GeneralizedTime */
-ASN1_GENERALIZEDTIME *ASN1_TIME_to_generalizedtime(ASN1_TIME *t,
+ASN1_GENERALIZEDTIME *ASN1_TIME_to_generalizedtime(const ASN1_TIME *t,
                                                    ASN1_GENERALIZEDTIME **out)
 {
     ASN1_GENERALIZEDTIME *ret = NULL;

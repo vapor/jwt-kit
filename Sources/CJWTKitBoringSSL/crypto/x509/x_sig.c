@@ -57,8 +57,8 @@
 
 #include <stdio.h>
 
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/asn1t.h>
+#include <openssl/x509.h>
 
 
 ASN1_SEQUENCE(X509_SIG) = {

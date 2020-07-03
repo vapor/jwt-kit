@@ -54,7 +54,7 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_obj.h>
+#include <openssl/obj.h>
 
 #include "../internal.h"
 

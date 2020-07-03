@@ -54,7 +54,7 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
 
 const char *ASN1_tag2str(int tag)

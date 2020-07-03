@@ -52,9 +52,9 @@
 
 #include <assert.h>
 
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_hmac.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/digest.h>
+#include <openssl/hmac.h>
+#include <openssl/mem.h>
 
 #include "internal.h"
 #include "../../internal.h"

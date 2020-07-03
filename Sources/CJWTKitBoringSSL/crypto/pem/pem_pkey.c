@@ -54,19 +54,19 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_pem.h>
+#include <openssl/pem.h>
 
 #include <stdio.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_dh.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_pkcs8.h>
-#include <CJWTKitBoringSSL_rand.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/dh.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/mem.h>
+#include <openssl/obj.h>
+#include <openssl/pkcs8.h>
+#include <openssl/rand.h>
+#include <openssl/x509.h>
 
 EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb,
                                   void *u)

@@ -56,9 +56,9 @@
 
 #include <stdio.h>
 
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_thread.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/asn1t.h>
+#include <openssl/thread.h>
+#include <openssl/x509.h>
 
 /*
  * X509_REQ_INFO is handled in an unusual way to get round invalid encodings.

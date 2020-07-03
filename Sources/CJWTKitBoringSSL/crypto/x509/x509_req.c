@@ -55,15 +55,15 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_bn.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_pem.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/asn1.h>
+#include <openssl/asn1t.h>
+#include <openssl/bn.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/mem.h>
+#include <openssl/obj.h>
+#include <openssl/pem.h>
+#include <openssl/x509.h>
 
 X509_REQ *X509_to_X509_REQ(X509 *x, EVP_PKEY *pkey, const EVP_MD *md)
 {
@@ -105,6 +105,16 @@ X509_REQ *X509_to_X509_REQ(X509 *x, EVP_PKEY *pkey, const EVP_MD *md)
  err:
     X509_REQ_free(ret);
     return (NULL);
+}
+
+long X509_REQ_get_version(const X509_REQ *req)
+{
+    return ASN1_INTEGER_get(req->req_info->version);
+}
+
+X509_NAME *X509_REQ_get_subject_name(const X509_REQ *req)
+{
+    return req->req_info->subject;
 }
 
 EVP_PKEY *X509_REQ_get_pubkey(X509_REQ *req)

@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/x509.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_obj.h>
+#include <openssl/asn1.h>
+#include <openssl/digest.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/obj.h>
 
 #include "internal.h"
 
@@ -139,6 +139,14 @@ int x509_digest_verify_init(EVP_MD_CTX *ctx, X509_ALGOR *sigalg,
       return EVP_DigestVerifyInit(ctx, NULL, NULL, NULL, pkey);
     }
     OPENSSL_PUT_ERROR(ASN1, ASN1_R_UNKNOWN_SIGNATURE_ALGORITHM);
+    return 0;
+  }
+
+  /* RSA signature algorithms include an explicit NULL parameter but we also
+   * accept omitted values for compatibility. Other algorithms must omit it. */
+  if (sigalg->parameter != NULL && (pkey_nid != EVP_PKEY_RSA ||
+                                    sigalg->parameter->type != V_ASN1_NULL)) {
+    OPENSSL_PUT_ERROR(X509, X509_R_INVALID_PARAMETER);
     return 0;
   }
 

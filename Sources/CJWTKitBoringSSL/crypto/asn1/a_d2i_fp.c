@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
 #include <limits.h>
 
-#include <CJWTKitBoringSSL_bio.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/bio.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 
 void *ASN1_item_d2i_bio(const ASN1_ITEM *it, BIO *in, void *x)

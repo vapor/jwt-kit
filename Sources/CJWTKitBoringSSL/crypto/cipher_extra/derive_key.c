@@ -54,12 +54,12 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_cipher.h>
+#include <openssl/cipher.h>
 
 #include <assert.h>
 
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/digest.h>
+#include <openssl/mem.h>
 
 
 #define PKCS5_SALT_LEN 8
@@ -86,7 +86,7 @@ int EVP_BytesToKey(const EVP_CIPHER *type, const EVP_MD *md,
   EVP_MD_CTX_init(&c);
   for (;;) {
     if (!EVP_DigestInit_ex(&c, md, NULL)) {
-      return 0;
+      goto err;
     }
     if (addmd++) {
       if (!EVP_DigestUpdate(&c, md_buf, mds)) {

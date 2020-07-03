@@ -1,4 +1,3 @@
-#define BORINGSSL_PREFIX CJWTKitBoringSSL
 #if defined(__arm__) && defined(__linux__)
 // This file is generated from a similarly-named Perl script in the BoringSSL
 // source tree. Do not edit by hand.
@@ -13,7 +12,7 @@
 #if !defined(OPENSSL_NO_ASM)
 #if defined(__arm__)
 #if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
+#include <boringssl_prefix_symbols_asm.h>
 #endif
 @ Copyright 2007-2016 The OpenSSL Project Authors. All Rights Reserved.
 @
@@ -61,7 +60,7 @@
 @ Add ARMv8 code path performing at 2.0 cpb on Apple A7.
 
 #ifndef __KERNEL__
-# include <CJWTKitBoringSSL_arm_arch.h>
+# include <openssl/arm_arch.h>
 #else
 # define __ARM_ARCH__ __LINUX_ARM_ARCH__
 # define __ARM_MAX_ARCH__ 7
@@ -2840,7 +2839,3 @@ sha256_block_data_order_armv8:
 #endif  // !OPENSSL_NO_ASM
 .section	.note.GNU-stack,"",%progbits
 #endif  // defined(__arm__) && defined(__linux__)
-#if defined(__linux__) && defined(__ELF__)
-.section .note.GNU-stack,"",%progbits
-#endif
-

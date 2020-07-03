@@ -57,7 +57,7 @@
 #ifndef OPENSSL_HEADER_BIO_INTERNAL_H
 #define OPENSSL_HEADER_BIO_INTERNAL_H
 
-#include <CJWTKitBoringSSL_base.h>
+#include <openssl/base.h>
 
 #if !defined(OPENSSL_WINDOWS)
 #if defined(OPENSSL_PNACL)

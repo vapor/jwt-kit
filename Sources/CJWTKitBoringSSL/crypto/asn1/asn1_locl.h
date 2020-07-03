@@ -62,7 +62,7 @@
 
 #include <time.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
 #if defined(__cplusplus)
 extern "C" {

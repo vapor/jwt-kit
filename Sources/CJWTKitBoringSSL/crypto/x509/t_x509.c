@@ -55,15 +55,15 @@
  * [including the GNU Public Licence.] */
 
 #include <ctype.h>
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_bio.h>
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_x509.h>
-#include <CJWTKitBoringSSL_x509v3.h>
+#include <openssl/asn1.h>
+#include <openssl/bio.h>
+#include <openssl/digest.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/mem.h>
+#include <openssl/obj.h>
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
 
 #include "internal.h"
 
