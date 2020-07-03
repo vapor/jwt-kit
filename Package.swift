@@ -26,5 +26,5 @@ let package = Package(
             .target(name: "JWTKit"),
         ],
     ],
-    cxxLanguageStandard: .cxx11)
+    cxxLanguageStandard: .cxx11
 )
