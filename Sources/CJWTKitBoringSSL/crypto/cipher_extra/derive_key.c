@@ -54,12 +54,12 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/cipher.h>
+#include <CJWTKitBoringSSL_cipher.h>
 
 #include <assert.h>
 
-#include <openssl/digest.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_digest.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 
 #define PKCS5_SALT_LEN 8

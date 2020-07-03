@@ -52,14 +52,14 @@
  * (eay@cryptsoft.com).  This product includes software written by Tim
  * Hudson (tjh@cryptsoft.com). */
 
-#include <openssl/dsa.h>
+#include <CJWTKitBoringSSL_dsa.h>
 
 #include <assert.h>
 
-#include <openssl/bn.h>
-#include <openssl/bytestring.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_bytestring.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../bytestring/internal.h"
 

@@ -54,11 +54,11 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/asn1.h>
-#include <openssl/cipher.h>
-#include <openssl/evp.h>
-#include <openssl/obj.h>
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_asn1.h>
+#include <CJWTKitBoringSSL_cipher.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 long X509_get_version(const X509 *x509)
 {

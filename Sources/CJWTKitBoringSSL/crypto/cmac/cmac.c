@@ -46,14 +46,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * ==================================================================== */
 
-#include <openssl/cmac.h>
+#include <CJWTKitBoringSSL_cmac.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/aes.h>
-#include <openssl/cipher.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_aes.h>
+#include <CJWTKitBoringSSL_cipher.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../internal.h"
 

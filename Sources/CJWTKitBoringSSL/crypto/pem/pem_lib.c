@@ -60,16 +60,16 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <openssl/base64.h>
-#include <openssl/buf.h>
-#include <openssl/des.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/mem.h>
-#include <openssl/obj.h>
-#include <openssl/pem.h>
-#include <openssl/rand.h>
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_base64.h>
+#include <CJWTKitBoringSSL_buf.h>
+#include <CJWTKitBoringSSL_des.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_pem.h>
+#include <CJWTKitBoringSSL_rand.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 #include "../internal.h"
 

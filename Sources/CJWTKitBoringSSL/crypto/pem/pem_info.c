@@ -56,19 +56,19 @@
  * [including the GNU Public Licence.]
  */
 
-#include <openssl/pem.h>
+#include <CJWTKitBoringSSL_pem.h>
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-#include <openssl/dsa.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/mem.h>
-#include <openssl/obj.h>
-#include <openssl/rsa.h>
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_dsa.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_rsa.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 #ifndef OPENSSL_NO_FP_API
 STACK_OF(X509_INFO) *PEM_X509_INFO_read(FILE *fp, STACK_OF(X509_INFO) *sk,

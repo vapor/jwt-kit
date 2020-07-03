@@ -12,15 +12,15 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <openssl/curve25519.h>
+#include <CJWTKitBoringSSL_curve25519.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/bytestring.h>
-#include <openssl/mem.h>
-#include <openssl/rand.h>
-#include <openssl/sha.h>
+#include <CJWTKitBoringSSL_bytestring.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_rand.h>
+#include <CJWTKitBoringSSL_sha.h>
 
 #include "../internal.h"
 #include "./internal.h"

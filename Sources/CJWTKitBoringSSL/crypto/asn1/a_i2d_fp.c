@@ -54,11 +54,11 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/asn1.h>
+#include <CJWTKitBoringSSL_asn1.h>
 
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_bio.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 
 int ASN1_item_i2d_fp(const ASN1_ITEM *it, FILE *out, void *x)

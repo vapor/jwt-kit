@@ -12,13 +12,13 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <openssl/hkdf.h>
+#include <CJWTKitBoringSSL_hkdf.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/err.h>
-#include <openssl/hmac.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_hmac.h>
 
 #include "../internal.h"
 

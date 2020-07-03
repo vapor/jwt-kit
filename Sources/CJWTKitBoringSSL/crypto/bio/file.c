@@ -71,7 +71,7 @@
 #endif
 #endif
 
-#include <openssl/bio.h>
+#include <CJWTKitBoringSSL_bio.h>
 
 #if !defined(OPENSSL_TRUSTY)
 
@@ -79,8 +79,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../internal.h"
 

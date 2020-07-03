@@ -54,18 +54,18 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
 
-#include <openssl/bn.h>
-#include <openssl/digest.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/mem.h>
-#include <openssl/obj.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_digest.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_obj.h>
 
 #include "internal.h"
 

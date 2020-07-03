@@ -49,14 +49,14 @@
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/aead.h>
-#include <openssl/aes.h>
-#include <openssl/cipher.h>
-#include <openssl/cpu.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
-#include <openssl/nid.h>
-#include <openssl/rand.h>
+#include <CJWTKitBoringSSL_aead.h>
+#include <CJWTKitBoringSSL_aes.h>
+#include <CJWTKitBoringSSL_cipher.h>
+#include <CJWTKitBoringSSL_cpu.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_nid.h>
+#include <CJWTKitBoringSSL_rand.h>
 
 #include "internal.h"
 #include "../../internal.h"

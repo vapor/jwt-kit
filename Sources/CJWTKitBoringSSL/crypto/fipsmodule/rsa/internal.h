@@ -57,9 +57,9 @@
 #ifndef OPENSSL_HEADER_RSA_INTERNAL_H
 #define OPENSSL_HEADER_RSA_INTERNAL_H
 
-#include <openssl/base.h>
+#include <CJWTKitBoringSSL_base.h>
 
-#include <openssl/bn.h>
+#include <CJWTKitBoringSSL_bn.h>
 
 
 #if defined(__cplusplus)

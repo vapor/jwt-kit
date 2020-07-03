@@ -108,14 +108,14 @@
 
 #include <stdio.h>
 
-#include <openssl/bio.h>
-#include <openssl/dh.h>
-#include <openssl/dsa.h>
-#include <openssl/evp.h>
-#include <openssl/pem.h>
-#include <openssl/pkcs7.h>
-#include <openssl/rsa.h>
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_bio.h>
+#include <CJWTKitBoringSSL_dh.h>
+#include <CJWTKitBoringSSL_dsa.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_pem.h>
+#include <CJWTKitBoringSSL_pkcs7.h>
+#include <CJWTKitBoringSSL_rsa.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 static RSA *pkey_get_rsa(EVP_PKEY *key, RSA **rsa);
 static DSA *pkey_get_dsa(EVP_PKEY *key, DSA **dsa);

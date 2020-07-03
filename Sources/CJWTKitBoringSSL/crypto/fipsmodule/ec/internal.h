@@ -68,12 +68,12 @@
 #ifndef OPENSSL_HEADER_EC_INTERNAL_H
 #define OPENSSL_HEADER_EC_INTERNAL_H
 
-#include <openssl/base.h>
+#include <CJWTKitBoringSSL_base.h>
 
-#include <openssl/bn.h>
-#include <openssl/ec.h>
-#include <openssl/ex_data.h>
-#include <openssl/type_check.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_ec.h>
+#include <CJWTKitBoringSSL_ex_data.h>
+#include <CJWTKitBoringSSL_type_check.h>
 
 #include "../bn/internal.h"
 

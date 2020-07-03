@@ -57,9 +57,9 @@
 
 #include <stdlib.h>
 
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/thread.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_pem.h>
+#include <CJWTKitBoringSSL_thread.h>
 
 #ifndef OPENSSL_NO_STDIO
 

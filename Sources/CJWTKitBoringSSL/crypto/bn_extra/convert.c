@@ -54,17 +54,17 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/bn.h>
+#include <CJWTKitBoringSSL_bn.h>
 
 #include <assert.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
 
-#include <openssl/bio.h>
-#include <openssl/bytestring.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_bio.h>
+#include <CJWTKitBoringSSL_bytestring.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../fipsmodule/bn/internal.h"
 

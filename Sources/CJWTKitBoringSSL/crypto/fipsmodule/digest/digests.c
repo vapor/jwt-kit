@@ -54,15 +54,15 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/digest.h>
+#include <CJWTKitBoringSSL_digest.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/md4.h>
-#include <openssl/md5.h>
-#include <openssl/nid.h>
-#include <openssl/sha.h>
+#include <CJWTKitBoringSSL_md4.h>
+#include <CJWTKitBoringSSL_md5.h>
+#include <CJWTKitBoringSSL_nid.h>
+#include <CJWTKitBoringSSL_sha.h>
 
 #include "internal.h"
 #include "../delocate.h"

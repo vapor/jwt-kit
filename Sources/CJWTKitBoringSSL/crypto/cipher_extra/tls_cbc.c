@@ -53,9 +53,9 @@
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/digest.h>
-#include <openssl/nid.h>
-#include <openssl/sha.h>
+#include <CJWTKitBoringSSL_digest.h>
+#include <CJWTKitBoringSSL_nid.h>
+#include <CJWTKitBoringSSL_sha.h>
 
 #include "../internal.h"
 #include "internal.h"

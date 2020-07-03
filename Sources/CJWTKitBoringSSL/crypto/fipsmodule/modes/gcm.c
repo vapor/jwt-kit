@@ -46,13 +46,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * ==================================================================== */
 
-#include <openssl/base.h>
+#include <CJWTKitBoringSSL_base.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/mem.h>
-#include <openssl/cpu.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_cpu.h>
 
 #include "internal.h"
 #include "../../internal.h"

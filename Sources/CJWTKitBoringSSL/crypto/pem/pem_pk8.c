@@ -54,15 +54,15 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/pem.h>
+#include <CJWTKitBoringSSL_pem.h>
 
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/mem.h>
-#include <openssl/obj.h>
-#include <openssl/pkcs8.h>
-#include <openssl/rand.h>
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_pkcs8.h>
+#include <CJWTKitBoringSSL_rand.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 static int do_pk8pkey(BIO *bp, EVP_PKEY *x, int isder,
                       int nid, const EVP_CIPHER *enc,

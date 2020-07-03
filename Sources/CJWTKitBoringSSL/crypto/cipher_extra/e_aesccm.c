@@ -46,14 +46,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * ==================================================================== */
 
-#include <openssl/aead.h>
+#include <CJWTKitBoringSSL_aead.h>
 
 #include <assert.h>
 
-#include <openssl/cpu.h>
-#include <openssl/cipher.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_cpu.h>
+#include <CJWTKitBoringSSL_cipher.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../fipsmodule/cipher/internal.h"
 

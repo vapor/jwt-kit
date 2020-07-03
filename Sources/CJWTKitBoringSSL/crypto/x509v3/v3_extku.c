@@ -57,11 +57,11 @@
 
 #include <stdio.h>
 
-#include <openssl/asn1t.h>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/obj.h>
-#include <openssl/x509v3.h>
+#include <CJWTKitBoringSSL_asn1t.h>
+#include <CJWTKitBoringSSL_conf.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_x509v3.h>
 
 static void *v2i_EXTENDED_KEY_USAGE(const X509V3_EXT_METHOD *method,
                                     X509V3_CTX *ctx,

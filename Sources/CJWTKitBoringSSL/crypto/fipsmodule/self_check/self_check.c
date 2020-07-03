@@ -12,21 +12,21 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <openssl/crypto.h>
+#include <CJWTKitBoringSSL_crypto.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <openssl/aead.h>
-#include <openssl/aes.h>
-#include <openssl/bn.h>
-#include <openssl/des.h>
-#include <openssl/ec.h>
-#include <openssl/ecdsa.h>
-#include <openssl/ec_key.h>
-#include <openssl/nid.h>
-#include <openssl/rsa.h>
-#include <openssl/sha.h>
+#include <CJWTKitBoringSSL_aead.h>
+#include <CJWTKitBoringSSL_aes.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_des.h>
+#include <CJWTKitBoringSSL_ec.h>
+#include <CJWTKitBoringSSL_ecdsa.h>
+#include <CJWTKitBoringSSL_ec_key.h>
+#include <CJWTKitBoringSSL_nid.h>
+#include <CJWTKitBoringSSL_rsa.h>
+#include <CJWTKitBoringSSL_sha.h>
 
 #include "../../internal.h"
 #include "../ec/internal.h"
