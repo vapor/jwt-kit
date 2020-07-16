@@ -54,14 +54,14 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
 #include <limits.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_asn1_mac.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/asn1_mac.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 #include "../internal.h"
 
@@ -430,7 +430,7 @@ void ASN1_STRING_length_set(ASN1_STRING *x, int len)
     return;
 }
 
-int ASN1_STRING_type(ASN1_STRING *x)
+int ASN1_STRING_type(const ASN1_STRING *x)
 {
     return M_ASN1_STRING_type(x);
 }

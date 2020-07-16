@@ -54,14 +54,14 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_obj.h>
+#include <openssl/asn1t.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
+#include <openssl/obj.h>
 
-int ASN1_TYPE_get(ASN1_TYPE *a)
+int ASN1_TYPE_get(const ASN1_TYPE *a)
 {
     if ((a->value.ptr != NULL) || (a->type == V_ASN1_NULL))
         return (a->type);

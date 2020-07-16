@@ -54,17 +54,17 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/x509.h>
 
 #include <limits.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_dsa.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_rsa.h>
-#include <CJWTKitBoringSSL_stack.h>
+#include <openssl/asn1.h>
+#include <openssl/digest.h>
+#include <openssl/dsa.h>
+#include <openssl/evp.h>
+#include <openssl/mem.h>
+#include <openssl/rsa.h>
+#include <openssl/stack.h>
 
 int X509_verify(X509 *a, EVP_PKEY *r)
 {

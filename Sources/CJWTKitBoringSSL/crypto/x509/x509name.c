@@ -56,12 +56,12 @@
 
 #include <string.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_stack.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/asn1.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/obj.h>
+#include <openssl/stack.h>
+#include <openssl/x509.h>
 
 #include "../internal.h"
 

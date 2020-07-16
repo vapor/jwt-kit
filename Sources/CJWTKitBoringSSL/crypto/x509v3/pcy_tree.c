@@ -58,12 +58,12 @@
 
 #include <string.h>
 
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_stack.h>
-#include <CJWTKitBoringSSL_thread.h>
-#include <CJWTKitBoringSSL_x509.h>
-#include <CJWTKitBoringSSL_x509v3.h>
+#include <openssl/mem.h>
+#include <openssl/obj.h>
+#include <openssl/stack.h>
+#include <openssl/thread.h>
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
 
 #include "pcy_int.h"
 #include "../internal.h"

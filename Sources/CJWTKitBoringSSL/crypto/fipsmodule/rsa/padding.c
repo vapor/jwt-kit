@@ -53,18 +53,18 @@
  * (eay@cryptsoft.com).  This product includes software written by Tim
  * Hudson (tjh@cryptsoft.com). */
 
-#include <CJWTKitBoringSSL_rsa.h>
+#include <openssl/rsa.h>
 
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_bn.h>
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_rand.h>
-#include <CJWTKitBoringSSL_sha.h>
+#include <openssl/bn.h>
+#include <openssl/digest.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
+#include <openssl/rand.h>
+#include <openssl/sha.h>
 
 #include "internal.h"
 #include "../../internal.h"

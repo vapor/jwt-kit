@@ -54,10 +54,10 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_evp.h>
+#include <openssl/evp.h>
 
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_err.h>
+#include <openssl/digest.h>
+#include <openssl/err.h>
 
 #include "internal.h"
 

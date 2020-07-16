@@ -7,13 +7,13 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <CJWTKitBoringSSL_evp.h>
+#include <openssl/evp.h>
 
 #include <assert.h>
 
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_type_check.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
+#include <openssl/type_check.h>
 
 #include "../internal.h"
 

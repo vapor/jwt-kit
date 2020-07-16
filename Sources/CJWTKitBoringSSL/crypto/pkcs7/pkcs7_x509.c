@@ -12,18 +12,18 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <CJWTKitBoringSSL_pkcs7.h>
+#include <openssl/pkcs7.h>
 
 #include <assert.h>
 #include <limits.h>
 
-#include <CJWTKitBoringSSL_bytestring.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_pem.h>
-#include <CJWTKitBoringSSL_pool.h>
-#include <CJWTKitBoringSSL_stack.h>
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/bytestring.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
+#include <openssl/pem.h>
+#include <openssl/pool.h>
+#include <openssl/stack.h>
+#include <openssl/x509.h>
 
 #include "internal.h"
 #include "../internal.h"

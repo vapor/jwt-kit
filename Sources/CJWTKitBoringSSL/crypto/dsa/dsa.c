@@ -57,20 +57,20 @@
  * The DSS routines are based on patches supplied by
  * Steven Schoch <schoch@sheba.arc.nasa.gov>. */
 
-#include <CJWTKitBoringSSL_dsa.h>
+#include <openssl/dsa.h>
 
 #include <string.h>
 
-#include <CJWTKitBoringSSL_bn.h>
-#include <CJWTKitBoringSSL_dh.h>
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_engine.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_ex_data.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_rand.h>
-#include <CJWTKitBoringSSL_sha.h>
-#include <CJWTKitBoringSSL_thread.h>
+#include <openssl/bn.h>
+#include <openssl/dh.h>
+#include <openssl/digest.h>
+#include <openssl/engine.h>
+#include <openssl/err.h>
+#include <openssl/ex_data.h>
+#include <openssl/mem.h>
+#include <openssl/rand.h>
+#include <openssl/sha.h>
+#include <openssl/thread.h>
 
 #include "../fipsmodule/bn/internal.h"
 #include "../internal.h"
@@ -130,6 +130,16 @@ int DSA_up_ref(DSA *dsa) {
   CRYPTO_refcount_inc(&dsa->references);
   return 1;
 }
+
+const BIGNUM *DSA_get0_pub_key(const DSA *dsa) { return dsa->pub_key; }
+
+const BIGNUM *DSA_get0_priv_key(const DSA *dsa) { return dsa->priv_key; }
+
+const BIGNUM *DSA_get0_p(const DSA *dsa) { return dsa->p; }
+
+const BIGNUM *DSA_get0_q(const DSA *dsa) { return dsa->q; }
+
+const BIGNUM *DSA_get0_g(const DSA *dsa) { return dsa->g; }
 
 void DSA_get0_key(const DSA *dsa, const BIGNUM **out_pub_key,
                   const BIGNUM **out_priv_key) {

@@ -14,12 +14,12 @@
 
 // Adapted from the public domain, estream code by D. Bernstein.
 
-#include <CJWTKitBoringSSL_chacha.h>
+#include <openssl/chacha.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_cpu.h>
+#include <openssl/cpu.h>
 
 #include "../internal.h"
 #include "internal.h"

@@ -54,12 +54,12 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/x509.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_thread.h>
+#include <openssl/asn1.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
+#include <openssl/thread.h>
 
 X509_INFO *X509_INFO_new(void)
 {

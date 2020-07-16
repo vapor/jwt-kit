@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
 #include <string.h>
 #include <limits.h>
 
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 #include "../internal.h"
 
@@ -115,7 +115,7 @@ int ASN1_INTEGER_cmp(const ASN1_INTEGER *x, const ASN1_INTEGER *y)
  * followed by optional zeros isn't padded.
  */
 
-int i2c_ASN1_INTEGER(ASN1_INTEGER *a, unsigned char **pp)
+int i2c_ASN1_INTEGER(const ASN1_INTEGER *a, unsigned char **pp)
 {
     int pad = 0, ret, i, neg;
     unsigned char *p, *n, pb = 0;

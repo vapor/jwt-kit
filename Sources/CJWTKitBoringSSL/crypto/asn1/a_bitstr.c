@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
+#include <openssl/asn1.h>
 
 #include <limits.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 #include "../internal.h"
 
@@ -70,7 +70,7 @@ int ASN1_BIT_STRING_set(ASN1_BIT_STRING *x, unsigned char *d, int len)
     return M_ASN1_BIT_STRING_set(x, d, len);
 }
 
-int i2c_ASN1_BIT_STRING(ASN1_BIT_STRING *a, unsigned char **pp)
+int i2c_ASN1_BIT_STRING(const ASN1_BIT_STRING *a, unsigned char **pp)
 {
     int ret, j, bits, len;
     unsigned char *p, *d;
@@ -233,7 +233,7 @@ int ASN1_BIT_STRING_set_bit(ASN1_BIT_STRING *a, int n, int value)
     return (1);
 }
 
-int ASN1_BIT_STRING_get_bit(ASN1_BIT_STRING *a, int n)
+int ASN1_BIT_STRING_get_bit(const ASN1_BIT_STRING *a, int n)
 {
     int w, v;
 
@@ -250,7 +250,7 @@ int ASN1_BIT_STRING_get_bit(ASN1_BIT_STRING *a, int n)
  * which is not specified in 'flags', 1 otherwise.
  * 'len' is the length of 'flags'.
  */
-int ASN1_BIT_STRING_check(ASN1_BIT_STRING *a,
+int ASN1_BIT_STRING_check(const ASN1_BIT_STRING *a,
                           unsigned char *flags, int flags_len)
 {
     int i, ok;

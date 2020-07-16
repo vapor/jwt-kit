@@ -54,18 +54,18 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/x509.h>
 
 #include <limits.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_bytestring.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_thread.h>
+#include <openssl/asn1.h>
+#include <openssl/asn1t.h>
+#include <openssl/bytestring.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/mem.h>
+#include <openssl/obj.h>
+#include <openssl/thread.h>
 
 #include "../internal.h"
 
@@ -178,160 +178,6 @@ EVP_PKEY *X509_PUBKEY_get(X509_PUBKEY *key)
     OPENSSL_free(spki);
     EVP_PKEY_free(ret);
     return NULL;
-}
-
-/*
- * Now two pseudo ASN1 routines that take an EVP_PKEY structure and encode or
- * decode as X509_PUBKEY
- */
-
-EVP_PKEY *d2i_PUBKEY(EVP_PKEY **a, const unsigned char **pp, long length)
-{
-    X509_PUBKEY *xpk;
-    EVP_PKEY *pktmp;
-    xpk = d2i_X509_PUBKEY(NULL, pp, length);
-    if (!xpk)
-        return NULL;
-    pktmp = X509_PUBKEY_get(xpk);
-    X509_PUBKEY_free(xpk);
-    if (!pktmp)
-        return NULL;
-    if (a) {
-        EVP_PKEY_free(*a);
-        *a = pktmp;
-    }
-    return pktmp;
-}
-
-int i2d_PUBKEY(const EVP_PKEY *a, unsigned char **pp)
-{
-    X509_PUBKEY *xpk = NULL;
-    int ret;
-    if (!a)
-        return 0;
-    if (!X509_PUBKEY_set(&xpk, (EVP_PKEY *)a))
-        return 0;
-    ret = i2d_X509_PUBKEY(xpk, pp);
-    X509_PUBKEY_free(xpk);
-    return ret;
-}
-
-/*
- * The following are equivalents but which return RSA and DSA keys
- */
-RSA *d2i_RSA_PUBKEY(RSA **a, const unsigned char **pp, long length)
-{
-    EVP_PKEY *pkey;
-    RSA *key;
-    const unsigned char *q;
-    q = *pp;
-    pkey = d2i_PUBKEY(NULL, &q, length);
-    if (!pkey)
-        return NULL;
-    key = EVP_PKEY_get1_RSA(pkey);
-    EVP_PKEY_free(pkey);
-    if (!key)
-        return NULL;
-    *pp = q;
-    if (a) {
-        RSA_free(*a);
-        *a = key;
-    }
-    return key;
-}
-
-int i2d_RSA_PUBKEY(const RSA *a, unsigned char **pp)
-{
-    EVP_PKEY *pktmp;
-    int ret;
-    if (!a)
-        return 0;
-    pktmp = EVP_PKEY_new();
-    if (!pktmp) {
-        OPENSSL_PUT_ERROR(X509, ERR_R_MALLOC_FAILURE);
-        return 0;
-    }
-    EVP_PKEY_set1_RSA(pktmp, (RSA *)a);
-    ret = i2d_PUBKEY(pktmp, pp);
-    EVP_PKEY_free(pktmp);
-    return ret;
-}
-
-#ifndef OPENSSL_NO_DSA
-DSA *d2i_DSA_PUBKEY(DSA **a, const unsigned char **pp, long length)
-{
-    EVP_PKEY *pkey;
-    DSA *key;
-    const unsigned char *q;
-    q = *pp;
-    pkey = d2i_PUBKEY(NULL, &q, length);
-    if (!pkey)
-        return NULL;
-    key = EVP_PKEY_get1_DSA(pkey);
-    EVP_PKEY_free(pkey);
-    if (!key)
-        return NULL;
-    *pp = q;
-    if (a) {
-        DSA_free(*a);
-        *a = key;
-    }
-    return key;
-}
-
-int i2d_DSA_PUBKEY(const DSA *a, unsigned char **pp)
-{
-    EVP_PKEY *pktmp;
-    int ret;
-    if (!a)
-        return 0;
-    pktmp = EVP_PKEY_new();
-    if (!pktmp) {
-        OPENSSL_PUT_ERROR(X509, ERR_R_MALLOC_FAILURE);
-        return 0;
-    }
-    EVP_PKEY_set1_DSA(pktmp, (DSA *)a);
-    ret = i2d_PUBKEY(pktmp, pp);
-    EVP_PKEY_free(pktmp);
-    return ret;
-}
-#endif
-
-EC_KEY *d2i_EC_PUBKEY(EC_KEY **a, const unsigned char **pp, long length)
-{
-    EVP_PKEY *pkey;
-    EC_KEY *key;
-    const unsigned char *q;
-    q = *pp;
-    pkey = d2i_PUBKEY(NULL, &q, length);
-    if (!pkey)
-        return (NULL);
-    key = EVP_PKEY_get1_EC_KEY(pkey);
-    EVP_PKEY_free(pkey);
-    if (!key)
-        return (NULL);
-    *pp = q;
-    if (a) {
-        EC_KEY_free(*a);
-        *a = key;
-    }
-    return (key);
-}
-
-int i2d_EC_PUBKEY(const EC_KEY *a, unsigned char **pp)
-{
-    EVP_PKEY *pktmp;
-    int ret;
-    if (!a)
-        return (0);
-    if ((pktmp = EVP_PKEY_new()) == NULL) {
-        OPENSSL_PUT_ERROR(X509, ERR_R_MALLOC_FAILURE);
-        return (0);
-    }
-    EVP_PKEY_set1_EC_KEY(pktmp, (EC_KEY *)a);
-    ret = i2d_PUBKEY(pktmp, pp);
-    EVP_PKEY_free(pktmp);
-    return (ret);
 }
 
 int X509_PUBKEY_set0_param(X509_PUBKEY *pub, const ASN1_OBJECT *aobj,

@@ -54,12 +54,12 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_x509.h>
+#include <openssl/x509.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_digest.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/asn1.h>
+#include <openssl/digest.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
 
 int ASN1_digest(i2d_of_void *i2d, const EVP_MD *type, char *data,
                 unsigned char *md, unsigned int *len)

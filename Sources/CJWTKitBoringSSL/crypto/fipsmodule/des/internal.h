@@ -57,7 +57,7 @@
 #ifndef OPENSSL_HEADER_DES_INTERNAL_H
 #define OPENSSL_HEADER_DES_INTERNAL_H
 
-#include <CJWTKitBoringSSL_base.h>
+#include <openssl/base.h>
 
 #include "../../internal.h"
 

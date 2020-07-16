@@ -1,4 +1,3 @@
-#define BORINGSSL_PREFIX CJWTKitBoringSSL
 #if defined(__arm__) && defined(__linux__)
 /* Copyright (c) 2015, Google Inc.
  *
@@ -28,7 +27,7 @@
 #if !defined(OPENSSL_NO_ASM) && defined(__arm__) && !defined(__APPLE__)
 
 #if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
+#include <boringssl_prefix_symbols_asm.h>
 #endif
 
 .fpu neon
@@ -2137,7 +2136,3 @@ bx lr
 .section	.note.GNU-stack,"",%progbits
 #endif
 #endif  // defined(__arm__) && defined(__linux__)
-#if defined(__linux__) && defined(__ELF__)
-.section .note.GNU-stack,"",%progbits
-#endif
-

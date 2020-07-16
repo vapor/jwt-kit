@@ -20,12 +20,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_type_check.h>
+#include <openssl/mem.h>
+#include <openssl/type_check.h>
 
 
 OPENSSL_STATIC_ASSERT(sizeof(CRYPTO_MUTEX) >= sizeof(pthread_rwlock_t),
                       "CRYPTO_MUTEX is too small");
+#if defined(__GNUC__) || defined(__clang__)
+OPENSSL_STATIC_ASSERT(alignof(CRYPTO_MUTEX) >= alignof(pthread_rwlock_t),
+                      "CRYPTO_MUTEX has insufficient alignment");
+#endif
 
 void CRYPTO_MUTEX_init(CRYPTO_MUTEX *lock) {
   if (pthread_rwlock_init((pthread_rwlock_t *) lock, NULL) != 0) {

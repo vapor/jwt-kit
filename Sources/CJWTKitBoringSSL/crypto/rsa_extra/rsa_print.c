@@ -7,9 +7,9 @@
  * https://www.openssl.org/source/license.html
  */
 
-#include <CJWTKitBoringSSL_rsa.h>
+#include <openssl/rsa.h>
 
-#include <CJWTKitBoringSSL_evp.h>
+#include <openssl/evp.h>
 
 
 int RSA_print(BIO *bio, const RSA *rsa, int indent) {

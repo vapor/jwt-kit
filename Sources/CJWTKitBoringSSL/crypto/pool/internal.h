@@ -15,8 +15,8 @@
 #ifndef OPENSSL_HEADER_POOL_INTERNAL_H
 #define OPENSSL_HEADER_POOL_INTERNAL_H
 
-#include <CJWTKitBoringSSL_lhash.h>
-#include <CJWTKitBoringSSL_thread.h>
+#include <openssl/lhash.h>
+#include <openssl/thread.h>
 
 #if defined(__cplusplus)
 extern "C" {

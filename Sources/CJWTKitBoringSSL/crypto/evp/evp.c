@@ -54,18 +54,18 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_evp.h>
+#include <openssl/evp.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_dsa.h>
-#include <CJWTKitBoringSSL_ec.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_nid.h>
-#include <CJWTKitBoringSSL_rsa.h>
-#include <CJWTKitBoringSSL_thread.h>
+#include <openssl/dsa.h>
+#include <openssl/ec.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
+#include <openssl/nid.h>
+#include <openssl/rsa.h>
+#include <openssl/thread.h>
 
 #include "internal.h"
 #include "../internal.h"

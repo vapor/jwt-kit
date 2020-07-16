@@ -109,9 +109,9 @@
 #ifndef OPENSSL_HEADER_CRYPTO_INTERNAL_H
 #define OPENSSL_HEADER_CRYPTO_INTERNAL_H
 
-#include <CJWTKitBoringSSL_ex_data.h>
-#include <CJWTKitBoringSSL_stack.h>
-#include <CJWTKitBoringSSL_thread.h>
+#include <openssl/ex_data.h>
+#include <openssl/stack.h>
+#include <openssl/thread.h>
 
 #include <assert.h>
 #include <string.h>

@@ -55,12 +55,12 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_ec_key.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_evp.h>
-#include <CJWTKitBoringSSL_rsa.h>
-#include <CJWTKitBoringSSL_dsa.h>
+#include <openssl/asn1.h>
+#include <openssl/ec_key.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
+#include <openssl/dsa.h>
 
 
 int i2d_PrivateKey(const EVP_PKEY *a, uint8_t **pp)

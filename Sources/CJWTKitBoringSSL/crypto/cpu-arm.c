@@ -12,12 +12,12 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <CJWTKitBoringSSL_cpu.h>
+#include <openssl/cpu.h>
 
 #if (defined(OPENSSL_ARM) || defined(OPENSSL_AARCH64)) && \
     !defined(OPENSSL_STATIC_ARMCAP)
 
-#include <CJWTKitBoringSSL_arm_arch.h>
+#include <openssl/arm_arch.h>
 
 
 extern uint32_t OPENSSL_armcap_P;

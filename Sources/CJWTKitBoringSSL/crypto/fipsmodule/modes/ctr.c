@@ -46,7 +46,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * ==================================================================== */
 
-#include <CJWTKitBoringSSL_type_check.h>
+#include <openssl/type_check.h>
 
 #include <assert.h>
 #include <string.h>

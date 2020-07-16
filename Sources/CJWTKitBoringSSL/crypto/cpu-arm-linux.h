@@ -15,7 +15,7 @@
 #ifndef OPENSSL_HEADER_CRYPTO_CPU_ARM_LINUX_H
 #define OPENSSL_HEADER_CRYPTO_CPU_ARM_LINUX_H
 
-#include <CJWTKitBoringSSL_base.h>
+#include <openssl/base.h>
 
 #include <string.h>
 

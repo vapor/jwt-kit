@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_base64.h>
+#include <openssl/base64.h>
 
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_type_check.h>
+#include <openssl/type_check.h>
 
 #include "../internal.h"
 

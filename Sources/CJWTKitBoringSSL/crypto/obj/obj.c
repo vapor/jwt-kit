@@ -54,18 +54,18 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <CJWTKitBoringSSL_obj.h>
+#include <openssl/obj.h>
 
 #include <inttypes.h>
 #include <limits.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_bytestring.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_lhash.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_thread.h>
+#include <openssl/asn1.h>
+#include <openssl/bytestring.h>
+#include <openssl/err.h>
+#include <openssl/lhash.h>
+#include <openssl/mem.h>
+#include <openssl/thread.h>
 
 #include "obj_dat.h"
 #include "../internal.h"

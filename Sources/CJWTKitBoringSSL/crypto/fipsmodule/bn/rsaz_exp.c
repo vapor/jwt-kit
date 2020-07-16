@@ -16,7 +16,7 @@
 
 #if defined(RSAZ_ENABLED)
 
-#include <CJWTKitBoringSSL_mem.h>
+#include <openssl/mem.h>
 
 #include "internal.h"
 #include "../../internal.h"

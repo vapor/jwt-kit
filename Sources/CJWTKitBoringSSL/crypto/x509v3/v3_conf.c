@@ -61,12 +61,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_conf.h>
-#include <CJWTKitBoringSSL_err.h>
-#include <CJWTKitBoringSSL_mem.h>
-#include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_x509.h>
-#include <CJWTKitBoringSSL_x509v3.h>
+#include <openssl/conf.h>
+#include <openssl/err.h>
+#include <openssl/mem.h>
+#include <openssl/obj.h>
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
 
 #include "../internal.h"
 #include "internal.h"

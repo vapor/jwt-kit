@@ -57,10 +57,10 @@
 
 #include <stdio.h>
 
-#include <CJWTKitBoringSSL_asn1.h>
-#include <CJWTKitBoringSSL_asn1t.h>
-#include <CJWTKitBoringSSL_conf.h>
-#include <CJWTKitBoringSSL_x509v3.h>
+#include <openssl/asn1.h>
+#include <openssl/asn1t.h>
+#include <openssl/conf.h>
+#include <openssl/x509v3.h>
 
 
 ASN1_SEQUENCE(AUTHORITY_KEYID) = {

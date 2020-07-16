@@ -49,10 +49,10 @@
 #ifndef OPENSSL_HEADER_MODES_INTERNAL_H
 #define OPENSSL_HEADER_MODES_INTERNAL_H
 
-#include <CJWTKitBoringSSL_base.h>
+#include <openssl/base.h>
 
-#include <CJWTKitBoringSSL_aes.h>
-#include <CJWTKitBoringSSL_cpu.h>
+#include <openssl/aes.h>
+#include <openssl/cpu.h>
 
 #include <stdlib.h>
 #include <string.h>

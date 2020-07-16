@@ -1,4 +1,3 @@
-#define BORINGSSL_PREFIX CJWTKitBoringSSL
 #if defined(__x86_64__) && defined(__APPLE__)
 # This file is generated from a similarly-named Perl script in the BoringSSL
 # source tree. Do not edit by hand.
@@ -11,7 +10,7 @@
 
 #if defined(__x86_64__) && !defined(OPENSSL_NO_ASM)
 #if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
+#include <boringssl_prefix_symbols_asm.h>
 #endif
 .data	
 
@@ -3069,7 +3068,3 @@ _aes256gcmsiv_kdf:
 
 #endif
 #endif  // defined(__x86_64__) && defined(__APPLE__)
-#if defined(__linux__) && defined(__ELF__)
-.section .note.GNU-stack,"",%progbits
-#endif
-

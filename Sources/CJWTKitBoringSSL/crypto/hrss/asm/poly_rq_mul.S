@@ -1,4 +1,3 @@
-#define BORINGSSL_PREFIX CJWTKitBoringSSL
 #if defined(__x86_64__) && defined(__linux__)
 // Copyright (c) 2017, the HRSS authors.
 //
@@ -17,7 +16,7 @@
 #if !defined(OPENSSL_NO_ASM) && !defined(OPENSSL_SMALL) && defined(__linux__)
 
 #if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
+#include <boringssl_prefix_symbols_asm.h>
 #endif
 
 // This is the polynomial multiplication function from [HRSS], provided by kind
@@ -8472,7 +8471,3 @@ ret
 .section	.note.GNU-stack,"",@progbits
 #endif
 #endif  // defined(__x86_64__) && defined(__linux__)
-#if defined(__linux__) && defined(__ELF__)
-.section .note.GNU-stack,"",%progbits
-#endif
-

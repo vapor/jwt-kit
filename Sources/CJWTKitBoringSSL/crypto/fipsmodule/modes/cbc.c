@@ -49,7 +49,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_type_check.h>
+#include <openssl/type_check.h>
 
 #include "internal.h"
 
