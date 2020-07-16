@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <openssl/err.h>
+#include <CJWTKitBoringSSL_err.h>
 
 #if defined(OPENSSL_WINDOWS)
 OPENSSL_MSVC_PRAGMA(warning(push, 3))

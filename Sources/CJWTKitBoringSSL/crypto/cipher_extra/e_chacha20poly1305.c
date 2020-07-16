@@ -12,17 +12,17 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <openssl/aead.h>
+#include <CJWTKitBoringSSL_aead.h>
 
 #include <string.h>
 
-#include <openssl/chacha.h>
-#include <openssl/cipher.h>
-#include <openssl/cpu.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
-#include <openssl/poly1305.h>
-#include <openssl/type_check.h>
+#include <CJWTKitBoringSSL_chacha.h>
+#include <CJWTKitBoringSSL_cipher.h>
+#include <CJWTKitBoringSSL_cpu.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_poly1305.h>
+#include <CJWTKitBoringSSL_type_check.h>
 
 #include "../fipsmodule/cipher/internal.h"
 #include "../internal.h"

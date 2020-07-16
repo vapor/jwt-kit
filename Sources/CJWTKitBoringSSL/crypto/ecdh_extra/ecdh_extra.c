@@ -64,14 +64,14 @@
  * (eay@cryptsoft.com).  This product includes software written by Tim
  * Hudson (tjh@cryptsoft.com). */
 
-#include <openssl/ecdh.h>
+#include <CJWTKitBoringSSL_ecdh.h>
 
 #include <limits.h>
 #include <string.h>
 
-#include <openssl/digest.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_digest.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../fipsmodule/ec/internal.h"
 #include "../internal.h"

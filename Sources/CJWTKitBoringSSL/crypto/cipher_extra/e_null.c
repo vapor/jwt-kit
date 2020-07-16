@@ -54,11 +54,11 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/cipher.h>
+#include <CJWTKitBoringSSL_cipher.h>
 
 #include <string.h>
 
-#include <openssl/nid.h>
+#include <CJWTKitBoringSSL_nid.h>
 
 #include "../internal.h"
 

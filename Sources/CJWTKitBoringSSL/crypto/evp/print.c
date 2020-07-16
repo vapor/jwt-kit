@@ -50,15 +50,15 @@
  * (eay@cryptsoft.com).  This product includes software written by Tim
  * Hudson (tjh@cryptsoft.com). */
 
-#include <openssl/evp.h>
+#include <CJWTKitBoringSSL_evp.h>
 
-#include <openssl/bio.h>
-#include <openssl/bn.h>
-#include <openssl/dsa.h>
-#include <openssl/ec.h>
-#include <openssl/ec_key.h>
-#include <openssl/mem.h>
-#include <openssl/rsa.h>
+#include <CJWTKitBoringSSL_bio.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_dsa.h>
+#include <CJWTKitBoringSSL_ec.h>
+#include <CJWTKitBoringSSL_ec_key.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_rsa.h>
 
 #include "../internal.h"
 #include "../fipsmodule/rsa/internal.h"

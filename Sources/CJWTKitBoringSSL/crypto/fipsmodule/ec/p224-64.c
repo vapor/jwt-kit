@@ -17,12 +17,12 @@
 // Inspired by Daniel J. Bernstein's public domain nistp224 implementation
 // and Adam Langley's public domain 64-bit C implementation of curve25519.
 
-#include <openssl/base.h>
+#include <CJWTKitBoringSSL_base.h>
 
-#include <openssl/bn.h>
-#include <openssl/ec.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_ec.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include <string.h>
 

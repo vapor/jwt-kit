@@ -54,10 +54,10 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/asn1.h>
+#include <CJWTKitBoringSSL_asn1.h>
 
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 /* ASN1_ITEM versions of the above */
 

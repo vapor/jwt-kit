@@ -58,14 +58,14 @@
 #include <string.h>
 #include <time.h>
 
-#include <openssl/asn1.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/mem.h>
-#include <openssl/obj.h>
-#include <openssl/thread.h>
-#include <openssl/x509.h>
-#include <openssl/x509v3.h>
+#include <CJWTKitBoringSSL_asn1.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_thread.h>
+#include <CJWTKitBoringSSL_x509.h>
+#include <CJWTKitBoringSSL_x509v3.h>
 
 #include "vpm_int.h"
 #include "../internal.h"

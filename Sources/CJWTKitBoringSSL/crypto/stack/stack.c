@@ -54,12 +54,12 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/stack.h>
+#include <CJWTKitBoringSSL_stack.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../internal.h"
 

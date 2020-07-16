@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <openssl/mem.h>
-#include <openssl/type_check.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_type_check.h>
 
 
 OPENSSL_STATIC_ASSERT(sizeof(CRYPTO_MUTEX) >= sizeof(pthread_rwlock_t),

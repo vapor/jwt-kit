@@ -12,9 +12,9 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <openssl/ec.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_ec.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "internal.h"
 #include "../bn/internal.h"

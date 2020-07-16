@@ -46,7 +46,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * ==================================================================== */
 
-#include <openssl/base.h>
+#include <CJWTKitBoringSSL_base.h>
 
 #include <assert.h>
 

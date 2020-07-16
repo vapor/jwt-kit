@@ -57,14 +57,14 @@
 
 #include <string.h>
 
-#include <openssl/asn1.h>
-#include <openssl/digest.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
-#include <openssl/obj.h>
-#include <openssl/stack.h>
-#include <openssl/x509.h>
-#include <openssl/x509v3.h>
+#include <CJWTKitBoringSSL_asn1.h>
+#include <CJWTKitBoringSSL_digest.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_stack.h>
+#include <CJWTKitBoringSSL_x509.h>
+#include <CJWTKitBoringSSL_x509v3.h>
 
 #include "../internal.h"
 #include "../x509v3/internal.h"

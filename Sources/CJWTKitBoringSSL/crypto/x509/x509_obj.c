@@ -57,11 +57,11 @@
 
 #include <string.h>
 
-#include <openssl/buf.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
-#include <openssl/obj.h>
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_buf.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 #include "../internal.h"
 

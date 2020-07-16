@@ -58,12 +58,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <openssl/asn1.h>
-#include <openssl/asn1t.h>
-#include <openssl/conf.h>
-#include <openssl/err.h>
-#include <openssl/obj.h>
-#include <openssl/x509v3.h>
+#include <CJWTKitBoringSSL_asn1.h>
+#include <CJWTKitBoringSSL_asn1t.h>
+#include <CJWTKitBoringSSL_conf.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_x509v3.h>
 
 static STACK_OF(CONF_VALUE) *i2v_BASIC_CONSTRAINTS(X509V3_EXT_METHOD *method,
                                                    BASIC_CONSTRAINTS *bcons,

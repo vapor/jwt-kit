@@ -54,11 +54,11 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/md5.h>
+#include <CJWTKitBoringSSL_md5.h>
 
 #include <string.h>
 
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "internal.h"
 #include "../../internal.h"

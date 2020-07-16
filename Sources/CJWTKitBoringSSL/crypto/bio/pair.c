@@ -50,13 +50,13 @@
  * (eay@cryptsoft.com).  This product includes software written by Tim
  * Hudson (tjh@cryptsoft.com). */
 
-#include <openssl/bio.h>
+#include <CJWTKitBoringSSL_bio.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../internal.h"
 

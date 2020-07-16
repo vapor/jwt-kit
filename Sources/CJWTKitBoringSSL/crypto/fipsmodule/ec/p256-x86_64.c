@@ -16,16 +16,18 @@
  *                          256 Bit Primes"
  */
 
-#include <openssl/ec.h>
+#include <CJWTKitBoringSSL_ec.h>
 
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <openssl/bn.h>
-#include <openssl/cpu.h>
-#include <openssl/crypto.h>
-#include <openssl/err.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_cpu.h>
+#include <CJWTKitBoringSSL_crypto.h>
+#include <CJWTKitBoringSSL_err.h>
+
+#include <CJWTKitBoringSSL_cpu.h>
 
 #include "../bn/internal.h"
 #include "../delocate.h"

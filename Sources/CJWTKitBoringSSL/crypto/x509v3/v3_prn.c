@@ -59,10 +59,10 @@
 
 #include <stdio.h>
 
-#include <openssl/bio.h>
-#include <openssl/conf.h>
-#include <openssl/mem.h>
-#include <openssl/x509v3.h>
+#include <CJWTKitBoringSSL_bio.h>
+#include <CJWTKitBoringSSL_conf.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_x509v3.h>
 
 /* Extension printing routines */
 

@@ -12,7 +12,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#include <openssl/rand.h>
+#include <CJWTKitBoringSSL_rand.h>
 
 #include <assert.h>
 #include <limits.h>
@@ -22,9 +22,9 @@
 #include <unistd.h>
 #endif
 
-#include <openssl/chacha.h>
-#include <openssl/cpu.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_chacha.h>
+#include <CJWTKitBoringSSL_cpu.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "internal.h"
 #include "fork_detect.h"

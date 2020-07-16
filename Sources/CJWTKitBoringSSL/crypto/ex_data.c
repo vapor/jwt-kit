@@ -106,16 +106,16 @@
  * (eay@cryptsoft.com).  This product includes software written by Tim
  * Hudson (tjh@cryptsoft.com). */
 
-#include <openssl/ex_data.h>
+#include <CJWTKitBoringSSL_ex_data.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/crypto.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
-#include <openssl/stack.h>
-#include <openssl/thread.h>
+#include <CJWTKitBoringSSL_crypto.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_stack.h>
+#include <CJWTKitBoringSSL_thread.h>
 
 #include "internal.h"
 

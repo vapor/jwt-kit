@@ -65,11 +65,11 @@
  * Sheueling Chang Shantz and Douglas Stebila of Sun Microsystems
  * Laboratories. */
 
-#include <openssl/ec.h>
+#include <CJWTKitBoringSSL_ec.h>
 
-#include <openssl/bn.h>
-#include <openssl/err.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../bn/internal.h"
 #include "../delocate.h"

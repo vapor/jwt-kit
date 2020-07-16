@@ -54,21 +54,21 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/rsa.h>
+#include <CJWTKitBoringSSL_rsa.h>
 
 #include <limits.h>
 #include <string.h>
 
-#include <openssl/bn.h>
-#include <openssl/digest.h>
-#include <openssl/engine.h>
-#include <openssl/err.h>
-#include <openssl/ex_data.h>
-#include <openssl/md5.h>
-#include <openssl/mem.h>
-#include <openssl/nid.h>
-#include <openssl/sha.h>
-#include <openssl/thread.h>
+#include <CJWTKitBoringSSL_bn.h>
+#include <CJWTKitBoringSSL_digest.h>
+#include <CJWTKitBoringSSL_engine.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_ex_data.h>
+#include <CJWTKitBoringSSL_md5.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_nid.h>
+#include <CJWTKitBoringSSL_sha.h>
+#include <CJWTKitBoringSSL_thread.h>
 
 #include "../bn/internal.h"
 #include "../delocate.h"

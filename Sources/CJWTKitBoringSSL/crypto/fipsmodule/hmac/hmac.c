@@ -54,13 +54,13 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/hmac.h>
+#include <CJWTKitBoringSSL_hmac.h>
 
 #include <assert.h>
 #include <string.h>
 
-#include <openssl/digest.h>
-#include <openssl/mem.h>
+#include <CJWTKitBoringSSL_digest.h>
+#include <CJWTKitBoringSSL_mem.h>
 
 #include "../../internal.h"
 

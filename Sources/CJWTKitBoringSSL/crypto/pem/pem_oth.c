@@ -55,16 +55,16 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.] */
 
-#include <openssl/pem.h>
+#include <CJWTKitBoringSSL_pem.h>
 
 #include <stdio.h>
 
-#include <openssl/err.h>
-#include <openssl/mem.h>
-#include <openssl/evp.h>
-#include <openssl/obj.h>
-#include <openssl/rand.h>
-#include <openssl/x509.h>
+#include <CJWTKitBoringSSL_err.h>
+#include <CJWTKitBoringSSL_mem.h>
+#include <CJWTKitBoringSSL_evp.h>
+#include <CJWTKitBoringSSL_obj.h>
+#include <CJWTKitBoringSSL_rand.h>
+#include <CJWTKitBoringSSL_x509.h>
 
 /* Handle 'other' PEMs: not private keys */
 
