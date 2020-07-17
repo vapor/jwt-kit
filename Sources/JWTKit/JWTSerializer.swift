@@ -12,7 +12,6 @@ struct JWTSerializer {
     {
         let jsonEncoder = JSONEncoder()
         jsonEncoder.dateEncodingStrategy = .secondsSince1970
-        jsonEncoder.outputFormatting.insert(.sortedKeys)
 
         // encode header, copying header struct to mutate alg
         var header = JWTHeader()
