@@ -37,6 +37,8 @@ import os
 # OS_ARCH_COMBOS maps from OS and platform to the OpenSSL assembly "style" for
 # that platform and the extension used by asm files.
 OS_ARCH_COMBOS = [
+    ('ios', 'arm', 'ios32', [], 'S'),
+    ('ios', 'aarch64', 'ios64', [], 'S'),
     ('linux', 'arm', 'linux32', [], 'S'),
     ('linux', 'aarch64', 'linux64', [], 'S'),
     ('linux', 'x86', 'elf', ['-fPIC', '-DOPENSSL_IA32_SSE2'], 'S'),
@@ -177,7 +179,7 @@ def preprocessor_arch_for_arch(arch):
 
 
 def preprocessor_platform_for_os(osname):
-    if osname == 'mac':
+    if osname == 'mac' or osname == 'ios':
         return '__APPLE__'
     elif osname == 'linux':
         return '__linux__'

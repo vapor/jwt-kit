@@ -86,6 +86,13 @@ function mangle_symbols {
         swift build --product CJWTKitBoringSSL --enable-test-discovery
         go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCJWTKitBoringSSL.a"
 
+        # Now build for iOS. We use xcodebuild for this because SwiftPM doesn't
+        # meaningfully support it. Unfortunately we must archive ourselves.
+        # This also builds for Apple Silicon
+        xcodebuild -sdk iphoneos -scheme CJWTKitBoringSSL -derivedDataPath "${TMPDIR}/iphoneos-deriveddata"
+        ar -r "${TMPDIR}/libCJWTKitBoringSSL-ios.a" "${TMPDIR}/iphoneos-deriveddata/Build/Products/Debug-iphoneos/CJWTKitBoringSSL.o"
+        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-iOS.txt" "${TMPDIR}/libCJWTKitBoringSSL-ios.a"
+
         # Now cross compile for our targets.
         # If you have trouble with the script around this point, consider
         # https://github.com/CSCIX65G/SwiftCrossCompilers to obtain cross
