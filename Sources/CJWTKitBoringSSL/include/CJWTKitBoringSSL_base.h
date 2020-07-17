@@ -95,7 +95,7 @@ extern "C" {
 #elif defined(__x86) || defined(__i386) || defined(__i386__) || defined(_M_IX86)
 #define OPENSSL_32_BIT
 #define OPENSSL_X86
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || defined(_M_ARM64)
 #define OPENSSL_64_BIT
 #define OPENSSL_AARCH64
 #elif defined(__arm) || defined(__arm__) || defined(_M_ARM)
@@ -189,7 +189,7 @@ extern "C" {
 // A consumer may use this symbol in the preprocessor to temporarily build
 // against multiple revisions of BoringSSL at the same time. It is not
 // recommended to do so for longer than is necessary.
-#define BORINGSSL_API_VERSION 9
+#define BORINGSSL_API_VERSION 10
 
 #if defined(BORINGSSL_SHARED_LIBRARY)
 
@@ -427,6 +427,10 @@ typedef struct ssl_session_st SSL_SESSION;
 typedef struct ssl_st SSL;
 typedef struct ssl_ticket_aead_method_st SSL_TICKET_AEAD_METHOD;
 typedef struct st_ERR_FNS ERR_FNS;
+typedef struct trust_token_st TRUST_TOKEN;
+typedef struct trust_token_client_st TRUST_TOKEN_CLIENT;
+typedef struct trust_token_issuer_st TRUST_TOKEN_ISSUER;
+typedef struct trust_token_method_st TRUST_TOKEN_METHOD;
 typedef struct v3_ext_ctx X509V3_CTX;
 typedef struct x509_attributes_st X509_ATTRIBUTE;
 typedef struct x509_cert_aux_st X509_CERT_AUX;

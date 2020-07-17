@@ -1,5 +1,5 @@
 import XCTest
-import JWTKit
+@testable import JWTKit
 
 class JWTKitTests: XCTestCase {
     func testParse() throws {
@@ -40,7 +40,11 @@ class JWTKitTests: XCTestCase {
         let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
         let jwt = try JWTSigner.hs256(key: "secret".bytes)
             .sign(ExpirationPayload(exp: exp))
-        XCTAssertEqual(jwt, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwMDAwMDAwMDB9.JgCO_GqUQnbS0z2hCxJLE9Tpt5SMoZObHBxzGBWuTYQ")
+        var parser = try JWTParser(token: jwt.bytes)
+        try XCTAssertEqual(parser.header().typ, "JWT")
+        try XCTAssertEqual(parser.header().alg, "HS256")
+        try XCTAssertEqual(parser.payload(as: ExpirationPayload.self).exp, exp)
+        try parser.verify(using: .hs256(key: "secret".bytes))
     }
 
     func testSigners() throws {
