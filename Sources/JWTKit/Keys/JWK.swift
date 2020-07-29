@@ -1,3 +1,6 @@
+import struct Foundation.Data
+import class Foundation.JSONDecoder
+
 /// A JSON Web Key.
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
@@ -33,12 +36,9 @@ public struct JWK: Decodable {
         case rs384
         /// RSA with SHA512
         case rs512
-        
-        /// Decodes from a lowercased string.
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let value = try container.decode(String.self).lowercased()
-            switch value {
+
+        init?(string: String) {
+            switch string.lowercased() {
             case "rs256":
                 self = .rs256
             case "rs384":
@@ -46,8 +46,18 @@ public struct JWK: Decodable {
             case "rs512":
                 self = .rs512
             default:
+                return nil
+            }
+        }
+        
+        /// Decodes from a lowercased string.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            guard let algorithm = Self(string: string) else {
                 throw JWTError.invalidJWK
             }
+            self = algorithm
         }
     }
     
@@ -86,5 +96,9 @@ public struct JWK: Decodable {
         case modulus = "n"
         case exponent = "e"
         case privateExponent = "d"
+    }
+
+    public init(json: String) throws {
+        self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
 }
