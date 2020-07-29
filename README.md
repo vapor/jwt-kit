@@ -113,7 +113,7 @@ struct TestPayload: JWTPayload, Equatable {
     enum CodingKeys: String, CodingKey {
         case subject = "sub"
         case expiration = "exp"
-        case isAdmin = "admin
+        case isAdmin = "admin"
     }
 
     // The "sub" (subject) claim identifies the principal that is the
