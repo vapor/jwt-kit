@@ -1,7 +1,101 @@
 import XCTest
+#if os(Linux)
+import FoundationNetworking
+#endif
 @testable import JWTKit
 
 class JWTKitTests: XCTestCase {
+    func testGettingStarted() throws {
+        // JWT payload structure.
+        struct TestPayload: JWTPayload, Equatable {
+            // Maps the longer Swift property names to the
+            // shortened keys used in the JWT payload.
+            enum CodingKeys: String, CodingKey {
+                case subject = "sub"
+                case expiration = "exp"
+                case admin
+            }
+
+            // The "sub" (subject) claim identifies the principal that is the
+            // subject of the JWT.
+            var subject: SubjectClaim
+
+            // The "exp" (expiration time) claim identifies the expiration time on
+            // or after which the JWT MUST NOT be accepted for processing.
+            var expiration: ExpirationClaim
+
+            // Custom data.
+            // If true, the user is an admin.
+            var admin: Bool
+
+            // Run any necessary verification logic here.
+            //
+            // Since we have an ExpirationClaim, we will
+            // call its verify method.
+            func verify(using signer: JWTSigner) throws {
+                try self.expiration.verifyNotExpired()
+            }
+        }
+
+        let signers = JWTSigners()
+        signers.use(.hs256(key: "secret"))
+
+        do {
+            let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo"
+            let payload = try signers.verify(jwt, as: TestPayload.self)
+            XCTAssertEqual(payload.admin, true)
+        }
+
+        do {
+            let payload = TestPayload(
+                subject: "vapor",
+                expiration: .init(value: .distantFuture),
+                admin: true
+            )
+            let jwt = try signers.sign(payload)
+            print(jwt)
+        }
+    }
+
+    func testJWKsApple() throws {
+        // Download the JWKS.
+        // This could be done asynchronously if needed.
+        let jwksData = try Data(
+            contentsOf: URL(string: "https://appleid.apple.com/auth/keys")!
+        )
+
+        // Decode the downloaded JSON.
+        let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
+
+        // Create signers and add JWKS.
+        let signers = JWTSigners()
+        try signers.use(jwks: jwks)
+    }
+
+    func testRSADocs() throws {
+        let signers = JWTSigners()
+        try signers.use(.rs256(key: .public(pem: rsaPublicKey)))
+    }
+
+    func testECDSADocs() throws {
+        let signers = JWTSigners()
+        try signers.use(.es256(key: .public(pem: ecdsaPublicKey)))
+    }
+
+    func testClaimDocs() throws {
+        struct TestPayload: JWTPayload {
+            enum CodingKeys: String, CodingKey {
+                case audience = "aud"
+            }
+
+            var audience: AudienceClaim
+
+            func verify(using signer: JWTSigner) throws {
+                try self.audience.verifyIntendedAudience(includes: "foo")
+            }
+        }
+    }
+
     func testParse() throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
 

@@ -1,7 +1,6 @@
 import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
-    
     public enum Curve {
         case p256
         case p384
@@ -28,6 +27,10 @@ public final class ECDSAKey: OpenSSLKey {
         }
         return .init(c)
     }
+    
+    public static func `public`(pem string: String) throws -> ECDSAKey {
+        try .public(pem: [UInt8](string.utf8))
+    }
 
     public static func `public`<Data>(pem data: Data) throws -> ECDSAKey
         where Data: DataProtocol
@@ -36,6 +39,10 @@ public final class ECDSAKey: OpenSSLKey {
             CJWTKitBoringSSL_PEM_read_bio_EC_PUBKEY(bio, nil, nil, nil)
         }
         return self.init(c)
+    }
+
+    public static func `private`(pem string: String) throws -> ECDSAKey {
+        try .private(pem: [UInt8](string.utf8))
     }
 
     public static func `private`<Data>(pem data: Data) throws -> ECDSAKey
