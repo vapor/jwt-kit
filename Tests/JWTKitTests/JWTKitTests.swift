@@ -2,7 +2,7 @@ import XCTest
 @testable import JWTKit
 
 class JWTKitTests: XCTestCase {
-    func testDocs() throws {
+    func testGettingStarted() throws {
         // JWT payload structure.
         struct TestPayload: JWTPayload, Equatable {
             // Maps the longer Swift property names to the
@@ -53,6 +53,32 @@ class JWTKitTests: XCTestCase {
             print(jwt)
         }
     }
+
+    func testJWKsApple() throws {
+        // Download the JWKS.
+        // This could be done asynchronously if needed.
+        let jwksData = try Data(
+            contentsOf: URL(string: "https://appleid.apple.com/auth/keys")!
+        )
+
+        // Decode the downloaded JSON.
+        let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
+
+        // Create signers and add JWKS.
+        let signers = JWTSigners()
+        try signers.use(jwks: jwks)
+    }
+
+    func testRSADocs() throws {
+        let signers = JWTSigners()
+        try signers.use(.rs256(key: .public(pem: rsaPublicKey)))
+    }
+
+    func testECDSADocs() throws {
+        let signers = JWTSigners()
+        try signers.use(.es256(key: .public(pem: ecdsaPublicKey)))
+    }
+
     func testParse() throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
 

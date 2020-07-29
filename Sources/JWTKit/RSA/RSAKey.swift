@@ -2,6 +2,10 @@ import CJWTKitBoringSSL
 import struct Foundation.Data
 
 public final class RSAKey: OpenSSLKey {
+    public static func `public`(pem string: String) throws -> RSAKey {
+        try .public(pem: [UInt8](string.utf8))
+    }
+
     public static func `public`<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
@@ -14,6 +18,10 @@ public final class RSAKey: OpenSSLKey {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
         return self.init(c, .public)
+    }
+
+    public static func `private`(pem string: String) throws -> RSAKey {
+        try .private(pem: [UInt8](string.utf8))
     }
 
     public static func `private`<Data>(pem data: Data) throws -> RSAKey
