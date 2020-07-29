@@ -47,25 +47,16 @@ public final class JWTSigners {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK
         }
-        self.use(.init(jwk: jwk), kid: kid)
-    }
-
-    /// Adds a new signer.
-    public func use(
-        _ signer: JWKSigner,
-        kid: JWKIdentifier
-    ) {
-        self.jwkStorage[kid] = signer
+        self.jwkStorage[kid] = JWKSigner(jwk: jwk)
     }
 
     /// Gets a signer for the supplied `kid`, if one exists.
     public func get(kid: JWKIdentifier? = nil, alg: String? = nil) -> JWTSigner? {
-        print(kid, alg)
         if let kid = kid {
             if let jwt = self.jwtStorage[kid] {
                 return jwt
-            } else if let jwk = self.jwkStorage[kid], let alg = alg.flatMap(JWK.Algorithm.init) {
-                return jwk.signer(for: alg)
+            } else if let jwk = self.jwkStorage[kid] {
+                return jwk.signer(for: alg.flatMap(JWK.Algorithm.init))
             } else {
                 return nil
             }

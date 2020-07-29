@@ -1,19 +1,13 @@
 import Foundation
 
-public struct JWKSigner {
+struct JWKSigner {
     let jwk: JWK
 
-    public init(json: String) throws {
-        try self.init(
-            jwk: JSONDecoder().decode(JWK.self, from: Data(json.utf8))
-        )
-    }
-
-    public init(jwk: JWK) {
+    init(jwk: JWK) {
         self.jwk = jwk
     }
 
-    public func signer(for algorithm: JWK.Algorithm? = nil) -> JWTSigner? {
+    func signer(for algorithm: JWK.Algorithm? = nil) -> JWTSigner? {
         switch self.jwk.keyType {
         case .rsa:
             guard let modulus = self.jwk.modulus else {

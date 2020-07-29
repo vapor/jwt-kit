@@ -194,8 +194,11 @@ class JWTKitTests: XCTestCase {
         }
         """
 
-        let privateSigner = try JWKSigner(json: privateKey).signer()!
-        let publicSigner = try JWKSigner(json: publicKey).signer()!
+        let publicSigners = JWTSigners()
+        try publicSigners.use(jwk: .init(json: publicKey))
+
+        let privateSigners = JWTSigners()
+        try privateSigners.use(jwk: .init(json: privateKey))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -203,11 +206,11 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let data = try privateSigner.sign(payload)
+        let data = try privateSigners.sign(payload, kid: "1234")
         // test private signer decoding
-        try XCTAssertEqual(privateSigner.verify(data, as: TestPayload.self), payload)
+        try XCTAssertEqual(privateSigners.verify(data, as: TestPayload.self), payload)
         // test public signer decoding
-        try XCTAssertEqual(publicSigner.verify(data, as: TestPayload.self), payload)
+        try XCTAssertEqual(publicSigners.verify(data, as: TestPayload.self), payload)
     }
     
     func testJWKS() throws {

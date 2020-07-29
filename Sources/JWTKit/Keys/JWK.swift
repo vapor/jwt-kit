@@ -1,3 +1,6 @@
+import struct Foundation.Data
+import class Foundation.JSONDecoder
+
 /// A JSON Web Key.
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
@@ -93,5 +96,9 @@ public struct JWK: Decodable {
         case modulus = "n"
         case exponent = "e"
         case privateExponent = "d"
+    }
+
+    public init(json: String) throws {
+        self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
 }
