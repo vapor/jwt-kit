@@ -157,7 +157,7 @@ We can also _generate_ JWTs, also known as signing. To demonstrate this, let's u
 ```swift
 // Create a new instance of our JWTPayload
 let payload = TestPayload(
-    subject: .init(value: "vapor"),
+    subject: "vapor",
     expiration: .init(value: .distantFuture),
     admin: true
 )
@@ -308,6 +308,21 @@ try signers.use(.es256(key: .public(pem: ecdsaPublicKey)))
 
 ## Claims
 
-<hr>
+JWTKit includes several helpers for implementing common [JWT claims](https://tools.ietf.org/html/rfc7519#section-4.1). 
 
-**Originally authored by** [@siemensikkema](http://github.com/siemensikkema)  
+|Claim|Type|Verify Method|
+|---|---|---|
+|`aud`|`AudienceClaim`|`verifyIntendedAudience(includes:)`|
+|`exp`|`ExpirationClaim`|`verifyNotExpired(currentDate:)`|
+|`jti`|`IDClaim`|n/a|
+|`iat`|`IssuedAtClaim`|n/a|
+|`iss`|`IssuerClaim`|n/a|
+|`locale`|`LocaleClaim`|n/a|
+|`nbf`|`NotBeforeClaim`|`verifyNotBefore(currentDate:)`|
+|`sub`|`SubjectClaim`|n/a|
+
+All claims should be verified in the `JWTPayload.verify` method. If the claim has a special verify method, you can use that. Otherwise, access the value of the claim using `value` and check that it is valid.
+
+---
+
+This package was originally authored by the wonderful [@siemensikkema](http://github.com/siemensikkema).

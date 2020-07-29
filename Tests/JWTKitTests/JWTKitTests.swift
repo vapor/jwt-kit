@@ -45,7 +45,7 @@ class JWTKitTests: XCTestCase {
 
         do {
             let payload = TestPayload(
-                subject: .init(value: "vapor"),
+                subject: "vapor",
                 expiration: .init(value: .distantFuture),
                 admin: true
             )
@@ -77,6 +77,20 @@ class JWTKitTests: XCTestCase {
     func testECDSADocs() throws {
         let signers = JWTSigners()
         try signers.use(.es256(key: .public(pem: ecdsaPublicKey)))
+    }
+
+    func testClaimDocs() throws {
+        struct TestPayload: JWTPayload {
+            enum CodingKeys: String, CodingKey {
+                case audience = "aud"
+            }
+
+            var audience: AudienceClaim
+
+            func verify(using signer: JWTSigner) throws {
+                try self.audience.verifyIntendedAudience(includes: "foo")
+            }
+        }
     }
 
     func testParse() throws {
