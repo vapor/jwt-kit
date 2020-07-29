@@ -27,17 +27,22 @@
 
 ### Major Releases
 
-The table below shows a list of PostgresNIO major releases alongside their compatible Swift versions. 
+The table below shows a list of JWTKit major releases alongside their compatible Swift versions. 
 
 |Version|Swift|SPM|
 |---|---|---|
 |4.0|5.2+|`from: "4.0.0"`|
+|3.0|4.0+|`from: "3.0.0"`|
+|2.0|3.1+|`from: "2.0.0"`|
+|1.0|3.1+|`from: "1.0.0"`|
 
 Use the SPM string to easily include the dependendency in your `Package.swift` file.
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: ...)
+.package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0")
 ```
+
+> Note: Prior to version 4.0, this package was included in `vapor/jwt.git`. 
 
 ### Supported Platforms
 
@@ -58,7 +63,7 @@ JWTKit provides APIs for signing and verifying JSON Web Tokens ([RFC7519](https:
 - ECDSA (ES256, ES384, ES512)
 - HMAC (HS256, HS384, HS512)
 - Claims (aud, exp, iss, etc)
-- JSON Web Keys (JWKs)
+- JSON Web Keys (JWK, JWKS)
 
 This package ships a private copy of BoringSSL for cryptography.
 
@@ -73,6 +78,7 @@ To start verifying or signing JWT tokens, you will need an instance of `JWTSigne
 ```swift
 import JWTKit
 
+// Signs and verifies JWTs
 let signers = JWTSigners()
 ```
 
@@ -177,7 +183,7 @@ You should see a JWT printed. This can be fed back into the `verify` method to a
 
 A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) data structure that represents a cryptographic key ([RFC7517](https://tools.ietf.org/html/rfc7517)). These are commonly used to supply clients with keys for verifying JWTs.
 
-For example, Apple hosts their Sign in with Apple JWKS at the following URL.
+For example, Apple hosts their _Sign in with Apple_ JWKS at the following URL.
 
 ```http
 GET https://appleid.apple.com/auth/keys
@@ -205,7 +211,7 @@ try signers.use(jwks: jwks)
 
 You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification.
 
-Note: As of writing, JWK only supports RSA keys.
+> Note: As of writing, JWK only supports RSA keys.
 
 ## HMAC
 
@@ -229,14 +235,14 @@ To create an RSA signer, first initialize an `RSAKey`. This can be done by passi
 ```swift
 // Initialize an RSA key with components.
 let key = RSAKey(
-	modulus: "...",
-	exponent: "...",
-	// Only included in private keys.
-	privateExponent: "..."
+    modulus: "...",
+    exponent: "...",
+    // Only included in private keys.
+    privateExponent: "..."
 )
 ```
 
-You can also choose to load a PEM file like the following:
+You can also choose to load a PEM file:
 
 ```swift
 let rsaPublicKey = """
@@ -271,11 +277,9 @@ try signers.use(.rs256(key: .public(pem: rsaPublicKey)))
 
 ## ECDSA
 
-ECDSA is a more modern algorithm that is similar to RSA. It is considered to be more secure for a given key length than RSA[^1]. However, you should do your own research before deciding. 
+ECDSA is a more modern algorithm that is similar to RSA. It is considered to be more secure for a given key length than RSA<sup>[1](#1)</sup>. However, you should do your own research before deciding. 
 
-[^1]: https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/
-
-Like RSA, you can load ECDSA keys using PEM files. 
+Like RSA, you can load ECDSA keys using PEM files: 
 
 ```swift
 let ecdsaPublicKey = """
@@ -326,3 +330,7 @@ All claims should be verified in the `JWTPayload.verify` method. If the claim ha
 ---
 
 This package was originally authored by the wonderful [@siemensikkema](http://github.com/siemensikkema).
+
+---
+
+<a name="1">1</a>: [https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/](https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/)
