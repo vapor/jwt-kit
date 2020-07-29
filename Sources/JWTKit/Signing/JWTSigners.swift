@@ -5,13 +5,15 @@ import struct Foundation.Data
 /// A collection of signers labeled by `kid`.
 public final class JWTSigners {
     /// Internal storage.
-    private var storage: [JWKIdentifier: JWTSigner]
+    private var jwtStorage: [JWKIdentifier: JWTSigner]
+    private var jwkStorage: [JWKIdentifier: JWKSigner]
 
     private var `default`: JWTSigner?
 
     /// Create a new `JWTSigners`.
     public init() {
-        self.storage = [:]
+        self.jwtStorage = [:]
+        self.jwkStorage = [:]
     }
 
     /// Adds a new signer.
@@ -21,24 +23,59 @@ public final class JWTSigners {
         isDefault: Bool? = nil
     ) {
         if let kid = kid {
-            self.storage[kid] = signer
+            self.jwtStorage[kid] = signer
         }
         if self.default == nil && isDefault != false {
             self.default = signer
         }
     }
 
+    /// Adds a `JWKS` (JSON Web Key Set) to this signers collection
+    /// by first decoding the JSON string.
+    public func use(jwksJSON json: String) throws {
+        let jwks = try JSONDecoder().decode(JWKS.self, from: Data(json.utf8))
+        try self.use(jwks: jwks)
+    }
+
+    /// Adds a `JWKS` (JSON Web Key Set) to this signers collection.
+    public func use(jwks: JWKS) throws {
+        try jwks.keys.forEach { try self.use(jwk: $0) }
+    }
+
+    /// Adds a `JWK` (JSON Web Key) to this signers collection.
+    public func use(jwk: JWK) throws {
+        guard let kid = jwk.keyIdentifier else {
+            throw JWTError.invalidJWK
+        }
+        self.use(.init(jwk: jwk), kid: kid)
+    }
+
+    /// Adds a new signer.
+    public func use(
+        _ signer: JWKSigner,
+        kid: JWKIdentifier
+    ) {
+        self.jwkStorage[kid] = signer
+    }
+
     /// Gets a signer for the supplied `kid`, if one exists.
-    public func get(kid: JWKIdentifier? = nil) -> JWTSigner? {
+    public func get(kid: JWKIdentifier? = nil, alg: String? = nil) -> JWTSigner? {
+        print(kid, alg)
         if let kid = kid {
-            return self.storage[kid]
+            if let jwt = self.jwtStorage[kid] {
+                return jwt
+            } else if let jwk = self.jwkStorage[kid], let alg = alg.flatMap(JWK.Algorithm.init) {
+                return jwk.signer(for: alg)
+            } else {
+                return nil
+            }
         } else {
             return self.default
         }
     }
 
-    public func require(kid: JWKIdentifier? = nil) throws -> JWTSigner {
-        guard let signer = self.get(kid: kid) else {
+    public func require(kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTSigner {
+        guard let signer = self.get(kid: kid, alg: alg) else {
             if let kid = kid {
                 throw JWTError.unknownKID(kid)
             } else {
@@ -84,7 +121,7 @@ public final class JWTSigners {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header()
-        return try self.require(kid: header.kid).verify(parser: parser)
+        return try self.require(kid: header.kid, alg: header.alg).verify(parser: parser)
     }
 
     public func sign<Payload>(

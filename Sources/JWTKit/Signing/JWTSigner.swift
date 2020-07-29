@@ -8,11 +8,12 @@ public final class JWTSigner {
 
     public func sign<Payload>(
         _ payload: Payload,
+        kid: JWKIdentifier? = nil,
         cty: String? = nil
     ) throws -> String
         where Payload: JWTPayload
     {
-        try JWTSerializer().sign(payload, using: self, kid: nil, cty: cty)
+        try JWTSerializer().sign(payload, using: self, kid: kid, cty: cty)
     }
 
     public func unverified<Payload>(

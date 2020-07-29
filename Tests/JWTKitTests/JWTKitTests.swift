@@ -40,7 +40,7 @@ class JWTKitTests: XCTestCase {
         let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
         let jwt = try JWTSigner.hs256(key: "secret".bytes)
             .sign(ExpirationPayload(exp: exp))
-        var parser = try JWTParser(token: jwt.bytes)
+        let parser = try JWTParser(token: jwt.bytes)
         try XCTAssertEqual(parser.header().typ, "JWT")
         try XCTAssertEqual(parser.header().alg, "HS256")
         try XCTAssertEqual(parser.payload(as: ExpirationPayload.self).exp, exp)
@@ -194,8 +194,8 @@ class JWTKitTests: XCTestCase {
         }
         """
 
-        let privateSigner = try JWTSigner.jwk(json: privateKey)
-        let publicSigner = try JWTSigner.jwk(json: publicKey)
+        let privateSigner = try JWKSigner(json: privateKey).signer()!
+        let publicSigner = try JWKSigner(json: publicKey).signer()!
 
         let payload = TestPayload(
             sub: "vapor",
@@ -331,6 +331,45 @@ class JWTKitTests: XCTestCase {
             }
             XCTAssertEqual(name, "aud")
         }
+    }
+
+    func testJWKsWithoutAlgorithm() throws {
+        // rsa key
+        let modulus = "mSfWGBcXRBPgnwnL_ymDCkBaL6vcMcLpBEomzf-wZPajcQFiq4n4MHScyo85Te6GU-YuErVvHKK0D72JhMNWAQXbiF5Hh7swSYX9QsycWwHBgOBNfp51Fm_HTU7ikDBEdSonrmSep8wNqi_PX2_jVBsoxYNeiCQyDLFLHOAAcbIE4Y6lpJy76GpdHJscMO2RsUznjv5VPOQVa_BlQRIIZ0YoSsq9EEZna9O370wZy8jnOthQIXoegQ7sItS1JMKk4X5DdoRenIfbfWLy88XxKOPlIHA5ekT8TyzeI2Uqkg3YMETTDPrSROVO1Qdl2W1uMdfIZ94DgKpZN2VW-w0fLw"
+        let exponent = "AQAB"
+        let privateExponent = "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
+
+        // sign jwt
+        let privateSigner = JWTSigner.rs256(key: RSAKey(
+            modulus: modulus,
+            exponent: exponent,
+            privateExponent: privateExponent
+        )!)
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using signer: JWTSigner) throws { }
+        }
+        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                    "kty": "RSA",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "n": "\(modulus)",
+                    "e": "\(exponent)"
+                 }
+            ]
+        }
+        """
+
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
     }
 }
 

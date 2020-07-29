@@ -33,12 +33,9 @@ public struct JWK: Decodable {
         case rs384
         /// RSA with SHA512
         case rs512
-        
-        /// Decodes from a lowercased string.
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let value = try container.decode(String.self).lowercased()
-            switch value {
+
+        init?(string: String) {
+            switch string.lowercased() {
             case "rs256":
                 self = .rs256
             case "rs384":
@@ -46,8 +43,18 @@ public struct JWK: Decodable {
             case "rs512":
                 self = .rs512
             default:
+                return nil
+            }
+        }
+        
+        /// Decodes from a lowercased string.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            guard let algorithm = Self(string: string) else {
                 throw JWTError.invalidJWK
             }
+            self = algorithm
         }
     }
     
