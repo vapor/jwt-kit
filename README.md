@@ -113,7 +113,7 @@ struct TestPayload: JWTPayload, Equatable {
     enum CodingKeys: String, CodingKey {
         case subject = "sub"
         case expiration = "exp"
-        case admin
+        case isAdmin = "admin
     }
 
     // The "sub" (subject) claim identifies the principal that is the
@@ -126,7 +126,7 @@ struct TestPayload: JWTPayload, Equatable {
 
     // Custom data.
     // If true, the user is an admin.
-    var admin: Bool
+    var isAdmin: Bool
 
     // Run any additional verification logic beyond
     // signature verification here.
@@ -152,7 +152,7 @@ If everything worked, you should see the payload printed:
 TestPayload(
     subject: "vapor", 
     expiration: 4001-01-01 00:00:00 +0000, 
-    admin: true
+    isAdmin: true
 )
 ```
 
@@ -165,7 +165,7 @@ We can also _generate_ JWTs, also known as signing. To demonstrate this, let's u
 let payload = TestPayload(
     subject: "vapor",
     expiration: .init(value: .distantFuture),
-    admin: true
+    isAdmin: true
 )
 ```
 

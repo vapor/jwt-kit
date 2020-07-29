@@ -1,4 +1,7 @@
 import XCTest
+#if os(Linux)
+import FoundationNetworking
+#endif
 @testable import JWTKit
 
 class JWTKitTests: XCTestCase {
@@ -40,7 +43,7 @@ class JWTKitTests: XCTestCase {
         do {
             let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo"
             let payload = try signers.verify(jwt, as: TestPayload.self)
-            print(payload)
+            XCTAssertEqual(payload.admin, true)
         }
 
         do {
