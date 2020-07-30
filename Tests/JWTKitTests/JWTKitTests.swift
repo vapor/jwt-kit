@@ -319,7 +319,8 @@ class JWTKitTests: XCTestCase {
         
         let signers = JWTSigners()
         try signers.use(jwksJSON: json)
-        
+
+        XCTAssertNotNil(signers.get())
         guard let a = signers.get(kid: "a") else {
             XCTFail("expected signer a")
             return
