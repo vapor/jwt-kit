@@ -5,15 +5,16 @@ import struct Foundation.Data
 /// A collection of signers labeled by `kid`.
 public final class JWTSigners {
     /// Internal storage.
-    private var jwtStorage: [JWKIdentifier: JWTSigner]
-    private var jwkStorage: [JWKIdentifier: JWKSigner]
-
-    private var `default`: JWTSigner?
+    private enum Signer {
+        case jwt(JWTSigner)
+        case jwk(JWKSigner)
+    }
+    private var storage: [JWKIdentifier: Signer]
+    private var `default`: Signer?
 
     /// Create a new `JWTSigners`.
     public init() {
-        self.jwtStorage = [:]
-        self.jwkStorage = [:]
+        self.storage = [:]
     }
 
     /// Adds a new signer.
@@ -23,10 +24,12 @@ public final class JWTSigners {
         isDefault: Bool? = nil
     ) {
         if let kid = kid {
-            self.jwtStorage[kid] = signer
+            self.storage[kid] = .jwt(signer)
         }
-        if self.default == nil && isDefault != false {
-            self.default = signer
+        switch (self.default, isDefault) {
+        case (.none, .none), (_, .some(true)):
+            self.default = .jwt(signer)
+        default: break
         }
     }
 
@@ -43,25 +46,37 @@ public final class JWTSigners {
     }
 
     /// Adds a `JWK` (JSON Web Key) to this signers collection.
-    public func use(jwk: JWK) throws {
+    public func use(
+        jwk: JWK,
+        isDefault: Bool? = nil
+    ) throws {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK
         }
-        self.jwkStorage[kid] = JWKSigner(jwk: jwk)
+        let signer = JWKSigner(jwk: jwk)
+        self.storage[kid] = .jwk(signer)
+        switch (self.default, isDefault) {
+        case (.none, .none), (_, .some(true)):
+            self.default = .jwk(signer)
+        default: break
+        }
     }
 
     /// Gets a signer for the supplied `kid`, if one exists.
     public func get(kid: JWKIdentifier? = nil, alg: String? = nil) -> JWTSigner? {
-        if let kid = kid {
-            if let jwt = self.jwtStorage[kid] {
-                return jwt
-            } else if let jwk = self.jwkStorage[kid] {
-                return jwk.signer(for: alg.flatMap(JWK.Algorithm.init))
-            } else {
-                return nil
-            }
+        let signer: Signer
+        if let kid = kid, let stored = self.storage[kid] {
+            signer = stored
+        } else if let d = self.default {
+            signer = d
         } else {
-            return self.default
+            return nil
+        }
+        switch signer {
+        case .jwt(let jwt):
+            return jwt
+        case .jwk(let jwk):
+            return jwk.signer(for: alg.flatMap(JWK.Algorithm.init))
         }
     }
 
