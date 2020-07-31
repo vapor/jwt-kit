@@ -474,6 +474,23 @@ class JWTKitTests: XCTestCase {
         let signers = JWTSigners()
         try signers.use(jwksJSON: microsoftJWKS)
     }
+
+    func testFoo() throws {
+        let test = TestPayload(
+            sub: "vapor",
+            name: "foo",
+            admin: true,
+            exp: .init(value: .distantFuture)
+        )
+        let jwt = try JWTSigner.rs256(
+            key: .private(pem: rsa2PrivateKey)
+        ).sign(test)
+
+        let payload = try JWTSigner.rs256(
+            key: .certificate(pem: rsa2Cert)
+        ).verify(jwt, as: TestPayload.self)
+        XCTAssertEqual(payload, test)
+    }
 }
 
 struct AudiencePayload: Codable {
@@ -609,6 +626,34 @@ PmjXpbCkecAWLj/CcDWEcuTZkYDiSG0zgglbbbhcV0vJQDWSv60tnlA3cjSYutAv
 7FPo5Cq8FkvrdDzeacwRSxYuIq1LtYnd6I30qNaNthntjvbqyMmBulJ1mzLI+Xg/
 aX4rbSL49Z3dAQn8vQIDAQAB
 -----END PUBLIC KEY-----
+"""
+
+let rsa2PrivateKey = """
+-----BEGIN PRIVATE KEY-----
+MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEAtgeOpWeiRIq0Blbc
+qq4P7sKnyDmj1mpQq7OyRKZM0qbwyyMM5Nisf5Y+RSDM7JDwqMeLspGo5znLBzN5
+L14JIQIDAQABAkBlMWRSfX9O3VDhKU65L9S5pcsCW1DCdQ3tthMHaO/SNn4jhmbf
+MamrK4TWctjuau+CwUtQz/kS/fjveYBSVklVAiEA2r1fExLdTwo1pRzCqvUhq7MO
+4wu1dPvv8mJZZvGxQGMCIQDVCVsmeiN+s9erwd95wUZKb4zBkT6MQC0r1fGQBnEN
+qwIgBBT6nDmC5cG0BJPH0jbm3PRnd7c1OKym6qgJMRGblC8CICh9Zr2haS2jsNIM
+PxU9DscG/JGtsV2mtO8n8omVL9eRAiEA1ccs/gJCMAwJ/jeA8tZwOF3GEb/9tGow
+RR8+JsDsJY8=
+-----END PRIVATE KEY-----
+"""
+
+let rsa2Cert = """
+-----BEGIN CERTIFICATE-----
+MIIBzjCCAXgCCQDnzO/FvcHZbjANBgkqhkiG9w0BAQsFADBuMQswCQYDVQQGEwJV
+UzELMAkGA1UECAwCTlkxDDAKBgNVBAcMA05ZQzEOMAwGA1UECgwFVmFwb3IxFDAS
+BgNVBAMMC3ZhcG9yLmNvZGVzMR4wHAYJKoZIhvcNAQkBFg9qd3RAdmFwb3IuY29k
+ZXMwHhcNMjAwNzMxMjMyOTQ5WhcNMjEwNzMxMjMyOTQ5WjBuMQswCQYDVQQGEwJV
+UzELMAkGA1UECAwCTlkxDDAKBgNVBAcMA05ZQzEOMAwGA1UECgwFVmFwb3IxFDAS
+BgNVBAMMC3ZhcG9yLmNvZGVzMR4wHAYJKoZIhvcNAQkBFg9qd3RAdmFwb3IuY29k
+ZXMwXDANBgkqhkiG9w0BAQEFAANLADBIAkEAtgeOpWeiRIq0Blbcqq4P7sKnyDmj
+1mpQq7OyRKZM0qbwyyMM5Nisf5Y+RSDM7JDwqMeLspGo5znLBzN5L14JIQIDAQAB
+MA0GCSqGSIb3DQEBCwUAA0EAQyBP1X40S4joTg1ov4eK0aKNlRLbWftEorGh5jCc
+F3IAwlztc7uFj589k/M+xO4TGdrEVlMyiVdC5/B0MLa8LQ==
+-----END CERTIFICATE-----
 """
 
 extension String {

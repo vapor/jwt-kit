@@ -42,15 +42,10 @@ extension OpenSSLKey {
     static func load<Data, T>(pem data: Data, _ closure: (UnsafeMutablePointer<BIO>) -> (T?)) throws -> T
         where Data: DataProtocol
     {
-        let bio = CJWTKitBoringSSL_BIO_new(CJWTKitBoringSSL_BIO_s_mem())
+        let bytes = data.copyBytes()
+        let bio = CJWTKitBoringSSL_BIO_new_mem_buf(bytes, numericCast(bytes.count))
         defer { CJWTKitBoringSSL_BIO_free(bio) }
-
-        guard (data.copyBytes() + [0]).withUnsafeBytes({ pointer in
-            CJWTKitBoringSSL_BIO_puts(bio, pointer.baseAddress?.assumingMemoryBound(to: Int8.self))
-        }) >= 0 else {
-            throw JWTError.signingAlgorithmFailure(OpenSSLError.bioPutsFailure)
-        }
-
+        
         guard let bioPtr = bio, let c = closure(bioPtr) else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.bioConversionFailure)
         }
