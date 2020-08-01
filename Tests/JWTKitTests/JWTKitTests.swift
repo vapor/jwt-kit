@@ -475,7 +475,7 @@ class JWTKitTests: XCTestCase {
         try signers.use(jwksJSON: microsoftJWKS)
     }
 
-    func testFoo() throws {
+    func testRSACertificate() throws {
         let test = TestPayload(
             sub: "vapor",
             name: "foo",
@@ -490,6 +490,12 @@ class JWTKitTests: XCTestCase {
             key: .certificate(pem: rsa2Cert)
         ).verify(jwt, as: TestPayload.self)
         XCTAssertEqual(payload, test)
+    }
+
+    func testFirebaseJWTAndCertificate() throws {
+        let payload = try JWTSigner.rs256(key: .certificate(pem: firebaseCert))
+            .verify(firebaseJWT, as: FirebasePayload.self)
+        XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
 }
 
@@ -653,6 +659,57 @@ ZXMwXDANBgkqhkiG9w0BAQEFAANLADBIAkEAtgeOpWeiRIq0Blbcqq4P7sKnyDmj
 1mpQq7OyRKZM0qbwyyMM5Nisf5Y+RSDM7JDwqMeLspGo5znLBzN5L14JIQIDAQAB
 MA0GCSqGSIb3DQEBCwUAA0EAQyBP1X40S4joTg1ov4eK0aKNlRLbWftEorGh5jCc
 F3IAwlztc7uFj589k/M+xO4TGdrEVlMyiVdC5/B0MLa8LQ==
+-----END CERTIFICATE-----
+"""
+
+struct FirebasePayload: JWTPayload, Equatable {
+    enum CodingKeys: String, CodingKey {
+        case providerID = "provider_id"
+        case issuer = "iss"
+        case audience = "aud"
+        case authTime = "auth_time"
+        case userID = "user_id"
+        case subject = "sub"
+        case issuedAt = "iat"
+        case expiration = "exp"
+    }
+    let providerID: String
+    let issuer: IssuerClaim
+    let audience: AudienceClaim
+    let authTime: Int
+    let userID: String
+    let subject: SubjectClaim
+    let issuedAt: IssuedAtClaim
+    let expiration: ExpirationClaim
+
+    func verify(using signer: JWTSigner) throws {
+        try self.expiration.verifyNotExpired(currentDate: .distantPast)
+    }
+}
+
+let firebaseJWT = """
+eyJhbGciOiJSUzI1NiIsImtpZCI6IjU1NGE3NTQ3Nzg1ODdjOTRjMTY3M2U4ZWEyNDQ2MTZjMGMwNDNjYmMiLCJ0eXAiOiJKV1QifQ.eyJwcm92aWRlcl9pZCI6ImFub255bW91cyIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS92enNnLXNjaGVkdWxlLXRlc3QiLCJhdWQiOiJ2enNnLXNjaGVkdWxlLXRlc3QiLCJhdXRoX3RpbWUiOjE1OTYyMzg5ODIsInVzZXJfaWQiOiJ5OHdpS1RoWEdLTTg4eHhyUVdEWnpLbkJ1cXYyIiwic3ViIjoieTh3aUtUaFhHS004OHh4clFXRFp6S25CdXF2MiIsImlhdCI6MTU5NjIzODk4MiwiZXhwIjoxNTk2MjQyNTgyLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7fSwic2lnbl9pbl9wcm92aWRlciI6ImFub255bW91cyJ9fQ.vW5N3RqN8ba_P56GgjyMY-RE3hr_ciEw-E_oBtVjMJw3pgIO7MDHj0eRqTDTbjapN0BhkxTjkOA-L5pGO-9uA7afO-45vmiyaFDaN_oIYHNCewDgVaphDy_CYQ1PJugZHVjumk-qgzdS9nen_6oXmWZ1CYMop-g8UEyVHUaU-yjnvYSvvRWcas--HaErcsPY6uDx9DR8R2_mC-_VHBD58zN1svjTELkeVIZtkvA2Pxy1WO1NKxc0hWiz7w6RTu6P56_DJ1OqyMwxQavblaufdjccuC3bnv_MGKM8xhtsYLFWPnwFD762A50cHyS6SondruP7UnFQc1owlB6gaxEihw
+"""
+
+let firebaseCert = """
+-----BEGIN CERTIFICATE-----
+MIIDHDCCAgSgAwIBAgIIOvZ+ZDrIgmQwDQYJKoZIhvcNAQEFBQAwMTEvMC0GA1UE
+AxMmc2VjdXJldG9rZW4uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wHhcNMjAw
+NzI0MDkyMDAxWhcNMjAwODA5MjEzNTAxWjAxMS8wLQYDVQQDEyZzZWN1cmV0b2tl
+bi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBANSBPQydBvIITxwMsm0adXL5ToKR6Aihi3fCepGZj1Oq2pdq
+r9ObfFcDX4GKHF7w6pm8WXxoZnjO37waSJc1ECmZt11tR0Ei/f0huLqDqNItGWRc
+ApogR3Af8C12IwFbxvp5tPj4s8H7Ldnrr97zzXogrTKvQCVJQJE43SfqcOO0T1br
+gfskj+G863Uy5JN7S8OijDLFK3YGIIvQDv6jp0tVrRwUUedJ4qET3IVWLkW5jAcd
+WAy7/RmIVVZFXuqjyunU6xNd6gLw5uZPZdLjSW9CccFmZQfinuNKyFGLhdF00TMq
+Torq8EOjFanRbxRi3mb9g01hVKY8WcsK1CE4RCMCAwEAAaM4MDYwDAYDVR0TAQH/
+BAIwADAOBgNVHQ8BAf8EBAMCB4AwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwIwDQYJ
+KoZIhvcNAQEFBQADggEBAGMRck+Afw3zQF3SqgJ80bCgFJy4CidQuoNuElA673Y+
+H4ulR5n/UV3feelR2+q0PvbZIVNf3Y5Yt+AWK9uK3LPprouFnx4U2X+mxsLHlHUC
+Kl+wKoLuDvAmiDHu5JIjoYO0el6JJYNVnG3wCrSLLc6ehA32hfngdtJmkDN0/OoM
+xmbj7X3JWctiJw0NxmH8wrKbeZLVIsaCwfc8iKjwcqRyA6hUxTobcsNs3IZsYv2W
+g/5ZupoI8k2foTq4OdXJH/hkq4N5AyLp9S/RSodW6X+gexxohtgJxGx0gojotMzX
+sb7NLsl7DkvjjxTz7I98xaGbfhofgYympeKT6UO+tmc=
 -----END CERTIFICATE-----
 """
 
