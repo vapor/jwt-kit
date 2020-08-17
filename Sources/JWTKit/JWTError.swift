@@ -9,6 +9,7 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
     case unknownKID(JWKIdentifier)
     case invalidJWK
     case invalidBool(String)
+    case generic(identifier: String, reason: String)
 
     public var reason: String {
         switch self {
@@ -28,6 +29,8 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
             return "invalid JWK"
         case .invalidBool(let str):
             return "invalid boolean value: \(str)"
+        case .generic(let identifier, let reason):
+                return "missing '\(identifier). \(reason)"
         }
     }
 

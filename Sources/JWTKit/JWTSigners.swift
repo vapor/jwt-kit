@@ -76,7 +76,7 @@ public final class JWTSigners {
         case .jwt(let jwt):
             return jwt
         case .jwk(let jwk):
-            return jwk.signer(for: alg.flatMap(JWK.Algorithm.init))
+            return jwk.signer(for: alg.flatMap({ JWK.Algorithm.init(string: $0) }))
         }
     }
 
@@ -144,6 +144,36 @@ public final class JWTSigners {
     }
 }
 
+//extension JWTSigners {
+//    /// Adds a `JWK` (JSON Web Key) to this signers collection.
+//    public func use(jwk: JWK) throws {
+//        guard let kid = jwk.keyIdentifier else {
+//            throw JWTError.invalidJWK
+//        }
+//        try self.use(.jwk(key:jwk), kid: kid)
+//    }
+//}
+
+
+public extension JWTSigners {
+
+    convenience init(jwks: JWKS, skipAnonymousKeys: Bool = true) throws  {
+        self.init()
+        for jwk in jwks.keys {
+            guard let kid = jwk.keyIdentifier else {
+                if skipAnonymousKeys {
+                    continue
+                } else {
+                    throw JWTError.generic(identifier: "missingKID", reason: "At least a JSON Web Key in the JSON Web Key Set is missing a `kid`.")
+                }
+            }
+
+            try self.use(JWTSigner.jwk(key: jwk), kid: kid)
+        }
+    }
+}
+
+// TODO: remove this and use the JWTSigner extensions directly?
 private struct JWKSigner {
     let jwk: JWK
 
@@ -180,7 +210,51 @@ private struct JWKSigner {
                 return JWTSigner.rs384(key: rsaKey)
             case .rs512:
                 return JWTSigner.rs512(key: rsaKey)
+            default:
+                return nil
+            }
+        
+        case .ec:
+            guard let x = self.jwk.x else {
+                return nil
+            }
+            guard let y = self.jwk.y else {
+                return nil
+            }
+            
+            // TODO: check: there is here an implicit assumption that the algo is linked to the curve
+            let curve: ECDSAKey.Curve
+            
+            switch algorithm {
+            case .es256:
+                curve = .p256
+            case .es384:
+                curve = .p384
+            case .es512:
+                curve = .p521
+            default:
+                return nil
+            }
+            
+            guard let ecKey = try? ECDSAKey.components(x: x, y: y, curve: curve) else {
+                return nil
+            }
+
+            guard let algorithm = algorithm ?? self.jwk.algorithm else {
+                return nil
+            }
+
+            switch algorithm {
+            case .es256:
+                return JWTSigner.es256(key: ecKey)
+            case .es384:
+                return JWTSigner.es384(key: ecKey)
+            case .es512:
+                return JWTSigner.es512(key: ecKey)
+            default:
+                return nil
             }
         }
     }
 }
+
