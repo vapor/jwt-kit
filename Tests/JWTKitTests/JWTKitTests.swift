@@ -224,7 +224,6 @@ class JWTKitTests: XCTestCase {
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
-    
     func testGetECParametersP384() throws {
         let message = "test".bytes
 

@@ -127,7 +127,6 @@ public final class JWTSigners {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header()
-        
         return try self.require(kid: header.kid, alg: header.alg).verify(parser: parser)
     }
 

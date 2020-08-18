@@ -11,19 +11,19 @@ import CJWTKitBoringSSL
 class BN {
     let c: UnsafeMutablePointer<BIGNUM>?;
 
-     public init() {
+    public init() {
         self.c = CJWTKitBoringSSL_BN_new();
     }
 
-     init(_ ptr: OpaquePointer) {
+    init(_ ptr: OpaquePointer) {
         self.c = UnsafeMutablePointer<BIGNUM>(ptr);
     }
 
-     deinit {
+    deinit {
         CJWTKitBoringSSL_BN_free(self.c);
     }
 
-     public static func convert(_ bnBase64: String) -> BN? {
+    public static func convert(_ bnBase64: String) -> BN? {
         guard let data = Data(base64Encoded: bnBase64) else {
             return nil
         }
@@ -34,12 +34,12 @@ class BN {
         return BN(c)
     }
 
-     public func toBase64(_ size: Int = 1000) -> String {
-        let pBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: size);
-        defer { pBuffer.deallocate() };
+    public func toBase64(_ size: Int = 1000) -> String {
+        let pBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
+        defer { pBuffer.deallocate() }
 
-         let actualBytes = Int(CJWTKitBoringSSL_BN_bn2bin(self.c, pBuffer));
-        let data = Data(bytes: pBuffer, count: actualBytes);
-        return data.base64EncodedString();
+        let actualBytes = Int(CJWTKitBoringSSL_BN_bn2bin(self.c, pBuffer))
+        let data = Data(bytes: pBuffer, count: actualBytes)
+        return data.base64EncodedString()
     }
 }
