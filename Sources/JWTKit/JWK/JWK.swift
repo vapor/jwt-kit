@@ -108,18 +108,6 @@ public struct JWK: Codable {
      /// The `kid` value is a case-sensitive string.
      public var keyIdentifier: JWKIdentifier?
 
-     /// The `x5u` (X.509 URL) parameter is a URI [RFC3986] that refers to a resource for an X.509 public key certificate or certificate chain [RFC5280].
-    public var x5u: String?
-
-     /// The `x5c` (X.509 certificate chain) parameter contains a chain of one or more PKIX certificates [RFC5280].
-    public var x5c: [String]?
-
-     /// The `x5t` (X.509 certificate SHA-1 thumbprint) parameter is a base64url-encoded SHA-1 thumbprint (a.k.a. digest) of the DER encoding of an X.509 certificate [RFC5280].  Note that certificate thumbprints are also sometimes known as certificate fingerprints.
-    public var x5t: String?
-
-     /// The `x5t#S256` (X.509 certificate SHA-256 thumbprint) parameter is a base64url-encoded SHA-256 thumbprint (a.k.a. digest) of the DER encoding of an X.509 certificate [RFC5280].
-    public var x5tS256: String?
-
     // RSA keys
     // Represented as the base64url encoding of the value’s unsigned big endian representation as an octet sequence.
     /// `n` Modulus.
@@ -131,102 +119,23 @@ public struct JWK: Codable {
     /// `d` Private exponent.
     public var privateExponent: String?
 
-    /// First prime factor.
-    public var p: String?
-
-    /// Second prime factor.
-    public var q: String?
-
-    /// First factor CRT exponent.
-    public var dp: String?
-
-    /// Second factor CRT exponent.
-    public var dq: String?
-
-    /// First CRT coefficient.
-    public var qi: String?
-
-    /// Other primes info.
-    public var oth: OthType?
-
-    // EC DSS keys
-    public var crv: String?
-
+    // ECDSA keys
     public var x: String?
 
     public var y: String?
-
-    public enum OthType: String, Codable {
-        case r
-        case d
-        case t
-    }
 
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
         case algorithm = "alg"
         case keyIdentifier = "kid"
-        case x5u
-        case x5c
-        case x5t
-        case x5tS256 = "x5t#S256"
         case modulus = "n"
         case exponent = "e"
         case privateExponent = "d"
-        case p
-        case q
-        case dp
-        case dq
-        case qi
-        case oth
-        case crv
         case x
         case y
     }
     
     public init(json: String) throws {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
-    }
-
-    public init(
-        kty: KeyType,
-        alg: Algorithm? = nil,
-        kid: JWKIdentifier? = nil,
-        x5u: String? = nil,
-        x5c: [String]? = nil,
-        x5t: String? = nil,
-        x5tS256: String? = nil,
-        n: String? = nil,
-        e: String? = nil,
-        d: String? = nil,
-        p: String? = nil,
-        q: String? = nil,
-        dp: String? = nil,
-        dq: String? = nil,
-        qi: String? = nil,
-        oth: OthType? = nil,
-        crv: String? = nil,
-        x: String? = nil,
-        y: String? = nil
-    ) {
-        self.keyType = kty
-        self.algorithm = alg
-        self.keyIdentifier = kid
-        self.x5u = x5u
-        self.x5c = x5c
-        self.x5t = x5t
-        self.x5tS256 = x5tS256
-        self.modulus = n
-        self.exponent = e
-        self.privateExponent = d
-        self.p = p
-        self.q = q
-        self.dp = dp
-        self.dq = dq
-        self.qi = qi
-        self.oth = oth
-        self.crv = crv
-        self.x = x
-        self.y = y
     }
 }
