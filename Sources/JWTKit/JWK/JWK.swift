@@ -1,7 +1,7 @@
 import struct Foundation.Data
 import class Foundation.JSONDecoder
 
- /// A JSON Web Key.
+/// A JSON Web Key.
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable {
