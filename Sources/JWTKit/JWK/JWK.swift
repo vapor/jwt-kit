@@ -9,9 +9,6 @@ public struct JWK: Codable {
      /// The `use` (public key use) parameter identifies the intended use of the public key. The `use` parameter is employed to indicate whether a public key is used for encrypting data or verifying the signature on data.
     public var use: PublicKeyUse?
 
-     /// The `key_ops` (key operations) parameter identifies the operation(s) for which the key is intended to be used. The `key_ops` parameter is intended for use cases in which public, private, or symmetric keys may be present.
-    public var keyOps: [KeyOperation]?
-
      /// Supported `kty` key types.
     public enum KeyType: String, Codable {
         /// RSA
@@ -172,7 +169,6 @@ public struct JWK: Codable {
      private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
         case use
-        case keyOps = "key_ops"
         case algorithm = "alg"
         case keyIdentifier = "kid"
         case x5u
@@ -200,7 +196,6 @@ public struct JWK: Codable {
      public init(
         kty: KeyType,
         use: PublicKeyUse? = nil,
-        keyOps: [KeyOperation]? = nil,
         alg: Algorithm? = nil,
         kid: JWKIdentifier? = nil,
         x5u: String? = nil,
@@ -222,7 +217,6 @@ public struct JWK: Codable {
     ) {
         self.keyType = kty
         self.use = use
-        self.keyOps = keyOps
         self.algorithm = alg
         self.keyIdentifier = kid
         self.x5u = x5u
