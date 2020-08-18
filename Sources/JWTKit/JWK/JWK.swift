@@ -79,8 +79,8 @@ public struct JWK: Codable {
         /// Decodes from a lowercased string.
         public init(from decoder: Decoder) throws {
             let container = try decoder.singleValueContainer()
-            let string = try container.decode(String.self).lowercased()
-            guard let algorithm = Self(rawValue: string) else {
+            let string = try container.decode(String.self)
+            guard let algorithm = Self(string: string) else {
                 throw JWTError.invalidJWK
             }
             self = algorithm
@@ -124,49 +124,49 @@ public struct JWK: Codable {
      /// The `x5t#S256` (X.509 certificate SHA-256 thumbprint) parameter is a base64url-encoded SHA-256 thumbprint (a.k.a. digest) of the DER encoding of an X.509 certificate [RFC5280].
     public var x5tS256: String?
 
-     // RSA keys
+    // RSA keys
     // Represented as the base64url encoding of the value’s unsigned big endian representation as an octet sequence.
-     /// Modulus.
+    /// `n` Modulus.
     public var modulus: String?
 
-     /// Exponent.
+    /// `e` Exponent.
     public var exponent: String?
 
-     /// Private exponent.
+    /// `d` Private exponent.
     public var privateExponent: String?
 
-     /// First prime factor.
+    /// First prime factor.
     public var p: String?
 
-     /// Second prime factor.
+    /// Second prime factor.
     public var q: String?
 
-     /// First factor CRT exponent.
+    /// First factor CRT exponent.
     public var dp: String?
 
-     /// Second factor CRT exponent.
+    /// Second factor CRT exponent.
     public var dq: String?
 
-     /// First CRT coefficient.
+    /// First CRT coefficient.
     public var qi: String?
 
-     /// Other primes info.
+    /// Other primes info.
     public var oth: OthType?
 
-     // EC DSS keys
-     public var crv: String?
+    // EC DSS keys
+    public var crv: String?
 
-     public var x: String?
+    public var x: String?
 
-     public var y: String?
+    public var y: String?
 
-     public enum OthType: String, Codable {
+    public enum OthType: String, Codable {
         case r
         case d
         case t
     }
 
-     private enum CodingKeys: String, CodingKey {
+    private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
         case use
         case algorithm = "alg"
@@ -193,7 +193,7 @@ public struct JWK: Codable {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
 
-     public init(
+    public init(
         kty: KeyType,
         use: PublicKeyUse? = nil,
         alg: Algorithm? = nil,
