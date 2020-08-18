@@ -5,7 +5,7 @@ extension DataProtocol {
         }) {
             return array
         } else {
-            var buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: self.count)
+            let buffer = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: self.count)
             self.copyBytes(to: buffer)
             defer { buffer.deallocate() }
             return [UInt8](buffer)

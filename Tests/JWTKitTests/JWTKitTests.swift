@@ -238,7 +238,6 @@ class JWTKitTests: XCTestCase {
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
-    
     func testGetECParametersP521() throws {
         let message = "test".bytes
 
@@ -252,8 +251,6 @@ class JWTKitTests: XCTestCase {
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
-    // TODO add tests
-
     func testJWTioExample() throws {
         let token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HWP_3cYHBw7AhHale5wky6-sVA"
         let corruptedToken = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HwP_3cYHBw7AhHale5wky6-sVA"

@@ -5,10 +5,6 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable {
-    
-     /// The `use` (public key use) parameter identifies the intended use of the public key. The `use` parameter is employed to indicate whether a public key is used for encrypting data or verifying the signature on data.
-    public var use: PublicKeyUse?
-
      /// Supported `kty` key types.
     public enum KeyType: String, Codable {
         /// RSA
@@ -168,7 +164,6 @@ public struct JWK: Codable {
 
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
-        case use
         case algorithm = "alg"
         case keyIdentifier = "kid"
         case x5u
@@ -195,7 +190,6 @@ public struct JWK: Codable {
 
     public init(
         kty: KeyType,
-        use: PublicKeyUse? = nil,
         alg: Algorithm? = nil,
         kid: JWKIdentifier? = nil,
         x5u: String? = nil,
@@ -216,7 +210,6 @@ public struct JWK: Codable {
         y: String? = nil
     ) {
         self.keyType = kty
-        self.use = use
         self.algorithm = alg
         self.keyIdentifier = kid
         self.x5u = x5u
