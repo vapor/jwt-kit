@@ -212,44 +212,44 @@ class JWTKitTests: XCTestCase {
     }
     
     func testGetECParametersP256() throws {
-        let message = "test".bytes;
+        let message = "test".bytes
 
-        let ec = try ECDSAKey.generate(curve: .p256);
-        let ecSigner = JWTSigner.es256(key: ec);
+        let ec = try ECDSAKey.generate(curve: .p256)
+        let ecSigner = JWTSigner.es256(key: ec)
 
-        let signature = try ecSigner.algorithm.sign(message);
+        let signature = try ecSigner.algorithm.sign(message)
 
-        let param = try ec.getParameters();
-        let ecVerifier = try JWTSigner.es256(key: ECDSAKey.components(x: param.x, y: param.y, curve: .p256));
-        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message));
+        let param = try ec.getParameters()
+        let ecVerifier = try JWTSigner.es256(key: ECDSAKey(x: param.x, y: param.y, curve: .p256))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
     
     func testGetECParametersP384() throws {
-        let message = "test".bytes;
+        let message = "test".bytes
 
-        let ec = try ECDSAKey.generate(curve: .p384);
-        let ecSigner = JWTSigner.es384(key: ec);
+        let ec = try ECDSAKey.generate(curve: .p384)
+        let ecSigner = JWTSigner.es384(key: ec)
 
-        let signature = try ecSigner.algorithm.sign(message);
+        let signature = try ecSigner.algorithm.sign(message)
 
-        let param = try ec.getParameters();
-        let ecVerifier = try JWTSigner.es384(key: ECDSAKey.components(x: param.x, y: param.y, curve: .p384));
-        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message));
+        let param = try ec.getParameters()
+        let ecVerifier = try JWTSigner.es384(key: ECDSAKey(x: param.x, y: param.y, curve: .p384))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
     
     func testGetECParametersP521() throws {
-        let message = "test".bytes;
+        let message = "test".bytes
 
-        let ec = try ECDSAKey.generate(curve: .p521);
-        let ecSigner = JWTSigner.es512(key: ec);
+        let ec = try ECDSAKey.generate(curve: .p521)
+        let ecSigner = JWTSigner.es512(key: ec)
 
-        let signature = try ecSigner.algorithm.sign(message);
+        let signature = try ecSigner.algorithm.sign(message)
 
-        let param = try ec.getParameters();
-        let ecVerifier = try JWTSigner.es512(key: ECDSAKey.components(x: param.x, y: param.y, curve: .p521));
-        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message));
+        let param = try ec.getParameters()
+        let ecVerifier = try JWTSigner.es512(key: ECDSAKey(x: param.x, y: param.y, curve: .p521))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
     // TODO add tests
@@ -307,49 +307,48 @@ class JWTKitTests: XCTestCase {
         }
     }
     
-    // TODO: this test needs to be updated as doesn't build anymore.
-//    func testJWKSigner() throws {
-//        let privateKey = """
-//        {
-//            "kty": "RSA",
-//            "d": "\(rsaPrivateExponent)",
-//            "e": "AQAB",
-//            "use": "sig",
-//            "kid": "1234",
-//            "alg": "RS256",
-//            "n": "\(rsaModulus)"
-//        }
-//        """
-//
-//        let publicKey = """
-//        {
-//            "kty": "RSA",
-//            "e": "AQAB",
-//            "use": "sig",
-//            "kid": "1234",
-//            "alg": "RS256",
-//            "n": "\(rsaModulus)"
-//        }
-//        """
-//
-//        let publicSigners = JWTSigners()
-//        try publicSigners.use(jwk: .init(json: publicKey))
-//
-//        let privateSigners = JWTSigners()
-//        try privateSigners.use(jwk: .init(json: privateKey))
-//
-//        let payload = TestPayload(
-//            sub: "vapor",
-//            name: "Foo",
-//            admin: false,
-//            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-//        )
-//        let data = try privateSigners.sign(payload, kid: "1234")
-//        // test private signer decoding
-//        try XCTAssertEqual(privateSigners.verify(data, as: TestPayload.self), payload)
-//        // test public signer decoding
-//        try XCTAssertEqual(publicSigners.verify(data, as: TestPayload.self), payload)
-//    }
+    func testJWKSigner() throws {
+        let privateKey = """
+        {
+            "kty": "RSA",
+            "d": "\(rsaPrivateExponent)",
+            "e": "AQAB",
+            "use": "sig",
+            "kid": "1234",
+            "alg": "RS256",
+            "n": "\(rsaModulus)"
+        }
+        """
+
+        let publicKey = """
+        {
+            "kty": "RSA",
+            "e": "AQAB",
+            "use": "sig",
+            "kid": "1234",
+            "alg": "RS256",
+            "n": "\(rsaModulus)"
+        }
+        """
+
+        let publicSigners = JWTSigners()
+        try publicSigners.use(jwk: .init(json: publicKey))
+
+        let privateSigners = JWTSigners()
+        try privateSigners.use(jwk: .init(json: privateKey))
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let data = try privateSigners.sign(payload, kid: "1234")
+        // test private signer decoding
+        try XCTAssertEqual(privateSigners.verify(data, as: TestPayload.self), payload)
+        // test public signer decoding
+        try XCTAssertEqual(publicSigners.verify(data, as: TestPayload.self), payload)
+    }
     
     func testJWKS() throws {
         let json = """

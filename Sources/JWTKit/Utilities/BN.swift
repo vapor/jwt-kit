@@ -28,11 +28,10 @@ class BN {
             return nil
         }
 
-        // TODO: confirm - was Int32(p.count) in original code
-         let c = data.withUnsafeBytes { (p: UnsafeRawBufferPointer) -> OpaquePointer in
+        let c = data.withUnsafeBytes { (p: UnsafeRawBufferPointer) -> OpaquePointer in
             return OpaquePointer(CJWTKitBoringSSL_BN_bin2bn(p.baseAddress?.assumingMemoryBound(to: UInt8.self), p.count, nil))
-        };
-        return BN(c);
+        }
+        return BN(c)
     }
 
      public func toBase64(_ size: Int = 1000) -> String {

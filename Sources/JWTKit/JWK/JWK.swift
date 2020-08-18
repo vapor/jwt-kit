@@ -38,8 +38,6 @@ public struct JWK: Codable {
             var container = encoder.singleValueContainer()
             try container.encode(self.rawValue)
         }
-        
-
      }
      
      /// The `kty` (key type) parameter identifies the cryptographic algorithm
@@ -48,48 +46,48 @@ public struct JWK: Codable {
      public var keyType: KeyType
      
      /// Supported `alg` algorithms
-     public enum Algorithm: String, Codable {
-         /// RSA with SHA256
-         case rs256
-         /// RSA with SHA384
-         case rs384
-         /// RSA with SHA512
-         case rs512
+    public enum Algorithm: String, Codable {
+        /// RSA with SHA256
+        case rs256
+        /// RSA with SHA384
+        case rs384
+        /// RSA with SHA512
+        case rs512
         /// EC with SHA256
         case es256
         /// EC with SHA384
         case es384
         /// EC with SHA512
         case es512
-
-         init?(string: String) {
-             switch string.lowercased() {
-             case "rs256":
-                 self = .rs256
-             case "rs384":
-                 self = .rs384
-             case "rs512":
-                 self = .rs512
-             case "es256":
-                 self = .es256
-             case "es384":
-                 self = .es384
-             case "es512":
-                 self = .es512
-             default:
-                 return nil
-             }
-         }
+        
+        init?(string: String) {
+            switch string.lowercased() {
+            case "rs256":
+                self = .rs256
+            case "rs384":
+                self = .rs384
+            case "rs512":
+                self = .rs512
+            case "es256":
+                self = .es256
+            case "es384":
+                self = .es384
+            case "es512":
+                self = .es512
+            default:
+                return nil
+            }
+        }
          
-         /// Decodes from a lowercased string.
-         public init(from decoder: Decoder) throws {
-             let container = try decoder.singleValueContainer()
-             let string = try container.decode(String.self)
-             guard let algorithm = Self(string: string) else {
-                 throw JWTError.invalidJWK
-             }
-             self = algorithm
-         }
+        /// Decodes from a lowercased string.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self).lowercased()
+            guard let algorithm = Self(rawValue: string) else {
+                throw JWTError.invalidJWK
+            }
+            self = algorithm
+        }
         
         /// Encodes to a lowercased string.
         public func encode(to encoder: Encoder) throws {
@@ -194,6 +192,10 @@ public struct JWK: Codable {
         case x
         case y
     }
+    
+    public init(json: String) throws {
+        self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
+    }
 
      public init(
         kty: KeyType,
@@ -239,89 +241,5 @@ public struct JWK: Codable {
         self.crv = crv
         self.x = x
         self.y = y
-    }
-}
-
-
-
-// TODO: can this be removed?
- public extension JWTSigner {
-
-     /// Creates a JWT signer with the supplied JWK
-    static func jwk(key: JWK) throws -> JWTSigner {
-        switch key.keyType {
-        case .rsa:
-            guard let n = key.modulus else {
-                throw JWTError.generic(identifier: "missingModulus", reason: "Modulus not specified for JWK RSA key.")
-            }
-            guard let e = key.exponent else {
-                throw JWTError.generic(identifier: "missingExponent", reason: "Exponent not specified for JWK RSA key.")
-            }
-
-             guard let algorithm = key.algorithm else {
-                throw JWTError.generic(identifier: "missingAlgorithm", reason: "Algorithm missing for JWK RSA key.")
-            }
-
-             guard let rsaKey = RSAKey(modulus: n, exponent: e, privateExponent: key.privateExponent) else {
-                throw JWTError.generic(identifier: "RSAKey generation", reason: "can't generate JWK RSA key.")
-            }
-
-             switch algorithm {
-             case .rs256:
-                return JWTSigner.rs256(key: rsaKey)
-             case .rs384:
-                return JWTSigner.rs384(key: rsaKey)
-             case .rs512:
-                return JWTSigner.rs512(key: rsaKey)
-            default:
-                throw JWTError.generic(
-                    identifier: "invalidAlgorithm",
-                    reason: "Algorithm \(String(describing: key.algorithm)) not supported for JWK RSA key.")
-            }
-        case .ec:
-            guard let x = key.x else {
-                throw JWTError.generic(identifier: "missingX", reason: "X not specified for JWK EC key.")
-            }
-            guard let y = key.y else {
-                throw JWTError.generic(identifier: "missingY", reason: "Y not specified for JWK EC key.")
-            }
-
-             guard let algorithm = key.algorithm else {
-                throw JWTError.generic(identifier: "missingAlgorithm", reason: "Algorithm missing for JWK EC key.")
-            }
-
-            // TODO: check: there is here an implicit assumption that the algo is linked to the curve
-            let curve: ECDSAKey.Curve
-            
-            switch algorithm {
-            case .es256:
-                curve = .p256
-            case .es384:
-                curve = .p384
-            case .es512:
-                curve = .p521
-            default:
-                throw JWTError.generic(
-                identifier: "invalidAlgorithm",
-                reason: "Algorithm \(String(describing: key.algorithm)) not supported for JWK EC key.")
-            }
-            
-            let ecKey = try ECDSAKey.components(x: x, y: y, curve: curve)
-            switch algorithm {
-            case .es256:
-                return JWTSigner.es256(key: ecKey)
-            case .es384:
-                return JWTSigner.es384(key: ecKey)
-            case .es512:
-                return JWTSigner.es512(key: ecKey)
-            default:
-                throw JWTError.generic(
-                    identifier: "invalidAlgorithm",
-                    reason: "Algorithm \(String(describing: key.algorithm)) not supported for JWK EC key.")
-            }
-        default:
-            throw JWTError.generic(
-                identifier: "invalidKeyType", reason: "Key type \(String(describing: key.keyType)) not supported.")
-        }
     }
 }

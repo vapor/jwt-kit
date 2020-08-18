@@ -8,8 +8,10 @@ internal struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
     var curveResultSize: Int {
         let curveName = CJWTKitBoringSSL_EC_GROUP_get_curve_name(CJWTKitBoringSSL_EC_KEY_get0_group(key.c))
         switch curveName {
-        case NID_X9_62_prime256v1, NID_secp384r1:
+        case NID_X9_62_prime256v1:
             return 32
+        case  NID_secp384r1:
+            return 48
         case NID_secp521r1:
             return 66
         default:

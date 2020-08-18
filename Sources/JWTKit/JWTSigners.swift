@@ -127,6 +127,7 @@ public final class JWTSigners {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header()
+        
         return try self.require(kid: header.kid, alg: header.alg).verify(parser: parser)
     }
 
@@ -154,26 +155,6 @@ public final class JWTSigners {
 //    }
 //}
 
-
-public extension JWTSigners {
-
-    convenience init(jwks: JWKS, skipAnonymousKeys: Bool = true) throws  {
-        self.init()
-        for jwk in jwks.keys {
-            guard let kid = jwk.keyIdentifier else {
-                if skipAnonymousKeys {
-                    continue
-                } else {
-                    throw JWTError.generic(identifier: "missingKID", reason: "At least a JSON Web Key in the JSON Web Key Set is missing a `kid`.")
-                }
-            }
-
-            try self.use(JWTSigner.jwk(key: jwk), kid: kid)
-        }
-    }
-}
-
-// TODO: remove this and use the JWTSigner extensions directly?
 private struct JWKSigner {
     let jwk: JWK
 
@@ -236,7 +217,7 @@ private struct JWKSigner {
                 return nil
             }
             
-            guard let ecKey = try? ECDSAKey.components(x: x, y: y, curve: curve) else {
+            guard let ecKey = try? ECDSAKey(x: x, y: y, curve: curve) else {
                 return nil
             }
 
