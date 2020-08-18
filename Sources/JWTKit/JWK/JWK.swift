@@ -138,4 +138,32 @@ public struct JWK: Codable {
     public init(json: String) throws {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
+    
+    public init(rsaKeyUsing algorithm: Algorithm?, keyIdentifier: JWKIdentifier?, n: String?, e: String?, d: String?) {
+        self.init(keyType: .rsa, algorithm: algorithm, keyIdentifier: keyIdentifier, n: n, e: e, d: d, x: nil, y: nil)
+    }
+    
+    public init(ecKeyUsing algorithm: Algorithm?, keyIdentifier: JWKIdentifier?, x: String?, y: String?) {
+        self.init(keyType: .ec, algorithm: algorithm, keyIdentifier: keyIdentifier, n: nil, e: nil, d: nil, x: x, y: y)
+    }
+    
+    private init(
+        keyType: KeyType,
+        algorithm: Algorithm? = nil,
+        keyIdentifier: JWKIdentifier? = nil,
+        n: String? = nil,
+        e: String? = nil,
+        d: String? = nil,
+        x: String? = nil,
+        y: String? = nil
+    ) {
+        self.keyType = keyType
+        self.algorithm = algorithm
+        self.keyIdentifier = keyIdentifier
+        self.modulus = n
+        self.exponent = e
+        self.privateExponent = d
+        self.x = x
+        self.y = y
+    }
 }
