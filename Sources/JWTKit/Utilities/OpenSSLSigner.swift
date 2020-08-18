@@ -36,7 +36,7 @@ extension OpenSSLSigner {
     }
 }
 
-public protocol OpenSSLKey { }
+protocol OpenSSLKey { }
 
 extension OpenSSLKey {
     static func load<Data, T>(pem data: Data, _ closure: (UnsafeMutablePointer<BIO>) -> (T?)) throws -> T

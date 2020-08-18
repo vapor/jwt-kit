@@ -145,16 +145,6 @@ public final class JWTSigners {
     }
 }
 
-//extension JWTSigners {
-//    /// Adds a `JWK` (JSON Web Key) to this signers collection.
-//    public func use(jwk: JWK) throws {
-//        guard let kid = jwk.keyIdentifier else {
-//            throw JWTError.invalidJWK
-//        }
-//        try self.use(.jwk(key:jwk), kid: kid)
-//    }
-//}
-
 private struct JWKSigner {
     let jwk: JWK
 
@@ -203,7 +193,6 @@ private struct JWKSigner {
                 return nil
             }
             
-            // TODO: check: there is here an implicit assumption that the algo is linked to the curve
             let curve: ECDSAKey.Curve
             
             switch algorithm {
