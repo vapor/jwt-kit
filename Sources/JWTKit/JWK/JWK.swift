@@ -33,7 +33,7 @@ public struct JWK: Codable {
         }
     }
      
-    /// The `kty` (key type) parameter identifies the cryptographic algorithm
+    ///  The `kty` (key type) parameter identifies the cryptographic algorithm
     ///  family used with the key, such as `RSA` or `EC`. The `kty` value
     ///  is a case-sensitive string.
     public var keyType: KeyType
