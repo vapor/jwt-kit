@@ -184,7 +184,7 @@ private struct JWKSigner {
                 return nil
             }
         
-        case .ec:
+        case .ecdsa:
             guard let x = self.jwk.x else {
                 return nil
             }
@@ -205,7 +205,7 @@ private struct JWKSigner {
                 return nil
             }
             
-            guard let ecKey = try? ECDSAKey(x: x, y: y, curve: curve) else {
+            guard let ecKey = try? ECDSAKey(parameters: .init(x: x, y: y), curve: curve) else {
                 return nil
             }
 

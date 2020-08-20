@@ -219,8 +219,8 @@ class JWTKitTests: XCTestCase {
 
         let signature = try ecSigner.algorithm.sign(message)
 
-        let param = try ec.getParameters()
-        let ecVerifier = try JWTSigner.es256(key: ECDSAKey(x: param.x, y: param.y, curve: .p256))
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es256(key: ECDSAKey(parameters: params, curve: .p256))
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
@@ -232,8 +232,8 @@ class JWTKitTests: XCTestCase {
 
         let signature = try ecSigner.algorithm.sign(message)
 
-        let param = try ec.getParameters()
-        let ecVerifier = try JWTSigner.es384(key: ECDSAKey(x: param.x, y: param.y, curve: .p384))
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es384(key: ECDSAKey(parameters: params, curve: .p384))
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
@@ -245,8 +245,8 @@ class JWTKitTests: XCTestCase {
 
         let signature = try ecSigner.algorithm.sign(message)
 
-        let param = try ec.getParameters()
-        let ecVerifier = try JWTSigner.es512(key: ECDSAKey(x: param.x, y: param.y, curve: .p521))
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es512(key: ECDSAKey(parameters: params, curve: .p521))
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     

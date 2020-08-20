@@ -9,8 +9,8 @@ public struct JWK: Codable {
     public enum KeyType: String, Codable {
         /// RSA
         case rsa
-        /// EC
-        case ec
+        /// ECDSA
+        case ecdsa
          
         /// Decodes from a lowercased string.
         public init(from decoder: Decoder) throws {
@@ -20,7 +20,7 @@ public struct JWK: Codable {
             case "rsa":
                 self = .rsa
             case "ec":
-                self = .ec
+                self = .ecdsa
             default:
                 throw JWTError.invalidJWK
             }
@@ -33,60 +33,60 @@ public struct JWK: Codable {
         }
     }
      
-    ///  The `kty` (key type) parameter identifies the cryptographic algorithm
-    ///  family used with the key, such as `RSA` or `EC`. The `kty` value
-    ///  is a case-sensitive string.
+    /// The `kty` (key type) parameter identifies the cryptographic algorithm
+    /// family used with the key, such as `RSA` or `EC`. The `kty` value
+    /// is a case-sensitive string.
     public var keyType: KeyType
      
     /// Supported `alg` algorithms
     public enum Algorithm: String, Codable {
-    /// RSA with SHA256
-    case rs256
-    /// RSA with SHA384
-    case rs384
-    /// RSA with SHA512
-    case rs512
-    /// EC with SHA256
-    case es256
-    /// EC with SHA384
-    case es384
-    /// EC with SHA512
-    case es512
+        /// RSA with SHA256
+        case rs256
+        /// RSA with SHA384
+        case rs384
+        /// RSA with SHA512
+        case rs512
+        /// EC with SHA256
+        case es256
+        /// EC with SHA384
+        case es384
+        /// EC with SHA512
+        case es512
 
-    init?(string: String) {
-        switch string.lowercased() {
-        case "rs256":
-            self = .rs256
-        case "rs384":
-            self = .rs384
-        case "rs512":
-            self = .rs512
-        case "es256":
-            self = .es256
-        case "es384":
-            self = .es384
-        case "es512":
-            self = .es512
-        default:
-            return nil
+        init?(string: String) {
+            switch string.lowercased() {
+            case "rs256":
+                self = .rs256
+            case "rs384":
+                self = .rs384
+            case "rs512":
+                self = .rs512
+            case "es256":
+                self = .es256
+            case "es384":
+                self = .es384
+            case "es512":
+                self = .es512
+            default:
+                return nil
+            }
         }
-    }
          
-    /// Decodes from a lowercased string.
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        let string = try container.decode(String.self)
-        guard let algorithm = Self(string: string) else {
-            throw JWTError.invalidJWK
+        /// Decodes from a lowercased string.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            guard let algorithm = Self(string: string) else {
+                throw JWTError.invalidJWK
+            }
+            self = algorithm
         }
-        self = algorithm
-    }
-    
-    /// Encodes to a lowercased string.
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(self.rawValue)
-    }
+        
+        /// Encodes to a lowercased string.
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.rawValue)
+        }
     }
      
      /// The `alg` (algorithm) parameter identifies the algorithm intended for
@@ -139,12 +139,12 @@ public struct JWK: Codable {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
     
-    public init(rsaKeyUsing algorithm: Algorithm?, keyIdentifier: JWKIdentifier?, n: String?, e: String?, d: String?) {
-        self.init(keyType: .rsa, algorithm: algorithm, keyIdentifier: keyIdentifier, n: n, e: e, d: d, x: nil, y: nil)
+    static func rsa(_ algorithm: Algorithm, identifier: JWKIdentifier, modulus: String, exponent: String, privateExponent: String) -> JWK {
+        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent, x: nil, y: nil)
     }
     
-    public init(ecKeyUsing algorithm: Algorithm?, keyIdentifier: JWKIdentifier?, x: String?, y: String?) {
-        self.init(keyType: .ec, algorithm: algorithm, keyIdentifier: keyIdentifier, n: nil, e: nil, d: nil, x: x, y: y)
+    static func ecdsa(_ algorithm: Algorithm, identifier: JWKIdentifier, x: String, y: String) -> JWK {
+        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, n: nil, e: nil, d: nil, x: x, y: y)
     }
     
     private init(
