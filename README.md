@@ -264,6 +264,12 @@ Use `.private` for loading private RSA pem keys. These start with:
 -----BEGIN RSA PRIVATE KEY-----
 ```
 
+Use `.certificate` for loading X.509 certificates. These start with:
+
+```
+-----BEGIN CERTIFICATE-----
+```
+
 Once you have the RSAKey, you can use it to create an RSA signer.
 
 - `rs256`: RSA with SHA-256
