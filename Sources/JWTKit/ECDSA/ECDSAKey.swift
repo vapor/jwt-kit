@@ -83,7 +83,7 @@ public final class ECDSAKey: OpenSSLKey {
         CJWTKitBoringSSL_EC_KEY_free(self.c)
     }
     
-    var parameters: Parameters? {
+    public var parameters: Parameters? {
         let group: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_group(self.c)
         let pubKey: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_public_key(self.c)
 
