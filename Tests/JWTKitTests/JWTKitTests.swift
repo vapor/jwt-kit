@@ -250,6 +250,29 @@ class JWTKitTests: XCTestCase {
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
     }
     
+    func testSigningECDSAKey() throws {
+        let key = try ECDSAKey.generate(curve: .p384)
+        let params = key.parameters!
+        let jwks = JWKS(keys: [
+            JWK.ecdsa(.es384, identifier: "vapor", x: params.x, y: params.y)
+        ])
+        let signers = JWTSigners()
+        try signers.use(jwks: jwks)
+        
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using signer: JWTSigner) throws { }
+        }
+        
+        let payload = Foo(bar: 42)
+
+        let jwt = try signers.sign(payload, kid: "vapor")
+
+        let foo = try signers.verify(jwt, as: Foo.self)
+        
+        XCTAssertEqual(foo.bar, 42)
+    }
+    
     func testJWTioExample() throws {
         let token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HWP_3cYHBw7AhHale5wky6-sVA"
         let corruptedToken = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HwP_3cYHBw7AhHale5wky6-sVA"

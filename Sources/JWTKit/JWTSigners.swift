@@ -192,6 +192,10 @@ private struct JWKSigner {
                 return nil
             }
             
+            guard let algorithm = algorithm ?? self.jwk.algorithm else {
+                return nil
+            }
+            
             let curve: ECDSAKey.Curve
             
             switch algorithm {
@@ -206,10 +210,6 @@ private struct JWKSigner {
             }
             
             guard let ecKey = try? ECDSAKey(parameters: .init(x: x, y: y), curve: curve) else {
-                return nil
-            }
-
-            guard let algorithm = algorithm ?? self.jwk.algorithm else {
                 return nil
             }
 
