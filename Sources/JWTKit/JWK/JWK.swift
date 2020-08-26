@@ -144,11 +144,11 @@ public struct JWK: Codable {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
     
-    public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String?) -> JWK {
+    public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String? = nil) -> JWK {
         JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent, x: nil, y: nil)
     }
     
-    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, privateKey: String?) -> JWK {
+    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, privateKey: String? = nil) -> JWK {
         #warning("privateExponent should be privateKey but using RSA's property because of naming clash with 'd' label when decoding a JWK")
         return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, n: nil, e: nil, d: privateKey, x: x, y: y)
     }
