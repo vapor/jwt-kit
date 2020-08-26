@@ -64,8 +64,6 @@ public final class JWTSigners {
 
     /// Gets a signer for the supplied `kid`, if one exists.
     public func get(kid: JWKIdentifier? = nil, alg: String? = nil) -> JWTSigner? {
-        print(kid)
-        print(alg)
         let signer: Signer
         if let kid = kid, let stored = self.storage[kid] {
             signer = stored
@@ -78,11 +76,6 @@ public final class JWTSigners {
         case .jwt(let jwt):
             return jwt
         case .jwk(let jwk):
-            print(alg)
-            let algsThing = alg.flatMap({ JWK.Algorithm.init(string: $0) })
-            print(algsThing)
-            let thing = jwk.signer(for: algsThing)
-            return thing
             return jwk.signer(for: alg.flatMap({ JWK.Algorithm.init(string: $0) }))
         }
     }
@@ -134,8 +127,6 @@ public final class JWTSigners {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header()
-        print(header)
-        print(header.alg)
         return try self.require(kid: header.kid, alg: header.alg).verify(parser: parser)
     }
 
