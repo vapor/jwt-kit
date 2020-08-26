@@ -145,12 +145,12 @@ public struct JWK: Codable {
     }
     
     public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String? = nil) -> JWK {
-        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent, x: nil, y: nil)
+        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent)
     }
     
-    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, privateKey: String? = nil) -> JWK {
+    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSAKey.Curve?, privateKey: String? = nil) -> JWK {
         #warning("privateExponent should be privateKey but using RSA's property because of naming clash with 'd' label when decoding a JWK")
-        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, n: nil, e: nil, d: privateKey, x: x, y: y)
+        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve)
     }
     
     private init(
@@ -161,7 +161,8 @@ public struct JWK: Codable {
         e: String? = nil,
         d: String? = nil,
         x: String? = nil,
-        y: String? = nil
+        y: String? = nil,
+        curve: ECDSAKey.Curve? = nil
     ) {
         self.keyType = keyType
         self.algorithm = algorithm
@@ -171,5 +172,6 @@ public struct JWK: Codable {
         self.privateExponent = d
         self.x = x
         self.y = y
+        self.curve = curve
     }
 }
