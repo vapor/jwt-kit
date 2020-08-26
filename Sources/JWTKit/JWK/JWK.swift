@@ -125,9 +125,7 @@ public struct JWK: Codable {
     public var y: String?
     
     public var curve: ECDSAKey.Curve?
-    
-    #warning("Needs a privatekey which is decoded to 'd' label in json for ecdsa keys. Currently this clashes with the RSA implementation")
-    
+        
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
         case algorithm = "alg"

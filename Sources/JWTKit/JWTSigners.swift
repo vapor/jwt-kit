@@ -207,27 +207,21 @@ private struct JWKSigner {
             
             let curve: ECDSAKey.Curve
             
-            switch algorithm {
-            case .es256:
-                curve = .p256
-            case .es384:
-                curve = .p384
-            case .es512:
-                curve = .p521
-            default:
-                return nil
+            if let jwkCurve = self.jwk.curve {
+                curve = jwkCurve
+            } else {
+                switch algorithm {
+                case .es256:
+                    curve = .p256
+                case .es384:
+                    curve = .p384
+                case .es512:
+                    curve = .p521
+                default:
+                    return nil
+                }
             }
             
-            #warning("privateExponent should be privateKey but using RSA's property because of naming clash with 'd' label when decoding a JWK")
-            print(self.jwk.privateExponent)
-            do {
-                print("x: \(x)")
-                print("y: \(y)")
-                let iex = try ECDSAKey(parameters: .init(x: x, y: y), curve: curve, privateKey: self.jwk.privateExponent)
-            } catch {
-                print(error)
-                fatalError()
-            }
             guard let ecKey = try? ECDSAKey(parameters: .init(x: x, y: y), curve: curve, privateKey: self.jwk.privateExponent) else {
                 return nil
             }
