@@ -1,7 +1,7 @@
 import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
-    public enum Curve {
+    public enum Curve: String, Codable {
         case p256
         case p384
         case p521
@@ -15,6 +15,35 @@ public final class ECDSAKey: OpenSSLKey {
             case .p521:
                 return NID_secp521r1
             }
+        }
+        
+        init?(string: String) {
+            switch string.lowercased() {
+            case "p256":
+                self = .p256
+            case "p384":
+                self = .p384
+            case "p521":
+                self = .p521
+            default:
+                return nil
+            }
+        }
+        
+        /// Decodes from a lowercased string.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let string = try container.decode(String.self)
+            guard let algorithm = Self(string: string) else {
+                throw JWTError.invalidJWK
+            }
+            self = algorithm
+        }
+        
+        /// Encodes to a lowercased string.
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.rawValue)
         }
     }
     
@@ -60,7 +89,7 @@ public final class ECDSAKey: OpenSSLKey {
         self.c = c
     }
     
-    convenience init(parameters: Parameters, curve: Curve = .p521) throws {
+    convenience init(parameters: Parameters, curve: Curve = .p521, privateKey: String? = nil) throws {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
@@ -72,8 +101,17 @@ public final class ECDSAKey: OpenSSLKey {
             throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret y as BN")
         }
 
-        if (1 != CJWTKitBoringSSL_EC_KEY_set_public_key_affine_coordinates(c, bnX.c, bnY.c)) {
+        if CJWTKitBoringSSL_EC_KEY_set_public_key_affine_coordinates(c, bnX.c, bnY.c) != 1 {
             throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to set public key")
+        }
+        
+        if let privateKey = privateKey {
+            guard let bnPrivate = BigNumber.convert(privateKey) else {
+                throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to interpret privateKey as BN")
+            }
+            if CJWTKitBoringSSL_EC_KEY_set_private_key(c, bnPrivate.c) != 1 {
+                throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to set private key")
+            }
         }
 
         self.init(c)

@@ -209,7 +209,8 @@ private struct JWKSigner {
                 return nil
             }
             
-            guard let ecKey = try? ECDSAKey(parameters: .init(x: x, y: y), curve: curve) else {
+            #warning("privateExponent should be privateKey but using RSA's property because of naming clash with 'd' label when decoding a JWK")
+            guard let ecKey = try? ECDSAKey(parameters: .init(x: x, y: y), curve: curve, privateKey: self.jwk.privateExponent) else {
                 return nil
             }
 

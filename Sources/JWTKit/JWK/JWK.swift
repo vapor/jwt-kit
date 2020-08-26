@@ -123,7 +123,11 @@ public struct JWK: Codable {
     public var x: String?
 
     public var y: String?
-
+    
+    public var curve: ECDSAKey.Curve?
+    
+    #warning("Needs a privatekey which is decoded to 'd' label in json for ecdsa keys. Currently this clashes with the RSA implementation")
+    
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
         case algorithm = "alg"
@@ -131,6 +135,7 @@ public struct JWK: Codable {
         case modulus = "n"
         case exponent = "e"
         case privateExponent = "d"
+        case curve = "crv"
         case x
         case y
     }
@@ -139,12 +144,13 @@ public struct JWK: Codable {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
     
-    public static func rsa(_ algorithm: Algorithm, identifier: JWKIdentifier, modulus: String, exponent: String, privateExponent: String) -> JWK {
+    public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String?) -> JWK {
         JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent, x: nil, y: nil)
     }
     
-    public static func ecdsa(_ algorithm: Algorithm, identifier: JWKIdentifier, x: String, y: String) -> JWK {
-        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, n: nil, e: nil, d: nil, x: x, y: y)
+    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, privateKey: String?) -> JWK {
+        #warning("privateExponent should be privateKey but using RSA's property because of naming clash with 'd' label when decoding a JWK")
+        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, n: nil, e: nil, d: privateKey, x: x, y: y)
     }
     
     private init(
