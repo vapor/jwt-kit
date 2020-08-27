@@ -147,7 +147,6 @@ public struct JWK: Codable {
     }
     
     public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        #warning("privateExponent should be privateKey but using RSA's property because of naming clash with 'd' label when decoding a JWK")
         return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve)
     }
     
