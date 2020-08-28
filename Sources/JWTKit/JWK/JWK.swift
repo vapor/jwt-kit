@@ -8,29 +8,9 @@ public struct JWK: Codable {
     /// Supported `kty` key types.
     public enum KeyType: String, Codable {
         /// RSA
-        case rsa
+        case rsa = "RSA"
         /// ECDSA
-        case ecdsa
-         
-        /// Decodes from a lowercased string.
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let value = try container.decode(String.self).lowercased()
-            switch value {
-            case "rsa":
-                self = .rsa
-            case "ec":
-                self = .ecdsa
-            default:
-                throw JWTError.invalidJWK
-            }
-        }
-        
-        /// Encodes to a lowercased string.
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            try container.encode(self.rawValue)
-        }
+        case ecdsa = "EC"
     }
      
     /// The `kty` (key type) parameter identifies the cryptographic algorithm
