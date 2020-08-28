@@ -19,7 +19,7 @@ public struct JWK: Codable {
             switch value {
             case "rsa":
                 self = .rsa
-            case "ecdsa":
+            case "ec":
                 self = .ecdsa
             default:
                 throw JWTError.invalidJWK
