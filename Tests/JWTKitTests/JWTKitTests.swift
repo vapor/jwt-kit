@@ -272,7 +272,7 @@ class JWTKitTests: XCTestCase {
         {
             "keys": [
                 {
-                    "kty": "ECDSA",
+                    "kty": "EC",
                     "use": "sig",
                     "kid": "vapor",
                     "x": "\(x)",
