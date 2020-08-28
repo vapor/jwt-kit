@@ -76,7 +76,7 @@ public final class JWTSigners {
         case .jwt(let jwt):
             return jwt
         case .jwk(let jwk):
-            return jwk.signer(for: alg.flatMap({ JWK.Algorithm.init(string: $0) }))
+            return jwk.signer(for: alg.flatMap({ JWK.Algorithm.init(rawValue: $0) }))
         }
     }
 

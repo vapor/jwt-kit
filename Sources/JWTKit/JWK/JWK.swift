@@ -21,52 +21,17 @@ public struct JWK: Codable {
     /// Supported `alg` algorithms
     public enum Algorithm: String, Codable {
         /// RSA with SHA256
-        case rs256
+        case rs256 = "RS256"
         /// RSA with SHA384
-        case rs384
+        case rs384 = "RS384"
         /// RSA with SHA512
-        case rs512
+        case rs512 = "RS512"
         /// EC with SHA256
-        case es256
+        case es256 = "ES256"
         /// EC with SHA384
-        case es384
+        case es384 = "ES384"
         /// EC with SHA512
-        case es512
-
-        init?(string: String) {
-            switch string.lowercased() {
-            case "rs256":
-                self = .rs256
-            case "rs384":
-                self = .rs384
-            case "rs512":
-                self = .rs512
-            case "es256":
-                self = .es256
-            case "es384":
-                self = .es384
-            case "es512":
-                self = .es512
-            default:
-                return nil
-            }
-        }
-         
-        /// Decodes from a lowercased string.
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let string = try container.decode(String.self)
-            guard let algorithm = Self(string: string) else {
-                throw JWTError.invalidJWK
-            }
-            self = algorithm
-        }
-        
-        /// Encodes to a lowercased string.
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            try container.encode(self.rawValue)
-        }
+        case es512 = "ES512"
     }
      
      /// The `alg` (algorithm) parameter identifies the algorithm intended for

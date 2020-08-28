@@ -2,9 +2,9 @@ import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
     public enum Curve: String, Codable {
-        case p256
-        case p384
-        case p521
+        case p256 = "P-256"
+        case p384 = "P-384"
+        case p521 = "P-521"
 
         var cName: Int32 {
             switch self {
@@ -15,35 +15,6 @@ public final class ECDSAKey: OpenSSLKey {
             case .p521:
                 return NID_secp521r1
             }
-        }
-        
-        init?(string: String) {
-            switch string.lowercased() {
-            case "p256":
-                self = .p256
-            case "p384":
-                self = .p384
-            case "p521":
-                self = .p521
-            default:
-                return nil
-            }
-        }
-        
-        /// Decodes from a lowercased string.
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let string = try container.decode(String.self)
-            guard let algorithm = Self(string: string) else {
-                throw JWTError.invalidJWK
-            }
-            self = algorithm
-        }
-        
-        /// Encodes to a lowercased string.
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            try container.encode(self.rawValue)
         }
     }
     
