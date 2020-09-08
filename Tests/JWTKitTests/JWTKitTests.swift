@@ -210,7 +210,84 @@ class JWTKitTests: XCTestCase {
             try XCTAssertEqual(publicSigner.verify(token, as: TestPayload.self), payload)
         }
     }
+    
+    func testGetECParametersP256() throws {
+        let message = "test".bytes
 
+        let ec = try ECDSAKey.generate(curve: .p256)
+        let ecSigner = JWTSigner.es256(key: ec)
+
+        let signature = try ecSigner.algorithm.sign(message)
+
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es256(key: ECDSAKey(parameters: params, curve: .p256))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+    }
+    
+    func testGetECParametersP384() throws {
+        let message = "test".bytes
+
+        let ec = try ECDSAKey.generate(curve: .p384)
+        let ecSigner = JWTSigner.es384(key: ec)
+
+        let signature = try ecSigner.algorithm.sign(message)
+
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es384(key: ECDSAKey(parameters: params, curve: .p384))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+    }
+    
+    func testGetECParametersP521() throws {
+        let message = "test".bytes
+
+        let ec = try ECDSAKey.generate(curve: .p521)
+        let ecSigner = JWTSigner.es512(key: ec)
+
+        let signature = try ecSigner.algorithm.sign(message)
+
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es512(key: ECDSAKey(parameters: params, curve: .p521))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+    }
+    
+    func testVerifyingECDSAKeyUsingJWK() throws {
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using signer: JWTSigner) throws { }
+        }
+                
+        // ecdsa key
+        let x = "0tu/H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT+hHd0ufc/OwjEbqilsYnTdm"
+        let y = "RWRZz+tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4+sU8uWegwjd72sBK6axj7"
+        
+        let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
+
+        // sign jwt
+        let privateSigner = JWTSigner.es384(key: try ECDSAKey(parameters: .init(x: x, y: y), curve: .p384, privateKey: privateKey))
+        
+        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                    "kty": "EC",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "y": "\(y)"
+                 }
+            ]
+        }
+        """
+
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
+    }
+    
     func testJWTioExample() throws {
         let token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HWP_3cYHBw7AhHale5wky6-sVA"
         let corruptedToken = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HwP_3cYHBw7AhHale5wky6-sVA"

@@ -36,7 +36,7 @@ extension JWTSigner {
         return .init(algorithm: HMACSigner<SHA384>(key: key, name: "HS384"))
     }
 
-    // MARK: 384
+    // MARK: 512
 
     public static func hs512(key: String) -> JWTSigner {
         self.hs512(key: [UInt8](key.utf8))

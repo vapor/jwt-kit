@@ -76,7 +76,7 @@ public final class JWTSigners {
         case .jwt(let jwt):
             return jwt
         case .jwk(let jwk):
-            return jwk.signer(for: alg.flatMap(JWK.Algorithm.init))
+            return jwk.signer(for: alg.flatMap({ JWK.Algorithm.init(rawValue: $0) }))
         }
     }
 
@@ -180,7 +180,54 @@ private struct JWKSigner {
                 return JWTSigner.rs384(key: rsaKey)
             case .rs512:
                 return JWTSigner.rs512(key: rsaKey)
+            default:
+                return nil
+            }
+        
+        case .ecdsa:
+            guard let x = self.jwk.x else {
+                return nil
+            }
+            guard let y = self.jwk.y else {
+                return nil
+            }
+            
+            guard let algorithm = algorithm ?? self.jwk.algorithm else {
+                return nil
+            }
+            
+            let curve: ECDSAKey.Curve
+            
+            if let jwkCurve = self.jwk.curve {
+                curve = jwkCurve
+            } else {
+                switch algorithm {
+                case .es256:
+                    curve = .p256
+                case .es384:
+                    curve = .p384
+                case .es512:
+                    curve = .p521
+                default:
+                    return nil
+                }
+            }
+            
+            guard let ecKey = try? ECDSAKey(parameters: .init(x: x, y: y), curve: curve, privateKey: self.jwk.privateExponent) else {
+                return nil
+            }
+
+            switch algorithm {
+            case .es256:
+                return JWTSigner.es256(key: ecKey)
+            case .es384:
+                return JWTSigner.es384(key: ecKey)
+            case .es512:
+                return JWTSigner.es512(key: ecKey)
+            default:
+                return nil
             }
         }
     }
 }
+

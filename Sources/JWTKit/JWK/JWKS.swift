@@ -2,9 +2,13 @@
 ///
 /// A JSON object that represents a set of JWKs.
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
-public struct JWKS: Decodable {
+public struct JWKS: Codable {
     /// All JSON Web Keys
     public var keys: [JWK]
+    
+    public init(keys: [JWK]) {
+        self.keys = keys
+    }
 
     /// Retrieves the desired key from the JSON Web Key Set
     /// - Parameters:

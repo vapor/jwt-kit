@@ -1,10 +1,10 @@
 import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
-    public enum Curve {
-        case p256
-        case p384
-        case p521
+    public enum Curve: String, Codable {
+        case p256 = "P-256"
+        case p384 = "P-384"
+        case p521 = "P-521"
 
         var cName: Int32 {
             switch self {
@@ -59,8 +59,54 @@ public final class ECDSAKey: OpenSSLKey {
     init(_ c: OpaquePointer) {
         self.c = c
     }
+    
+    public convenience init(parameters: Parameters, curve: Curve = .p521, privateKey: String? = nil) throws {
+        guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
+            throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
+        }
+        
+        guard let bnX = BigNumber.convert(parameters.x) else {
+            throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x as BN")
+        }
+        guard let bnY = BigNumber.convert(parameters.y) else {
+            throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret y as BN")
+        }
+
+        if CJWTKitBoringSSL_EC_KEY_set_public_key_affine_coordinates(c, bnX.c, bnY.c) != 1 {
+            throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to set public key")
+        }
+        
+        if let privateKey = privateKey {
+            guard let bnPrivate = BigNumber.convert(privateKey) else {
+                throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to interpret privateKey as BN")
+            }
+            if CJWTKitBoringSSL_EC_KEY_set_private_key(c, bnPrivate.c) != 1 {
+                throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to set private key")
+            }
+        }
+
+        self.init(c)
+    }
 
     deinit {
         CJWTKitBoringSSL_EC_KEY_free(self.c)
+    }
+    
+    public var parameters: Parameters? {
+        let group: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_group(self.c)
+        let pubKey: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_public_key(self.c)
+
+        let bnX = BigNumber()
+        let bnY = BigNumber()
+        if (CJWTKitBoringSSL_EC_POINT_get_affine_coordinates_GFp(group, pubKey, bnX.c, bnY.c, nil) != 1) {
+            return nil
+        }
+
+        return Parameters(x: bnX.toBase64(), y: bnY.toBase64())
+    }
+
+    public struct Parameters {
+        public let x: String
+        public let y: String
     }
 }
