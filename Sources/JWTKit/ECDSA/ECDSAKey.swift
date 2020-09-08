@@ -60,7 +60,7 @@ public final class ECDSAKey: OpenSSLKey {
         self.c = c
     }
     
-    convenience init(parameters: Parameters, curve: Curve = .p521, privateKey: String? = nil) throws {
+    public convenience init(parameters: Parameters, curve: Curve = .p521, privateKey: String? = nil) throws {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
