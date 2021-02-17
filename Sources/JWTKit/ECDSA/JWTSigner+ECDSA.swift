@@ -1,4 +1,4 @@
-import CJWTKitBoringSSL
+@_implementationOnly import CJWTKitBoringSSL
 
 extension JWTSigner {
     public static func es256(key: ECDSAKey) -> JWTSigner {

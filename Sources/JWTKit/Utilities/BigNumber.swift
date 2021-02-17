@@ -1,5 +1,5 @@
 import Foundation
-import CJWTKitBoringSSL
+@_implementationOnly import CJWTKitBoringSSL
 
 class BigNumber {
     let c: UnsafeMutablePointer<BIGNUM>?;

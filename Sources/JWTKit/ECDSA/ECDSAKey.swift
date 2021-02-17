@@ -1,4 +1,4 @@
-import CJWTKitBoringSSL
+@_implementationOnly import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
     public enum Curve: String, Codable {

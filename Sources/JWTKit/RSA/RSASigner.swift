@@ -1,4 +1,4 @@
-import CJWTKitBoringSSL
+@_implementationOnly import CJWTKitBoringSSL
 import struct Foundation.Data
 
 internal struct RSASigner: JWTAlgorithm, OpenSSLSigner {
