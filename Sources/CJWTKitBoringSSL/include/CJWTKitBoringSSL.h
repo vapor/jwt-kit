@@ -20,7 +20,6 @@
 #include "CJWTKitBoringSSL_base.h"
 #include "CJWTKitBoringSSL_bio.h"
 #include "CJWTKitBoringSSL_blowfish.h"
-#include "CJWTKitBoringSSL_bn.h"
 #include "CJWTKitBoringSSL_boringssl_prefix_symbols.h"
 #include "CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h"
 #include "CJWTKitBoringSSL_cast.h"

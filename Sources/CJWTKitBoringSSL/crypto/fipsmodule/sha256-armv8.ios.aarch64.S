@@ -60,11 +60,13 @@
 .text
 
 
+.private_extern	_OPENSSL_armcap_P
 .globl	_sha256_block_data_order
 .private_extern	_sha256_block_data_order
 
 .align	6
 _sha256_block_data_order:
+	AARCH64_VALID_CALL_TARGET
 #ifndef	__KERNEL__
 #if __has_feature(hwaddress_sanitizer) && __clang_major__ >= 10
 	adrp	x16,:pg_hi21_nc:_OPENSSL_armcap_P
@@ -75,6 +77,7 @@ _sha256_block_data_order:
 	tst	w16,#ARMV8_SHA256
 	b.ne	Lv8_entry
 #endif
+	AARCH64_SIGN_LINK_REGISTER
 	stp	x29,x30,[sp,#-128]!
 	add	x29,sp,#0
 
@@ -1035,6 +1038,7 @@ Loop_16_xx:
 	ldp	x25,x26,[x29,#64]
 	ldp	x27,x28,[x29,#80]
 	ldp	x29,x30,[sp],#128
+	AARCH64_VALIDATE_LINK_REGISTER
 	ret
 
 
@@ -1069,6 +1073,7 @@ LK256:
 .align	6
 sha256_block_armv8:
 Lv8_entry:
+	// Armv8.3-A PAuth: even though x30 is pushed to stack it is not popped later.
 	stp	x29,x30,[sp,#-16]!
 	add	x29,sp,#0
 
@@ -1204,10 +1209,6 @@ Loop_hw:
 	ldr	x29,[sp],#16
 	ret
 
-#endif
-#ifndef	__KERNEL__
-.comm	_OPENSSL_armcap_P,4,4
-.private_extern	_OPENSSL_armcap_P
 #endif
 #endif  // !OPENSSL_NO_ASM
 #endif  // defined(__aarch64__) && defined(__APPLE__)
