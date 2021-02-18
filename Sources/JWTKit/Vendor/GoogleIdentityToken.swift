@@ -100,7 +100,7 @@ public struct GoogleIdentityToken: JWTPayload {
 
     public func verify(using signer: JWTSigner) throws {
         guard ["accounts.google.com", "https://accounts.google.com"].contains(self.issuer.value) else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Claim wasn't issued by Google")
+            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Google")
         }
 
         guard self.subject.value.count <= 255 else {

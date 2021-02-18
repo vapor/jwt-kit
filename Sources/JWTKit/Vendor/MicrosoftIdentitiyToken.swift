@@ -112,7 +112,7 @@ public struct MicrosoftIdentityToken: JWTPayload {
         }
 
         guard self.issuer.value == "https://login.microsoftonline.com/\(tenantId)/v2.0" else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Apple")
+            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Microsoft")
         }
 
         try self.expires.verifyNotExpired()
