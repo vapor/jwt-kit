@@ -3,7 +3,7 @@
 ##
 ## This source file is part of the Vapor open source project
 ##
-## Copyright (c) 2017-2020 Vapor project authors
+## Copyright (c) 2017-2021 Vapor project authors
 ## Licensed under MIT
 ##
 ## See LICENSE for license information
@@ -11,6 +11,7 @@
 ## SPDX-License-Identifier: MIT
 ##
 ##===----------------------------------------------------------------------===##
+
 # This was substantially adapted from SwiftCyrpto's vendor-boringssl.sh script.
 # The license for the original work is reproduced below. See NOTICES.txt for
 # more.
@@ -44,6 +45,10 @@ OS_ARCH_COMBOS = [
     ('linux', 'x86', 'elf', ['-fPIC', '-DOPENSSL_IA32_SSE2'], 'S'),
     ('linux', 'x86_64', 'elf', [], 'S'),
     ('mac', 'x86_64', 'macosx', [], 'S'),
+    # ('windows', 'aarch64', 'coff', [], 'S'),
+    # ('windows', 'arm', 'coff', [], 'S'),
+    ('windows', 'x86', 'coff', [], 'S'),
+    # ('windows', 'x86_64', 'coff', [], 'S'),
 ]
 
 
@@ -183,6 +188,8 @@ def preprocessor_platform_for_os(osname):
         return '__APPLE__'
     elif osname == 'linux':
         return '__linux__'
+    elif osname == 'windows':
+        return '_WIN32'
 
 
 def asm_target(osname, arch, asm):

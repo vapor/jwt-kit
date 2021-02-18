@@ -1,4 +1,4 @@
-import CJWTKitBoringSSL
+@_implementationOnly import CJWTKitBoringSSL
 import struct Foundation.Data
 
 public final class RSAKey: OpenSSLKey {
@@ -172,11 +172,15 @@ public final class RSAKey: OpenSSLKey {
     }
 
     let type: KeyType
-    let c: UnsafeMutablePointer<RSA>
+    
+    internal var c: UnsafeMutablePointer<RSA> {
+        return self.cRaw.assumingMemoryBound(to: RSA.self)
+    }
+    internal let cRaw: UnsafeMutableRawPointer//RSA
 
     init(_ c: UnsafeMutablePointer<RSA>, _ type: KeyType) {
         self.type = type
-        self.c = c
+        self.cRaw = UnsafeMutableRawPointer(c)
     }
 
     deinit {

@@ -77,38 +77,10 @@ int X509_issuer_and_serial_cmp(const X509 *a, const X509 *b)
 
     ai = a->cert_info;
     bi = b->cert_info;
-    i = M_ASN1_INTEGER_cmp(ai->serialNumber, bi->serialNumber);
+    i = ASN1_INTEGER_cmp(ai->serialNumber, bi->serialNumber);
     if (i)
         return (i);
     return (X509_NAME_cmp(ai->issuer, bi->issuer));
-}
-
-unsigned long X509_issuer_and_serial_hash(X509 *a)
-{
-    unsigned long ret = 0;
-    EVP_MD_CTX ctx;
-    unsigned char md[16];
-    char *f;
-
-    EVP_MD_CTX_init(&ctx);
-    f = X509_NAME_oneline(a->cert_info->issuer, NULL, 0);
-    if (!EVP_DigestInit_ex(&ctx, EVP_md5(), NULL))
-        goto err;
-    if (!EVP_DigestUpdate(&ctx, (unsigned char *)f, strlen(f)))
-        goto err;
-    OPENSSL_free(f);
-    if (!EVP_DigestUpdate
-        (&ctx, (unsigned char *)a->cert_info->serialNumber->data,
-         (unsigned long)a->cert_info->serialNumber->length))
-        goto err;
-    if (!EVP_DigestFinal_ex(&ctx, &(md[0]), NULL))
-        goto err;
-    ret = (((unsigned long)md[0]) | ((unsigned long)md[1] << 8L) |
-           ((unsigned long)md[2] << 16L) | ((unsigned long)md[3] << 24L)
-        ) & 0xffffffffL;
- err:
-    EVP_MD_CTX_cleanup(&ctx);
-    return (ret);
 }
 
 int X509_issuer_name_cmp(const X509 *a, const X509 *b)
@@ -131,7 +103,7 @@ int X509_CRL_match(const X509_CRL *a, const X509_CRL *b)
     return OPENSSL_memcmp(a->sha1_hash, b->sha1_hash, 20);
 }
 
-X509_NAME *X509_get_issuer_name(X509 *a)
+X509_NAME *X509_get_issuer_name(const X509 *a)
 {
     return (a->cert_info->issuer);
 }
@@ -146,7 +118,7 @@ unsigned long X509_issuer_name_hash_old(X509 *x)
     return (X509_NAME_hash_old(x->cert_info->issuer));
 }
 
-X509_NAME *X509_get_subject_name(X509 *a)
+X509_NAME *X509_get_subject_name(const X509 *a)
 {
     return (a->cert_info->subject);
 }
@@ -154,6 +126,11 @@ X509_NAME *X509_get_subject_name(X509 *a)
 ASN1_INTEGER *X509_get_serialNumber(X509 *a)
 {
     return (a->cert_info->serialNumber);
+}
+
+const ASN1_INTEGER *X509_get0_serialNumber(const X509 *x509)
+{
+    return x509->cert_info->serialNumber;
 }
 
 unsigned long X509_subject_name_hash(X509 *x)

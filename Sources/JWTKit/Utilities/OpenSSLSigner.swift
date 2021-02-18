@@ -1,4 +1,4 @@
-import CJWTKitBoringSSL
+@_implementationOnly import CJWTKitBoringSSL
 
 protocol OpenSSLSigner {
     var algorithm: OpaquePointer { get }

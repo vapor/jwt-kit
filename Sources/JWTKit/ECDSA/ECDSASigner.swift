@@ -1,4 +1,4 @@
-import CJWTKitBoringSSL
+@_implementationOnly import CJWTKitBoringSSL
 
 internal struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
     let key: ECDSAKey
