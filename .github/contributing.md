@@ -1,6 +1,6 @@
 # Contributing to JWTKit
 
-See [Vapor's contributing.md](https://github.com/vapor/vapor/blob/master/.github/contributing.md) for general information on contributing to Vapor packages.
+See [Vapor's contributing.md](https://github.com/vapor/vapor/blob/main/.github/contributing.md) for general information on contributing to Vapor packages.
 
 ### Dependencies
 
