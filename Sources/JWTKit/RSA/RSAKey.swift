@@ -40,7 +40,8 @@ public final class RSAKey: OpenSSLKey {
     public static func `public`<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
-        fatalError()
+        #warning("PEM != DER")
+        return try RSAKey(privateKey: nil, publicKey: _RSA.Signing.PublicKey(derRepresentation: data))
     }
 
     /// Creates RSAKey from public certificate pem file.
@@ -58,7 +59,8 @@ public final class RSAKey: OpenSSLKey {
     /// - parameters:
     ///     - pem: Contents of pem file.
     public static func certificate(pem string: String) throws -> RSAKey {
-        fatalError()
+        #warning("check")
+        return try RSAKey(privateKey: nil, publicKey: .init(pemRepresentation: string))
     }
 
     /// Creates RSAKey from public certificate pem file.
@@ -116,7 +118,8 @@ public final class RSAKey: OpenSSLKey {
     public static func `private`<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
-        fatalError()
+        #warning("DER != pem")
+        return try RSAKey(privateKey: _RSA.Signing.PrivateKey(derRepresentation: data), publicKey: nil)
     }
 
     public convenience init?(
