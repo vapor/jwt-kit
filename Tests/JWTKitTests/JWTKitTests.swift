@@ -515,11 +515,12 @@ class JWTKitTests: XCTestCase {
         let privateExponent = "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
 
         // sign jwt
-        let privateSigner = JWTSigner.rs256(key: RSAKey(
+        let key = try XCTUnwrap(RSAKey(
             modulus: modulus,
             exponent: exponent,
             privateExponent: privateExponent
-        )!)
+        ))
+        let privateSigner = JWTSigner.rs256(key: key)
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using signer: JWTSigner) throws { }
