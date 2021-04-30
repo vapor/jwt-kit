@@ -11,7 +11,7 @@
 ## SPDX-License-Identifier: MIT
 ##
 ##===----------------------------------------------------------------------===##
-# This was substantially adapted from SwiftCyrpto's vendor-boringssl.sh script.
+# This was substantially adapted from SwiftCrypto's vendor-boringssl.sh script.
 # The license for the original work is reproduced below. See NOTICES.txt for
 # more.
 #
