@@ -14,13 +14,14 @@ let package = Package(
         MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0")
+        .package(url: "https://github.com/Lukasa/swift-crypto.git", .branch("cb-prototype-rsa-interface"))
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
         .target(name: "JWTKit", dependencies: [
             .target(name: "CJWTKitBoringSSL"),
             .product(name: "Crypto", package: "swift-crypto"),
+            .product(name: "_CryptoExtras", package: "swift-crypto"),
         ]),
         .testTarget(name: "JWTKitTests", dependencies: [
             .target(name: "JWTKit"),

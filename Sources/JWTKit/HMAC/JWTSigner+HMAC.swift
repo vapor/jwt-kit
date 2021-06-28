@@ -1,4 +1,3 @@
-@_implementationOnly import CJWTKitBoringSSL
 import Crypto
 
 extension JWTSigner {
