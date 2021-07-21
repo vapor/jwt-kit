@@ -9,6 +9,7 @@ public struct AppleIdentityToken: JWTPayload {
         case issuedAt = "iat"
         case expires = "exp"
         case emailVerified = "email_verified"
+        case isPrivateEmail = "is_private_email"
         case nonceSupported = "nonce_supported"
     }
 
@@ -41,6 +42,9 @@ public struct AppleIdentityToken: JWTPayload {
 
     /// A Boolean value that indicates whether the service has verified the email. The value of this claim is always true because the servers only return verified email addresses.
     public let emailVerified: BoolClaim?
+    
+    /// A Boolean value that indicates whether the email shared by the user is the proxy address. It is absent (nil) if the user is not using a proxy email address.
+    public let isPrivateEmail: BoolClaim?
 
     public func verify(using signer: JWTSigner) throws {
         guard self.issuer.value == "https://appleid.apple.com" else {
