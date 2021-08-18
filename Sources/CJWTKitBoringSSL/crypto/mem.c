@@ -93,20 +93,38 @@ static void __asan_unpoison_memory_region(const void *addr, size_t size) {}
 #define WEAK_SYMBOL_FUNC(rettype, name, args) static rettype(*name) args = NULL;
 #endif
 
+#if defined(BORINGSSL_SDALLOCX)
 // sdallocx is a sized |free| function. By passing the size (which we happen to
-// always know in BoringSSL), the malloc implementation can save work. We cannot
-// depend on |sdallocx| being available, however, so it's a weak symbol.
+// always know in BoringSSL), the malloc implementation can save work.
 //
-// This will always be safe, but will only be overridden if the malloc
-// implementation is statically linked with BoringSSL. So, if |sdallocx| is
-// provided in, say, libc.so, we still won't use it because that's dynamically
-// linked. This isn't an ideal result, but its helps in some cases.
-WEAK_SYMBOL_FUNC(void, sdallocx, (void *ptr, size_t size, int flags));
+// This is guarded by BORINGSSL_SDALLOCX, rather than being a weak symbol,
+// because it can work poorly if there are two malloc implementations in the
+// address space. (Which probably isn't valid, ODR etc, but
+// https://github.com/grpc/grpc/issues/25450). In that situation, |malloc| can
+// come from one allocator but |sdallocx| from another and crashes quickly
+// result. We can't match |sdallocx| with |mallocx| because tcmalloc only
+// provides the former, so a mismatch can still happen.
+void sdallocx(void *ptr, size_t size, int flags);
+#endif
 
 // The following three functions can be defined to override default heap
 // allocation and freeing. If defined, it is the responsibility of
 // |OPENSSL_memory_free| to zero out the memory before returning it to the
 // system. |OPENSSL_memory_free| will not be passed NULL pointers.
+//
+// WARNING: These functions are called on every allocation and free in
+// BoringSSL across the entire process. They may be called by any code in the
+// process which calls BoringSSL, including in process initializers and thread
+// destructors. When called, BoringSSL may hold pthreads locks. Any other code
+// in the process which, directly or indirectly, calls BoringSSL may be on the
+// call stack and may itself be using arbitrary synchronization primitives.
+//
+// As a result, these functions may not have the usual programming environment
+// available to most C or C++ code. In particular, they may not call into
+// BoringSSL, or any library which depends on BoringSSL. Any synchronization
+// primitives used must tolerate every other synchronization primitive linked
+// into the process, including pthreads locks. Failing to meet these constraints
+// may result in deadlocks, crashes, or memory corruption.
 WEAK_SYMBOL_FUNC(void*, OPENSSL_memory_alloc, (size_t size));
 WEAK_SYMBOL_FUNC(void, OPENSSL_memory_free, (void *ptr));
 WEAK_SYMBOL_FUNC(size_t, OPENSSL_memory_get_size, (void *ptr));
@@ -148,11 +166,11 @@ void OPENSSL_free(void *orig_ptr) {
 
   size_t size = *(size_t *)ptr;
   OPENSSL_cleanse(ptr, size + OPENSSL_MALLOC_PREFIX);
-  if (sdallocx) {
-    sdallocx(ptr, size + OPENSSL_MALLOC_PREFIX, 0 /* flags */);
-  } else {
-    free(ptr);
-  }
+#if defined(BORINGSSL_SDALLOCX)
+  sdallocx(ptr, size + OPENSSL_MALLOC_PREFIX, 0 /* flags */);
+#else
+  free(ptr);
+#endif
 }
 
 void *OPENSSL_realloc(void *orig_ptr, size_t new_size) {
@@ -232,6 +250,8 @@ uint32_t OPENSSL_hash32(const void *ptr, size_t len) {
 
   return h;
 }
+
+uint32_t OPENSSL_strhash(const char *s) { return OPENSSL_hash32(s, strlen(s)); }
 
 size_t OPENSSL_strnlen(const char *s, size_t len) {
   for (size_t i = 0; i < len; i++) {
