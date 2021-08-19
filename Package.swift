@@ -14,7 +14,7 @@ let package = Package(
         MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/Lukasa/swift-crypto.git", .branch("cb-prototype-rsa-interface"))
+        .package(url: "https://github.com/apple/swift-crypto.git", .branch("main"))
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
