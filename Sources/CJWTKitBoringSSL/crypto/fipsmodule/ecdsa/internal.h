@@ -1,4 +1,4 @@
-/* Copyright (c) 2014, Google Inc.
+/* Copyright (c) 2021, Google Inc.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -12,30 +12,28 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
-#ifndef OPENSSL_HEADER_CHACHA_H
-#define OPENSSL_HEADER_CHACHA_H
+#ifndef OPENSSL_HEADER_CRYPTO_FIPSMODULE_ECDSA_INTERNAL_H
+#define OPENSSL_HEADER_CRYPTO_FIPSMODULE_ECDSA_INTERNAL_H
 
-#include "CJWTKitBoringSSL_base.h"
+#include <CJWTKitBoringSSL_base.h>
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-// ChaCha20.
-//
-// ChaCha20 is a stream cipher. See https://tools.ietf.org/html/rfc8439.
 
-
-// CRYPTO_chacha_20 encrypts |in_len| bytes from |in| with the given key and
-// nonce and writes the result to |out|. If |in| and |out| alias, they must be
-// equal. The initial block counter is specified by |counter|.
-OPENSSL_EXPORT void CRYPTO_chacha_20(uint8_t *out, const uint8_t *in,
-                                     size_t in_len, const uint8_t key[32],
-                                     const uint8_t nonce[12], uint32_t counter);
+// ecdsa_sign_with_nonce_for_known_answer_test behaves like |ECDSA_do_sign| but
+// takes a fixed nonce. This function is used as part of known-answer tests in
+// the FIPS module.
+ECDSA_SIG *ecdsa_sign_with_nonce_for_known_answer_test(const uint8_t *digest,
+                                                       size_t digest_len,
+                                                       const EC_KEY *eckey,
+                                                       const uint8_t *nonce,
+                                                       size_t nonce_len);
 
 
 #if defined(__cplusplus)
-}  // extern C
+}
 #endif
 
-#endif  // OPENSSL_HEADER_CHACHA_H
+#endif  // OPENSSL_HEADER_CRYPTO_FIPSMODULE_ECDSA_INTERNAL_H

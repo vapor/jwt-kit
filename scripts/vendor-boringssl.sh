@@ -84,14 +84,20 @@ function mangle_symbols {
 
         # Begin by building for macOS.
         swift build --product CJWTKitBoringSSL --enable-test-discovery
-        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCJWTKitBoringSSL.a"
+        (
+            cd "${SRCROOT}"
+            go run "util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCJWTKitBoringSSL.a"
+        )
 
         # Now build for iOS. We use xcodebuild for this because SwiftPM doesn't
         # meaningfully support it. Unfortunately we must archive ourselves.
         # This also builds for Apple Silicon
-        xcodebuild -sdk iphoneos -scheme CJWTKitBoringSSL -derivedDataPath "${TMPDIR}/iphoneos-deriveddata"
+        xcodebuild -sdk iphoneos -scheme CJWTKitBoringSSL -derivedDataPath "${TMPDIR}/iphoneos-deriveddata" -destination generic/platform=iOS
         ar -r "${TMPDIR}/libCJWTKitBoringSSL-ios.a" "${TMPDIR}/iphoneos-deriveddata/Build/Products/Debug-iphoneos/CJWTKitBoringSSL.o"
-        go run "${SRCROOT}/util/read_symbols.go" -out "${TMPDIR}/symbols-iOS.txt" "${TMPDIR}/libCJWTKitBoringSSL-ios.a"
+        (
+            cd "${SRCROOT}"
+            go run "util/read_symbols.go" -out "${TMPDIR}/symbols-iOS.txt" "${TMPDIR}/libCJWTKitBoringSSL-ios.a"
+        )
 
         # Now cross compile for our targets.
         # If you have trouble with the script around this point, consider
@@ -104,15 +110,20 @@ function mangle_symbols {
 
         # Now we need to generate symbol mangles for Linux. We can do this in
         # one go for all of them.
-        go run "${SRCROOT}/util/read_symbols.go" -obj-file-format elf -out "${TMPDIR}/symbols-linux-all.txt" "${HERE}"/.build/*-unknown-linux/debug/libCJWTKitBoringSSL.a
+        (
+            cd "${SRCROOT}"
+            go run "util/read_symbols.go" -obj-file-format elf -out "${TMPDIR}/symbols-linux-all.txt" "${HERE}"/.build/*-unknown-linux/debug/libCJWTKitBoringSSL.a
+        )
 
         # Now we concatenate all the symbols together and uniquify it.
         cat "${TMPDIR}"/symbols-*.txt | sort | uniq > "${TMPDIR}/symbols.txt"
 
         # Use this as the input to the mangle.
-        go run "${SRCROOT}/util/make_prefix_headers.go" -out "${HERE}/${DSTROOT}/include/openssl" "${TMPDIR}/symbols.txt"
+        (
+            cd "${SRCROOT}"
+            go run "util/make_prefix_headers.go" -out "${HERE}/${DSTROOT}/include/openssl" "${TMPDIR}/symbols.txt"
+        )
 
-        echo "Disabling mangled target in Package.swift"
         # Remove the product, as we no longer need it.
         $sed -i -e 's/MANGLE_START\*\//MANGLE_START/' -e 's/\/\*MANGLE_END/MANGLE_END/' "${HERE}/Package.swift"
     )

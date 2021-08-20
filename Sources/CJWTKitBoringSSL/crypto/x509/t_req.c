@@ -63,6 +63,8 @@
 #include <CJWTKitBoringSSL_x509.h>
 #include <CJWTKitBoringSSL_x509v3.h>
 
+#include "internal.h"
+
 
 int X509_REQ_print_fp(FILE *fp, X509_REQ *x) {
   BIO *bio = BIO_new_fp(fp, BIO_NOCLOSE);
