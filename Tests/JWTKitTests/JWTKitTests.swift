@@ -332,7 +332,7 @@ class JWTKitTests: XCTestCase {
             _ = try publicSigner.verify(corruptedToken, as: JWTioPayload.self)
         } catch let error as JWTError {
             switch error {
-            case .signatureVerifictionFailed:
+            case .signatureVerificationFailed:
                 // pass
                 XCTAssert(true)
             default:
