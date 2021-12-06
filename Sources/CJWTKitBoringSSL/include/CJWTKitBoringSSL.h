@@ -39,6 +39,7 @@
 #include "CJWTKitBoringSSL_evp.h"
 #include "CJWTKitBoringSSL_hkdf.h"
 #include "CJWTKitBoringSSL_hmac.h"
+#include "CJWTKitBoringSSL_hpke.h"
 #include "CJWTKitBoringSSL_hrss.h"
 #include "CJWTKitBoringSSL_md4.h"
 #include "CJWTKitBoringSSL_md5.h"

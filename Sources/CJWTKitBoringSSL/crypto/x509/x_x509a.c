@@ -61,6 +61,9 @@
 #include <CJWTKitBoringSSL_obj.h>
 #include <CJWTKitBoringSSL_x509.h>
 
+#include "internal.h"
+
+
 /*
  * X509_CERT_AUX routines. These are used to encode additional user
  * modifiable data about a certificate. This data is appended to the X509

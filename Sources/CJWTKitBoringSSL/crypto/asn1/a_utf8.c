@@ -59,7 +59,7 @@
 #include <CJWTKitBoringSSL_err.h>
 #include <CJWTKitBoringSSL_mem.h>
 
-#include "asn1_locl.h"
+#include "internal.h"
 
 /* UTF8 utilities */
 

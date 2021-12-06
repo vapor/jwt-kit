@@ -63,6 +63,7 @@
 #include <CJWTKitBoringSSL_obj.h>
 #include <CJWTKitBoringSSL_x509v3.h>
 
+#include "../x509/internal.h"
 #include "internal.h"
 
 
