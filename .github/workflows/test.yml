@@ -1,73 +1,35 @@
 name: test
 on:
   pull_request:
-  push:
-    branches:
-    - master
+  push: 
+    branches: 
+      - main
+env:
+  LOG_LEVEL: info
+  SWIFT_DETERMINISTIC_HASHING: 1
+
 jobs:
-  dependents:
+
+  unit-tests:
+    uses: vapor/ci/.github/workflows/run-unit-tests.yml@reusable-workflows
+    with:
+      with_coverage: false
+      with_tsan: true
+  
+  upstream-check:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        dependent:
-          - jwt
-    container: swift:5.2-focal
-    steps: 
-      - name: Check out JWTKit
+    container: swift:5.5-focal
+    steps:
+      - name: Check out self
         uses: actions/checkout@v2
         with:
           path: jwt-kit
-      - name: Check out provider
+      - name: Check out Vapor
         uses: actions/checkout@v2
         with:
-          repository: vapor/${{ matrix.dependent }}
-          path: dependent
-      - name: Use local JWTKit
-        run: swift package edit jwt-kit --path ../jwt-kit
-        working-directory: dependent
-      - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
-        working-directory: dependent
-  linux:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        image:
-          # 5.2 Stable
-          - swift:5.2-xenial
-          - swift:5.2-bionic
-          - swift:5.2-focal
-          - swift:5.2-centos8
-          - swift:5.2-amazonlinux2
-          # 5.2 Unstable
-          - swiftlang/swift:nightly-5.2-xenial
-          - swiftlang/swift:nightly-5.2-bionic
-          # 5.3 Unstable
-          - swiftlang/swift:nightly-5.3-xenial
-          - swiftlang/swift:nightly-5.3-bionic
-          # Master Unstable
-          - swiftlang/swift:nightly-master-xenial
-          - swiftlang/swift:nightly-master-bionic
-          - swiftlang/swift:nightly-master-focal
-          - swiftlang/swift:nightly-master-centos8
-          - swiftlang/swift:nightly-master-amazonlinux2
-    container: ${{ matrix.image }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Run tests with Thread Sanitizer
-        timeout-minutes: 10
-        run: swift test --enable-test-discovery --sanitize=thread
-  macOS:
-    runs-on: macos-latest
-    steps:
-      - name: Select latest available Xcode
-        uses: maxim-lobanov/setup-xcode@v1.2.1
-        with:
-          xcode-version: latest
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
+          repository: vapor/vapor
+          path: vapor
+      - name: Use local package
+        run: swift package --package-path vapor edit jwt-kit --path jwt-kit
+      - name: Run tests
+        run: swift test --package-path vapor --enable-test-discovery
