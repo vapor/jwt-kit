@@ -17,7 +17,7 @@ public final class ECDSAKey: OpenSSLKey {
             }
         }
       
-        public init?(cName: Int32) {
+        init?(cName: Int32) {
             switch cName {
             case NID_X9_62_prime256v1:
                 self = .p256
