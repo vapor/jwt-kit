@@ -222,6 +222,7 @@ class JWTKitTests: XCTestCase {
         let params = ec.parameters!
         let ecVerifier = try JWTSigner.es256(key: ECDSAKey(parameters: params, curve: .p256))
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p256)
     }
     
     func testGetECParametersP384() throws {
@@ -235,6 +236,7 @@ class JWTKitTests: XCTestCase {
         let params = ec.parameters!
         let ecVerifier = try JWTSigner.es384(key: ECDSAKey(parameters: params, curve: .p384))
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p384)
     }
     
     func testGetECParametersP521() throws {
@@ -248,6 +250,7 @@ class JWTKitTests: XCTestCase {
         let params = ec.parameters!
         let ecVerifier = try JWTSigner.es512(key: ECDSAKey(parameters: params, curve: .p521))
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p521)
     }
     
     func testVerifyingECDSAKeyUsingJWK() throws {

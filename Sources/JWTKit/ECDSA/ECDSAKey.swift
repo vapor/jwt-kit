@@ -16,6 +16,19 @@ public final class ECDSAKey: OpenSSLKey {
                 return NID_secp521r1
             }
         }
+      
+        public init?(cName: Int32) {
+            switch cName {
+            case NID_X9_62_prime256v1:
+                self = .p256
+            case NID_secp384r1:
+                self = .p384
+            case NID_secp521r1:
+                self = .p521
+            default:
+                return nil
+            }
+        }
     }
     
     public static func generate(curve: Curve = .p521) throws -> ECDSAKey {
@@ -90,6 +103,12 @@ public final class ECDSAKey: OpenSSLKey {
 
     deinit {
         CJWTKitBoringSSL_EC_KEY_free(self.c)
+    }
+  
+    public var curve: Curve? {
+        let group: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_group(self.c)
+        let cName = CJWTKitBoringSSL_EC_GROUP_get_curve_name(group)
+        return Curve(cName: cName)
     }
     
     public var parameters: Parameters? {
