@@ -82,7 +82,7 @@ function mangle_symbols {
         export GOPATH="${TMPDIR}"
 
         # Begin by building for macOS.
-        swift build --product CJWTKitBoringSSL --enable-test-discovery
+        swift build --product CJWTKitBoringSSL
         (
             cd "${SRCROOT}"
             go run "util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCJWTKitBoringSSL.a"
@@ -103,7 +103,7 @@ function mangle_symbols {
         # compilers for the architectures we care about.
         for cc_target in "${CROSS_COMPILE_TARGET_LOCATION}"/*"${CROSS_COMPILE_VERSION}"*.json; do
             echo "Cross compiling for ${cc_target}"
-            swift build --product CJWTKitBoringSSL --destination "${cc_target}" --enable-test-discovery
+            swift build --product CJWTKitBoringSSL --destination "${cc_target}"
         done;
 
         # Now we need to generate symbol mangles for Linux. We can do this in
