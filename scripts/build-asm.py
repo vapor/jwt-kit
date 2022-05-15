@@ -204,7 +204,7 @@ def munge_file(pp_arch, pp_platform, source_lines, sink):
     """
     sink.write(b"#if defined(%b) && defined(%b)\n" % (pp_arch.encode(), pp_platform.encode()))
     for line in source_lines:
-        sink.write(line.encode())
+        sink.write(line)
 
     sink.write(b"#endif  // defined(%b) && defined(%b)\n" % (pp_arch.encode(), pp_platform.encode()))
 
