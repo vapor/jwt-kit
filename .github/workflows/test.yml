@@ -12,7 +12,7 @@ jobs:
       matrix:
         dependent:
           - jwt
-    container: swift:5.2-focal
+    container: swift:5.6-focal
     steps: 
       - name: Check out JWTKit
         uses: actions/checkout@v2
