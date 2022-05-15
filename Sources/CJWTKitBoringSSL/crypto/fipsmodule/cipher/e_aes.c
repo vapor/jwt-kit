@@ -52,7 +52,6 @@
 #include <CJWTKitBoringSSL_aead.h>
 #include <CJWTKitBoringSSL_aes.h>
 #include <CJWTKitBoringSSL_cipher.h>
-#include <CJWTKitBoringSSL_cpu.h>
 #include <CJWTKitBoringSSL_err.h>
 #include <CJWTKitBoringSSL_mem.h>
 #include <CJWTKitBoringSSL_nid.h>
@@ -910,6 +909,16 @@ static int aead_aes_gcm_init_impl(struct aead_aes_gcm_ctx *gcm_ctx,
                                   size_t *out_tag_len, const uint8_t *key,
                                   size_t key_len, size_t tag_len) {
   const size_t key_bits = key_len * 8;
+
+  switch (key_bits) {
+    case 128:
+      boringssl_fips_inc_counter(fips_counter_evp_aes_128_gcm);
+      break;
+
+    case 256:
+      boringssl_fips_inc_counter(fips_counter_evp_aes_256_gcm);
+      break;
+  }
 
   if (key_bits != 128 && key_bits != 192 && key_bits != 256) {
     OPENSSL_PUT_ERROR(CIPHER, CIPHER_R_BAD_KEY_LENGTH);

@@ -23,20 +23,17 @@
 #include <string.h>
 
 #include <CJWTKitBoringSSL_bn.h>
-#include <CJWTKitBoringSSL_cpu.h>
 #include <CJWTKitBoringSSL_crypto.h>
 #include <CJWTKitBoringSSL_err.h>
-
-#include <CJWTKitBoringSSL_cpu.h>
 
 #include "../bn/internal.h"
 #include "../delocate.h"
 #include "../../internal.h"
 #include "internal.h"
-#include "p256-x86_64.h"
+#include "p256-nistz.h"
 
-
-#if !defined(OPENSSL_NO_ASM) && defined(OPENSSL_X86_64) && \
+#if !defined(OPENSSL_NO_ASM) &&  \
+    (defined(OPENSSL_X86_64) || defined(OPENSSL_AARCH64)) &&    \
     !defined(OPENSSL_SMALL)
 
 typedef P256_POINT_AFFINE PRECOMP256_ROW[64];
@@ -48,7 +45,7 @@ static const BN_ULONG ONE[P256_LIMBS] = {
 };
 
 // Precomputed tables for the default generator
-#include "p256-x86_64-table.h"
+#include "p256-nistz-table.h"
 
 // Recode window to a signed digit, see |ec_GFp_nistp_recode_scalar_bits| in
 // util.c for details
@@ -204,7 +201,7 @@ static void ecp_nistz256_windowed_mul(const EC_GROUP *group, P256_POINT *r,
   // ~1599 ((96 * 16) + 63) bytes of stack space.
   alignas(64) P256_POINT table[16];
   uint8_t p_str[33];
-  OPENSSL_memcpy(p_str, p_scalar->bytes, 32);
+  OPENSSL_memcpy(p_str, p_scalar->words, 32);
   p_str[32] = 0;
 
   // table[0] is implicitly (0,0,0) (the point at infinity), therefore it is
@@ -324,7 +321,7 @@ static void ecp_nistz256_point_mul_base(const EC_GROUP *group, EC_RAW_POINT *r,
   alignas(32) p256_point_union_t t, p;
 
   uint8_t p_str[33];
-  OPENSSL_memcpy(p_str, scalar->bytes, 32);
+  OPENSSL_memcpy(p_str, scalar->words, 32);
   p_str[32] = 0;
 
   // First window
@@ -369,7 +366,7 @@ static void ecp_nistz256_points_mul_public(const EC_GROUP *group,
 
   alignas(32) p256_point_union_t t, p;
   uint8_t p_str[33];
-  OPENSSL_memcpy(p_str, g_scalar->bytes, 32);
+  OPENSSL_memcpy(p_str, g_scalar->words, 32);
   p_str[32] = 0;
 
   // First window
@@ -557,10 +554,12 @@ static void ecp_nistz256_inv0_mod_ord(const EC_GROUP *group, EC_SCALAR *out,
 static int ecp_nistz256_scalar_to_montgomery_inv_vartime(const EC_GROUP *group,
                                                  EC_SCALAR *out,
                                                  const EC_SCALAR *in) {
-  if ((OPENSSL_ia32cap_get()[1] & (1 << 28)) == 0) {
+#if defined(OPENSSL_X86_64)
+  if (!CRYPTO_is_AVX_capable()) {
     // No AVX support; fallback to generic code.
     return ec_simple_scalar_to_montgomery_inv_vartime(group, out, in);
   }
+#endif
 
   assert(group->order.width == P256_LIMBS);
   if (!beeu_mod_inverse_vartime(out->words, in->words, group->order.d)) {
@@ -631,5 +630,6 @@ DEFINE_METHOD_FUNCTION(EC_METHOD, EC_GFp_nistz256_method) {
   out->cmp_x_coordinate = ecp_nistz256_cmp_x_coordinate;
 }
 
-#endif /* !defined(OPENSSL_NO_ASM) && defined(OPENSSL_X86_64) && \
+#endif /* !defined(OPENSSL_NO_ASM) && \
+          (defined(OPENSSL_X86_64) || defined(OPENSSL_AARCH64)) &&  \
           !defined(OPENSSL_SMALL) */

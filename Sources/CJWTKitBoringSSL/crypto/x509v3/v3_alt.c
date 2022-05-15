@@ -64,6 +64,7 @@
 #include <CJWTKitBoringSSL_obj.h>
 #include <CJWTKitBoringSSL_x509v3.h>
 
+#include "../x509/internal.h"
 #include "internal.h"
 
 
@@ -104,11 +105,17 @@ STACK_OF(CONF_VALUE) *i2v_GENERAL_NAMES(X509V3_EXT_METHOD *method,
                                         GENERAL_NAMES *gens,
                                         STACK_OF(CONF_VALUE) *ret)
 {
-    size_t i;
-    GENERAL_NAME *gen;
-    for (i = 0; i < sk_GENERAL_NAME_num(gens); i++) {
-        gen = sk_GENERAL_NAME_value(gens, i);
-        ret = i2v_GENERAL_NAME(method, gen, ret);
+    int ret_was_null = ret == NULL;
+    for (size_t i = 0; i < sk_GENERAL_NAME_num(gens); i++) {
+        GENERAL_NAME *gen = sk_GENERAL_NAME_value(gens, i);
+        STACK_OF(CONF_VALUE) *tmp = i2v_GENERAL_NAME(method, gen, ret);
+        if (tmp == NULL) {
+            if (ret_was_null) {
+                sk_CONF_VALUE_pop_free(ret, X509V3_conf_free);
+            }
+            return NULL;
+        }
+        ret = tmp;
     }
     if (!ret)
         return sk_CONF_VALUE_new_null();
@@ -119,6 +126,9 @@ STACK_OF(CONF_VALUE) *i2v_GENERAL_NAME(X509V3_EXT_METHOD *method,
                                        GENERAL_NAME *gen,
                                        STACK_OF(CONF_VALUE) *ret)
 {
+    /* Note the error-handling for this function relies on there being at most
+     * one |X509V3_add_value| call. If there were two and the second failed, we
+     * would need to sometimes free the first call's result. */
     unsigned char *p;
     char oline[256], htmp[5];
     int i;
@@ -139,17 +149,17 @@ STACK_OF(CONF_VALUE) *i2v_GENERAL_NAME(X509V3_EXT_METHOD *method,
         break;
 
     case GEN_EMAIL:
-        if (!X509V3_add_value_uchar("email", gen->d.ia5->data, &ret))
+        if (!x509V3_add_value_asn1_string("email", gen->d.ia5, &ret))
             return NULL;
         break;
 
     case GEN_DNS:
-        if (!X509V3_add_value_uchar("DNS", gen->d.ia5->data, &ret))
+        if (!x509V3_add_value_asn1_string("DNS", gen->d.ia5, &ret))
             return NULL;
         break;
 
     case GEN_URI:
-        if (!X509V3_add_value_uchar("URI", gen->d.ia5->data, &ret))
+        if (!x509V3_add_value_asn1_string("URI", gen->d.ia5, &ret))
             return NULL;
         break;
 
@@ -162,12 +172,13 @@ STACK_OF(CONF_VALUE) *i2v_GENERAL_NAME(X509V3_EXT_METHOD *method,
     case GEN_IPADD:
         p = gen->d.ip->data;
         if (gen->d.ip->length == 4)
-            BIO_snprintf(oline, sizeof oline,
+            BIO_snprintf(oline, sizeof(oline),
                          "%d.%d.%d.%d", p[0], p[1], p[2], p[3]);
         else if (gen->d.ip->length == 16) {
             oline[0] = 0;
             for (i = 0; i < 8; i++) {
-                BIO_snprintf(htmp, sizeof htmp, "%X", p[0] << 8 | p[1]);
+                uint16_t v = ((uint16_t)p[0] << 8) | p[1];
+                BIO_snprintf(htmp, sizeof(htmp), "%X", v);
                 p += 2;
                 OPENSSL_strlcat(oline, htmp, sizeof(oline));
                 if (i != 7)
@@ -236,7 +247,8 @@ int GENERAL_NAME_print(BIO *out, GENERAL_NAME *gen)
         else if (gen->d.ip->length == 16) {
             BIO_printf(out, "IP Address");
             for (i = 0; i < 8; i++) {
-                BIO_printf(out, ":%X", p[0] << 8 | p[1]);
+                uint16_t v = ((uint16_t)p[0] << 8) | p[1];
+                BIO_printf(out, ":%X", v);
                 p += 2;
             }
             BIO_puts(out, "\n");

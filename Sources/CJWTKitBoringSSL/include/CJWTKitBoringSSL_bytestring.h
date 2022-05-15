@@ -154,6 +154,11 @@ OPENSSL_EXPORT int CBS_get_u16_length_prefixed(CBS *cbs, CBS *out);
 // returns one on success and zero on error.
 OPENSSL_EXPORT int CBS_get_u24_length_prefixed(CBS *cbs, CBS *out);
 
+// CBS_get_until_first finds the first instance of |c| in |cbs|. If found, it
+// sets |*out| to the text before the match, advances |cbs| over it, and returns
+// one. Otherwise, it returns zero and leaves |cbs| unmodified.
+OPENSSL_EXPORT int CBS_get_until_first(CBS *cbs, CBS *out, uint8_t c);
+
 
 // Parsing ASN.1
 //
@@ -254,15 +259,21 @@ OPENSSL_EXPORT int CBS_get_any_asn1_element(CBS *cbs, CBS *out,
 
 // CBS_get_any_ber_asn1_element acts the same as |CBS_get_any_asn1_element| but
 // also allows indefinite-length elements to be returned and does not enforce
-// that lengths are minimal. For indefinite-lengths, |*out_header_len| and
+// that lengths are minimal. It sets |*out_indefinite| to one if the length was
+// indefinite and zero otherwise. If indefinite, |*out_header_len| and
 // |CBS_len(out)| will be equal as only the header is returned (although this is
-// also true for empty elements so the length must be checked too). If
+// also true for empty elements so |*out_indefinite| should be checked). If
 // |out_ber_found| is not NULL then it is set to one if any case of invalid DER
 // but valid BER is found, and to zero otherwise.
+//
+// This function will not successfully parse an end-of-contents (EOC) as an
+// element. Callers parsing indefinite-length encoding must check for EOC
+// separately.
 OPENSSL_EXPORT int CBS_get_any_ber_asn1_element(CBS *cbs, CBS *out,
                                                 unsigned *out_tag,
                                                 size_t *out_header_len,
-                                                int *out_ber_found);
+                                                int *out_ber_found,
+                                                int *out_indefinite);
 
 // CBS_get_asn1_uint64 gets an ASN.1 INTEGER from |cbs| using |CBS_get_asn1|
 // and sets |*out| to its value. It returns one on success and zero on error,
@@ -462,6 +473,10 @@ OPENSSL_EXPORT int CBB_add_asn1(CBB *cbb, CBB *out_contents, unsigned tag);
 // CBB_add_bytes appends |len| bytes from |data| to |cbb|. It returns one on
 // success and zero otherwise.
 OPENSSL_EXPORT int CBB_add_bytes(CBB *cbb, const uint8_t *data, size_t len);
+
+// CBB_add_zeros append |len| bytes with value zero to |cbb|. It returns one on
+// success and zero otherwise.
+OPENSSL_EXPORT int CBB_add_zeros(CBB *cbb, size_t len);
 
 // CBB_add_space appends |len| bytes to |cbb| and sets |*out_data| to point to
 // the beginning of that space. The caller must then write |len| bytes of

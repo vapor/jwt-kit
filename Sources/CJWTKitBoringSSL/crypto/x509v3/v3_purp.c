@@ -64,10 +64,10 @@
 #include <CJWTKitBoringSSL_mem.h>
 #include <CJWTKitBoringSSL_obj.h>
 #include <CJWTKitBoringSSL_thread.h>
-#include <CJWTKitBoringSSL_x509_vfy.h>
 #include <CJWTKitBoringSSL_x509v3.h>
 
 #include "../internal.h"
+#include "../x509/internal.h"
 #include "internal.h"
 
 #define V1_ROOT (EXFLAG_V1|EXFLAG_SS)
@@ -437,7 +437,7 @@ int x509v3_cache_extensions(X509 *x)
         return (x->ex_flags & EXFLAG_INVALID) == 0;
     }
 
-    if (!X509_digest(x, EVP_sha1(), x->sha1_hash, NULL))
+    if (!X509_digest(x, EVP_sha256(), x->cert_hash, NULL))
         x->ex_flags |= EXFLAG_INVALID;
     /* V1 should mean no extensions ... */
     if (X509_get_version(x) == X509_VERSION_1)

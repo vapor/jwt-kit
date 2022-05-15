@@ -93,20 +93,36 @@ static STACK_OF(CONF_VALUE) *i2v_AUTHORITY_KEYID(X509V3_EXT_METHOD *method,
                                                  STACK_OF(CONF_VALUE)
                                                  *extlist)
 {
-    char *tmp;
+    int extlist_was_null = extlist == NULL;
     if (akeyid->keyid) {
-        tmp = x509v3_bytes_to_hex(akeyid->keyid->data, akeyid->keyid->length);
-        X509V3_add_value("keyid", tmp, &extlist);
+        char *tmp = x509v3_bytes_to_hex(akeyid->keyid->data,
+                                        akeyid->keyid->length);
+        int ok = tmp != NULL && X509V3_add_value("keyid", tmp, &extlist);
         OPENSSL_free(tmp);
+        if (!ok) {
+            goto err;
+        }
     }
-    if (akeyid->issuer)
-        extlist = i2v_GENERAL_NAMES(NULL, akeyid->issuer, extlist);
+    if (akeyid->issuer) {
+        STACK_OF(CONF_VALUE) *tmpextlist =
+            i2v_GENERAL_NAMES(NULL, akeyid->issuer, extlist);
+        if (tmpextlist == NULL) {
+            goto err;
+        }
+        extlist = tmpextlist;
+    }
     if (akeyid->serial) {
-        tmp = x509v3_bytes_to_hex(akeyid->serial->data, akeyid->serial->length);
-        X509V3_add_value("serial", tmp, &extlist);
-        OPENSSL_free(tmp);
+        if (!X509V3_add_value_int("serial", akeyid->serial, &extlist)) {
+            goto err;
+        }
     }
     return extlist;
+
+err:
+    if (extlist_was_null) {
+        sk_CONF_VALUE_pop_free(extlist, X509V3_conf_free);
+    }
+    return NULL;
 }
 
 /*
