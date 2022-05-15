@@ -231,10 +231,10 @@ def main():
     # Now we need to bring over all the .S files, inserting our preprocessor
     # directives along the way. We do this to allow the C preprocessor to make
     # unneeded assembly files vanish.
-    for ((osname, arch), asm_files) in asm_outputs.iteritems():
+    for ((osname, arch), asm_files) in asm_outputs.items():
         munge_all_files(osname, arch, asm_files)
 
-    for ((osname, arch), asm_files) in NON_PERL_FILES.iteritems():
+    for ((osname, arch), asm_files) in NON_PERL_FILES.items():
         for asm_file in asm_files:
              with open(asm_file, 'rb') as f:
                  lines = f.readlines()
