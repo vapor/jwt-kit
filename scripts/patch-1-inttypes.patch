@@ -14,11 +14,11 @@ diff --git a/Sources/CJWTKitBoringSSL/include/CJWTKitBoringSSL_bn.h b/Sources/CJ
 index c86c1ef..7013140 100644
 --- a/Sources/CJWTKitBoringSSL/include/CJWTKitBoringSSL_bn.h
 +++ b/Sources/CJWTKitBoringSSL/include/CJWTKitBoringSSL_bn.h
-@@ -126,7 +126,7 @@
+@@ -126,7 +126,8 @@
  #include "CJWTKitBoringSSL_base.h"
  #include "CJWTKitBoringSSL_thread.h"
  
--#include <inttypes.h>  // for PRIu64 and friends
+ #include <inttypes.h>  // for PRIu64 and friends
 +#include <sys/types.h>
  #include <stdio.h>  // for FILE*
  
