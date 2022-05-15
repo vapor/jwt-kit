@@ -202,11 +202,11 @@ def munge_file(pp_arch, pp_platform, source_lines, sink):
     """
     Wraps a single assembly file in appropriate defines.
     """
-    sink.write("#if defined(%s) && defined(%s)\n" % (pp_arch, pp_platform))
+    sink.write(b"#if defined(%s) && defined(%s)\n" % (pp_arch, pp_platform))
     for line in source_lines:
         sink.write(line)
 
-    sink.write("#endif  // defined(%s) && defined(%s)\n" % (pp_arch, pp_platform))
+    sink.write(b"#endif  // defined(%s) && defined(%s)\n" % (pp_arch, pp_platform))
 
 
 def munge_all_files(osname, arch, asms):
