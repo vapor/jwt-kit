@@ -2,17 +2,16 @@
 //
 // This source file is part of the Vapor open source project
 //
-// Copyright (c) 2017-2020 Vapor project authors
+// Copyright (c) 2022 Vapor project authors
 // Licensed under MIT
 //
 // See LICENSE for license information
 //
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
 #ifndef C_VAPORJWT_BORINGSSL_H
 #define C_VAPORJWT_BORINGSSL_H
-
 #include "CJWTKitBoringSSL_aes.h"
 #include "CJWTKitBoringSSL_arm_arch.h"
 #include "CJWTKitBoringSSL_asn1_mac.h"
@@ -39,7 +38,6 @@
 #include "CJWTKitBoringSSL_evp.h"
 #include "CJWTKitBoringSSL_hkdf.h"
 #include "CJWTKitBoringSSL_hmac.h"
-#include "CJWTKitBoringSSL_hpke.h"
 #include "CJWTKitBoringSSL_hrss.h"
 #include "CJWTKitBoringSSL_md4.h"
 #include "CJWTKitBoringSSL_md5.h"
@@ -59,5 +57,4 @@
 #include "CJWTKitBoringSSL_siphash.h"
 #include "CJWTKitBoringSSL_trust_token.h"
 #include "CJWTKitBoringSSL_x509v3.h"
-
 #endif  // C_VAPORJWT_BORINGSSL_H

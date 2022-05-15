@@ -206,6 +206,12 @@ void RSA_get0_factors(const RSA *rsa, const BIGNUM **out_p,
   }
 }
 
+const RSA_PSS_PARAMS *RSA_get0_pss_params(const RSA *rsa) {
+  // We do not support the id-RSASSA-PSS key encoding. If we add support later,
+  // the |maskHash| field should be filled in for OpenSSL compatibility.
+  return NULL;
+}
+
 void RSA_get0_crt_params(const RSA *rsa, const BIGNUM **out_dmp1,
                          const BIGNUM **out_dmq1, const BIGNUM **out_iqmp) {
   if (out_dmp1 != NULL) {
@@ -297,13 +303,21 @@ int RSA_public_encrypt(size_t flen, const uint8_t *from, uint8_t *to, RSA *rsa,
   return out_len;
 }
 
-int RSA_sign_raw(RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,
-                 const uint8_t *in, size_t in_len, int padding) {
+static int rsa_sign_raw_no_self_test(RSA *rsa, size_t *out_len, uint8_t *out,
+                                     size_t max_out, const uint8_t *in,
+                                     size_t in_len, int padding) {
   if (rsa->meth->sign_raw) {
     return rsa->meth->sign_raw(rsa, out_len, out, max_out, in, in_len, padding);
   }
 
   return rsa_default_sign_raw(rsa, out_len, out, max_out, in, in_len, padding);
+}
+
+int RSA_sign_raw(RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,
+                 const uint8_t *in, size_t in_len, int padding) {
+  boringssl_ensure_rsa_self_test();
+  return rsa_sign_raw_no_self_test(rsa, out_len, out, max_out, in, in_len,
+                                   padding);
 }
 
 int RSA_private_encrypt(size_t flen, const uint8_t *from, uint8_t *to, RSA *rsa,
@@ -517,8 +531,9 @@ int RSA_add_pkcs1_prefix(uint8_t **out_msg, size_t *out_msg_len,
   return 0;
 }
 
-int RSA_sign(int hash_nid, const uint8_t *digest, unsigned digest_len,
-             uint8_t *out, unsigned *out_len, RSA *rsa) {
+int rsa_sign_no_self_test(int hash_nid, const uint8_t *digest,
+                          unsigned digest_len, uint8_t *out, unsigned *out_len,
+                          RSA *rsa) {
   const unsigned rsa_size = RSA_size(rsa);
   int ret = 0;
   uint8_t *signed_msg = NULL;
@@ -533,8 +548,9 @@ int RSA_sign(int hash_nid, const uint8_t *digest, unsigned digest_len,
   if (!RSA_add_pkcs1_prefix(&signed_msg, &signed_msg_len,
                             &signed_msg_is_alloced, hash_nid, digest,
                             digest_len) ||
-      !RSA_sign_raw(rsa, &size_t_out_len, out, rsa_size, signed_msg,
-                    signed_msg_len, RSA_PKCS1_PADDING)) {
+      !rsa_sign_raw_no_self_test(rsa, &size_t_out_len, out, rsa_size,
+                                 signed_msg, signed_msg_len,
+                                 RSA_PKCS1_PADDING)) {
     goto err;
   }
 
@@ -546,6 +562,13 @@ err:
     OPENSSL_free(signed_msg);
   }
   return ret;
+}
+
+int RSA_sign(int hash_nid, const uint8_t *digest, unsigned digest_len,
+             uint8_t *out, unsigned *out_len, RSA *rsa) {
+  boringssl_ensure_rsa_self_test();
+
+  return rsa_sign_no_self_test(hash_nid, digest, digest_len, out, out_len, rsa);
 }
 
 int RSA_sign_pss_mgf1(RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,
@@ -571,8 +594,9 @@ int RSA_sign_pss_mgf1(RSA *rsa, size_t *out_len, uint8_t *out, size_t max_out,
   return ret;
 }
 
-int RSA_verify(int hash_nid, const uint8_t *digest, size_t digest_len,
-               const uint8_t *sig, size_t sig_len, RSA *rsa) {
+int rsa_verify_no_self_test(int hash_nid, const uint8_t *digest,
+                            size_t digest_len, const uint8_t *sig,
+                            size_t sig_len, RSA *rsa) {
   if (rsa->n == NULL || rsa->e == NULL) {
     OPENSSL_PUT_ERROR(RSA, RSA_R_VALUE_MISSING);
     return 0;
@@ -596,12 +620,9 @@ int RSA_verify(int hash_nid, const uint8_t *digest, size_t digest_len,
     return 0;
   }
 
-  if (!RSA_verify_raw(rsa, &len, buf, rsa_size, sig, sig_len,
-                      RSA_PKCS1_PADDING)) {
-    goto out;
-  }
-
-  if (!RSA_add_pkcs1_prefix(&signed_msg, &signed_msg_len,
+  if (!rsa_verify_raw_no_self_test(rsa, &len, buf, rsa_size, sig, sig_len,
+                                   RSA_PKCS1_PADDING) ||
+      !RSA_add_pkcs1_prefix(&signed_msg, &signed_msg_len,
                             &signed_msg_is_alloced, hash_nid, digest,
                             digest_len)) {
     goto out;
@@ -622,6 +643,13 @@ out:
     OPENSSL_free(signed_msg);
   }
   return ret;
+}
+
+int RSA_verify(int hash_nid, const uint8_t *digest, size_t digest_len,
+               const uint8_t *sig, size_t sig_len, RSA *rsa) {
+  boringssl_ensure_rsa_self_test();
+  return rsa_verify_no_self_test(hash_nid, digest, digest_len, sig, sig_len,
+                                 rsa);
 }
 
 int RSA_verify_pss_mgf1(RSA *rsa, const uint8_t *digest, size_t digest_len,
@@ -657,7 +685,8 @@ err:
 }
 
 static int check_mod_inverse(int *out_ok, const BIGNUM *a, const BIGNUM *ainv,
-                             const BIGNUM *m, BN_CTX *ctx) {
+                             const BIGNUM *m, unsigned m_min_bits,
+                             BN_CTX *ctx) {
   if (BN_is_negative(ainv) || BN_cmp(ainv, m) >= 0) {
     *out_ok = 0;
     return 1;
@@ -670,7 +699,7 @@ static int check_mod_inverse(int *out_ok, const BIGNUM *a, const BIGNUM *ainv,
   BIGNUM *tmp = BN_CTX_get(ctx);
   int ret = tmp != NULL &&
             bn_mul_consttime(tmp, a, ainv, ctx) &&
-            bn_div_consttime(NULL, tmp, tmp, m, ctx);
+            bn_div_consttime(NULL, tmp, tmp, m, m_min_bits, ctx);
   if (ret) {
     *out_ok = BN_is_one(tmp);
   }
@@ -750,10 +779,15 @@ int RSA_check_key(const RSA *key) {
   // simply check that d * e is one mod p-1 and mod q-1. Note d and e were bound
   // by earlier checks in this function.
   if (!bn_usub_consttime(&pm1, key->p, BN_value_one()) ||
-      !bn_usub_consttime(&qm1, key->q, BN_value_one()) ||
-      !bn_mul_consttime(&de, key->d, key->e, ctx) ||
-      !bn_div_consttime(NULL, &tmp, &de, &pm1, ctx) ||
-      !bn_div_consttime(NULL, &de, &de, &qm1, ctx)) {
+      !bn_usub_consttime(&qm1, key->q, BN_value_one())) {
+    OPENSSL_PUT_ERROR(RSA, ERR_LIB_BN);
+    goto out;
+  }
+  const unsigned pm1_bits = BN_num_bits(&pm1);
+  const unsigned qm1_bits = BN_num_bits(&qm1);
+  if (!bn_mul_consttime(&de, key->d, key->e, ctx) ||
+      !bn_div_consttime(NULL, &tmp, &de, &pm1, pm1_bits, ctx) ||
+      !bn_div_consttime(NULL, &de, &de, &qm1, qm1_bits, ctx)) {
     OPENSSL_PUT_ERROR(RSA, ERR_LIB_BN);
     goto out;
   }
@@ -772,9 +806,12 @@ int RSA_check_key(const RSA *key) {
 
   if (has_crt_values) {
     int dmp1_ok, dmq1_ok, iqmp_ok;
-    if (!check_mod_inverse(&dmp1_ok, key->e, key->dmp1, &pm1, ctx) ||
-        !check_mod_inverse(&dmq1_ok, key->e, key->dmq1, &qm1, ctx) ||
-        !check_mod_inverse(&iqmp_ok, key->q, key->iqmp, key->p, ctx)) {
+    if (!check_mod_inverse(&dmp1_ok, key->e, key->dmp1, &pm1, pm1_bits, ctx) ||
+        !check_mod_inverse(&dmq1_ok, key->e, key->dmq1, &qm1, qm1_bits, ctx) ||
+        // |p| is odd, so |pm1| and |p| have the same bit width. If they didn't,
+        // we only need a lower bound anyway.
+        !check_mod_inverse(&iqmp_ok, key->q, key->iqmp, key->p, pm1_bits,
+                           ctx)) {
       OPENSSL_PUT_ERROR(RSA, ERR_LIB_BN);
       goto out;
     }
@@ -890,9 +927,9 @@ int RSA_check_fips(RSA *key) {
     ret = 0;
     goto cleanup;
   }
-#if defined(BORINGSSL_FIPS_BREAK_RSA_PWCT)
-  data[0] = ~data[0];
-#endif
+  if (boringssl_fips_break_test("RSA_PWCT")) {
+    data[0] = ~data[0];
+  }
   if (!RSA_verify(NID_sha256, data, sizeof(data), sig, sig_len, key)) {
     OPENSSL_PUT_ERROR(RSA, ERR_R_INTERNAL_ERROR);
     ret = 0;
@@ -914,6 +951,8 @@ int RSA_private_transform(RSA *rsa, uint8_t *out, const uint8_t *in,
 }
 
 int RSA_flags(const RSA *rsa) { return rsa->flags; }
+
+int RSA_test_flags(const RSA *rsa, int flags) { return rsa->flags & flags; }
 
 int RSA_blinding_on(RSA *rsa, BN_CTX *ctx) {
   return 1;

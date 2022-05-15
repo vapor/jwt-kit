@@ -77,13 +77,12 @@ function mangle_symbols {
     (
         # We need a .a: may as well get SwiftPM to give it to us.
         # Temporarily enable the product we need.
-        echo "Enabling mangled target in Package.swift"
         $sed -i -e 's/MANGLE_START/MANGLE_START*\//' -e 's/MANGLE_END/\/*MANGLE_END/' "${HERE}/Package.swift"
 
         export GOPATH="${TMPDIR}"
 
         # Begin by building for macOS.
-        swift build --product CJWTKitBoringSSL --enable-test-discovery
+        swift build --product CJWTKitBoringSSL
         (
             cd "${SRCROOT}"
             go run "util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCJWTKitBoringSSL.a"
@@ -91,7 +90,6 @@ function mangle_symbols {
 
         # Now build for iOS. We use xcodebuild for this because SwiftPM doesn't
         # meaningfully support it. Unfortunately we must archive ourselves.
-        # This also builds for Apple Silicon
         xcodebuild -sdk iphoneos -scheme CJWTKitBoringSSL -derivedDataPath "${TMPDIR}/iphoneos-deriveddata" -destination generic/platform=iOS
         ar -r "${TMPDIR}/libCJWTKitBoringSSL-ios.a" "${TMPDIR}/iphoneos-deriveddata/Build/Products/Debug-iphoneos/CJWTKitBoringSSL.o"
         (
@@ -105,7 +103,7 @@ function mangle_symbols {
         # compilers for the architectures we care about.
         for cc_target in "${CROSS_COMPILE_TARGET_LOCATION}"/*"${CROSS_COMPILE_VERSION}"*.json; do
             echo "Cross compiling for ${cc_target}"
-            swift build --product CJWTKitBoringSSL --destination "${cc_target}" --enable-test-discovery
+            swift build --product CJWTKitBoringSSL --destination "${cc_target}"
         done;
 
         # Now we need to generate symbol mangles for Linux. We can do this in
@@ -272,7 +270,7 @@ echo "RENAMING header files"
     rmdir "include/openssl"
 
     # Now change the imports from "<openssl/X> to "<CJWTKitBoringSSL_X>", apply the same prefix to the 'boringssl_prefix_symbols' headers.
-    find . -name "*.[ch]" -or -name "*.cc" -or -name "*.S" | xargs $sed -i -e 's+include <openssl/+include <CJWTKitBoringSSL_+' -e 's+include <boringssl_prefix_symbols+include <CJWTKitBoringSSL_boringssl_prefix_symbols+'
+    find . -name "*.[ch]" -or -name "*.cc" -or -name "*.S" | xargs $sed -i -e 's+include <openssl/+include <CJWTKitBoringSSL_+' -e 's+include <boringssl_prefix_symbols+include <CJWTKitBoringSSL_boringssl_prefix_symbols+' -e 's+include "openssl/+include "CJWTKitBoringSSL_+'
 
     # Okay now we need to rename the headers adding the prefix "CJWTKitBoringSSL_".
     pushd include
@@ -291,7 +289,6 @@ echo "PROTECTING against executable stacks"
 
 echo "PATCHING BoringSSL"
 git apply "${HERE}/scripts/patch-1-inttypes.patch"
-git apply "${HERE}/scripts/patch-2-arm-arch.patch"
 
 # We need BoringSSL to be modularised
 echo "MODULARISING BoringSSL"
@@ -300,17 +297,16 @@ cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 //
 // This source file is part of the Vapor open source project
 //
-// Copyright (c) 2017-2020 Vapor project authors
+// Copyright (c) 2022 Vapor project authors
 // Licensed under MIT
 //
 // See LICENSE for license information
 //
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 //
 //===----------------------------------------------------------------------===//
 #ifndef C_VAPORJWT_BORINGSSL_H
 #define C_VAPORJWT_BORINGSSL_H
-
 #include "CJWTKitBoringSSL_aes.h"
 #include "CJWTKitBoringSSL_arm_arch.h"
 #include "CJWTKitBoringSSL_asn1_mac.h"
@@ -337,7 +333,6 @@ cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 #include "CJWTKitBoringSSL_evp.h"
 #include "CJWTKitBoringSSL_hkdf.h"
 #include "CJWTKitBoringSSL_hmac.h"
-#include "CJWTKitBoringSSL_hpke.h"
 #include "CJWTKitBoringSSL_hrss.h"
 #include "CJWTKitBoringSSL_md4.h"
 #include "CJWTKitBoringSSL_md5.h"
@@ -357,8 +352,16 @@ cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 #include "CJWTKitBoringSSL_siphash.h"
 #include "CJWTKitBoringSSL_trust_token.h"
 #include "CJWTKitBoringSSL_x509v3.h"
-
 #endif  // C_VAPORJWT_BORINGSSL_H
+EOF
+
+# modulemap is required by the cmake build
+echo "CREATING modulemap"
+cat << EOF > "$DSTROOT/include/module.modulemap"
+module CJWTKitBoringSSL {
+    header "CJWTKitBoringSSL.h"
+    export *
+}
 EOF
 
 echo "RECORDING BoringSSL revision"
@@ -367,4 +370,3 @@ echo "This directory is derived from BoringSSL cloned from https://boringssl.goo
 
 echo "CLEANING temporary directory"
 rm -rf "${TMPDIR}"
-

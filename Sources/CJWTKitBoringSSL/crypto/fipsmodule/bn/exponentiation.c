@@ -112,7 +112,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <CJWTKitBoringSSL_cpu.h>
 #include <CJWTKitBoringSSL_err.h>
 #include <CJWTKitBoringSSL_mem.h>
 

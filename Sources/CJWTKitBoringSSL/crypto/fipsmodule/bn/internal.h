@@ -552,12 +552,15 @@ int bn_sqr_consttime(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx);
 // bn_div_consttime behaves like |BN_div|, but it rejects negative inputs and
 // treats both inputs, including their magnitudes, as secret. It is, as a
 // result, much slower than |BN_div| and should only be used for rare operations
-// where Montgomery reduction is not available.
+// where Montgomery reduction is not available. |divisor_min_bits| is a
+// public lower bound for |BN_num_bits(divisor)|. When |divisor|'s bit width is
+// public, this can speed up the operation.
 //
 // Note that |quotient->width| will be set pessimally to |numerator->width|.
 OPENSSL_EXPORT int bn_div_consttime(BIGNUM *quotient, BIGNUM *remainder,
                                     const BIGNUM *numerator,
-                                    const BIGNUM *divisor, BN_CTX *ctx);
+                                    const BIGNUM *divisor,
+                                    unsigned divisor_min_bits, BN_CTX *ctx);
 
 // bn_is_relatively_prime checks whether GCD(|x|, |y|) is one. On success, it
 // returns one and sets |*out_relatively_prime| to one if the GCD was one and
@@ -703,6 +706,25 @@ void bn_mod_exp_mont_small(BN_ULONG *r, const BN_ULONG *a, size_t num,
 // independent of |a|, but |mont->N| is a public value.
 void bn_mod_inverse0_prime_mont_small(BN_ULONG *r, const BN_ULONG *a,
                                       size_t num, const BN_MONT_CTX *mont);
+
+
+// Word-based byte conversion functions.
+
+// bn_big_endian_to_words interprets |in_len| bytes from |in| as a big-endian,
+// unsigned integer and writes the result to |out_len| words in |out|. |out_len|
+// must be large enough to represent any |in_len|-byte value. That is, |out_len|
+// must be at least |BN_BYTES * in_len|.
+void bn_big_endian_to_words(BN_ULONG *out, size_t out_len, const uint8_t *in,
+                            size_t in_len);
+
+// bn_words_to_big_endian represents |in_len| words from |in| as a big-endian,
+// unsigned integer in |out_len| bytes. It writes the result to |out|. |out_len|
+// must be large enough to represent |in| without truncation.
+//
+// Note |out_len| may be less than |BN_BYTES * in_len| if |in| is known to have
+// leading zeros.
+void bn_words_to_big_endian(uint8_t *out, size_t out_len, const BN_ULONG *in,
+                            size_t in_len);
 
 
 #if defined(__cplusplus)
