@@ -27,12 +27,12 @@ class BigNumber {
         return BigNumber(c)
     }
 
-    public func toBase64(_ size: Int = 1000) -> String {
+    public func toBase64URL(_ size: Int = 1000) -> String {
         let pBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
         defer { pBuffer.deallocate() }
 
         let actualBytes = Int(CJWTKitBoringSSL_BN_bn2bin(self.c, pBuffer))
         let data = Data(bytes: pBuffer, count: actualBytes)
-        return data.base64EncodedString()
+        return String.init(decoding: data.base64URLEncodedBytes(), as: UTF8.self)
     }
 }

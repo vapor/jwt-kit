@@ -121,7 +121,7 @@ public final class ECDSAKey: OpenSSLKey {
             return nil
         }
 
-        return Parameters(x: bnX.toBase64(), y: bnY.toBase64())
+        return Parameters(x: bnX.toBase64URL(), y: bnY.toBase64URL())
     }
 
     public struct Parameters {
