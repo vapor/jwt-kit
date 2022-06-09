@@ -16,8 +16,8 @@ class BigNumber {
         CJWTKitBoringSSL_BN_free(self.c);
     }
 
-    public static func convert(_ bnBase64: String) -> BigNumber? {
-        guard let data = Data(base64Encoded: bnBase64) else {
+    public static func convert(_ bnBase64Url: String) -> BigNumber? {
+        guard let data = bnBase64Url.data(using: .utf8)?.base64URLDecodedBytes() else {
             return nil
         }
 
