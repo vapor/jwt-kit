@@ -78,10 +78,10 @@ public final class ECDSAKey: OpenSSLKey {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
         
-        guard let bnX = BigNumber.convert(parameters.x) else {
+        guard let bnX = BigNumber(base64URL: parameters.x) else {
             throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x as BN")
         }
-        guard let bnY = BigNumber.convert(parameters.y) else {
+        guard let bnY = BigNumber(base64URL: parameters.y) else {
             throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret y as BN")
         }
 
@@ -90,7 +90,7 @@ public final class ECDSAKey: OpenSSLKey {
         }
         
         if let privateKey = privateKey {
-            guard let bnPrivate = BigNumber.convert(privateKey) else {
+            guard let bnPrivate = BigNumber(base64URL: privateKey) else {
                 throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to interpret privateKey as BN")
             }
             if CJWTKitBoringSSL_EC_KEY_set_private_key(c, bnPrivate.c) != 1 {
@@ -121,7 +121,7 @@ public final class ECDSAKey: OpenSSLKey {
             return nil
         }
 
-        return Parameters(x: bnX.toBase64(), y: bnY.toBase64())
+        return Parameters(x: bnX.toBase64URL(), y: bnY.toBase64URL())
     }
 
     public struct Parameters {
