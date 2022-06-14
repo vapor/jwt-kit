@@ -38,7 +38,6 @@ class BigNumber {
         self.init(c)
     }
 
-
     public func toBase64(_ size: Int = 1000) -> String {
         let pBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
         defer { pBuffer.deallocate() }
@@ -47,7 +46,6 @@ class BigNumber {
         let data = Data(bytes: pBuffer, count: actualBytes)
         return data.base64EncodedString()
     }
-
 
     public func toBase64URL() -> String {
         let bytes = CJWTKitBoringSSL_BN_num_bytes(self.c)
