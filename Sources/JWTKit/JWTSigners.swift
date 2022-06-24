@@ -144,7 +144,7 @@ public final class JWTSigners {
         // Verify the chain
         // The first cert is used to sign the JWS
         // Each subsequent cert should be used to certify the previous one
-        // For the last cert we can find the signer for the KID
+        // For the last cert we use the root cert passed in
         // https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.6
         for (index, certificate) in x5c.enumerated() {
             if index == 0 {
