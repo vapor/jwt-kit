@@ -110,14 +110,14 @@ public final class JWTSigners {
         try JWTParser(token: token).payload(as: Payload.self)
     }
     
-    public func verifyJWS<Payload>(
+    public func verifyJWSWithX5C<Payload>(
         _ token: String,
         as payload: Payload.Type = Payload.self,
         rootCert: String
     ) throws -> Payload
         where Payload: JWTPayload
     {
-        try self.verifyJWS([UInt8](token.utf8), as: Payload.self, rootCert: [UInt8](rootCert.utf8))
+        try self.verifyJWSWithX5C([UInt8](token.utf8), as: Payload.self, rootCert: [UInt8](rootCert.utf8))
     }
     
     func addBoundaryToCert(_ cert: String) -> String {
@@ -128,7 +128,7 @@ public final class JWTSigners {
         """
     }
     
-    public func verifyJWS<Message, Payload>(
+    public func verifyJWSWithX5C<Message, Payload>(
         _ token: Message,
         as payload: Payload.Type = Payload.self,
         rootCert: Message
