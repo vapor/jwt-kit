@@ -1,6 +1,7 @@
 import class Foundation.JSONEncoder
 import class Foundation.JSONDecoder
 import struct Foundation.Data
+@_implementationOnly import CJWTKitBoringSSL
 
 /// A collection of signers labeled by `kid`.
 public final class JWTSigners {
@@ -108,8 +109,99 @@ public final class JWTSigners {
     {
         try JWTParser(token: token).payload(as: Payload.self)
     }
-
-
+    
+    public func verifyJWS<Payload>(
+        _ token: String,
+        as payload: Payload.Type = Payload.self,
+        rootCert: String
+    ) throws -> Payload
+        where Payload: JWTPayload
+    {
+        try self.verifyJWS([UInt8](token.utf8), as: Payload.self, rootCert: [UInt8](rootCert.utf8))
+    }
+    
+    func addBoundaryToCert(_ cert: String) -> String {
+        """
+        -----BEGIN CERTIFICATE-----
+        \(cert)
+        -----END CERTIFICATE-----
+        """
+    }
+    
+    public func verifyJWS<Message, Payload>(
+        _ token: Message,
+        as payload: Payload.Type = Payload.self,
+        rootCert: Message
+    ) throws -> Payload
+        where Message: DataProtocol, Payload: JWTPayload
+    {
+        let parser = try JWTParser(token: token)
+        let header = try parser.header()
+        guard let x5c = header.x5c else {
+            throw JWTError.generic(identifier: "JWS", reason: "No x5c certificates provided")
+        }
+        
+        // Verify the chain
+        // The first cert is used to sign the JWS
+        // Each subsequent cert should be used to certify the previous one
+        // For the last cert we can find the signer for the KID
+        // https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.6
+        for (index, certificate) in x5c.enumerated() {
+            if index == 0 {
+                continue
+            }
+            
+            if index == x5c.count {
+                let rootCertx509 = try ECDSAKey.load(pem: rootCert) { bio in
+                    CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
+                }
+                defer { CJWTKitBoringSSL_X509_free(rootCertx509) }
+                
+                let certToVerify = addBoundaryToCert(certificate)
+                let certToVerifyX509 = try ECDSAKey.load(pem: [UInt8](certToVerify.utf8)) { bio in
+                    CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
+                }
+                defer { CJWTKitBoringSSL_X509_free(certToVerifyX509) }
+                
+                let rootPKey = CJWTKitBoringSSL_X509_get_pubkey(rootCertx509)
+                defer { CJWTKitBoringSSL_EVP_PKEY_free(rootPKey) }
+                
+                guard CJWTKitBoringSSL_X509_verify(certToVerifyX509, rootPKey) == 1 else {
+                    throw JWTError.generic(identifier: "JWS", reason: "Certificate verification failed")
+                }
+            } else {
+                let certString = addBoundaryToCert(certificate)
+                
+                let x509 = try ECDSAKey.load(pem: [UInt8](certString.utf8)) { bio in
+                    CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
+                }
+                defer { CJWTKitBoringSSL_X509_free(x509) }
+                
+                let cert2String = addBoundaryToCert(x5c[index-1])
+                let x5092 = try ECDSAKey.load(pem: [UInt8](cert2String.utf8)) { bio in
+                    CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
+                }
+                defer { CJWTKitBoringSSL_X509_free(x5092) }
+                
+                let pkey = CJWTKitBoringSSL_X509_get_pubkey(x509)
+                defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
+                
+                guard CJWTKitBoringSSL_X509_verify(x5092, pkey) == 1 else {
+                    throw JWTError.generic(identifier: "JWS", reason: "Certificate verification failed")
+                }
+            }
+        }
+        
+        guard let signingCert = x5c.first else {
+            throw JWTError.generic(identifier: "JWS", reason: "No x5c certificates provided")
+        }
+        let keyData = addBoundaryToCert(signingCert)
+        let ecdsaKey = try ECDSAKey.certificate(pem: keyData)
+        
+        let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: CJWTKitBoringSSL_EVP_sha256(), name: "ES256"))
+        return try signer.verify(parser: parser)
+    }
+    
     public func verify<Payload>(
         _ token: String,
         as payload: Payload.Type = Payload.self

@@ -41,6 +41,53 @@ public final class ECDSAKey: OpenSSLKey {
         return .init(c)
     }
     
+    /// Creates ECDSAKey from public certificate pem file.
+    ///
+    /// Certificate pem files look like:
+    ///
+    ///     -----BEGIN CERTIFICATE-----
+    ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
+    ///     ...
+    ///     -----END CERTIFICATE-----
+    ///
+    /// This key can only be used to verify JWTs.
+    ///
+    /// - parameters:
+    ///     - pem: Contents of pem file.
+    public static func certificate(pem string: String) throws -> ECDSAKey {
+        try self.certificate(pem: [UInt8](string.utf8))
+    }
+
+    /// Creates ECDSAKey from public certificate pem file.
+    ///
+    /// Certificate pem files look like:
+    ///
+    ///     -----BEGIN CERTIFICATE-----
+    ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
+    ///     ...
+    ///     aX4rbSL49Z3dAQn8vQIDAQAB
+    ///     -----END CERTIFICATE-----
+    ///
+    /// This key can only be used to verify JWTs.
+    ///
+    /// - parameters:
+    ///     - pem: Contents of pem file.
+    public static func certificate<Data>(pem data: Data) throws -> ECDSAKey
+        where Data: DataProtocol
+    {
+        let x509 = try self.load(pem: data) { bio in
+            CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
+        }
+        defer { CJWTKitBoringSSL_X509_free(x509) }
+        let pkey = CJWTKitBoringSSL_X509_get_pubkey(x509)
+        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
+
+        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_EC_KEY(pkey) else {
+            throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
+        }
+        return self.init(c)
+    }
+    
     public static func `public`(pem string: String) throws -> ECDSAKey {
         try .public(pem: [UInt8](string.utf8))
     }
