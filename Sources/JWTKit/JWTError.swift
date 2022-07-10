@@ -8,6 +8,7 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
     case missingKIDHeader
     case unknownKID(JWKIdentifier)
     case invalidJWK
+	case invalidCompression
     case invalidBool(String)
     case generic(identifier: String, reason: String)
 
@@ -27,6 +28,8 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
             return "unknown kid: \(kid)"
         case .invalidJWK:
             return "invalid JWK"
+		case .invalidCompression:
+			return "compression type not supported"
         case .invalidBool(let str):
             return "invalid boolean value: \(str)"
         case .generic(let identifier, let reason):

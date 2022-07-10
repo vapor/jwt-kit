@@ -1,4 +1,6 @@
 import class Foundation.JSONDecoder
+import struct Foundation.Data
+import class SWCompression.Deflate
 
 struct JWTParser {
     let encodedHeader: ArraySlice<UInt8>
@@ -25,8 +27,17 @@ struct JWTParser {
     func payload<Payload>(as payload: Payload.Type) throws -> Payload
         where Payload: JWTPayload
     {
-        try self.jsonDecoder()
-            .decode(Payload.self, from: .init(self.encodedPayload.base64URLDecodedBytes()))
+		var decodedPayload = Data(self.encodedPayload.base64URLDecodedBytes())
+
+		if let compressionType = try self.header().zip {
+			guard compressionType == "DEF" else {
+				throw JWTError.invalidCompression
+			}
+			decodedPayload = try Deflate.decompress(data: decodedPayload)
+		}
+
+        return try self.jsonDecoder()
+            .decode(Payload.self, from: decodedPayload)
     }
 
     func verify(using signer: JWTSigner) throws {
