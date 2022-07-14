@@ -149,6 +149,37 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(payload.name, "John Doe")
     }
 
+    func testRSASubject() throws {
+        let publicKey = try XCTUnwrap(RSAKey(modulus: rsaModulus, exponent: "AQAB"))
+        
+        guard let m_public = publicKey.modulus, let e_public = publicKey.publicExponent else {
+            XCTFail("The subjects of the RSA key do not exist.")
+            return
+        }
+        
+        XCTAssertNil(publicKey.privateExponent)
+        XCTAssertEqual(e_public.base64URLEncodedString(), "AQAB")
+        XCTAssertEqual(m_public.base64URLEncodedString(), rsaModulus)
+        
+        
+        let privatekey = try XCTUnwrap(RSAKey(
+            modulus: rsaModulus,
+            exponent: "AQAB",
+            privateExponent: rsaPrivateExponent)
+        )
+        
+        guard let m_private = privatekey.modulus,
+              let e_private = privatekey.publicExponent,
+              let d_private = privatekey.privateExponent else {
+            XCTFail("The subjects of the RSA key do not exist.")
+            return
+        }
+        
+        XCTAssertEqual(e_private.base64URLEncodedString(), "AQAB")
+        XCTAssertEqual(m_private.base64URLEncodedString(), rsaModulus)
+        XCTAssertEqual(d_private.base64URLEncodedString(), rsaPrivateExponent)
+    }
+    
     func testRSA() throws {
         let privateSigner = try JWTSigner.rs256(key: .private(pem: rsaPrivateKey.bytes))
         let publicSigner = try JWTSigner.rs256(key: .public(pem: rsaPublicKey.bytes))
@@ -462,6 +493,24 @@ class JWTKitTests: XCTestCase {
         try XCTAssertEqual(privateSigners.verify(data, as: TestPayload.self), payload)
         // test public signer decoding
         try XCTAssertEqual(publicSigners.verify(data, as: TestPayload.self), payload)
+    }
+    
+    func testPemToJWK() throws {
+        let key = RSAKey(modulus: rsaModulus, exponent: "AQAB", privateExponent: rsaPrivateExponent)
+        let key_json = """
+        {"kid":"1234","n":"\(rsaModulus)","e":"AQAB","kty":"RSA","alg":"RS256"}
+        """
+        
+        let jwk = JWK.rsa(key, .rs256, identifier: "1234")
+        
+        let jsonEncoder = JSONEncoder()
+        jsonEncoder.dateEncodingStrategy = .secondsSince1970
+        
+        let jsonData = try jsonEncoder.encode(jwk)
+        let json = String(data: jsonData, encoding: .utf8)
+        
+        
+        XCTAssertEqual(key_json, json)
     }
     
     func testJWKS() throws {

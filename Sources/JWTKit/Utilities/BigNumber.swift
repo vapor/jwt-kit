@@ -57,3 +57,16 @@ class BigNumber {
         return String.init(decoding: data.base64URLEncodedBytes(), as: UTF8.self)
     }
 }
+
+extension UnsafePointer where Pointee == BIGNUM {
+    internal func toData() -> Data {
+        let size = CJWTKitBoringSSL_BN_num_bytes(self)
+        let pBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(size))
+        defer { pBuffer.deallocate() }
+        
+        let actualBytes = Int(CJWTKitBoringSSL_BN_bn2bin(self, pBuffer))
+        
+        let data = Data(bytes: pBuffer, count: actualBytes)
+        return data
+    }
+}
