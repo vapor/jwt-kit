@@ -150,6 +150,8 @@ class JWTKitTests: XCTestCase {
     }
     
     func testUnsecuredNone() throws {
+        let data =
+            "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOjIwMDAwMDAwMDAsImFkbWluIjpmYWxzZSwibmFtZSI6IkZvbyIsInN1YiI6InZhcG9yIn0."
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
@@ -159,6 +161,7 @@ class JWTKitTests: XCTestCase {
         let signer = JWTSigner.unsecuredNone
         let token = try signer.sign(payload)
         try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
+        try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
     }
 
