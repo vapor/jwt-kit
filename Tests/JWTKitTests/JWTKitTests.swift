@@ -159,6 +159,7 @@ class JWTKitTests: XCTestCase {
         let signer = JWTSigner.unsecuredNone
         let token = try signer.sign(payload)
         try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
+        XCTAssertTrue(token.hasSuffix("."))
     }
 
     func testRSA() throws {
