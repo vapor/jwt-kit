@@ -8,7 +8,8 @@ struct JWTParser {
     init<Token>(token: Token) throws
         where Token: DataProtocol
     {
-        let tokenParts = token.copyBytes().split(separator: .period)
+        let tokenParts = token.copyBytes()
+            .split(separator: .period, omittingEmptySubsequences: false)
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken
         }
