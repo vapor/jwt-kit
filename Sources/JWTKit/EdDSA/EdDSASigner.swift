@@ -6,7 +6,7 @@ internal struct EdDSASigner: JWTAlgorithm {
 	
 	func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8] where Plaintext : DataProtocol {
 		guard let privateKey = key.privateKey else {
-			throw EdDSAError.generateKeyFailure
+			throw EdDSAError.privateKeyMissing
 		}
 		
 		return try Curve25519.Signing.PrivateKey(

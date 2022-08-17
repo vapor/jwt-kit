@@ -1,3 +1,3 @@
 internal enum EdDSAError: Error {	
-	case generateKeyFailure
+	case privateKeyMissing
 }
