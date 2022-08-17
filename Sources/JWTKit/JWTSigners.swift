@@ -231,14 +231,11 @@ private struct JWKSigner {
             }
 				
 		case .octetKeyPair:
-			guard let x = self.jwk.x, let xDecoded = Data(base64Encoded: x.base64UrlEncodedToBase64()) else {
+			guard let x = self.jwk.x, let key = EdDSAKey(x: x, d: self.jwk.privateExponent, curve: self.jwk.curve ?? .ed25519) else {
 				return nil
 			}				
 
-			return JWTSigner.eddsa(
-				publicKey: xDecoded,
-				privateKey: nil
-			)
+				return JWTSigner.eddsa(key)
         }
     }
 }
