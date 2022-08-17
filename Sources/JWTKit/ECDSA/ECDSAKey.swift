@@ -1,42 +1,8 @@
 @_implementationOnly import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
-    public enum Curve: String, Codable {
-        case p256 = "P-256"
-        case p384 = "P-384"
-        case p521 = "P-521"
-		case ed25519 = "Ed25519"
-
-        var cName: Int32 {
-            switch self {
-            case .p256:
-                return NID_X9_62_prime256v1
-            case .p384:
-                return NID_secp384r1
-            case .p521:
-                return NID_secp521r1
-			case .ed25519:
-				return NID_ED25519
-            }
-        }
-      
-        init?(cName: Int32) {
-            switch cName {
-            case NID_X9_62_prime256v1:
-                self = .p256
-            case NID_secp384r1:
-                self = .p384
-            case NID_secp521r1:
-                self = .p521
-			case NID_ED25519:
-				self = .ed25519
-            default:
-                return nil
-            }
-        }
-    }
     
-    public static func generate(curve: Curve = .p521) throws -> ECDSAKey {
+	public static func generate(curve: JWK.Curve = .p521) throws -> ECDSAKey {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
@@ -78,7 +44,7 @@ public final class ECDSAKey: OpenSSLKey {
         self.c = c
     }
     
-    public convenience init(parameters: Parameters, curve: Curve = .p521, privateKey: String? = nil) throws {
+	public convenience init(parameters: Parameters, curve: JWK.Curve = .p521, privateKey: String? = nil) throws {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
@@ -110,10 +76,10 @@ public final class ECDSAKey: OpenSSLKey {
         CJWTKitBoringSSL_EC_KEY_free(self.c)
     }
   
-    public var curve: Curve? {
+	public var curve: JWK.Curve? {
         let group: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_group(self.c)
         let cName = CJWTKitBoringSSL_EC_GROUP_get_curve_name(group)
-        return Curve(cName: cName)
+        return JWK.Curve(cName: cName)
     }
     
     public var parameters: Parameters? {
@@ -133,4 +99,38 @@ public final class ECDSAKey: OpenSSLKey {
         public let x: String
         public let y: String
     }
+}
+
+extension JWK.Curve {
+	var cName: Int32 {
+		switch self {
+		case .p256:
+			return NID_X9_62_prime256v1
+		case .p384:
+			return NID_secp384r1
+		case .p521:
+			return NID_secp521r1
+		case .ed25519:
+			return NID_ED25519
+		case .ed448:
+			return NID_ED448
+		}
+	}
+  
+	init?(cName: Int32) {
+		switch cName {
+		case NID_X9_62_prime256v1:
+			self = .p256
+		case NID_secp384r1:
+			self = .p384
+		case NID_secp521r1:
+			self = .p521
+		case NID_ED25519:
+			self = .ed25519
+		case NID_ED448:
+			self = .ed448
+		default:
+			return nil
+		}
+	}
 }

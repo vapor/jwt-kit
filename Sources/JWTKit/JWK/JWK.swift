@@ -5,6 +5,15 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable {
+	
+	public enum Curve: String, Codable {
+		case p256 = "P-256"
+		case p384 = "P-384"
+		case p521 = "P-521"
+		case ed25519 = "Ed25519"
+		case ed448 = "Ed448"
+	}
+	
     /// Supported `kty` key types.
     public enum KeyType: String, Codable {
         /// RSA
@@ -73,7 +82,7 @@ public struct JWK: Codable {
 
     public var y: String?
     
-    public var curve: ECDSAKey.Curve?
+    public var curve: JWK.Curve?
         
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
@@ -95,7 +104,7 @@ public struct JWK: Codable {
         JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent)
     }
     
-    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSAKey.Curve?, privateKey: String? = nil) -> JWK {
+    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
         return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve)
     }
     
@@ -108,7 +117,7 @@ public struct JWK: Codable {
         d: String? = nil,
         x: String? = nil,
         y: String? = nil,
-        curve: ECDSAKey.Curve? = nil
+        curve: JWK.Curve? = nil
     ) {
         self.keyType = keyType
         self.algorithm = algorithm
