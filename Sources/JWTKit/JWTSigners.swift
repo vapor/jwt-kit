@@ -229,6 +229,16 @@ private struct JWKSigner {
             default:
                 return nil
             }
+				
+		case .octetKeyPair:
+			guard let x = self.jwk.x, let xDecoded = Data(base64Encoded: x.base64UrlEncodedToBase64()) else {
+				return nil
+			}
+
+			return JWTSigner.eddsa(
+				publicKey: xDecoded,
+				privateKey: nil
+			)
         }
     }
 }

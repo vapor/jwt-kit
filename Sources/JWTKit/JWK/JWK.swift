@@ -11,6 +11,8 @@ public struct JWK: Codable {
         case rsa = "RSA"
         /// ECDSA
         case ecdsa = "EC"
+		/// Octet Key Pair
+		case octetKeyPair = "OKP"
     }
      
     /// The `kty` (key type) parameter identifies the cryptographic algorithm
@@ -32,6 +34,8 @@ public struct JWK: Codable {
         case es384 = "ES384"
         /// EC with SHA512
         case es512 = "ES512"
+		/// EdDSA
+		case eddsa = "EdDSA"
     }
      
      /// The `alg` (algorithm) parameter identifies the algorithm intended for

@@ -5,6 +5,7 @@ public final class ECDSAKey: OpenSSLKey {
         case p256 = "P-256"
         case p384 = "P-384"
         case p521 = "P-521"
+		case ed25519 = "Ed25519"
 
         var cName: Int32 {
             switch self {
@@ -14,6 +15,8 @@ public final class ECDSAKey: OpenSSLKey {
                 return NID_secp384r1
             case .p521:
                 return NID_secp521r1
+			case .ed25519:
+				return NID_ED25519
             }
         }
       
@@ -25,6 +28,8 @@ public final class ECDSAKey: OpenSSLKey {
                 self = .p384
             case NID_secp521r1:
                 self = .p521
+			case NID_ED25519:
+				self = .ed25519
             default:
                 return nil
             }
