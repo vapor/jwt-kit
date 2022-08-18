@@ -7,11 +7,11 @@ internal struct EdDSASigner: JWTAlgorithm {
 	func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8] where Plaintext : DataProtocol {
 		
 		guard key.curve == .ed25519 else {
-			throw EdDSAError.curveNotSupported(key.curve)
+			throw  JWTError.signingAlgorithmFailure(EdDSAError.curveNotSupported(key.curve))
 		}
 		
 		guard let privateKey = key.privateKey else {
-			throw EdDSAError.privateKeyMissing
+			throw  JWTError.signingAlgorithmFailure(EdDSAError.privateKeyMissing)
 		}
 		
 		return try Curve25519.Signing.PrivateKey(
@@ -24,7 +24,7 @@ internal struct EdDSASigner: JWTAlgorithm {
 	func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool where Signature : DataProtocol, Plaintext : DataProtocol {
 		
 		guard key.curve == .ed25519 else {
-			throw EdDSAError.curveNotSupported(key.curve)
+			throw  JWTError.signingAlgorithmFailure(EdDSAError.curveNotSupported(key.curve))
 		}
 		
 		return try Curve25519.Signing.PublicKey(

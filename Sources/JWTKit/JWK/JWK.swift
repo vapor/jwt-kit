@@ -82,7 +82,7 @@ public struct JWK: Codable {
 
     public var y: String?
     
-    public var curve: JWK.Curve?
+    public var curve: Curve?
         
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
@@ -107,6 +107,10 @@ public struct JWK: Codable {
     public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
         return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve)
     }
+	
+	public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
+		return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve)
+	}
     
     private init(
         keyType: KeyType,
@@ -117,7 +121,7 @@ public struct JWK: Codable {
         d: String? = nil,
         x: String? = nil,
         y: String? = nil,
-        curve: JWK.Curve? = nil
+        curve: Curve? = nil
     ) {
         self.keyType = keyType
         self.algorithm = algorithm

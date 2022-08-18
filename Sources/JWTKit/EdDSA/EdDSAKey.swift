@@ -8,21 +8,21 @@ public struct EdDSAKey {
 	let curve: JWK.Curve
 	
 	public init(x: String, d: String? = nil, curve: JWK.Curve = .ed25519) throws {
-		
-		guard let x = Data(base64Encoded: x.base64UrlEncodedToBase64()) else {
-			throw EdDSAError.publicKeyMissing
+				
+		guard let x = x.data(using: .utf8) else {
+			throw JWTError.signingAlgorithmFailure(EdDSAError.publicKeyMissing)
 		}
 		
 		try self.init(
-			publicKey: x,
-			privateKey: d.flatMap { Data(base64Encoded: $0.base64UrlEncodedToBase64()) },
+			publicKey: Data(x.base64URLDecodedBytes()),
+			privateKey: d.flatMap { $0.data(using: .utf8) }.map { Data($0.base64URLDecodedBytes()) },
 			curve: curve
 		)
 	}
 	
 	public init(publicKey: Data, privateKey: Data? = nil, curve: JWK.Curve = .ed25519) throws {
 		guard curve == .ed25519 else {
-			throw EdDSAError.curveNotSupported(curve)
+			throw JWTError.signingAlgorithmFailure(EdDSAError.curveNotSupported(curve))
 		}
 				
 		self.publicKey = publicKey
@@ -32,7 +32,7 @@ public struct EdDSAKey {
 	
 	public static func generate(curve: JWK.Curve = .ed25519) throws -> EdDSAKey {
 		guard curve == .ed25519 else {
-			throw EdDSAError.curveNotSupported(curve)
+			throw JWTError.signingAlgorithmFailure(EdDSAError.curveNotSupported(curve))
 		}
 		
 		let key = Curve25519.Signing.PrivateKey()
@@ -44,14 +44,3 @@ public struct EdDSAKey {
 	}
 }
 
-extension String {
-	func base64UrlEncodedToBase64() -> String {
-		var base64 = replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-		if base64.count % 4 != 0 {
-			base64.append(
-				String(repeating: "=", count: 4 - base64.count % 4)
-			)
-		}
-		return base64
-	}
-}
