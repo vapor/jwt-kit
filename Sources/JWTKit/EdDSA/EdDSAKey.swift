@@ -1,4 +1,5 @@
 import Foundation
+import Crypto
 
 public struct EdDSAKey {
 	
@@ -27,6 +28,19 @@ public struct EdDSAKey {
 		self.publicKey = publicKey
 		self.privateKey = privateKey
 		self.curve = curve
+	}
+	
+	public static func generate(curve: JWK.Curve = .ed25519) throws -> EdDSAKey {
+		guard curve == .ed25519 else {
+			throw EdDSAError.curveNotSupported(curve)
+		}
+		
+		let key = Curve25519.Signing.PrivateKey()
+		return try .init(
+			publicKey: key.publicKey.rawRepresentation,
+			privateKey: key.rawRepresentation,
+			curve: curve
+		)
 	}
 }
 

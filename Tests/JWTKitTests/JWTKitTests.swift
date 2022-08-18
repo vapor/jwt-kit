@@ -670,6 +670,21 @@ class JWTKitTests: XCTestCase {
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
+	
+	// MARK: - EdDSA
+	
+	func testEdDSAGenerate() throws {
+		let payload = TestPayload(
+			sub: "vapor",
+			name: "Foo",
+			admin: false,
+			exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+		)
+		let signer = try JWTSigner.eddsa(.generate())
+		let token = try signer.sign(payload)
+		try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
+	}
+
 }
 
 struct AudiencePayload: Codable {
