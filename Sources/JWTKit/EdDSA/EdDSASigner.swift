@@ -17,7 +17,7 @@ internal struct EdDSASigner: JWTAlgorithm {
 	}
 	
 	func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool where Signature : DataProtocol, Plaintext : DataProtocol {
-				
+		
 		try Curve25519.Signing.PublicKey(
 			rawRepresentation: key.publicKey
 		).isValidSignature(

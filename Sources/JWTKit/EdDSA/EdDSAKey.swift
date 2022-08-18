@@ -6,19 +6,24 @@ public struct EdDSAKey {
 	let privateKey: Data?
 	let curve: JWK.Curve
 	
-	public init?(x: String, d: String? = nil, curve: JWK.Curve = .ed25519) {
+	public init(x: String, d: String? = nil, curve: JWK.Curve = .ed25519) throws {
+		
 		guard let x = Data(base64Encoded: x.base64UrlEncodedToBase64()) else {
-			return nil
+			throw EdDSAError.publicKeyMissing
 		}
 		
-		self.init(
+		try self.init(
 			publicKey: x,
 			privateKey: d.flatMap { Data(base64Encoded: $0.base64UrlEncodedToBase64()) },
 			curve: curve
 		)
 	}
 	
-	public init(publicKey: Data, privateKey: Data? = nil, curve: JWK.Curve = .ed25519) {
+	public init(publicKey: Data, privateKey: Data? = nil, curve: JWK.Curve = .ed25519) throws {
+		guard curve == .ed25519 else {
+			throw EdDSAError.curveNotSupported(curve)
+		}
+				
 		self.publicKey = publicKey
 		self.privateKey = privateKey
 		self.curve = curve
