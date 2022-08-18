@@ -27,8 +27,12 @@ internal struct EdDSASigner: JWTAlgorithm {
 			throw  JWTError.signingAlgorithmFailure(EdDSAError.curveNotSupported(key.curve))
 		}
 		
+		guard let publicKey = key.publicKey else {
+			throw  JWTError.signingAlgorithmFailure(EdDSAError.publicKeyMissing)
+		}
+		
 		return try Curve25519.Signing.PublicKey(
-			rawRepresentation: key.publicKey
+			rawRepresentation: publicKey
 		).isValidSignature(
 			signature,
 			for: plaintext

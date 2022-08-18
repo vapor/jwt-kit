@@ -681,21 +681,15 @@ class JWTKitTests: XCTestCase {
 			exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
 		)
 		
-		let key = try EdDSAKey.generate()
-		
 		let signer = try JWTSigner.eddsa(.generate())
 		let token = try signer.sign(payload)
 		try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
 	}
 	
 	func testEdDSAPublicPrivate() throws {
-		let signer = try JWTSigner.eddsa(
-			.init(
-				publicKey: Data(base64Encoded: eddsaPublicKeyBase64)!,
-				privateKey: Data(base64Encoded: eddsaPrivateKeyBae64)!,
-				curve: .ed25519
-			)
-		)
+		
+		let publicSigner = try JWTSigner.eddsa(.init(publicKey: Data(base64Encoded: eddsaPublicKeyBase64)))
+		let privateSigner = try JWTSigner.eddsa(.init(privateKey: Data(base64Encoded: eddsaPrivateKeyBae64)))
 
 		let payload = TestPayload(
 			sub: "vapor",
@@ -704,11 +698,9 @@ class JWTKitTests: XCTestCase {
 			exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
 		)
 		for _ in 0..<1_000 {
-			let token = try signer.sign(payload)
-			// test private signer decoding
-			try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
+			let token = try privateSigner.sign(payload)
 			// test public signer decoding
-			try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
+			try XCTAssertEqual(publicSigner.verify(token, as: TestPayload.self), payload)
 		}
 	}
 		

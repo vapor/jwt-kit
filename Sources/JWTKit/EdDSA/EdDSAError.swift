@@ -1,5 +1,6 @@
 internal enum EdDSAError: Error {	
+	case publicAndPrivateKeyMissing
 	case privateKeyMissing
-	case curveNotSupported(JWK.Curve)
 	case publicKeyMissing
+	case curveNotSupported(JWK.Curve)
 }
