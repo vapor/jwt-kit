@@ -1,6 +1,9 @@
 @_implementationOnly import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
+	
+	@available(*, deprecated, renamed: "JWK.Curve")
+	public typealias Curve = JWK.Curve
     
 	public static func generate(curve: JWK.Curve = .p521) throws -> ECDSAKey {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
