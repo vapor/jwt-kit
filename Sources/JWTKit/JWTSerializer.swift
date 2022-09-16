@@ -1,16 +1,23 @@
 import class Foundation.JSONEncoder
 
+/// A type for taking a JWT and generating, signing, and encoding it.
 struct JWTSerializer {
-    func sign<Payload>(
+    /// Signs a JWT with a given payload, signer, and header values.
+    /// - Parameters:
+    ///   - payload: The JWT's payload type. Must conform to `JWTPayload`.
+    ///   - signer: The `JWTSigner` to use for the token's signature.
+    ///   - typ: The signature's content type. Defaults to "JWT".
+    ///   - kid: The key ID for the token (if any).
+    ///   - cty: The payload's content type (if any).
+    ///   - zip: The compression type to use for the payload (if any).
+    func sign<Payload: JWTPayload>(
         _ payload: Payload,
         using signer: JWTSigner,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
         zip: CompressionType? = nil
-    ) throws -> String
-        where Payload: JWTPayload
-    {
+    ) throws -> String {
         let jsonEncoder = JSONEncoder()
         jsonEncoder.dateEncodingStrategy = .secondsSince1970
 
