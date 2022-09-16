@@ -27,9 +27,8 @@ struct JWTSerializer {
 
         // encode payload
         let payloadData = try jsonEncoder.encode(payload)
-
         let encodedPayload: [UInt8]
-
+        
         if let compressionAlgorithm = zip {
             // if a compression algorithm was specified, compress the data before base64ing it
             let compressedData = try compressionAlgorithm.algorithm.compress(data: payloadData)

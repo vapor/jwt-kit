@@ -133,7 +133,8 @@ public final class JWTSigners {
     public func sign<Payload>(
         _ payload: Payload,
         typ: String = "JWT",
-        kid: JWKIdentifier? = nil
+        kid: JWKIdentifier? = nil,
+        zip: CompressionType? = nil
     ) throws -> String
         where Payload: JWTPayload
     {
@@ -141,7 +142,8 @@ public final class JWTSigners {
             payload,
             using: self.require(kid: kid),
             typ: typ,
-            kid: kid
+            kid: kid,
+            zip: zip
         )
     }
 }
