@@ -148,6 +148,22 @@ class JWTKitTests: XCTestCase {
         let payload = try signers.verify(data, as: TestPayload.self)
         XCTAssertEqual(payload.name, "John Doe")
     }
+    
+    func testUnsecuredNone() throws {
+        let data =
+            "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOjIwMDAwMDAwMDAsImFkbWluIjpmYWxzZSwibmFtZSI6IkZvbyIsInN1YiI6InZhcG9yIn0."
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let signer = JWTSigner.unsecuredNone
+        let token = try signer.sign(payload)
+        try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
+        try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
+        XCTAssertTrue(token.hasSuffix("."))
+    }
 
     func testRSA() throws {
         let privateSigner = try JWTSigner.rs256(key: .private(pem: rsaPrivateKey.bytes))
