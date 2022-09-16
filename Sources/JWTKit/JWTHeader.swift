@@ -15,7 +15,7 @@ struct JWTHeader: Codable {
     /// The JWT key identifier.
     var kid: JWKIdentifier?
 
-	/// The type of compression applied to the payload, if any.
-	var zip: String?
+    /// The type of compression applied to the payload, if any.
+    var zip: String?
 }
 

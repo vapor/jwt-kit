@@ -28,14 +28,14 @@ struct JWTParser {
     func payload<Payload>(as payload: Payload.Type) throws -> Payload
         where Payload: JWTPayload
     {
-		var decodedPayload = Data(self.encodedPayload.base64URLDecodedBytes())
+        var decodedPayload = Data(self.encodedPayload.base64URLDecodedBytes())
 
-		if let compressionType = try self.header().zip {
-			guard compressionType == "DEF" else {
-				throw JWTError.invalidCompression
-			}
-			decodedPayload = try Deflate.decompress(data: decodedPayload)
-		}
+        if let compressionType = try self.header().zip {
+            guard compressionType == "DEF" else {
+                throw JWTError.invalidCompression
+            }
+            decodedPayload = try Deflate.decompress(data: decodedPayload)
+        }
 
         return try self.jsonDecoder()
             .decode(Payload.self, from: decodedPayload)
