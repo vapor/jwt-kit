@@ -643,6 +643,25 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(foo.bar, 42)
     }
 
+    func testDeflate() throws {
+        let test = TestPayload(
+            sub: "vapor",
+            name: "foo",
+            admin: true,
+            exp: .init(value: .distantFuture)
+        )
+
+        let jwt = try JWTSigner.es256(
+            key: .private(pem: ecdsaPrivateKey)
+        ).sign(test, zip: .deflate)
+
+        let payload = try JWTSigner.es256(
+            key: .public(pem: ecdsaPublicKey)
+        ).verify(jwt, as: TestPayload.self)
+
+        XCTAssertEqual(test, payload)
+    }
+
     func testMicrosoftJWKs() throws {
         let signers = JWTSigners()
         try signers.use(jwksJSON: microsoftJWKS)
