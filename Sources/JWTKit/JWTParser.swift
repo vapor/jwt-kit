@@ -33,6 +33,7 @@ struct JWTParser {
         if let compressionType = try self.header().zip {
             guard compressionType == "DEF" else {
                 throw JWTError.invalidCompression
+                throw JWTError.invalidCompression(algorithm: compressionType)
             }
             decodedPayload = try Deflate.decompress(data: decodedPayload)
         }
