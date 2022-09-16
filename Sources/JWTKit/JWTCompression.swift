@@ -4,15 +4,15 @@ import protocol SWCompression.DecompressionAlgorithm
 import protocol SWCompression.CompressionAlgorithm
 
 /// The supported compression types for a JWT's body.
-public enum CompressionTypes: String {
-    /// Deflate (Gzip) compression.
+public enum CompressionType: String {
+    /// Deflate compression.
     case deflate = "DEF"
 }
 
 /// Types that can both compress and decompress data.
 typealias CompressableAlgorithm = DecompressionAlgorithm & CompressionAlgorithm
 
-extension CompressionTypes {
+extension CompressionType {
     /// The decompression algorithm for the compression type.
     var algorithm: CompressableAlgorithm.Type {
         switch self {

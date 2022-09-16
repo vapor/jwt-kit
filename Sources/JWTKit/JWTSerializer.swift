@@ -6,7 +6,8 @@ struct JWTSerializer {
         using signer: JWTSigner,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
-        cty: String? = nil
+        cty: String? = nil,
+        zip: CompressionType? = nil
     ) throws -> String
         where Payload: JWTPayload
     {
@@ -19,13 +20,24 @@ struct JWTSerializer {
         header.typ = typ
         header.cty = cty
         header.alg = signer.algorithm.name
+        header.zip = zip?.rawValue
 
         let headerData = try jsonEncoder.encode(header)
         let encodedHeader = headerData.base64URLEncodedBytes()
 
         // encode payload
         let payloadData = try jsonEncoder.encode(payload)
-        let encodedPayload = payloadData.base64URLEncodedBytes()
+
+        let encodedPayload: [UInt8]
+
+        if let compressionAlgorithm = zip {
+            // if a compression algorithm was specified, compress the data before base64ing it
+            let compressedData = try compressionAlgorithm.algorithm.compress(data: payloadData)
+            encodedPayload = compressedData.base64URLEncodedBytes()
+        } else {
+            // if not, just base64 the data.
+            encodedPayload = payloadData.base64URLEncodedBytes()
+        }
 
         // combine header and payload to create signature
         let signatureData = try signer.algorithm.sign(encodedHeader + [.period] + encodedPayload)

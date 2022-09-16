@@ -31,7 +31,7 @@ struct JWTParser {
         var decodedPayload = Data(self.encodedPayload.base64URLDecodedBytes())
 
         if let compressionType = try self.header().zip {
-            guard let compressionType = CompressionTypes(rawValue: compressionType) else {
+            guard let compressionType = CompressionType(rawValue: compressionType) else {
                 throw JWTError.invalidCompression(algorithm: compressionType)
             }
             decodedPayload = try compressionType.algorithm.decompress(data: decodedPayload)
