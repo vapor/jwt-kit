@@ -5,7 +5,7 @@ public final class ECDSAKey: OpenSSLKey {
 	@available(*, deprecated, renamed: "JWK.Curve")
 	public typealias Curve = JWK.Curve
     
-	public static func generate(curve: JWK.Curve = .p521) throws -> ECDSAKey {
+    public static func generate(curve: JWK.Curve = .p521) throws -> ECDSAKey {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
@@ -47,7 +47,7 @@ public final class ECDSAKey: OpenSSLKey {
         self.c = c
     }
     
-	public convenience init(parameters: Parameters, curve: JWK.Curve = .p521, privateKey: String? = nil) throws {
+    public convenience init(parameters: Parameters, curve: JWK.Curve = .p521, privateKey: String? = nil) throws {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
@@ -120,20 +120,20 @@ extension JWK.Curve {
 		}
 	}
   
-	init?(cName: Int32) {
-		switch cName {
-		case NID_X9_62_prime256v1:
-			self = .p256
-		case NID_secp384r1:
-			self = .p384
-		case NID_secp521r1:
-			self = .p521
-		case NID_ED25519:
-			self = .ed25519
-		case NID_ED448:
-			self = .ed448
-		default:
-			return nil
-		}
-	}
+    init?(cName: Int32) {
+        switch cName {
+        case NID_X9_62_prime256v1:
+            self = .p256
+        case NID_secp384r1:
+            self = .p384
+        case NID_secp521r1:
+            self = .p521
+        case NID_ED25519:
+            self = .ed25519
+        case NID_ED448:
+            self = .ed448
+        default:
+            return nil
+        }
+    }
 }
