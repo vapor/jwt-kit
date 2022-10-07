@@ -670,144 +670,144 @@ class JWTKitTests: XCTestCase {
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
-	
-	// MARK: - EdDSA
-	
-	func testEdDSAGenerate() throws {
-		let payload = TestPayload(
-			sub: "vapor",
-			name: "Foo",
-			admin: false,
-			exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-		)
-		
-		let signer = try JWTSigner.eddsa(.generate())
-		let token = try signer.sign(payload)
-		try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
-	}
-	
-	func testEdDSAPublicPrivate() throws {
-		
-		let publicSigner = try JWTSigner.eddsa(.init(publicKey: Data(base64Encoded: eddsaPublicKeyBase64)))
-		let privateSigner = try JWTSigner.eddsa(.init(privateKey: Data(base64Encoded: eddsaPrivateKeyBae64)))
+    
+    // MARK: - EdDSA
+    
+    func testEdDSAGenerate() throws {
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        
+        let signer = try JWTSigner.eddsa(.generate())
+        let token = try signer.sign(payload)
+        try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
+    }
+    
+    func testEdDSAPublicPrivate() throws {
+        
+        let publicSigner = try JWTSigner.eddsa(.init(publicKey: Data(base64Encoded: eddsaPublicKeyBase64)))
+        let privateSigner = try JWTSigner.eddsa(.init(privateKey: Data(base64Encoded: eddsaPrivateKeyBae64)))
 
-		let payload = TestPayload(
-			sub: "vapor",
-			name: "Foo",
-			admin: false,
-			exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-		)
-		for _ in 0..<1_000 {
-			let token = try privateSigner.sign(payload)
-			// test public signer decoding
-			try XCTAssertEqual(publicSigner.verify(token, as: TestPayload.self), payload)
-		}
-	}
-		
-	func testVerifyingEdDSAKeyUsingJWK() throws {
-		struct Foo: JWTPayload {
-			var bar: Int
-			func verify(using signer: JWTSigner) throws { }
-		}
-				
-		// ecdsa key in base64 format
-		let x = eddsaPublicKeyBase64
-		let d = eddsaPrivateKeyBae64
-		
-		// sign jwt
-		let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
-		let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        for _ in 0..<1_000 {
+            let token = try privateSigner.sign(payload)
+            // test public signer decoding
+            try XCTAssertEqual(publicSigner.verify(token, as: TestPayload.self), payload)
+        }
+    }
+        
+    func testVerifyingEdDSAKeyUsingJWK() throws {
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using signer: JWTSigner) throws { }
+        }
+                
+        // ecdsa key in base64 format
+        let x = eddsaPublicKeyBase64
+        let d = eddsaPrivateKeyBae64
+        
+        // sign jwt
+        let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
+        let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
 
-		// verify using jwks
-		let jwksString = """
-		{
-			"keys": [
-				{
-					"kty": "OKP",
-					"use": "sig",
-					"kid": "vapor",
-					"x": "\(x)",
-					"d": "\(d)"
-				 }
-			]
-		}
-		"""
+        // verify using jwks
+        let jwksString = """
+        {
+            "keys": [
+                {
+                    "kty": "OKP",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "d": "\(d)"
+                 }
+            ]
+        }
+        """
 
-		let signers = JWTSigners()
-		try signers.use(jwksJSON: jwksString)
-		let foo = try signers.verify(jwt, as: Foo.self)
-		XCTAssertEqual(foo.bar, 42)
-	}
-	
-	func testVerifyingEdDSAKeyUsingJWKBase64URL() throws {
-		struct Foo: JWTPayload {
-			var bar: Int
-			func verify(using signer: JWTSigner) throws { }
-		}
-				
-		// eddsa key in base64url format
-		let x = eddsaPublicKeyBase64Url
-		let d = eddsaPrivateKeyBae64Url
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
+    }
+    
+    func testVerifyingEdDSAKeyUsingJWKBase64URL() throws {
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using signer: JWTSigner) throws { }
+        }
+                
+        // eddsa key in base64url format
+        let x = eddsaPublicKeyBase64Url
+        let d = eddsaPrivateKeyBae64Url
 
-		// sign jwt
-		let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
-		let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
+        // sign jwt
+        let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
+        let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
 
-		// verify using jwks without alg
-		let jwksString = """
-		{
-			"keys": [
-				{
-				 "kty": "OKP",
-				 "use": "sig",
-				 "kid": "vapor",
-				 "x": "\(x)",
-				 "d": "\(d)"
-				 }
-			]
-		}
-		"""
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                 "kty": "OKP",
+                 "use": "sig",
+                 "kid": "vapor",
+                 "x": "\(x)",
+                 "d": "\(d)"
+                 }
+            ]
+        }
+        """
 
-		let signers = JWTSigners()
-		try signers.use(jwksJSON: jwksString)
-		let foo = try signers.verify(jwt, as: Foo.self)
-		XCTAssertEqual(foo.bar, 42)
-	}
-		
-	func testVerifyingEdDSAKeyUsingJWKWithMixedBase64Formats() throws {
-		struct Foo: JWTPayload {
-			var bar: Int
-			func verify(using signer: JWTSigner) throws { }
-		}
-				
-		// eddsa key in base64url format
-		let x = eddsaPublicKeyBase64Url
-		let d = eddsaPrivateKeyBae64
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
+    }
+        
+    func testVerifyingEdDSAKeyUsingJWKWithMixedBase64Formats() throws {
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using signer: JWTSigner) throws { }
+        }
+                
+        // eddsa key in base64url format
+        let x = eddsaPublicKeyBase64Url
+        let d = eddsaPrivateKeyBae64
 
-		// sign jwt
-		let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
-		let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
+        // sign jwt
+        let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
+        let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
 
-		// verify using jwks without alg
-		let jwksString = """
-		{
-			"keys": [
-				{
-				  "kty": "OKP",
-				  "use": "sig",
-				  "kid": "vapor",
-				  "x": "\(x)",
-				  "d": "\(d)"
-				 }
-			]
-		}
-		"""
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                  "kty": "OKP",
+                  "use": "sig",
+                  "kid": "vapor",
+                  "x": "\(x)",
+                  "d": "\(d)"
+                 }
+            ]
+        }
+        """
 
-		let signers = JWTSigners()
-		try signers.use(jwksJSON: jwksString)
-		let foo = try signers.verify(jwt, as: Foo.self)
-		XCTAssertEqual(foo.bar, 42)
-	}
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
+    }
 
 }
 

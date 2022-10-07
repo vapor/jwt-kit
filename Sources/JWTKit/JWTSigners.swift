@@ -229,21 +229,21 @@ private struct JWKSigner {
             default:
                 return nil
             }
-				
-		case .octetKeyPair:
-			guard let algorithm = algorithm ?? self.jwk.algorithm else {
-				return nil
-			}
-				
-			switch algorithm {
-				case .eddsa:
-					guard let key = try? EdDSAKey(x: self.jwk.x, d: self.jwk.privateExponent, curve: self.jwk.curve ?? .ed25519) else {
-						return nil
-					}
-					return JWTSigner.eddsa(key)
-				default:
-					return nil
-			}
+
+        case .octetKeyPair:
+            guard let algorithm = algorithm ?? self.jwk.algorithm else {
+                return nil
+            }
+                
+            switch algorithm {
+                case .eddsa:
+                    guard let key = try? EdDSAKey(x: self.jwk.x, d: self.jwk.privateExponent, curve: self.jwk.curve ?? .ed25519) else {
+                        return nil
+                    }
+                    return JWTSigner.eddsa(key)
+                default:
+                    return nil
+            }
         }
     }
 }

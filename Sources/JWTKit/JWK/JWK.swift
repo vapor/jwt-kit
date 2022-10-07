@@ -5,23 +5,23 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable {
-	
-	public enum Curve: String, Codable {
-		case p256 = "P-256"
-		case p384 = "P-384"
-		case p521 = "P-521"
-		case ed25519 = "Ed25519"
-		case ed448 = "Ed448"
-	}
-	
+
+    public enum Curve: String, Codable {
+        case p256 = "P-256"
+        case p384 = "P-384"
+        case p521 = "P-521"
+        case ed25519 = "Ed25519"
+        case ed448 = "Ed448"
+    }
+    
     /// Supported `kty` key types.
     public enum KeyType: String, Codable {
         /// RSA
         case rsa = "RSA"
         /// ECDSA
         case ecdsa = "EC"
-		/// Octet Key Pair
-		case octetKeyPair = "OKP"
+        /// Octet Key Pair
+        case octetKeyPair = "OKP"
     }
      
     /// The `kty` (key type) parameter identifies the cryptographic algorithm
@@ -43,8 +43,8 @@ public struct JWK: Codable {
         case es384 = "ES384"
         /// EC with SHA512
         case es512 = "ES512"
-		/// EdDSA
-		case eddsa = "EdDSA"
+        /// EdDSA
+        case eddsa = "EdDSA"
     }
      
      /// The `alg` (algorithm) parameter identifies the algorithm intended for
@@ -107,10 +107,10 @@ public struct JWK: Codable {
     public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
         return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve)
     }
-	
-	public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
-		return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve)
-	}
+    
+    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
+        return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve)
+    }
     
     private init(
         keyType: KeyType,

@@ -1,9 +1,9 @@
 @_implementationOnly import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
-	
-	@available(*, deprecated, renamed: "JWK.Curve")
-	public typealias Curve = JWK.Curve
+    
+    @available(*, deprecated, renamed: "JWK.Curve")
+    public typealias Curve = JWK.Curve
     
     public static func generate(curve: JWK.Curve = .p521) throws -> ECDSAKey {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
@@ -79,7 +79,7 @@ public final class ECDSAKey: OpenSSLKey {
         CJWTKitBoringSSL_EC_KEY_free(self.c)
     }
   
-	public var curve: JWK.Curve? {
+    public var curve: JWK.Curve? {
         let group: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_group(self.c)
         let cName = CJWTKitBoringSSL_EC_GROUP_get_curve_name(group)
         return JWK.Curve(cName: cName)
@@ -105,20 +105,20 @@ public final class ECDSAKey: OpenSSLKey {
 }
 
 extension JWK.Curve {
-	var cName: Int32 {
-		switch self {
-		case .p256:
-			return NID_X9_62_prime256v1
-		case .p384:
-			return NID_secp384r1
-		case .p521:
-			return NID_secp521r1
-		case .ed25519:
-			return NID_ED25519
-		case .ed448:
-			return NID_ED448
-		}
-	}
+    var cName: Int32 {
+        switch self {
+        case .p256:
+            return NID_X9_62_prime256v1
+        case .p384:
+            return NID_secp384r1
+        case .p521:
+            return NID_secp521r1
+        case .ed25519:
+            return NID_ED25519
+        case .ed448:
+            return NID_ED448
+        }
+    }
   
     init?(cName: Int32) {
         switch cName {
