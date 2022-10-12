@@ -5,7 +5,7 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable {
-
+    
     public enum Curve: String, Codable {
         case p256 = "P-256"
         case p384 = "P-384"
@@ -104,12 +104,12 @@ public struct JWK: Codable {
         JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent)
     }
     
-    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
-        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve)
+    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSAKey.Curve?, privateKey: String? = nil) -> JWK {
+        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
     }
     
-    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: JWK.Curve?, privateKey: String? = nil) -> JWK {
-        return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve)
+    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
+        return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
     }
     
     private init(

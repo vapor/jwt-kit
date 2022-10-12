@@ -2,10 +2,15 @@
 
 public final class ECDSAKey: OpenSSLKey {
     
-    @available(*, deprecated, renamed: "JWK.Curve")
-    public typealias Curve = JWK.Curve
+    public enum Curve: String, Codable {
+        case p256 = "P-256"
+        case p384 = "P-384"
+        case p521 = "P-521"
+        case ed25519 = "Ed25519"
+        case ed448 = "Ed448"
+    }
     
-    public static func generate(curve: JWK.Curve = .p521) throws -> ECDSAKey {
+    public static func generate(curve: Curve = .p521) throws -> ECDSAKey {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
@@ -47,7 +52,7 @@ public final class ECDSAKey: OpenSSLKey {
         self.c = c
     }
     
-    public convenience init(parameters: Parameters, curve: JWK.Curve = .p521, privateKey: String? = nil) throws {
+    public convenience init(parameters: Parameters, curve: Curve = .p521, privateKey: String? = nil) throws {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
         }
@@ -79,10 +84,10 @@ public final class ECDSAKey: OpenSSLKey {
         CJWTKitBoringSSL_EC_KEY_free(self.c)
     }
   
-    public var curve: JWK.Curve? {
+    public var curve: Curve? {
         let group: OpaquePointer = CJWTKitBoringSSL_EC_KEY_get0_group(self.c)
         let cName = CJWTKitBoringSSL_EC_GROUP_get_curve_name(group)
-        return JWK.Curve(cName: cName)
+        return Curve(cName: cName)
     }
     
     public var parameters: Parameters? {
@@ -104,7 +109,7 @@ public final class ECDSAKey: OpenSSLKey {
     }
 }
 
-extension JWK.Curve {
+extension ECDSAKey.Curve {
     var cName: Int32 {
         switch self {
         case .p256:

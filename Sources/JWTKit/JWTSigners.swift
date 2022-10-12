@@ -198,9 +198,9 @@ private struct JWKSigner {
                 return nil
             }
             
-            let curve: JWK.Curve
+            let curve: ECDSAKey.Curve
             
-            if let jwkCurve = self.jwk.curve {
+            if let jwkCurve = (self.jwk.curve.flatMap { ECDSAKey.Curve(rawValue: $0.rawValue) }) {
                 curve = jwkCurve
             } else {
                 switch algorithm {
@@ -235,9 +235,11 @@ private struct JWKSigner {
                 return nil
             }
                 
+            let curve = self.jwk.curve.flatMap { EdDSAKey.Curve(rawValue: $0.rawValue) } ?? .ed25519
+            
             switch algorithm {
                 case .eddsa:
-                    guard let key = try? EdDSAKey(x: self.jwk.x, d: self.jwk.privateExponent, curve: self.jwk.curve ?? .ed25519) else {
+                guard let key = try? EdDSAKey(x: self.jwk.x, d: self.jwk.privateExponent, curve: curve) else {
                         return nil
                     }
                     return JWTSigner.eddsa(key)
