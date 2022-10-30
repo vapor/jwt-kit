@@ -1,7 +1,6 @@
 import class Foundation.JSONEncoder
 import class Foundation.JSONDecoder
 import struct Foundation.Data
-@_implementationOnly import CJWTKitBoringSSL
 
 /// A collection of signers labeled by `kid`.
 public final class JWTSigners {
@@ -109,7 +108,8 @@ public final class JWTSigners {
     {
         try JWTParser(token: token).payload(as: Payload.self)
     }
-    
+
+
     public func verify<Payload>(
         _ token: String,
         as payload: Payload.Type = Payload.self

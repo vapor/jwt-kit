@@ -1,36 +1,76 @@
 @_implementationOnly import CJWTKitBoringSSL
 
-extension JWTSigners {
-    /// Verify a JWS with `x5c` claims.
+/// An object for verifying JWS tokens that contain the `x5c` header parameter
+/// with a set of known root certificates.
+///
+/// Usage:
+/// ```
+/// let verifier = try X5CVerifier(rootCertificates: myRoots)
+/// let payload = try verifier.verifyJWS(myJWS, as: MyPayload.self)
+/// // payload is now known to be valid!
+/// ```
+///
+/// See [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515#section-4.1.6)
+/// for details on the `x5c` header parameter.
+public class X5CVerifier {
+    private let trustedStore: X509TrustStore
+
+    /// Create a new X5CVerifier trusting `rootCertificates`.
     ///
-    ///
-    /// - Parameters:
-    ///   - token: The JWS to verify.
-    ///   - payload: The type to decode from the token payload.
-    ///   - rootCert: The root certificate to trust when verifying `x5c`.
-    /// - Returns: The decoded payload, if verified.
-    public func verifyJWSWithX5C<Payload>(
-        _ token: String,
-        as payload: Payload.Type = Payload.self,
-        rootCert: String
-    ) throws -> Payload
-        where Payload: JWTPayload
-    {
-        try self.verifyJWSWithX5C([UInt8](token.utf8), as: Payload.self, rootCert: [UInt8](rootCert.utf8))
+    /// - Parameter rootCertificates: The root certificates to be trusted.
+    public convenience init(rootCertificates: [String]) throws {
+        try self.init(rootCertificates: rootCertificates.map {
+            Array($0.utf8)
+        })
     }
 
-    /// Verify a JWS with `x5c` claims.
+    /// Create a new X5CVerifier trusting `rootCertificates`.
     ///
+    /// - Parameter rootCertificates: The root certificates to be trusted.
+    public init<Message: DataProtocol>(rootCertificates: [Message]) throws {
+        guard !rootCertificates.isEmpty else {
+            throw JWTError.generic(identifier: "JWS", reason: "No root certs provided")
+        }
+        trustedStore = try X509TrustStore()
+        do {
+            for rootCert in rootCertificates {
+                let rootCertx509 = try X509Pointer(pem: rootCert)
+                try trustedStore.trust(rootCertx509)
+            }
+        } catch {
+            trustedStore.freeAll()
+            throw error
+        }
+    }
+
+    deinit {
+        trustedStore.freeAll()
+    }
+
+    /// Verify a JWS with the `x5c` header parameter against the trusted root
+    /// certificates.
     ///
     /// - Parameters:
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
-    ///   - rootCert: The root certificate to trust when verifying `x5c`.
     /// - Returns: The decoded payload, if verified.
-    public func verifyJWSWithX5C<Message, Payload>(
+    public func verifyJWS<Payload: JWTPayload>(
+        _ token: String,
+        as payload: Payload.Type = Payload.self
+    ) throws -> Payload {
+        try self.verifyJWS(Array(token.utf8), as: payload)
+    }
+
+    /// Verify a JWS with `x5c` claims against the
+    /// trusted root certificates.
+    ///
+    /// - Parameters:
+    ///   - token: The JWS to verify.
+    ///   - payload: The type to decode from the token payload.
+    /// - Returns: The decoded payload, if verified.
+    public func verifyJWS<Message, Payload>(
         _ token: Message,
-        as payload: Payload.Type = Payload.self,
-        rootCert: Message
+        as payload: Payload.Type = Payload.self
     ) throws -> Payload
         where Message: DataProtocol, Payload: JWTPayload
     {
@@ -44,43 +84,30 @@ extension JWTSigners {
             throw JWTError.generic(identifier: "JWS", reason: "Only ES256 is currently supported")
         }
 
-        // Verify the chain
-        // The first cert is used to sign the JWS
-        // Each subsequent cert should be used to certify the previous one
-        // https://datatracker.ietf.org/doc/html/rfc7515#section-4.1.6
-
-        let trustedStore = try X509TrustStore()
-        defer { trustedStore.freeAll() }
-
-        let rootCertx509 = try X509Pointer(pemECDSA: rootCert) // freed as part of the trusted store
-        do {
-            try trustedStore.trust(rootCertx509)
-        } catch {
-            // Won't be freed as part of trusted store
-            // if it wasn't added! So manually free it here.
-            rootCertx509.free()
-            throw error
-        }
-
+        // Setup an untrusted chain using all the certificates in the x5c.
         let untrustedChain = try X509Chain()
         defer { untrustedChain.freeAll() }
 
         for cert in x5c {
-            // This looks like x509Chain = try x5c.map(X509Pointer.init(x5c:))
-            // with a little push on the end, but note that
-            // we have to call `.free()` on each allocated
-            // cert. So it's not quite.
-            let x509 = try X509Pointer(x5cECDSA: cert)
+            let x509 = try X509Pointer(x5c: cert)
             try untrustedChain.push(x509)
         }
 
+        // The first cert in x5c is used to sign the JWS, so that's what we're
+        // targeting.
         let ctx = try X509StoreContext(
             trusting: trustedStore,
             targeting: untrustedChain[0]!, // We verify above that this isn't empty
             untrusted: untrustedChain
         )
         defer { ctx.free() }
+
+        // Verify the x5c chain is valid.
         try ctx.verify()
+
+        // Now that we know the chain is valid, we have
+        // to verify that the token was signed with the
+        // known-valid signing cert.
 
         let signingCert = x5c[0] // We verify above that this isn't empty
         let keyData = addBoundaryToCert(signingCert)
@@ -117,16 +144,16 @@ private struct X509Pointer {
     }
 
     /// Read a pem string.
-    init<Message: DataProtocol>(pemECDSA cert: Message) throws {
+    init<Message: DataProtocol>(pem cert: Message) throws {
         value = try ECDSAKey.load(pem: cert) { bio in
             CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
         }
     }
 
     /// Read an x5c claim.
-    init(x5cECDSA claim: String) throws {
+    init(x5c claim: String) throws {
         let pem = Array(addBoundaryToCert(claim).utf8)
-        try self.init(pemECDSA: pem)
+        try self.init(pem: pem)
     }
 
     func free() {
@@ -136,7 +163,7 @@ private struct X509Pointer {
 
 /// Wraps a CJWTKitBoringSSL `X509_STORE` pointer.
 ///
-/// You must manually call `free()`.
+/// You must manually call `freeAll()`.
 private struct X509TrustStore {
     var value: OpaquePointer
 
