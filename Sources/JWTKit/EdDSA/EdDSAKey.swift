@@ -8,41 +8,60 @@ public struct EdDSAKey {
     }
     
     let keyPair: OctetKeyPair
-    var publicKey: Data? {
+    var publicKey: Data {
         keyPair.publicKey
     }
     var privateKey: Data? {
         keyPair.privateKey
     }
     let curve: Curve
-    
-    public init(x: String?, d: String? = nil, curve: Curve = .ed25519) throws {
-        try self.init(
-            publicKey: x.flatMap { $0.data(using: .utf8) }.map { Data($0.base64URLDecodedBytes()) },
-            privateKey: d.flatMap { $0.data(using: .utf8) }.map { Data($0.base64URLDecodedBytes()) },
+         
+    public static func `public`(x: String, curve: Curve) throws -> EdDSAKey {
+        
+        guard let xData = x.data(using: .utf8), !xData.isEmpty else {
+            throw EdDSAError.publicKeyMissing
+        }
+        
+        return try EdDSAKey(
+            keyPair: .`public`(
+                x: Data(xData.base64URLDecodedBytes())
+            ),
             curve: curve
         )
     }
     
-    public init(publicKey: Data? = nil, privateKey: Data? = nil, curve: Curve = .ed25519) throws {
-        try self.init(
-            keyPair: try .init(publicKey: publicKey, privateKey: privateKey),
+    public static func `private`(x: String, d: String, curve: Curve) throws -> EdDSAKey {
+        guard let xData = x.data(using: .utf8), !xData.isEmpty else {
+            throw EdDSAError.publicKeyMissing
+        }
+        
+        guard let dData = d.data(using: .utf8), !dData.isEmpty else {
+            throw EdDSAError.privateKeyMissing
+        }
+        
+        
+        return try EdDSAKey(
+            keyPair: .`private`(
+                x: Data(xData.base64URLDecodedBytes()),
+                d: Data(dData.base64URLDecodedBytes())
+            ),
             curve: curve
         )
     }
     
-    init(keyPair: OctetKeyPair, curve: Curve = .ed25519) throws {
+    init(keyPair: OctetKeyPair, curve: Curve) throws {
         self.keyPair = keyPair
         self.curve = curve
     }
     
-    public static func generate(curve: Curve = .ed25519) throws -> EdDSAKey {
+    public static func generate(curve: Curve) throws -> EdDSAKey {
         switch curve {
         case .ed25519:            
             let key = Curve25519.Signing.PrivateKey()
             return try .init(
-                publicKey: key.publicKey.rawRepresentation,
-                privateKey: key.rawRepresentation,
+                keyPair: .`private`(
+                    x: key.publicKey.rawRepresentation,
+                    d: key.rawRepresentation),
                 curve: curve
             )
         }

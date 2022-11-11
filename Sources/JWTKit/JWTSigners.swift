@@ -235,16 +235,21 @@ private struct JWKSigner {
                 return nil
             }
                 
-            let curve = self.jwk.curve.flatMap { EdDSAKey.Curve(rawValue: $0.rawValue) } ?? .ed25519
+            guard let curve = self.jwk.curve.flatMap({ EdDSAKey.Curve(rawValue: $0.rawValue) }) else {
+                return nil
+            }
             
-            switch algorithm {
-                case .eddsa:
-                guard let key = try? EdDSAKey(x: self.jwk.x, d: self.jwk.privateExponent, curve: curve) else {
-                        return nil
-                    }
-                    return JWTSigner.eddsa(key)
-                default:
-                    return nil
+            switch (algorithm, self.jwk.x, jwk.privateExponent) {
+            case (.eddsa, .some(let x), .some(let d)):
+                let key = try? EdDSAKey.private(x: x, d: d, curve: curve)
+                return key.map(JWTSigner.eddsa(_:))
+                
+            case (.eddsa, .some(let x), .none):
+                let key = try? EdDSAKey.public(x: x, curve: curve)
+                return key.map(JWTSigner.eddsa(_:))
+                
+            default:
+                return nil
             }
         }
     }

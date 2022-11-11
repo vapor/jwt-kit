@@ -681,15 +681,19 @@ class JWTKitTests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         
-        let signer = try JWTSigner.eddsa(.generate())
+        let signer = try JWTSigner.eddsa(.generate(curve: .ed25519))
         let token = try signer.sign(payload)
         try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
     }
     
     func testEdDSAPublicPrivate() throws {
         
-        let publicSigner = try JWTSigner.eddsa(.init(publicKey: Data(base64Encoded: eddsaPublicKeyBase64)))
-        let privateSigner = try JWTSigner.eddsa(.init(privateKey: Data(base64Encoded: eddsaPrivateKeyBae64)))
+        let publicSigner = try JWTSigner.eddsa(
+            .public(x: eddsaPublicKeyBase64, curve: .ed25519)
+        )
+        let privateSigner = try JWTSigner.eddsa(
+            .private(x: eddsaPublicKeyBase64, d: eddsaPrivateKeyBae64, curve: .ed25519)
+        )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -715,7 +719,7 @@ class JWTKitTests: XCTestCase {
         let d = eddsaPrivateKeyBae64
         
         // sign jwt
-        let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
+        let signer = try JWTSigner.eddsa(.private(x: x, d: d, curve: .ed25519))
         let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks
@@ -724,6 +728,7 @@ class JWTKitTests: XCTestCase {
             "keys": [
                 {
                     "kty": "OKP",
+                    "crv": "Ed25519",
                     "use": "sig",
                     "kid": "vapor",
                     "x": "\(x)",
@@ -750,7 +755,7 @@ class JWTKitTests: XCTestCase {
         let d = eddsaPrivateKeyBae64Url
 
         // sign jwt
-        let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
+        let signer = try JWTSigner.eddsa(.private(x: x, d: d, curve: .ed25519))
         let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
@@ -759,6 +764,7 @@ class JWTKitTests: XCTestCase {
             "keys": [
                 {
                  "kty": "OKP",
+                 "crv": "Ed25519",
                  "use": "sig",
                  "kid": "vapor",
                  "x": "\(x)",
@@ -785,7 +791,7 @@ class JWTKitTests: XCTestCase {
         let d = eddsaPrivateKeyBae64
 
         // sign jwt
-        let signer = try JWTSigner.eddsa(.init(x: x, d: d, curve: .ed25519))
+        let signer = try JWTSigner.eddsa(.private(x: x, d: d, curve: .ed25519))
         let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
@@ -794,6 +800,7 @@ class JWTKitTests: XCTestCase {
             "keys": [
                 {
                   "kty": "OKP",
+                  "crv": "Ed25519",
                   "use": "sig",
                   "kid": "vapor",
                   "x": "\(x)",

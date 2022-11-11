@@ -1,43 +1,32 @@
 import Foundation
 
+// https://www.rfc-editor.org/rfc/rfc8037.html#appendix-A
 enum OctetKeyPair {
-    case `public`(Data)
-    case `private`(Data)
-    case `publicPrivate`(x: Data, d: Data)
+    case `public`(x: Data)
+    case `private`(x: Data, d: Data)
     
-    init(publicKey: Data?, privateKey: Data?) throws {
-        switch (publicKey, privateKey) {
-            case (.some(let publicKey), .some(let privateKey)):
-                self = .publicPrivate(x: publicKey, d: privateKey)
-                
-            case (.some(let publicKey), .none):
-                self = .public(publicKey)
-                
-            case (.none, .some(let privateKey)):
-                self = .private(privateKey)
-                
-            case (.none, .none):
-                throw EdDSAError.publicAndPrivateKeyMissing
-        }
+    init(x: Data, d: Data) throws {
+        self = .`private`(x: x, d: d)
     }
     
-    var publicKey: Data? {
+    init(x: Data) throws {
+        self = .`public`(x: x)
+    }
+    
+    var publicKey: Data {
         switch self {
-            case .private:
-                return nil
-                
-            case .public(let publicKey), .publicPrivate(let publicKey, _):
-                return publicKey
+            case .`public`(let x), .`private`(let x, _):
+                return x
         }
     }
     
     var privateKey: Data? {
         switch self {
-            case .public:
-                return nil
+            case .`private`(_ , let d):
+                return d
                 
-            case .private(let privateKey), .publicPrivate(_, let privateKey):
-                return privateKey
+            case .`public`:
+                return nil
         }
     }
 }
