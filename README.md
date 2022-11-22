@@ -59,7 +59,7 @@ JWTKit provides APIs for signing and verifying JSON Web Tokens ([RFC7519](https:
 
 - Verifying (parsing)
 - Signing (serializing)
-- RSA (RS256, RS384, RS512)
+- RSA (RS256, RS384, RS512, PS256, PS384, PS512)
 - ECDSA (ES256, ES384, ES512)
 - HMAC (HS256, HS384, HS512)
 - Claims (aud, exp, iss, etc)
@@ -275,6 +275,10 @@ Once you have the RSAKey, you can use it to create an RSA signer.
 - `rs256`: RSA with SHA-256
 - `rs384`: RSA with SHA-384
 - `rs512`: RSA with SHA-512
+- `ps256`: RSASSA-PSS with SHA-256 and MGF1 with SHA-256
+- `ps384`: RSASSA-PSS with SHA-384 and MGF1 with SHA-384
+- `ps512`: RSASSA-PSS with SHA-512 and MGF1 with SHA-512
+
 
 ```swift
 // Add RSA with SHA-256 signer.
