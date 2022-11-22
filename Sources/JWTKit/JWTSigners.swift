@@ -182,6 +182,12 @@ private struct JWKSigner {
                 return JWTSigner.rs384(key: rsaKey)
             case .rs512:
                 return JWTSigner.rs512(key: rsaKey)
+            case .ps256:
+                return JWTSigner.ps256(key: rsaKey)
+            case .ps384:
+                return JWTSigner.ps384(key: rsaKey)
+            case .ps512:
+                return JWTSigner.ps512(key: rsaKey)
             default:
                 return nil
             }

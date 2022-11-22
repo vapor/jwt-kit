@@ -26,6 +26,12 @@ public struct JWK: Codable {
         case rs384 = "RS384"
         /// RSA with SHA512
         case rs512 = "RS512"
+        /// RSA with SHA256 and PSS padding
+        case ps256 = "PS256" 
+        /// RSA with SHA384 and PSS padding
+        case ps384 = "PS384"
+        /// RSA with SHA512 and PSS padding
+        case ps512 = "PS512"
         /// EC with SHA256
         case es256 = "ES256"
         /// EC with SHA384
