@@ -486,6 +486,7 @@ class JWTKitTests: XCTestCase {
             "keys": [
                 {"kty": "RSA", "alg": "RS256", "kid": "a", "n": "\(rsaModulus)", "e": "AQAB"},
                 {"kty": "RSA", "alg": "RS512", "kid": "b", "n": "\(rsaModulus)", "e": "AQAB"},
+                {"kty": "RSA", "alg": "PS256", "kid": "c", "n": "\(rsaModulus)", "e": "AQAB"},
             ]
         }
         """
@@ -502,8 +503,13 @@ class JWTKitTests: XCTestCase {
             XCTFail("expected signer b")
             return
         }
+        guard let c = signers.get(kid: "c") else {
+            XCTFail("expected signer c")
+            return
+        }
         XCTAssertEqual(a.algorithm.name, "RS256")
         XCTAssertEqual(b.algorithm.name, "RS512")
+        XCTAssertEqual(c.algorithm.name, "PS256")
     }
 
     func testJWTPayloadVerification() throws {
@@ -670,6 +676,131 @@ class JWTKitTests: XCTestCase {
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
+
+
+    func testImplementationPSS() throws {
+        let test = TestPayload(
+            sub: "vapor",
+            name: "foo",
+            admin: true,
+            exp: .init(value: .distantFuture)
+        )
+        let jwt = try JWTSigner.ps256(
+            key: .private(pem: rsa3PrivateKey)
+        ).sign(test)
+        let payload = try JWTSigner.ps256(
+            key: .public(pem: rsa3PublicKey)
+        ).verify(jwt, as: TestPayload.self)
+        XCTAssertEqual(payload, test)
+    }
+
+    func testJWTIOPSS256Verification() throws {
+        let jwt = """
+        eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiZm9vIiwiZXhwIjo2NDA5MjIxMTIwMCwiYWRtaW4iOnRydWUsInN1YiI6InZhcG9yIn0.5Y26kc9FxNC1Tz_R02EB-zebvSawOrgg6evpCVNR91W3o2iffNWCx6h2XPdVgpfpHQ5u2N2SwFMRP4Y3MDWmB4_Wb42SKZJyXEiq3Nz_lRbQHwochgU7utshAW93S00t4hHQUGqr_Khpv-VJEWCbAPv58IhkaUeAFCN2IFozgnazHuqnMfcboEsn7OUO-tp5ojbE9yovUF-qJKkHJ1Nxvd_ajVZ-ow6hBt9LIJjifB8rGLqMKMMgvgCyWBo_AbWFS52B45uYPcr6zgduzvU-fCt0NQzvxMDjMddYzV7tX34WyO9mZ8jTNl-wnuocmXk13bu6pLbofJUn-UGJk32DWQ
+        """
+
+        _ = try JWTSigner.ps256(key: .public(pem: rsa3PublicKey))
+        .verify(jwt, as: TestPayload.self)
+    }
+
+    func testJWTIOPSS384Verification() throws {
+        let jwt = """
+        eyJhbGciOiJQUzM4NCIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiZm9vIiwiZXhwIjo2NDA5MjIxMTIwMCwiYWRtaW4iOnRydWUsInN1YiI6InZhcG9yIn0.OpRlt86zIvrJQZlbOfE9Nmd1rGzzSV68u-Gj9ue1-hp_HLWFMQgXeak8TgxFFncqzd9jrh-2uiBJKOjJIR2OfDukJIk43XyxFPX4MDDdTWBaIqkEbv3T8OWsqMU06bOw0EqHyimcihrXg-zFkeRwbHND8GLPeKCXCL60o6tfKrODq1mfkrOL13_VH78NbwCQ-rpKKj9PlKC4x-kjiWlrRhh2BuccrzLyw2_dvGH-Jy51hQzkTsHhevqyCzKHh19smZ-F7cFwEDaavyEO7MhuIgez740XCYUq6GazLUW9jn-iINveVIkUPeYb_GMvwQwuYsGvWw7pTKx8RvLcciUkEg
+        """
+
+        _ = try JWTSigner.ps384(key: .public(pem: rsa3PublicKey))
+        .verify(jwt, as: TestPayload.self)
+    }
+
+    func testJWTIOPSS512Verification() throws {
+        let jwt = """
+        eyJhbGciOiJQUzUxMiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiZm9vIiwiZXhwIjo2NDA5MjIxMTIwMCwiYWRtaW4iOnRydWUsInN1YiI6InZhcG9yIn0.VNmU-wz3f4VY65zmCDqAnl-14uMxYMGvXpZcVZc_sShhDejGJgHPMoJvlfw6H799c95Z_sEt2e9iQHJrIlKMifYt7-ZIqQ2rbnEQ5Kd1rphdUFiEMkdsp1bxSBW_vv9cNQGF10EITunL08UrpoUnaJRthMJ5gGygE16hPfRFP_xI8kduYdCNRhVwgSRjcGcWFkpojqeyVBWta3SBDpS5ExEXfiEwiL9k6bkcTvWRGc3lYIRIUMze0xQxgn7PGCTWrx-P6a_TzAcOYujo0z07rEck_yOxzTld-dl753z2WRcsFQe8Usj3eeAtZhfBVrxIeOqnFkSbnwUfQCNT3e3Z8Q
+        """
+
+        _ = try JWTSigner.ps512(key: .public(pem: rsa3PublicKey))
+        .verify(jwt, as: TestPayload.self)
+    }
+
+    func testJWKPSSSigner() throws {
+        let privateKey = """
+        {
+            "kty": "RSA",
+            "d": "\(rsaPrivateExponent)",
+            "e": "AQAB",
+            "use": "sig",
+            "kid": "1234",
+            "alg": "PS256",
+            "n": "\(rsaModulus)"
+        }
+        """
+
+        let publicKey = """
+        {
+            "kty": "RSA",
+            "e": "AQAB",
+            "use": "sig",
+            "kid": "1234",
+            "n": "\(rsaModulus)"
+        }
+        """
+
+        let publicSigners = JWTSigners()
+        try publicSigners.use(jwk: .init(json: publicKey))
+
+        let privateSigners = JWTSigners()
+        try privateSigners.use(jwk: .init(json: privateKey))
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let data = try privateSigners.sign(payload, kid: "1234")
+        // test private signer decoding
+        try XCTAssertEqual(privateSigners.verify(data, as: TestPayload.self), payload)
+        // test public signer decoding
+        try XCTAssertEqual(publicSigners.verify(data, as: TestPayload.self), payload)
+    }
+
+    func testJWKPSSVerification() throws {
+        // rsa key
+        let modulus = "mSfWGBcXRBPgnwnL_ymDCkBaL6vcMcLpBEomzf-wZPajcQFiq4n4MHScyo85Te6GU-YuErVvHKK0D72JhMNWAQXbiF5Hh7swSYX9QsycWwHBgOBNfp51Fm_HTU7ikDBEdSonrmSep8wNqi_PX2_jVBsoxYNeiCQyDLFLHOAAcbIE4Y6lpJy76GpdHJscMO2RsUznjv5VPOQVa_BlQRIIZ0YoSsq9EEZna9O370wZy8jnOthQIXoegQ7sItS1JMKk4X5DdoRenIfbfWLy88XxKOPlIHA5ekT8TyzeI2Uqkg3YMETTDPrSROVO1Qdl2W1uMdfIZ94DgKpZN2VW-w0fLw"
+        let exponent = "AQAB"
+        let privateExponent = "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
+
+        // sign jwt
+        let privateSigner = JWTSigner.ps256(key: RSAKey(
+            modulus: modulus,
+            exponent: exponent,
+            privateExponent: privateExponent
+        )!)
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using signer: JWTSigner) throws { }
+        }
+        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                    "kty": "RSA",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "n": "\(modulus)",
+                    "e": "\(exponent)"
+                 }
+            ]
+        }
+        """
+
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
+    }
 }
 
 struct AudiencePayload: Codable {
@@ -833,6 +964,48 @@ ZXMwXDANBgkqhkiG9w0BAQEFAANLADBIAkEAtgeOpWeiRIq0Blbcqq4P7sKnyDmj
 MA0GCSqGSIb3DQEBCwUAA0EAQyBP1X40S4joTg1ov4eK0aKNlRLbWftEorGh5jCc
 F3IAwlztc7uFj589k/M+xO4TGdrEVlMyiVdC5/B0MLa8LQ==
 -----END CERTIFICATE-----
+"""
+
+let rsa3PrivateKey = """
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEA6czGzD/c/PU9hjvaQjoVbYP6cXEN/TXf4cVrDPEwmbTl842L
+HwmIkdGEi4CK8o1orXZurLxGzYMVGYgwxgjk3UGi/Bww99Io0LI8VLSZp2amvEsv
+VbbG+RtCofIkOMC105LFfFo7/KUMRPRj3Fl80Y55hgfkNrM2JXlJMHGDklcUq954
+kduPHqZ1CySmXsGuL1UQDjxgo/0cxVwxLBupp/KY8WEiUGFMciihZI/8xO2Ku8tB
+vxL4tUYE8/UHFT2GrYLRMwBM2CkJeoWuRaphy1WKWo7rFj21jTr7+58mP5kdQ7I2
++a1I2cnRvwDlwWcpUwp/7zYL0YQpXCSJ+FTyIwIDAQABAoIBAH5Wb55zbCEtDF/6
++8gJxwZ06OJgKyUG9cH0ghJuSsrkW9YuSF0vM6NISo1vmqXTEBucAdZJryDikoZH
+d8OrjrCZBU+ilDt2TyPnDH7hUJ6K89KP9jYlHIQD3Q/R3wzj5d08VIcL45p0PZsN
+TOEHYlGC4dwxa3q7gKjjT09kJ6rtZvoqeJYeaNq8Glt/PIZyaicOnTAgPaTA1q79
+IXGrN2S48NFHz+zzxNXERc8NYPbBcn+9qMA6ML5Ig+wWUL+mG9bMXWPWGMhrOMFr
+W/EZ3yHTsk1/6mgNKAHBN6pL1kiGNS0lU5aIZ/1RuzMpxg7T5IEVPCzNlxAX35Jm
++hJR6HECgYEA+xIosaqCq623M0Msj6RbpGPnPUR4eZLRQeR9q1QlRLNWDXFwm2UY
+Oy70Qj29SnNUZ7hRhC3/deBJRMS4nGM6KaJoZtOAgK0PrxLBuqUrxOv2nyfeYLYN
+I4Lk63hEoVNWXTXvynyxUA34MzNVZHMA/LDE2u1diVGh7JoUh+FSA80CgYEA7mPQ
+91jCc1Q3B+VdP4eWgpdkBPcJNrxJmSfUCbg84bmFYyH1+7dXdEkjfQLqlJBpzuBf
+F3bx0WQUQdmaJ08WnDOvH+aUc/HRcnyrlLH9VOP6DCNc7uKK0GsMZJoOOPXT/jYi
+w36tA+4zb3ceY/eu23n+w7b8d3iA7Ql+TSxOva8CgYBBDM9mWNtKR9PzgDAHd3oW
++ZtsEFV2ikeVXvIAdejCCAT/rqiSWnsQunWmxABLTd5MkUDtkk1h6R6SprV+L2de
+ainKmnns3On3XlC7XxgcCVb4nYfMXt7AmKVfLOX7NnBl7heWyv/V0gjAm0hAoltb
+HSGj52QYtAHUH4e6PPLW8QKBgQC2QKmp8Ln44hGQf9Jil46CGKvm/9aTei/qX4DE
+TY5+JA/OUlB1OR4rUR9Im8or+pxqBS+uCMmnhBPYpDwugVCP6xOgF/C3E9FE7ftf
+mxRKqmColwCdwaTO4oh/ASiOc6K3XzwEqfwsXRgFx9P8KYgNU59qkaNC02X90pw0
+9ALfEQKBgCOeN/HHspa9ADLbfhFNTDbSKg0FAymEh0mJ00ThbFrGQmheZZ8O5GBF
+umnQE+L7BqPwoX3Xn+ESrB1JNSvFs+rsrMke9bUZEsTfl8oa1pWgR7rAQlxSMJwh
+yKvlMn6yYLQ+/U5GQ9oUMq3Pny8nZfxOQDo7bhX5ITMyJVnWHOU1
+-----END RSA PRIVATE KEY-----
+"""
+
+let rsa3PublicKey = """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6czGzD/c/PU9hjvaQjoV
+bYP6cXEN/TXf4cVrDPEwmbTl842LHwmIkdGEi4CK8o1orXZurLxGzYMVGYgwxgjk
+3UGi/Bww99Io0LI8VLSZp2amvEsvVbbG+RtCofIkOMC105LFfFo7/KUMRPRj3Fl8
+0Y55hgfkNrM2JXlJMHGDklcUq954kduPHqZ1CySmXsGuL1UQDjxgo/0cxVwxLBup
+p/KY8WEiUGFMciihZI/8xO2Ku8tBvxL4tUYE8/UHFT2GrYLRMwBM2CkJeoWuRaph
+y1WKWo7rFj21jTr7+58mP5kdQ7I2+a1I2cnRvwDlwWcpUwp/7zYL0YQpXCSJ+FTy
+IwIDAQAB
+-----END PUBLIC KEY-----
 """
 
 struct FirebasePayload: JWTPayload, Equatable {
