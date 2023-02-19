@@ -1,3 +1,5 @@
+import Foundation
+
 /// Algorithm powering a `JWTSigner`.
 public protocol JWTAlgorithm {
     /// Unique JWT-standard name for this algorithm.

@@ -1,3 +1,4 @@
+import Foundation
 @_implementationOnly import CJWTKitBoringSSL
 
 protocol OpenSSLSigner {

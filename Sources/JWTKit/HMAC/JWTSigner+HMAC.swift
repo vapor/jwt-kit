@@ -1,5 +1,6 @@
 @_implementationOnly import CJWTKitBoringSSL
 import Crypto
+import Foundation
 
 extension JWTSigner {
     // MARK: 256

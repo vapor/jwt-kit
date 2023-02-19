@@ -1,4 +1,4 @@
-import struct Foundation.Data
+import Foundation
 
 extension DataProtocol {
     func base64URLDecodedBytes() -> [UInt8] {

@@ -1,6 +1,4 @@
-import class Foundation.JSONEncoder
-import class Foundation.JSONDecoder
-import struct Foundation.Data
+import Foundation
 
 /// A collection of signers labeled by `kid`.
 public final class JWTSigners {
