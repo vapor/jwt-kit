@@ -1,3 +1,5 @@
+import Foundation
+
 /// A JWT signer.
 public final class JWTSigner {
     public let algorithm: JWTAlgorithm

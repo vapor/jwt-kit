@@ -1,4 +1,4 @@
-import class Foundation.JSONDecoder
+import Foundation
 
 struct JWTParser {
     let encodedHeader: ArraySlice<UInt8>

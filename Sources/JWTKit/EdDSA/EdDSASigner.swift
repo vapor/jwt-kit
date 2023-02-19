@@ -1,3 +1,4 @@
+import Foundation
 import Crypto
 
 internal struct EdDSASigner: JWTAlgorithm {

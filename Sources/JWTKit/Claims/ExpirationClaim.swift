@@ -1,3 +1,5 @@
+import Foundation
+
 /// The "exp" (expiration time) claim identifies the expiration time on
 /// or after which the JWT MUST NOT be accepted for processing.  The
 /// processing of the "exp" claim requires that the current date/time

@@ -1,5 +1,5 @@
 @_implementationOnly import CJWTKitBoringSSL
-import struct Foundation.Data
+import Foundation
 
 internal struct RSASigner: JWTAlgorithm, OpenSSLSigner {
     let key: RSAKey
