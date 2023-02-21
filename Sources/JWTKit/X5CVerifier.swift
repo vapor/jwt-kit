@@ -58,7 +58,7 @@ public class X5CVerifier {
         _ token: String,
         as payload: Payload.Type = Payload.self
     ) throws -> Payload {
-        try self.verifyJWS(Array(token.utf8), as: payload)
+        try self.verifyJWS(Array(token.utf8), as: Payload.self)
     }
 
     /// Verify a JWS with `x5c` claims against the
@@ -76,13 +76,15 @@ public class X5CVerifier {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header()
+
+        guard let headerAlg = header.alg,
+              headerAlg == "ES256" else {
+            throw JWTError.generic(identifier: "JWS", reason: "Only ES256 is currently supported")
+        }
         guard let x5c = header.x5c, !x5c.isEmpty else {
             throw JWTError.generic(identifier: "JWS", reason: "No x5c certificates provided")
         }
 
-        guard header.alg == "ES256" else {
-            throw JWTError.generic(identifier: "JWS", reason: "Only ES256 is currently supported")
-        }
 
         // Setup an untrusted chain using all the certificates in the x5c.
         let untrustedChain = try X509Chain()
@@ -117,7 +119,7 @@ public class X5CVerifier {
             algorithm: ECDSASigner(
                 key: ecdsaKey,
                 algorithm: CJWTKitBoringSSL_EVP_sha256(),
-                name: "ES256"
+                name: headerAlg
             )
         )
         return try signer.verify(parser: parser)
@@ -168,17 +170,15 @@ private struct X509TrustStore {
     var value: OpaquePointer
 
     init() throws {
-        let trustedStore = CJWTKitBoringSSL_X509_STORE_new()
-        if let trustedStore = trustedStore {
-            value = trustedStore
-        } else {
+        guard let trustedStore = CJWTKitBoringSSL_X509_STORE_new() else {
             throw JWTError.generic(identifier: "JWS", reason: "OpenSSL failure")
         }
+        self.value = trustedStore
     }
 
     /// Add this certificate to the trust store.
     func trust(_ cert: X509Pointer) throws {
-        if  CJWTKitBoringSSL_X509_STORE_add_cert(value, cert.value) != 1 {
+        guard  CJWTKitBoringSSL_X509_STORE_add_cert(value, cert.value) == 1 else {
             throw JWTError.generic(identifier: "JWS", reason: "Couldn't add cert")
         }
     }
@@ -198,11 +198,10 @@ private struct X509Chain {
     var value: OpaquePointer
 
     init() throws {
-        if let value = CJWTKitBoringSSL_sk_X509_new_null() {
-            self.value = value
-        } else {
+        guard let value = CJWTKitBoringSSL_sk_X509_new_null() else {
             throw JWTError.generic(identifier: "JWS", reason: "OpenSSL failure")
         }
+        self.value = value
     }
 
     /// Frees this chain AND anything in it. So don't call
@@ -216,18 +215,14 @@ private struct X509Chain {
     }
 
     func push(_ x509: X509Pointer) throws {
-        if CJWTKitBoringSSL_sk_X509_push(value, x509.value) == 0 {
+        guard CJWTKitBoringSSL_sk_X509_push(value, x509.value) != 0 else {
             throw JWTError.generic(identifier: "JWS", reason: "Couldn't push cert")
         }
     }
 
     /// Get the X509 at the index (0-based).
     subscript(index: Int) -> X509Pointer? {
-        if let pointer = CJWTKitBoringSSL_sk_X509_value(value, index) {
-            return X509Pointer(value: pointer)
-        } else {
-            return nil
-        }
+        return CJWTKitBoringSSL_sk_X509_value(value, index).map(X509Pointer.init(value:))
     }
 }
 
@@ -263,7 +258,7 @@ private struct X509StoreContext {
 
     /// Verifies the context as currently built.
     func verify() throws {
-        if CJWTKitBoringSSL_X509_verify_cert(value) != 1 {
+        guard CJWTKitBoringSSL_X509_verify_cert(value) == 1 else {
             throw buildError()
         }
     }
