@@ -1,4 +1,5 @@
 @_implementationOnly import CJWTKitBoringSSL
+import Foundation
 
 /// An object for verifying JWS tokens that contain the `x5c` header parameter
 /// with a set of known root certificates.

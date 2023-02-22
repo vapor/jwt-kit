@@ -1,4 +1,5 @@
 import XCTest
+import Foundation
 #if os(Linux)
 import FoundationNetworking
 #endif
