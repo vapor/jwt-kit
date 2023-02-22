@@ -12,14 +12,14 @@ jobs:
       matrix:
         dependent:
           - jwt
-    container: swift:5.6-focal
+    container: swift:5.7
     steps: 
       - name: Check out JWTKit
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: jwt-kit
       - name: Check out provider
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: vapor/${{ matrix.dependent }}
           path: dependent
@@ -34,3 +34,14 @@ jobs:
      with:
        with_coverage: false
        with_tsan: true
+
+  test-exports:
+    name: Test exports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Build
+        run: swift build -Xswiftc -DBUILDING_DOCC

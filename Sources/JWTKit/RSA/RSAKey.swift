@@ -1,5 +1,5 @@
 @_implementationOnly import CJWTKitBoringSSL
-import struct Foundation.Data
+import Foundation
 
 public final class RSAKey: OpenSSLKey {
     /// Creates RSAKey from public key pem file.

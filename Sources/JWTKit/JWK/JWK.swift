@@ -5,12 +5,23 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable {
+    
+    public enum Curve: String, Codable {
+        case p256 = "P-256"
+        case p384 = "P-384"
+        case p521 = "P-521"
+        case ed25519 = "Ed25519"
+        case ed448 = "Ed448"
+    }
+    
     /// Supported `kty` key types.
     public enum KeyType: String, Codable {
         /// RSA
         case rsa = "RSA"
         /// ECDSA
         case ecdsa = "EC"
+        /// Octet Key Pair
+        case octetKeyPair = "OKP"
     }
      
     /// The `kty` (key type) parameter identifies the cryptographic algorithm
@@ -32,6 +43,8 @@ public struct JWK: Codable {
         case es384 = "ES384"
         /// EC with SHA512
         case es512 = "ES512"
+        /// EdDSA
+        case eddsa = "EdDSA"
     }
      
      /// The `alg` (algorithm) parameter identifies the algorithm intended for
@@ -69,7 +82,7 @@ public struct JWK: Codable {
 
     public var y: String?
     
-    public var curve: ECDSAKey.Curve?
+    public var curve: Curve?
         
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
@@ -92,7 +105,11 @@ public struct JWK: Codable {
     }
     
     public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve)
+        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
+    }
+    
+    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
+        return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
     }
     
     private init(
@@ -104,7 +121,7 @@ public struct JWK: Codable {
         d: String? = nil,
         x: String? = nil,
         y: String? = nil,
-        curve: ECDSAKey.Curve? = nil
+        curve: Curve? = nil
     ) {
         self.keyType = keyType
         self.algorithm = algorithm

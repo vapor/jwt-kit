@@ -1,3 +1,5 @@
+import Foundation
+
 public protocol JWTUnixEpochClaim: JWTClaim where Value == Date { }
 
 extension JWTUnixEpochClaim {
