@@ -19,14 +19,17 @@ struct JWTParser {
     }
 
     func header() throws -> JWTHeader {
-        try self.jsonDecoder()
+        let jsonDecoder = JSONDecoder()
+        jsonDecoder.dateDecodingStrategy = .secondsSince1970
+        
+        return try jsonDecoder
             .decode(JWTHeader.self, from: .init(self.encodedHeader.base64URLDecodedBytes()))
     }
 
     func payload<Payload>(as payload: Payload.Type) throws -> Payload
         where Payload: JWTPayload
     {
-        try self.jsonDecoder()
+        try payload.jsonDecoder()
             .decode(Payload.self, from: .init(self.encodedPayload.base64URLDecodedBytes()))
     }
 
@@ -42,11 +45,5 @@ struct JWTParser {
 
     private var message: ArraySlice<UInt8> {
         self.encodedHeader + [.period] + self.encodedPayload
-    }
-
-    private func jsonDecoder() -> JSONDecoder {
-        let jsonDecoder = JSONDecoder()
-        jsonDecoder.dateDecodingStrategy = .secondsSince1970
-        return jsonDecoder
     }
 }

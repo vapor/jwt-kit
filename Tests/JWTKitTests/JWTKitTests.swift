@@ -815,6 +815,34 @@ class JWTKitTests: XCTestCase {
         let foo = try signers.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
+    
+    func testCustomJWTDecoder() throws
+    {
+        struct Payload: JWTPayload {
+            func verify(using signer: JWTKit.JWTSigner) throws {
+                return
+            }
+            
+            static func jsonDecoder() -> JSONDecoder {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .millisecondsSince1970
+                return decoder
+            }
+            
+            var date: Date
+        }
+        
+        let someDate = Date(timeIntervalSince1970: 1681988782.123)
+        let raw = "eyJhbGciOiJIUzI1NiJ9.eyJkYXRlIjoxNjgxOTg4NzgyMTIzfQ._Ff9lojDxfJyA6tkzxALXIl-ldNQpDDuOLEaXJxWhYU"
+        
+        let parser = try JWTParser(token: raw.data(using: .utf8)!)
+        
+        let parsed = try parser.payload(as: Payload.self)
+        
+        let interval = parsed.date.timeIntervalSince(someDate)
+        
+        XCTAssertLessThan(abs(interval), 0.001)
+    }
 
 }
 
