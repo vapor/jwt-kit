@@ -1,6 +1,17 @@
 /// - See Also:
 /// [Retrieve the User’s Information from Apple ID Servers](https://developer.apple.com/documentation/signinwithapplerestapi/authenticating_users_with_sign_in_with_apple)
 public struct AppleIdentityToken: JWTPayload {
+
+    /// Taken from https://developer.apple.com/documentation/authenticationservices/asuserdetectionstatus
+    public enum UserDetectionStatus : Int, Codable {
+        /// Not supported on current platform, ignore the value
+        case unsupported
+        /// We could not determine the value.  New users in the ecosystem will get this value as well, so you should not block these users, but instead treat them as any new user through standard email sign up flows
+        case unknown
+        /// A hint that we have high confidence that the user is real
+        case likelyReal
+    }
+
     enum CodingKeys: String, CodingKey {
         case nonce, email
         case issuer = "iss"
@@ -12,6 +23,7 @@ public struct AppleIdentityToken: JWTPayload {
         case isPrivateEmail = "is_private_email"
         case nonceSupported = "nonce_supported"
         case orgId = "org_id"
+        case realUserStatus = "real_user_status"
     }
 
     /// The issuer-registered claim key, which has the value https://appleid.apple.com.
@@ -49,6 +61,9 @@ public struct AppleIdentityToken: JWTPayload {
     
     /// A Boolean value that indicates whether the email shared by the user is the proxy address. It is absent (nil) if the user is not using a proxy email address.
     public let isPrivateEmail: BoolClaim?
+
+    /// A value that indicates whether the user appears to be a real person.
+    public let realUserStatus: UserDetectionStatus?
 
     public func verify(using signer: JWTSigner) throws {
         guard self.issuer.value == "https://appleid.apple.com" else {
