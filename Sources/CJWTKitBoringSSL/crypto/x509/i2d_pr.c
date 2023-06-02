@@ -1,4 +1,3 @@
-/* crypto/asn1/i2d_pr.c */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,28 +55,25 @@
  * [including the GNU Public Licence.] */
 
 #include <CJWTKitBoringSSL_asn1.h>
+#include <CJWTKitBoringSSL_dsa.h>
 #include <CJWTKitBoringSSL_ec_key.h>
 #include <CJWTKitBoringSSL_err.h>
 #include <CJWTKitBoringSSL_evp.h>
 #include <CJWTKitBoringSSL_rsa.h>
-#include <CJWTKitBoringSSL_dsa.h>
 
 
-int i2d_PrivateKey(const EVP_PKEY *a, uint8_t **pp)
-{
-    switch (EVP_PKEY_id(a)) {
+int i2d_PrivateKey(const EVP_PKEY *a, uint8_t **pp) {
+  switch (EVP_PKEY_id(a)) {
     case EVP_PKEY_RSA:
-        return i2d_RSAPrivateKey(a->pkey.rsa, pp);
+      return i2d_RSAPrivateKey(EVP_PKEY_get0_RSA(a), pp);
     case EVP_PKEY_EC:
-        return i2d_ECPrivateKey(a->pkey.ec, pp);
+      return i2d_ECPrivateKey(EVP_PKEY_get0_EC_KEY(a), pp);
     case EVP_PKEY_DSA:
-        return i2d_DSAPrivateKey(a->pkey.dsa, pp);
+      return i2d_DSAPrivateKey(EVP_PKEY_get0_DSA(a), pp);
     default:
-        /*
-         * Although this file is in crypto/x509 for layering reasons, it emits
-         * an error code from ASN1 for OpenSSL compatibility.
-         */
-        OPENSSL_PUT_ERROR(ASN1, ASN1_R_UNSUPPORTED_PUBLIC_KEY_TYPE);
-        return -1;
-    }
+      // Although this file is in crypto/x509 for layering reasons, it emits
+      // an error code from ASN1 for OpenSSL compatibility.
+      OPENSSL_PUT_ERROR(ASN1, ASN1_R_UNSUPPORTED_PUBLIC_KEY_TYPE);
+      return -1;
+  }
 }

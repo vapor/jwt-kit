@@ -107,14 +107,14 @@ OPENSSL_EXPORT int BIO_up_ref(BIO *bio);
 // bytes read, zero on EOF, or a negative number on error.
 OPENSSL_EXPORT int BIO_read(BIO *bio, void *data, int len);
 
-// BIO_gets "reads a line" from |bio| and puts at most |size| bytes into |buf|.
-// It returns the number of bytes read or a negative number on error. The
-// phrase "reads a line" is in quotes in the previous sentence because the
-// exact operation depends on the BIO's method. For example, a digest BIO will
-// return the digest in response to a |BIO_gets| call.
+// BIO_gets reads a line from |bio| and writes at most |size| bytes into |buf|.
+// It returns the number of bytes read or a negative number on error. This
+// function's output always includes a trailing NUL byte, so it will read at
+// most |size - 1| bytes.
 //
-// TODO(fork): audit the set of BIOs that we end up needing. If all actually
-// return a line for this call, remove the warning above.
+// If the function read a complete line, the output will include the newline
+// character, '\n'. If no newline was found before |size - 1| bytes or EOF, it
+// outputs the bytes which were available.
 OPENSSL_EXPORT int BIO_gets(BIO *bio, char *buf, int size);
 
 // BIO_write writes |len| bytes from |data| to |bio|. It returns the number of
@@ -328,7 +328,7 @@ OPENSSL_EXPORT int BIO_printf(BIO *bio, const char *format, ...)
 OPENSSL_EXPORT int BIO_indent(BIO *bio, unsigned indent, unsigned max_indent);
 
 // BIO_hexdump writes a hex dump of |data| to |bio|. Each line will be indented
-// by |indent| spaces.
+// by |indent| spaces. It returns one on success and zero otherwise.
 OPENSSL_EXPORT int BIO_hexdump(BIO *bio, const uint8_t *data, size_t len,
                                unsigned indent);
 
@@ -383,7 +383,7 @@ OPENSSL_EXPORT const BIO_METHOD *BIO_s_mem(void);
 //
 // If |len| is negative, then |buf| is treated as a NUL-terminated string, but
 // don't depend on this in new code.
-OPENSSL_EXPORT BIO *BIO_new_mem_buf(const void *buf, int len);
+OPENSSL_EXPORT BIO *BIO_new_mem_buf(const void *buf, ossl_ssize_t len);
 
 // BIO_mem_contents sets |*out_contents| to point to the current contents of
 // |bio| and |*out_len| to contain the length of that data. It returns one on
@@ -873,7 +873,6 @@ struct bio_st {
 #define BIO_C_GET_FILE_PTR 107
 #define BIO_C_SET_FILENAME 108
 #define BIO_C_SET_SSL 109
-#define BIO_C_GET_SSL 110
 #define BIO_C_SET_MD 111
 #define BIO_C_GET_MD 112
 #define BIO_C_GET_CIPHER_STATUS 113
@@ -887,9 +886,6 @@ struct bio_st {
 #define BIO_C_GET_PROXY_PARAM 121
 #define BIO_C_SET_BUFF_READ_DATA 122  // data to read first
 #define BIO_C_GET_ACCEPT 124
-#define BIO_C_SET_SSL_RENEGOTIATE_BYTES 125
-#define BIO_C_GET_SSL_NUM_RENEGOTIATES 126
-#define BIO_C_SET_SSL_RENEGOTIATE_TIMEOUT 127
 #define BIO_C_FILE_SEEK 128
 #define BIO_C_GET_CIPHER_CTX 129
 #define BIO_C_SET_BUF_MEM_EOF_RETURN 130  // return end of input value

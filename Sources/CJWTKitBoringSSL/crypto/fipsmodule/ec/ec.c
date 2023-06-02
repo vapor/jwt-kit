@@ -285,7 +285,6 @@ EC_GROUP *ec_group_new(const EC_METHOD *meth) {
 
   ret = OPENSSL_malloc(sizeof(EC_GROUP));
   if (ret == NULL) {
-    OPENSSL_PUT_ERROR(EC, ERR_R_MALLOC_FAILURE);
     return NULL;
   }
   OPENSSL_memset(ret, 0, sizeof(EC_GROUP));
@@ -447,7 +446,6 @@ static EC_GROUP *ec_group_new_from_data(const struct built_in_curve *curve) {
 
   BN_CTX *ctx = BN_CTX_new();
   if (ctx == NULL) {
-    OPENSSL_PUT_ERROR(EC, ERR_R_MALLOC_FAILURE);
     goto err;
   }
 
@@ -686,7 +684,6 @@ EC_POINT *EC_POINT_new(const EC_GROUP *group) {
 
   EC_POINT *ret = OPENSSL_malloc(sizeof *ret);
   if (ret == NULL) {
-    OPENSSL_PUT_ERROR(EC, ERR_R_MALLOC_FAILURE);
     return NULL;
   }
 
@@ -804,7 +801,7 @@ int EC_POINT_get_affine_coordinates(const EC_GROUP *group,
   return EC_POINT_get_affine_coordinates_GFp(group, point, x, y, ctx);
 }
 
-void ec_affine_to_jacobian(const EC_GROUP *group, EC_RAW_POINT *out,
+void ec_affine_to_jacobian(const EC_GROUP *group, EC_JACOBIAN *out,
                            const EC_AFFINE *p) {
   out->X = p->X;
   out->Y = p->Y;
@@ -812,12 +809,12 @@ void ec_affine_to_jacobian(const EC_GROUP *group, EC_RAW_POINT *out,
 }
 
 int ec_jacobian_to_affine(const EC_GROUP *group, EC_AFFINE *out,
-                          const EC_RAW_POINT *p) {
+                          const EC_JACOBIAN *p) {
   return group->meth->point_get_affine_coordinates(group, p, &out->X, &out->Y);
 }
 
 int ec_jacobian_to_affine_batch(const EC_GROUP *group, EC_AFFINE *out,
-                                const EC_RAW_POINT *in, size_t num) {
+                                const EC_JACOBIAN *in, size_t num) {
   if (group->meth->jacobian_to_affine_batch == NULL) {
     OPENSSL_PUT_ERROR(EC, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
     return 0;
@@ -993,13 +990,13 @@ int ec_point_mul_no_self_test(const EC_GROUP *group, EC_POINT *r,
 
   if (p_scalar != NULL) {
     EC_SCALAR scalar;
-    EC_RAW_POINT tmp;
+    EC_JACOBIAN tmp;
     if (!arbitrary_bignum_to_scalar(group, &scalar, p_scalar, ctx) ||
         !ec_point_mul_scalar(group, &tmp, &p->raw, &scalar)) {
       goto err;
     }
     if (g_scalar == NULL) {
-      OPENSSL_memcpy(&r->raw, &tmp, sizeof(EC_RAW_POINT));
+      OPENSSL_memcpy(&r->raw, &tmp, sizeof(EC_JACOBIAN));
     } else {
       group->meth->add(group, &r->raw, &r->raw, &tmp);
     }
@@ -1019,8 +1016,8 @@ int EC_POINT_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *g_scalar,
   return ec_point_mul_no_self_test(group, r, g_scalar, p, p_scalar, ctx);
 }
 
-int ec_point_mul_scalar_public(const EC_GROUP *group, EC_RAW_POINT *r,
-                               const EC_SCALAR *g_scalar, const EC_RAW_POINT *p,
+int ec_point_mul_scalar_public(const EC_GROUP *group, EC_JACOBIAN *r,
+                               const EC_SCALAR *g_scalar, const EC_JACOBIAN *p,
                                const EC_SCALAR *p_scalar) {
   if (g_scalar == NULL || p_scalar == NULL || p == NULL) {
     OPENSSL_PUT_ERROR(EC, ERR_R_PASSED_NULL_PARAMETER);
@@ -1035,9 +1032,9 @@ int ec_point_mul_scalar_public(const EC_GROUP *group, EC_RAW_POINT *r,
   return 1;
 }
 
-int ec_point_mul_scalar_public_batch(const EC_GROUP *group, EC_RAW_POINT *r,
+int ec_point_mul_scalar_public_batch(const EC_GROUP *group, EC_JACOBIAN *r,
                                      const EC_SCALAR *g_scalar,
-                                     const EC_RAW_POINT *points,
+                                     const EC_JACOBIAN *points,
                                      const EC_SCALAR *scalars, size_t num) {
   if (group->meth->mul_public_batch == NULL) {
     OPENSSL_PUT_ERROR(EC, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
@@ -1048,8 +1045,8 @@ int ec_point_mul_scalar_public_batch(const EC_GROUP *group, EC_RAW_POINT *r,
                                        num);
 }
 
-int ec_point_mul_scalar(const EC_GROUP *group, EC_RAW_POINT *r,
-                        const EC_RAW_POINT *p, const EC_SCALAR *scalar) {
+int ec_point_mul_scalar(const EC_GROUP *group, EC_JACOBIAN *r,
+                        const EC_JACOBIAN *p, const EC_SCALAR *scalar) {
   if (p == NULL || scalar == NULL) {
     OPENSSL_PUT_ERROR(EC, ERR_R_PASSED_NULL_PARAMETER);
     return 0;
@@ -1067,7 +1064,7 @@ int ec_point_mul_scalar(const EC_GROUP *group, EC_RAW_POINT *r,
   return 1;
 }
 
-int ec_point_mul_scalar_base(const EC_GROUP *group, EC_RAW_POINT *r,
+int ec_point_mul_scalar_base(const EC_GROUP *group, EC_JACOBIAN *r,
                              const EC_SCALAR *scalar) {
   if (scalar == NULL) {
     OPENSSL_PUT_ERROR(EC, ERR_R_PASSED_NULL_PARAMETER);
@@ -1077,8 +1074,10 @@ int ec_point_mul_scalar_base(const EC_GROUP *group, EC_RAW_POINT *r,
   group->meth->mul_base(group, r, scalar);
 
   // Check the result is on the curve to defend against fault attacks or bugs.
-  // This has negligible cost compared to the multiplication.
-  if (!ec_GFp_simple_is_on_curve(group, r)) {
+  // This has negligible cost compared to the multiplication. This can only
+  // happen on bug or CPU fault, so it okay to leak this. The alternative would
+  // be to proceed with bad data.
+  if (!constant_time_declassify_int(ec_GFp_simple_is_on_curve(group, r))) {
     OPENSSL_PUT_ERROR(EC, ERR_R_INTERNAL_ERROR);
     return 0;
   }
@@ -1086,10 +1085,10 @@ int ec_point_mul_scalar_base(const EC_GROUP *group, EC_RAW_POINT *r,
   return 1;
 }
 
-int ec_point_mul_scalar_batch(const EC_GROUP *group, EC_RAW_POINT *r,
-                              const EC_RAW_POINT *p0, const EC_SCALAR *scalar0,
-                              const EC_RAW_POINT *p1, const EC_SCALAR *scalar1,
-                              const EC_RAW_POINT *p2,
+int ec_point_mul_scalar_batch(const EC_GROUP *group, EC_JACOBIAN *r,
+                              const EC_JACOBIAN *p0, const EC_SCALAR *scalar0,
+                              const EC_JACOBIAN *p1, const EC_SCALAR *scalar1,
+                              const EC_JACOBIAN *p2,
                               const EC_SCALAR *scalar2) {
   if (group->meth->mul_batch == NULL) {
     OPENSSL_PUT_ERROR(EC, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
@@ -1109,7 +1108,7 @@ int ec_point_mul_scalar_batch(const EC_GROUP *group, EC_RAW_POINT *r,
 }
 
 int ec_init_precomp(const EC_GROUP *group, EC_PRECOMP *out,
-                    const EC_RAW_POINT *p) {
+                    const EC_JACOBIAN *p) {
   if (group->meth->init_precomp == NULL) {
     OPENSSL_PUT_ERROR(EC, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
     return 0;
@@ -1118,7 +1117,7 @@ int ec_init_precomp(const EC_GROUP *group, EC_PRECOMP *out,
   return group->meth->init_precomp(group, out, p);
 }
 
-int ec_point_mul_scalar_precomp(const EC_GROUP *group, EC_RAW_POINT *r,
+int ec_point_mul_scalar_precomp(const EC_GROUP *group, EC_JACOBIAN *r,
                                 const EC_PRECOMP *p0, const EC_SCALAR *scalar0,
                                 const EC_PRECOMP *p1, const EC_SCALAR *scalar1,
                                 const EC_PRECOMP *p2,
@@ -1140,8 +1139,8 @@ int ec_point_mul_scalar_precomp(const EC_GROUP *group, EC_RAW_POINT *r,
   return 1;
 }
 
-void ec_point_select(const EC_GROUP *group, EC_RAW_POINT *out, BN_ULONG mask,
-                      const EC_RAW_POINT *a, const EC_RAW_POINT *b) {
+void ec_point_select(const EC_GROUP *group, EC_JACOBIAN *out, BN_ULONG mask,
+                      const EC_JACOBIAN *a, const EC_JACOBIAN *b) {
   ec_felem_select(group, &out->X, mask, &a->X, &b->X);
   ec_felem_select(group, &out->Y, mask, &a->Y, &b->Y);
   ec_felem_select(group, &out->Z, mask, &a->Z, &b->Z);
@@ -1155,20 +1154,20 @@ void ec_affine_select(const EC_GROUP *group, EC_AFFINE *out, BN_ULONG mask,
 
 void ec_precomp_select(const EC_GROUP *group, EC_PRECOMP *out, BN_ULONG mask,
                        const EC_PRECOMP *a, const EC_PRECOMP *b) {
-  OPENSSL_STATIC_ASSERT(sizeof(out->comb) == sizeof(*out),
-                        "out->comb does not span the entire structure");
+  static_assert(sizeof(out->comb) == sizeof(*out),
+                "out->comb does not span the entire structure");
   for (size_t i = 0; i < OPENSSL_ARRAY_SIZE(out->comb); i++) {
     ec_affine_select(group, &out->comb[i], mask, &a->comb[i], &b->comb[i]);
   }
 }
 
-int ec_cmp_x_coordinate(const EC_GROUP *group, const EC_RAW_POINT *p,
+int ec_cmp_x_coordinate(const EC_GROUP *group, const EC_JACOBIAN *p,
                         const EC_SCALAR *r) {
   return group->meth->cmp_x_coordinate(group, p, r);
 }
 
 int ec_get_x_coordinate_as_scalar(const EC_GROUP *group, EC_SCALAR *out,
-                                  const EC_RAW_POINT *p) {
+                                  const EC_JACOBIAN *p) {
   uint8_t bytes[EC_MAX_BYTES];
   size_t len;
   if (!ec_get_x_coordinate_as_bytes(group, bytes, &len, sizeof(bytes), p)) {
@@ -1195,7 +1194,7 @@ int ec_get_x_coordinate_as_scalar(const EC_GROUP *group, EC_SCALAR *out,
   // Additionally, one can manually check this property for built-in curves. It
   // is enforced for legacy custom curves in |EC_GROUP_set_generator|.
   const BIGNUM *order = &group->order;
-  BN_ULONG words[EC_MAX_WORDS + 1];
+  BN_ULONG words[EC_MAX_WORDS + 1] = {0};
   bn_big_endian_to_words(words, order->width + 1, bytes, len);
   bn_reduce_once(out->words, words, /*carry=*/words[order->width], order->d,
                  order->width);
@@ -1204,7 +1203,7 @@ int ec_get_x_coordinate_as_scalar(const EC_GROUP *group, EC_SCALAR *out,
 
 int ec_get_x_coordinate_as_bytes(const EC_GROUP *group, uint8_t *out,
                                  size_t *out_len, size_t max_out,
-                                 const EC_RAW_POINT *p) {
+                                 const EC_JACOBIAN *p) {
   size_t len = BN_num_bytes(&group->field);
   assert(len <= EC_MAX_BYTES);
   if (max_out < len) {
@@ -1222,7 +1221,7 @@ int ec_get_x_coordinate_as_bytes(const EC_GROUP *group, uint8_t *out,
   return 1;
 }
 
-void ec_set_to_safe_point(const EC_GROUP *group, EC_RAW_POINT *out) {
+void ec_set_to_safe_point(const EC_GROUP *group, EC_JACOBIAN *out) {
   if (group->generator != NULL) {
     ec_GFp_simple_point_copy(out, &group->generator->raw);
   } else {
