@@ -1,17 +1,6 @@
 /// - See Also:
 /// [Retrieve the User’s Information from Apple ID Servers](https://developer.apple.com/documentation/signinwithapplerestapi/authenticating_users_with_sign_in_with_apple)
 public struct AppleIdentityToken: JWTPayload {
-
-    /// Taken from https://developer.apple.com/documentation/authenticationservices/asuserdetectionstatus
-    public enum UserDetectionStatus : Int, Codable {
-        /// Not supported on current platform, ignore the value
-        case unsupported
-        /// We could not determine the value.  New users in the ecosystem will get this value as well, so you should not block these users, but instead treat them as any new user through standard email sign up flows
-        case unknown
-        /// A hint that we have high confidence that the user is real
-        case likelyReal
-    }
-
     enum CodingKeys: String, CodingKey {
         case nonce, email
         case issuer = "iss"
@@ -71,5 +60,54 @@ public struct AppleIdentityToken: JWTPayload {
         }
 
         try self.expires.verifyNotExpired()
+    }
+}
+
+extension AppleIdentityToken {
+    /// Taken from https://developer.apple.com/documentation/authenticationservices/asuserdetectionstatus
+    /// With slight modification to make adding new cases non-breaking.
+    public struct UserDetectionStatus: OptionSet, Codable {
+        /// Used for decoding/encoding
+        private enum Status: Int, Codable {
+            case unsupported
+            case unknown
+            case likelyReal
+        }
+
+        /// Not supported on current platform, ignore the value
+        public static let unsupported = UserDetectionStatus([]) // 0 was giving a warning
+
+        /// We could not determine the value.  New users in the ecosystem will get this value as well, so you should not block these users, but instead treat them as any new user through standard email sign up flows
+        public static let unknown = UserDetectionStatus(rawValue: 1)
+
+        /// A hint that we have high confidence that the user is real
+        public static let likelyReal = UserDetectionStatus(rawValue: 2)
+
+        public let rawValue: Int
+
+        public init(rawValue: Int) {
+            self.rawValue = rawValue
+        }
+
+        public init(from decoder: Decoder) throws {
+            let value = try decoder.singleValueContainer().decode(Status.self)
+            switch value {
+            case .unsupported:  self = .unsupported
+            case .unknown:      self = .unknown
+            case .likelyReal:   self = .likelyReal
+            }
+        }
+
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            switch self {
+            case .unsupported:  try container.encode(Status.unsupported)
+            case .unknown:      try container.encode(Status.unknown)
+            case .likelyReal:   try container.encode(Status.likelyReal)
+            default:
+                let context = EncodingError.Context(codingPath: encoder.codingPath, debugDescription: "Invalid enum value: \(self)")
+                throw EncodingError.invalidValue(self, context)
+            }
+        }
     }
 }
