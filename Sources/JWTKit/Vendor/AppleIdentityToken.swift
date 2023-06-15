@@ -41,7 +41,7 @@ public struct AppleIdentityToken: JWTPayload {
     /// The user's email address.
     public let email: String?
 
-    /// Managed Apple ID organization
+    /// Managed Apple ID organization (see https://developer.apple.com/documentation/rosterapi/integrating_with_roster_api_and_sign_in_with_apple)
     public let orgId: String?
     
     /// A Boolean value that indicates whether the service has verified the email. The value of this claim is always true because the servers only return verified email addresses.
