@@ -362,7 +362,6 @@ static int probable_prime_dh_safe(BIGNUM *rnd, int bits, const BIGNUM *add,
 BN_GENCB *BN_GENCB_new(void) {
   BN_GENCB *callback = OPENSSL_malloc(sizeof(BN_GENCB));
   if (callback == NULL) {
-    OPENSSL_PUT_ERROR(BN, ERR_R_MALLOC_FAILURE);
     return NULL;
   }
   OPENSSL_memset(callback, 0, sizeof(BN_GENCB));
@@ -385,6 +384,8 @@ int BN_GENCB_call(BN_GENCB *callback, int event, int n) {
 
   return callback->callback(event, n, callback);
 }
+
+void *BN_GENCB_get_arg(const BN_GENCB *callback) { return callback->arg; }
 
 int BN_generate_prime_ex(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
                          const BIGNUM *rem, BN_GENCB *cb) {

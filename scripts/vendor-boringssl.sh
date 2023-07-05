@@ -3,19 +3,29 @@
 ##
 ## This source file is part of the Vapor open source project
 ##
-## Copyright (c) 2017-2020 Vapor project authors
-## Licensed under MIT
+## It is taken from the SwiftCrypto project, with minor modifications
 ##
-## See LICENSE for license information
-##
-## SPDX-License-Identifier: MIT
+## See below for licensing information
 ##
 ##===----------------------------------------------------------------------===##
-# This was substantially adapted from SwiftCrypto's vendor-boringssl.sh script.
+##===----------------------------------------------------------------------===##
+##
+## This source file is part of the SwiftCrypto open source project
+##
+## Copyright (c) 2019-2021 Apple Inc. and the SwiftCrypto project authors
+## Licensed under Apache License v2.0
+##
+## See LICENSE.txt for license information
+## See CONTRIBUTORS.md for the list of SwiftCrypto project authors
+##
+## SPDX-License-Identifier: Apache-2.0
+##
+##===----------------------------------------------------------------------===##
+# This was substantially adapted from grpc-swift's vendor-boringssl.sh script.
 # The license for the original work is reproduced below. See NOTICES.txt for
 # more.
 #
-# Copyright (c) 2019 Apple Inc. and the SwiftCrypto project authors
+# Copyright 2016, gRPC Authors All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,8 +53,8 @@ HERE=$(pwd)
 DSTROOT=Sources/CJWTKitBoringSSL
 TMPDIR=$(mktemp -d /tmp/.workingXXXXXX)
 SRCROOT="${TMPDIR}/src/boringssl.googlesource.com/boringssl"
-CROSS_COMPILE_TARGET_LOCATION="/Library/Developer/Destinations"
-CROSS_COMPILE_VERSION="5.1.1"
+#CROSS_COMPILE_TARGET_LOCATION="/Library/Developer/Destinations"
+CROSS_COMPILE_VERSION="5.8-jammy"
 
 # This function namespaces the awkward inline functions declared in OpenSSL
 # and BoringSSL.
@@ -81,11 +91,15 @@ function mangle_symbols {
 
         export GOPATH="${TMPDIR}"
 
-        # Begin by building for macOS.
-        swift build --product CJWTKitBoringSSL
+        # Begin by building for macOS. We build for two target triples, Intel
+        # and Apple Silicon.
+        swift build --triple "x86_64-apple-macosx" --product CJWTKitBoringSSL
+        swift build --triple "arm64-apple-macosx" --product CJWTKitBoringSSL
         (
             cd "${SRCROOT}"
-            go run "util/read_symbols.go" -out "${TMPDIR}/symbols-macOS.txt" "${HERE}/.build/debug/libCJWTKitBoringSSL.a"
+            go mod tidy -modcacherw
+            go run "util/read_symbols.go" -out "${TMPDIR}/symbols-macOS-intel.txt" "${HERE}/.build/x86_64-apple-macosx/debug/libCJWTKitBoringSSL.a"
+            go run "util/read_symbols.go" -out "${TMPDIR}/symbols-macOS-as.txt" "${HERE}/.build/arm64-apple-macosx/debug/libCJWTKitBoringSSL.a"
         )
 
         # Now build for iOS. We use xcodebuild for this because SwiftPM doesn't
@@ -101,16 +115,35 @@ function mangle_symbols {
         # If you have trouble with the script around this point, consider
         # https://github.com/CSCIX65G/SwiftCrossCompilers to obtain cross
         # compilers for the architectures we care about.
-        for cc_target in "${CROSS_COMPILE_TARGET_LOCATION}"/*"${CROSS_COMPILE_VERSION}"*.json; do
-            echo "Cross compiling for ${cc_target}"
-            swift build --product CJWTKitBoringSSL --destination "${cc_target}"
-        done;
+        #
+#         for cc_target in "${CROSS_COMPILE_TARGET_LOCATION}"/*"${CROSS_COMPILE_VERSION}"*.json; do
+#             echo "Cross compiling for ${cc_target}"
+#             swift build --product CJWTKitBoringSSL --destination "${cc_target}"
+#         done;
+
+        # N.B.: The cross-compilation "support" used by the original version of
+        # this script (see above) is very painful and unreliable, so we're using a
+        # couple of quick-and-dirty Docker commands instead (which means we can't
+        # generate symbols for 32-bit architectures). Fortunately, true cross-compilation
+        # support was said to be imminent at the time of this writing.
+        # 
+        # Requirements for this approach:
+        # - Docker Desktop for Mac version 4.19.0 or higher
+        # - File sharing for the directory containing this repository must be allowed
+        # - "Use Virtualization framework" must be enabled
+        # - "Use Rosetta for x86/amd64 emulation on Apple Silicon" must be enabled
+        docker run -t -i --rm --privileged -v$(pwd):/src -w/src --platform linux/arm64 \
+            "swift:${CROSS_COMPILE_VERSION}" \
+            swift build --product CJWTKitBoringSSL
+        docker run -t -i --rm --privileged -v$(pwd):/src -w/src --platform linux/amd64 \
+            "swift:${CROSS_COMPILE_VERSION}" \
+            swift build --product CJWTKitBoringSSL
 
         # Now we need to generate symbol mangles for Linux. We can do this in
         # one go for all of them.
         (
             cd "${SRCROOT}"
-            go run "util/read_symbols.go" -obj-file-format elf -out "${TMPDIR}/symbols-linux-all.txt" "${HERE}"/.build/*-unknown-linux/debug/libCJWTKitBoringSSL.a
+            go run "util/read_symbols.go" -obj-file-format elf -out "${TMPDIR}/symbols-linux-all.txt" "${HERE}"/.build/*-unknown-linux-gnu/debug/libCJWTKitBoringSSL.a
         )
 
         # Now we concatenate all the symbols together and uniquify it.
@@ -182,7 +215,7 @@ echo "GENERATING assembly helpers"
     cd "$SRCROOT"
     cd ..
     mkdir -p "${SRCROOT}/crypto/third_party/sike/asm"
-    python "${HERE}/scripts/build-asm.py"
+    python3 "${HERE}/scripts/build-asm.py"
 )
 
 PATTERNS=(
@@ -230,14 +263,12 @@ done
 echo "GENERATING err_data.c"
 (
     cd "$SRCROOT/crypto/err"
+    go mod tidy -modcacherw
     go run err_data_generate.go > "${HERE}/${DSTROOT}/crypto/err/err_data.c"
 )
 
 echo "DELETING crypto/fipsmodule/bcm.c"
 rm -f $DSTROOT/crypto/fipsmodule/bcm.c
-
-echo "FIXING missing include"
-perl -pi -e '$_ .= qq(\n#include <openssl/cpu.h>\n) if /#include <openssl\/err.h>/' "$DSTROOT/crypto/fipsmodule/ec/p256-x86_64.c"
 
 echo "REMOVING libssl"
 (
@@ -289,24 +320,14 @@ echo "PROTECTING against executable stacks"
 
 echo "PATCHING BoringSSL"
 git apply "${HERE}/scripts/patch-1-inttypes.patch"
+git apply "${HERE}/scripts/patch-2-more-inttypes.patch"
 
 # We need BoringSSL to be modularised
 echo "MODULARISING BoringSSL"
 cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
-//===----------------------------------------------------------------------===//
-//
-// This source file is part of the Vapor open source project
-//
-// Copyright (c) 2022 Vapor project authors
-// Licensed under MIT
-//
-// See LICENSE for license information
-//
-// SPDX-License-Identifier: MIT
-//
-//===----------------------------------------------------------------------===//
-#ifndef C_VAPORJWT_BORINGSSL_H
-#define C_VAPORJWT_BORINGSSL_H
+#ifndef C_JWT_KIT_BORINGSSL_H
+#define C_JWT_KIT_BORINGSSL_H
+
 #include "CJWTKitBoringSSL_aes.h"
 #include "CJWTKitBoringSSL_arm_arch.h"
 #include "CJWTKitBoringSSL_asn1_mac.h"
@@ -352,7 +373,8 @@ cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 #include "CJWTKitBoringSSL_siphash.h"
 #include "CJWTKitBoringSSL_trust_token.h"
 #include "CJWTKitBoringSSL_x509v3.h"
-#endif  // C_VAPORJWT_BORINGSSL_H
+
+#endif  // C_JWT_KIT_BORINGSSL_H
 EOF
 
 # modulemap is required by the cmake build
@@ -370,3 +392,4 @@ echo "This directory is derived from BoringSSL cloned from https://boringssl.goo
 
 echo "CLEANING temporary directory"
 rm -rf "${TMPDIR}"
+

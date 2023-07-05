@@ -126,7 +126,9 @@
 #endif
 
 #if !defined(__cplusplus)
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#include <stdalign.h>
+#elif defined(_MSC_VER) && !defined(__clang__)
 #define alignas(x) __declspec(align(x))
 #define alignof __alignof
 #else
@@ -135,10 +137,12 @@
 // compilers have long implemented C11 and made it default. The most likely
 // cause of pre-C11 modes is stale -std=c99 or -std=gnu99 flags in build
 // configuration. Such flags can be removed.
-#if __STDC_VERSION__ < 201112L
+//
+// TODO(davidben): In MSVC 2019 16.8 or higher (_MSC_VER >= 1928),
+// |__STDC_VERSION__| will be 201112 when passed /std:c11 and unset otherwise.
+// C11 alignas and alignof are only implemented in C11 mode. Can we mandate C11
+// mode for those versions?
 #error "BoringSSL must be built in C11 mode or higher."
-#endif
-#include <stdalign.h>
 #endif
 #endif
 
@@ -151,6 +155,32 @@
 #if defined(OPENSSL_THREADS) && !defined(OPENSSL_PTHREADS) && \
     defined(OPENSSL_WINDOWS)
 #define OPENSSL_WINDOWS_THREADS
+#endif
+
+// Determine the atomics implementation to use with C.
+#if !defined(__cplusplus)
+#if !defined(OPENSSL_C11_ATOMIC) && defined(OPENSSL_THREADS) &&   \
+    !defined(__STDC_NO_ATOMICS__) && defined(__STDC_VERSION__) && \
+    __STDC_VERSION__ >= 201112L
+#define OPENSSL_C11_ATOMIC
+#endif
+
+#if defined(OPENSSL_C11_ATOMIC)
+#include <stdatomic.h>
+#endif
+
+// Older MSVC does not support C11 atomics, so we fallback to the Windows APIs.
+// When both are available (e.g. clang-cl), we prefer the C11 ones. The Windows
+// APIs don't allow some operations to be implemented as efficiently. This can
+// be removed once we can rely on
+// https://devblogs.microsoft.com/cppblog/c11-atomics-in-visual-studio-2022-version-17-5-preview-2/
+#if !defined(OPENSSL_C11_ATOMIC) && defined(OPENSSL_THREADS) && \
+    defined(OPENSSL_WINDOWS)
+#define OPENSSL_WINDOWS_ATOMIC
+#endif
+#endif  // !__cplusplus
+
+#if defined(OPENSSL_WINDOWS_THREADS) || defined(OPENSSL_WINDOWS_ATOMIC)
 OPENSSL_MSVC_PRAGMA(warning(push, 3))
 #include <windows.h>
 OPENSSL_MSVC_PRAGMA(warning(pop))
@@ -162,7 +192,7 @@ extern "C" {
 
 
 #if defined(OPENSSL_X86) || defined(OPENSSL_X86_64) || defined(OPENSSL_ARM) || \
-    defined(OPENSSL_AARCH64) || defined(OPENSSL_PPC64LE)
+    defined(OPENSSL_AARCH64)
 // OPENSSL_cpuid_setup initializes the platform-specific feature cache.
 void OPENSSL_cpuid_setup(void);
 #endif
@@ -219,6 +249,16 @@ typedef __uint128_t uint128_t;
 // platform.
 #if defined(__SSE2__) && !defined(OPENSSL_NO_SSE2_FOR_TESTING)
 #define OPENSSL_SSE2
+#endif
+
+#if defined(BORINGSSL_MALLOC_FAILURE_TESTING)
+// OPENSSL_reset_malloc_counter_for_testing, when malloc testing is enabled,
+// resets the internal malloc counter, to simulate further malloc failures. This
+// should be called in between independent tests, at a point where failure from
+// a previous test will not impact subsequent ones.
+OPENSSL_EXPORT void OPENSSL_reset_malloc_counter_for_testing(void);
+#else
+OPENSSL_INLINE void OPENSSL_reset_malloc_counter_for_testing(void) {}
 #endif
 
 
@@ -298,7 +338,7 @@ typedef uint32_t crypto_word_t;
 // always has the same output for a given input. This allows it to eliminate
 // dead code, move computations across loops, and vectorize.
 static inline crypto_word_t value_barrier_w(crypto_word_t a) {
-#if !defined(OPENSSL_NO_ASM) && (defined(__GNUC__) || defined(__clang__))
+#if defined(__GNUC__) || defined(__clang__)
   __asm__("" : "+r"(a) : /* no inputs */);
 #endif
   return a;
@@ -306,7 +346,7 @@ static inline crypto_word_t value_barrier_w(crypto_word_t a) {
 
 // value_barrier_u32 behaves like |value_barrier_w| but takes a |uint32_t|.
 static inline uint32_t value_barrier_u32(uint32_t a) {
-#if !defined(OPENSSL_NO_ASM) && (defined(__GNUC__) || defined(__clang__))
+#if defined(__GNUC__) || defined(__clang__)
   __asm__("" : "+r"(a) : /* no inputs */);
 #endif
   return a;
@@ -314,7 +354,7 @@ static inline uint32_t value_barrier_u32(uint32_t a) {
 
 // value_barrier_u64 behaves like |value_barrier_w| but takes a |uint64_t|.
 static inline uint64_t value_barrier_u64(uint64_t a) {
-#if !defined(OPENSSL_NO_ASM) && (defined(__GNUC__) || defined(__clang__))
+#if defined(__GNUC__) || defined(__clang__)
   __asm__("" : "+r"(a) : /* no inputs */);
 #endif
   return a;
@@ -461,19 +501,43 @@ static inline int constant_time_select_int(crypto_word_t mask, int a, int b) {
 // of memory as secret. Secret data is tracked as it flows to registers and
 // other parts of a memory. If secret data is used as a condition for a branch,
 // or as a memory index, it will trigger warnings in valgrind.
-#define CONSTTIME_SECRET(x, y) VALGRIND_MAKE_MEM_UNDEFINED(x, y)
+#define CONSTTIME_SECRET(ptr, len) VALGRIND_MAKE_MEM_UNDEFINED(ptr, len)
 
 // CONSTTIME_DECLASSIFY takes a pointer and a number of bytes and marks that
 // region of memory as public. Public data is not subject to constant-time
 // rules.
-#define CONSTTIME_DECLASSIFY(x, y) VALGRIND_MAKE_MEM_DEFINED(x, y)
+#define CONSTTIME_DECLASSIFY(ptr, len) VALGRIND_MAKE_MEM_DEFINED(ptr, len)
 
 #else
 
-#define CONSTTIME_SECRET(x, y)
-#define CONSTTIME_DECLASSIFY(x, y)
+#define CONSTTIME_SECRET(ptr, len)
+#define CONSTTIME_DECLASSIFY(ptr, len)
 
 #endif  // BORINGSSL_CONSTANT_TIME_VALIDATION
+
+static inline crypto_word_t constant_time_declassify_w(crypto_word_t v) {
+  // Return |v| through a value barrier to be safe. Valgrind-based constant-time
+  // validation is partly to check the compiler has not undone any constant-time
+  // work. Any place |BORINGSSL_CONSTANT_TIME_VALIDATION| influences
+  // optimizations, this validation is inaccurate.
+  //
+  // However, by sending pointers through valgrind, we likely inhibit escape
+  // analysis. On local variables, particularly booleans, we likely
+  // significantly impact optimizations.
+  //
+  // Thus, to be safe, stick a value barrier, in hopes of comparably inhibiting
+  // compiler analysis.
+  CONSTTIME_DECLASSIFY(&v, sizeof(v));
+  return value_barrier_w(v);
+}
+
+static inline int constant_time_declassify_int(int v) {
+  static_assert(sizeof(uint32_t) == sizeof(int),
+                "int is not the same size as uint32_t");
+  // See comment above.
+  CONSTTIME_DECLASSIFY(&v, sizeof(v));
+  return value_barrier_u32(v);
+}
 
 
 // Thread-safe initialisation.
@@ -501,14 +565,116 @@ typedef pthread_once_t CRYPTO_once_t;
 OPENSSL_EXPORT void CRYPTO_once(CRYPTO_once_t *once, void (*init)(void));
 
 
-// Reference counting.
+// Atomics.
+//
+// The following functions provide an API analogous to <stdatomic.h> from C11
+// and abstract between a few variations on atomics we need to support.
 
-// Automatically enable C11 atomics if implemented.
-#if !defined(OPENSSL_C11_ATOMIC) && defined(OPENSSL_THREADS) &&   \
-    !defined(__STDC_NO_ATOMICS__) && defined(__STDC_VERSION__) && \
-    __STDC_VERSION__ >= 201112L
-#define OPENSSL_C11_ATOMIC
+#if defined(__cplusplus)
+
+// In C++, we can't easily detect whether C will use |OPENSSL_C11_ATOMIC| or
+// |OPENSSL_WINDOWS_ATOMIC|. Instead, we define a layout-compatible type without
+// the corresponding functions. When we can rely on C11 atomics in MSVC, that
+// will no longer be a concern.
+typedef uint32_t CRYPTO_atomic_u32;
+
+#elif defined(OPENSSL_C11_ATOMIC)
+
+typedef _Atomic uint32_t CRYPTO_atomic_u32;
+
+// This should be const, but the |OPENSSL_WINDOWS_ATOMIC| implementation is not
+// const due to Windows limitations. When we can rely on C11 atomics, make this
+// const-correct.
+OPENSSL_INLINE uint32_t CRYPTO_atomic_load_u32(CRYPTO_atomic_u32 *val) {
+  return atomic_load(val);
+}
+
+OPENSSL_INLINE int CRYPTO_atomic_compare_exchange_weak_u32(
+    CRYPTO_atomic_u32 *val, uint32_t *expected, uint32_t desired) {
+  return atomic_compare_exchange_weak(val, expected, desired);
+}
+
+OPENSSL_INLINE void CRYPTO_atomic_store_u32(CRYPTO_atomic_u32 *val,
+                                            uint32_t desired) {
+  atomic_store(val, desired);
+}
+
+#elif defined(OPENSSL_WINDOWS_ATOMIC)
+
+typedef LONG CRYPTO_atomic_u32;
+
+OPENSSL_INLINE uint32_t CRYPTO_atomic_load_u32(volatile CRYPTO_atomic_u32 *val) {
+  // This is not ideal because it still writes to a cacheline. MSVC is not able
+  // to optimize this to a true atomic read, and Windows does not provide an
+  // InterlockedLoad function.
+  //
+  // The Windows documentation [1] does say "Simple reads and writes to
+  // properly-aligned 32-bit variables are atomic operations", but this is not
+  // phrased in terms of the C11 and C++11 memory models, and indeed a read or
+  // write seems to produce slightly different code on MSVC than a sequentially
+  // consistent std::atomic::load in C++. Moreover, it is unclear if non-MSVC
+  // compilers on Windows provide the same guarantees. Thus we avoid relying on
+  // this and instead still use an interlocked function. This is still
+  // preferable a global mutex, and eventually this code will be replaced by
+  // [2]. Additionally, on clang-cl, we'll use the |OPENSSL_C11_ATOMIC| path.
+  //
+  // [1] https://learn.microsoft.com/en-us/windows/win32/sync/interlocked-variable-access
+  // [2] https://devblogs.microsoft.com/cppblog/c11-atomics-in-visual-studio-2022-version-17-5-preview-2/
+  return (uint32_t)InterlockedCompareExchange(val, 0, 0);
+}
+
+OPENSSL_INLINE int CRYPTO_atomic_compare_exchange_weak_u32(
+    volatile CRYPTO_atomic_u32 *val, uint32_t *expected32, uint32_t desired) {
+  LONG expected = (LONG)*expected32;
+  LONG actual = InterlockedCompareExchange(val, (LONG)desired, expected);
+  *expected32 = (uint32_t)actual;
+  return actual == expected;
+}
+
+OPENSSL_INLINE void CRYPTO_atomic_store_u32(volatile CRYPTO_atomic_u32 *val,
+                                            uint32_t desired) {
+  InterlockedExchange(val, (LONG)desired);
+}
+
+#elif !defined(OPENSSL_THREADS)
+
+typedef uint32_t CRYPTO_atomic_u32;
+
+OPENSSL_INLINE uint32_t CRYPTO_atomic_load_u32(CRYPTO_atomic_u32 *val) {
+  return *val;
+}
+
+OPENSSL_INLINE int CRYPTO_atomic_compare_exchange_weak_u32(
+    CRYPTO_atomic_u32 *val, uint32_t *expected, uint32_t desired) {
+  if (*val != *expected) {
+    *expected = *val;
+    return 0;
+  }
+  *val = desired;
+  return 1;
+}
+
+OPENSSL_INLINE void CRYPTO_atomic_store_u32(CRYPTO_atomic_u32 *val,
+                                            uint32_t desired) {
+  *val = desired;
+}
+
+#else
+
+// Require some atomics implementation. Contact BoringSSL maintainers if you
+// have a platform with fails this check.
+#error "Thread-compatible configurations require atomics"
+
 #endif
+
+// See the comment in the |__cplusplus| section above.
+static_assert(sizeof(CRYPTO_atomic_u32) == sizeof(uint32_t),
+              "CRYPTO_atomic_u32 does not match uint32_t size");
+static_assert(alignof(CRYPTO_atomic_u32) == alignof(uint32_t),
+              "CRYPTO_atomic_u32 does not match uint32_t alignment");
+
+
+// Reference counting.
 
 // CRYPTO_REFCOUNT_MAX is the value at which the reference count saturates.
 #define CRYPTO_REFCOUNT_MAX 0xffffffff
@@ -648,6 +814,7 @@ typedef enum {
   OPENSSL_THREAD_LOCAL_ERR = 0,
   OPENSSL_THREAD_LOCAL_RAND,
   OPENSSL_THREAD_LOCAL_FIPS_COUNTERS,
+  OPENSSL_THREAD_LOCAL_FIPS_SERVICE_INDICATOR_STATE,
   OPENSSL_THREAD_LOCAL_TEST,
   NUM_OPENSSL_THREAD_LOCALS,
 } thread_local_data_t;
@@ -683,22 +850,25 @@ OPENSSL_EXPORT int CRYPTO_set_thread_local(
 
 typedef struct crypto_ex_data_func_st CRYPTO_EX_DATA_FUNCS;
 
-DECLARE_STACK_OF(CRYPTO_EX_DATA_FUNCS)
-
 // CRYPTO_EX_DATA_CLASS tracks the ex_indices registered for a type which
 // supports ex_data. It should defined as a static global within the module
 // which defines that type.
 typedef struct {
   struct CRYPTO_STATIC_MUTEX lock;
-  STACK_OF(CRYPTO_EX_DATA_FUNCS) *meth;
+  // funcs is a linked list of |CRYPTO_EX_DATA_FUNCS| structures. It may be
+  // traversed without serialization only up to |num_funcs|. last points to the
+  // final entry of |funcs|, or NULL if empty.
+  CRYPTO_EX_DATA_FUNCS *funcs, *last;
+  // num_funcs is the number of entries in |funcs|.
+  CRYPTO_atomic_u32 num_funcs;
   // num_reserved is one if the ex_data index zero is reserved for legacy
   // |TYPE_get_app_data| functions.
   uint8_t num_reserved;
 } CRYPTO_EX_DATA_CLASS;
 
-#define CRYPTO_EX_DATA_CLASS_INIT {CRYPTO_STATIC_MUTEX_INIT, NULL, 0}
+#define CRYPTO_EX_DATA_CLASS_INIT {CRYPTO_STATIC_MUTEX_INIT, NULL, NULL, 0, 0}
 #define CRYPTO_EX_DATA_CLASS_INIT_WITH_APP_DATA \
-    {CRYPTO_STATIC_MUTEX_INIT, NULL, 1}
+    {CRYPTO_STATIC_MUTEX_INIT, NULL, NULL, 0, 1}
 
 // CRYPTO_get_ex_new_index allocates a new index for |ex_data_class| and writes
 // it to |*out_index|. Each class of object should provide a wrapper function
@@ -877,6 +1047,16 @@ static inline uint32_t CRYPTO_load_u32_be(const void *in) {
 
 static inline void CRYPTO_store_u32_be(void *out, uint32_t v) {
   v = CRYPTO_bswap4(v);
+  OPENSSL_memcpy(out, &v, sizeof(v));
+}
+
+static inline uint64_t CRYPTO_load_u64_le(const void *in) {
+  uint64_t v;
+  OPENSSL_memcpy(&v, in, sizeof(v));
+  return v;
+}
+
+static inline void CRYPTO_store_u64_le(void *out, uint64_t v) {
   OPENSSL_memcpy(out, &v, sizeof(v));
 }
 
@@ -1236,16 +1416,6 @@ OPENSSL_INLINE int CRYPTO_is_ARMv8_PMULL_capable(void) {
 
 #endif  // OPENSSL_ARM || OPENSSL_AARCH64
 
-#if defined(OPENSSL_PPC64LE)
-
-// CRYPTO_is_PPC64LE_vcrypto_capable returns true iff the current CPU supports
-// the Vector.AES category of instructions.
-int CRYPTO_is_PPC64LE_vcrypto_capable(void);
-
-extern unsigned long OPENSSL_ppc64le_hwcap2;
-
-#endif  // OPENSSL_PPC64LE
-
 #if defined(BORINGSSL_DISPATCH_TEST)
 // Runtime CPU dispatch testing support
 
@@ -1260,6 +1430,13 @@ extern unsigned long OPENSSL_ppc64le_hwcap2;
 extern uint8_t BORINGSSL_function_hit[7];
 #endif  // BORINGSSL_DISPATCH_TEST
 
+// OPENSSL_vasprintf_internal is just like |vasprintf(3)|. If |system_malloc| is
+// 0, memory will be allocated with |OPENSSL_malloc| and must be freed with
+// |OPENSSL_free|. Otherwise the system |malloc| function is used and the memory
+// must be freed with the system |free| function.
+OPENSSL_EXPORT int OPENSSL_vasprintf_internal(char **str, const char *format,
+                                              va_list args, int system_malloc)
+    OPENSSL_PRINTF_FORMAT_FUNC(2, 0);
 
 #if defined(__cplusplus)
 }  // extern C
