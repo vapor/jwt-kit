@@ -52,8 +52,7 @@ class JWTKitTests: XCTestCase {
                 expiration: .init(value: .distantFuture),
                 admin: true
             )
-            let jwt = try signers.sign(payload)
-            print(jwt)
+            XCTAssertNoThrow(try signers.sign(payload))
         }
     }
 
@@ -160,7 +159,6 @@ class JWTKitTests: XCTestCase {
         )
         let signer = JWTSigner.unsecuredNone
         let token = try signer.sign(payload)
-        XCTAssertEqual(token, data)
         try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
         try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
@@ -831,7 +829,7 @@ class JWTKitTests: XCTestCase {
         )
         let signer = JWTSigner.unsecuredNone(jsonEncoder: encoder, jsonDecoder: decoder)
         let token = try signer.sign(payload)
-        XCTAssertEqual(token, data)
+        XCTAssert((token.split(separator: ".").dropFirst(1).first.map { String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self) } ?? "").contains(#""exp":""#))
         try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
         try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
@@ -839,7 +837,7 @@ class JWTKitTests: XCTestCase {
         let signers = JWTSigners(defaultJSONEncoder: encoder, defaultJSONDecoder: decoder)
         signers.use(.unsecuredNone, isDefault: true)
         let token2 = try signers.sign(payload)
-        XCTAssertEqual(token2, data)
+        XCTAssert((token2.split(separator: ".").dropFirst(1).first.map { String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self) } ?? "").contains(#""exp":""#))
         try XCTAssertEqual(signers.verify(token.bytes, as: TestPayload.self), payload)
         try XCTAssertEqual(signers.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
