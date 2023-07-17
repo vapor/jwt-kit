@@ -59,7 +59,23 @@ public class X5CVerifier {
         _ token: String,
         as payload: Payload.Type = Payload.self
     ) throws -> Payload {
-        try self.verifyJWS(Array(token.utf8), as: Payload.self)
+        try self.verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
+    }
+    
+    /// Verify a JWS with the `x5c` header parameter against the trusted root
+    /// certificates, overriding the default JSON decoder.
+    ///
+    /// - Parameters:
+    ///   - token: The JWS to verify.
+    ///   - payload: The type to decode from the token payload.
+    ///   - jsonDecoder: The JSON decoder to use for decoding the token.
+    /// - Returns: The decoded payload, if verified.
+    public func verifyJWS<Payload: JWTPayload>(
+        _ token: String,
+        as payload: Payload.Type = Payload.self,
+        jsonDecoder: JSONDecoder
+    ) throws -> Payload {
+        try self.verifyJWS(Array(token.utf8), as: Payload.self, jsonDecoder: jsonDecoder)
     }
 
     /// Verify a JWS with `x5c` claims against the
@@ -75,8 +91,26 @@ public class X5CVerifier {
     ) throws -> Payload
         where Message: DataProtocol, Payload: JWTPayload
     {
+        try self.verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
+    }
+    
+    /// Verify a JWS with `x5c` claims against the
+    /// trusted root certificates, overriding the default JSON decoder.
+    ///
+    /// - Parameters:
+    ///   - token: The JWS to verify.
+    ///   - payload: The type to decode from the token payload.
+    ///   - jsonDecoder: The JSON decoder to use for dcoding the token.
+    /// - Returns: The decoded payload, if verified.
+    public func verifyJWS<Message, Payload>(
+        _ token: Message,
+        as payload: Payload.Type = Payload.self,
+        jsonDecoder: JSONDecoder
+    ) throws -> Payload
+        where Message: DataProtocol, Payload: JWTPayload
+    {
         let parser = try JWTParser(token: token)
-        let header = try parser.header()
+        let header = try parser.header(jsonDecoder: jsonDecoder)
 
         guard let headerAlg = header.alg,
               headerAlg == "ES256" else {

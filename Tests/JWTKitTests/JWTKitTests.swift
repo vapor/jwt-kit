@@ -135,9 +135,9 @@ class JWTKitTests: XCTestCase {
         let jwt = try JWTSigner.hs256(key: "secret".bytes)
             .sign(ExpirationPayload(exp: exp))
         let parser = try JWTParser(token: jwt.bytes)
-        try XCTAssertEqual(parser.header().typ, "JWT")
-        try XCTAssertEqual(parser.header().alg, "HS256")
-        try XCTAssertEqual(parser.payload(as: ExpirationPayload.self).exp, exp)
+        try XCTAssertEqual(parser.header(jsonDecoder: .defaultForJWT).typ, "JWT")
+        try XCTAssertEqual(parser.header(jsonDecoder: .defaultForJWT).alg, "HS256")
+        try XCTAssertEqual(parser.payload(as: ExpirationPayload.self, jsonDecoder: .defaultForJWT).exp, exp)
         try parser.verify(using: .hs256(key: "secret".bytes))
     }
 
@@ -160,6 +160,7 @@ class JWTKitTests: XCTestCase {
         )
         let signer = JWTSigner.unsecuredNone
         let token = try signer.sign(payload)
+        XCTAssertEqual(token, data)
         try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
         try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
@@ -815,7 +816,34 @@ class JWTKitTests: XCTestCase {
         let foo = try signers.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
-
+    
+    func testCustomJSONCoders() throws {
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+        
+        let data =
+            "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOiIyMDMzLTA1LTE4VDAzOjMzOjIwWiIsImFkbWluIjpmYWxzZSwibmFtZSI6IkZvbyIsInN1YiI6InZhcG9yIn0."
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let signer = JWTSigner.unsecuredNone(jsonEncoder: encoder, jsonDecoder: decoder)
+        let token = try signer.sign(payload)
+        XCTAssertEqual(token, data)
+        try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
+        try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
+        XCTAssertTrue(token.hasSuffix("."))
+        
+        let signers = JWTSigners(defaultJSONEncoder: encoder, defaultJSONDecoder: decoder)
+        signers.use(.unsecuredNone, isDefault: true)
+        let token2 = try signers.sign(payload)
+        XCTAssertEqual(token2, data)
+        try XCTAssertEqual(signers.verify(token.bytes, as: TestPayload.self), payload)
+        try XCTAssertEqual(signers.verify(data.bytes, as: TestPayload.self), payload)
+        XCTAssertTrue(token.hasSuffix("."))
+    }
 }
 
 struct AudiencePayload: Codable {

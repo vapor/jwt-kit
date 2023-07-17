@@ -3,9 +3,20 @@ import Foundation
 /// A JWT signer.
 public final class JWTSigner {
     public let algorithm: JWTAlgorithm
+    
+    internal var jsonEncoder: JSONEncoder?
+    internal var jsonDecoder: JSONDecoder?
 
     public init(algorithm: JWTAlgorithm) {
         self.algorithm = algorithm
+        self.jsonEncoder = nil
+        self.jsonDecoder = nil
+    }
+    
+    public init(algorithm: JWTAlgorithm, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) {
+        self.algorithm = algorithm
+        self.jsonEncoder = jsonEncoder
+        self.jsonDecoder = jsonDecoder
     }
 
     public func sign<Payload>(
@@ -16,7 +27,7 @@ public final class JWTSigner {
     ) throws -> String
         where Payload: JWTPayload
     {
-        try JWTSerializer().sign(payload, using: self, typ: typ, kid: kid, cty: cty)
+        try JWTSerializer().sign(payload, using: self, typ: typ, kid: kid, cty: cty, jsonEncoder: self.jsonEncoder ?? .defaultForJWT)
     }
 
     public func unverified<Payload>(
@@ -34,7 +45,7 @@ public final class JWTSigner {
     ) throws -> Payload
         where Message: DataProtocol, Payload: JWTPayload
     {
-        try JWTParser(token: token).payload(as: Payload.self)
+        try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
     }
 
     public func verify<Payload>(
@@ -60,7 +71,7 @@ public final class JWTSigner {
         where Payload: JWTPayload
     {
         try parser.verify(using: self)
-        let payload = try parser.payload(as: Payload.self)
+        let payload = try parser.payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
         try payload.verify(using: self)
         return payload
     }

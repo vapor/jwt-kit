@@ -6,13 +6,11 @@ struct JWTSerializer {
         using signer: JWTSigner,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
-        cty: String? = nil
+        cty: String? = nil,
+        jsonEncoder: JSONEncoder
     ) throws -> String
         where Payload: JWTPayload
     {
-        let jsonEncoder = JSONEncoder()
-        jsonEncoder.dateEncodingStrategy = .secondsSince1970
-
         // encode header, copying header struct to mutate alg
         var header = JWTHeader()
         header.kid = kid
