@@ -72,6 +72,8 @@ For those algorithms which specify a curve type (`crv`), the following curves, a
 
 This package includes a vendored internal-only copy of [BoringSSL](https://boringssl.googlesource.com), used for certain cryptographic operations not currently available via [SwiftCrypto](https://github.com/apple/swift-crypto).
 
+> Note: The `P-521` elliptic curve used with the ES512 signing algorithm is often assumed to be a typo, but confusingly, it is not. 
+
 ## Vapor
 
 The [vapor/jwt](https://github.com/vapor/jwt) package provides first-class integration with Vapor and is recommended for all Vapor projects which want to use JWTKit.
@@ -177,16 +179,13 @@ import JWTKit
 
 // Download the JWKS.
 // This could be done asynchronously if needed.
-let jwksData = try Data(
+let jwksData = try String(
     contentsOf: URL(string: "https://appleid.apple.com/auth/keys")!
 )
 
-// Decode the downloaded JSON.
-let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
-
 // Create signers and add JWKS.
 let signers = JWTSigners()
-try signers.use(jwks: jwks)
+try signers.use(jwksJSON: jwksData)
 ```
 
 You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.  
@@ -208,7 +207,7 @@ signers.use(.hs256(key: "secret"))
 
 RSA is the most commonly used JWT signing algorithm. It supports distinct public and private keys. This means that a public key can be distributed for verifying JWTs are authentic while the private key that generates them is kept secret.
 
-To create an RSA signer, first initialize an `RSAKey`. This can be done by passing in the components.
+To create an RSA signer, first initialize an `RSAKey`. This can be done by passing in the components:
 
 ```swift
 // Initialize an RSA key with components.
@@ -248,7 +247,7 @@ Use `.certificate` for loading X.509 certificates. These start with:
 -----BEGIN CERTIFICATE-----
 ```
 
-Once you have the RSAKey, you can use it to create an RSA signer.
+Once you have the RSAKey, you can use it to create an RSA signer:
 
 - `rs256`: RSA with SHA-256
 - `rs384`: RSA with SHA-384
@@ -287,11 +286,11 @@ Use `.private` for loading private ECDSA pem keys. These start with:
 -----BEGIN PRIVATE KEY-----
 ```
 
-Once you have the ECDSAKey, you can use it to create an ECDSA signer.
+Once you have the ECDSAKey, you can use it to create an ECDSA signer:
 
-- `es256`: ECDSA with SHA-256
-- `es384`: ECDSA with SHA-384
-- `es512`: ECDSA with SHA-512
+- `es256`: ECDSA with SHA-256 and P-256
+- `es384`: ECDSA with SHA-384 and P-384
+- `es512`: ECDSA with SHA-512 and P-521
 
 ```swift
 // Add ECDSA with SHA-256 signer.
@@ -320,8 +319,8 @@ Additional helpers are provided for common types of claims not defined by the RF
 - `GoogleHostedDomainClaim`: For use with the `GoogleIdentityToken` vendor token type.
 - `JWTMultiValueClaim`: A protocol for claims, such as `AudienceClaim` which can optionally be encoded as an array with multiple values.
 - `JWTUnixEpochClaim`: A protocol for claims, such as `ExpirationClaim` and `IssuedAtClaim`, whose value is a count of seconds since the UNIX epoch (midnight of January 1, 1970).
-- `LocaleClaim`: A claim whose value is a [BCP 47](https://tools.ietf.org/html/bcp47) language tag. Also used by `GoogleIdentityToken`.
+- `LocaleClaim`: A claim whose value is a [BCP 47](https://www.rfc-editor.org/info/bcp47) language tag. Also used by `GoogleIdentityToken`.
 
 ---
 
-_This package was originally authored by the wonderful @siemensikkema._
+_This package was originally authored by the wonderful [@siemensikkema](https://github.com/siemensikkema)._
