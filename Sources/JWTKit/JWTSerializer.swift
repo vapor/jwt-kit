@@ -7,7 +7,7 @@ struct JWTSerializer {
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
-        jsonEncoder: JSONEncoder
+        jsonEncoder: any JWTJSONEncoder
     ) throws -> String
         where Payload: JWTPayload
     {

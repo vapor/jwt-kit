@@ -73,7 +73,7 @@ public class X5CVerifier {
     public func verifyJWS<Payload: JWTPayload>(
         _ token: String,
         as payload: Payload.Type = Payload.self,
-        jsonDecoder: JSONDecoder
+        jsonDecoder: any JWTJSONDecoder
     ) throws -> Payload {
         try self.verifyJWS(Array(token.utf8), as: Payload.self, jsonDecoder: jsonDecoder)
     }
@@ -105,7 +105,7 @@ public class X5CVerifier {
     public func verifyJWS<Message, Payload>(
         _ token: Message,
         as payload: Payload.Type = Payload.self,
-        jsonDecoder: JSONDecoder
+        jsonDecoder: any JWTJSONDecoder
     ) throws -> Payload
         where Message: DataProtocol, Payload: JWTPayload
     {

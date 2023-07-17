@@ -5,7 +5,7 @@ import class Foundation.JSONDecoder
 extension JWTSigner {
     public static func es256(key: ECDSAKey) -> JWTSigner { .es256(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    public static func es256(key: ECDSAKey, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) -> JWTSigner {
+    public static func es256(key: ECDSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: ECDSASigner(
             key: key,
             algorithm: CJWTKitBoringSSL_EVP_sha256(),
@@ -15,7 +15,7 @@ extension JWTSigner {
 
     public static func es384(key: ECDSAKey) -> JWTSigner { .es384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    public static func es384(key: ECDSAKey, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) -> JWTSigner {
+    public static func es384(key: ECDSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: ECDSASigner(
             key: key,
             algorithm: CJWTKitBoringSSL_EVP_sha384(),
@@ -25,7 +25,7 @@ extension JWTSigner {
 
     public static func es512(key: ECDSAKey) -> JWTSigner { .es512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    public static func es512(key: ECDSAKey, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) -> JWTSigner {
+    public static func es512(key: ECDSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: ECDSASigner(
             key: key,
             algorithm: CJWTKitBoringSSL_EVP_sha512(),

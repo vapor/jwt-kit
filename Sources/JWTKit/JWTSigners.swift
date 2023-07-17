@@ -14,7 +14,7 @@ public final class JWTSigners {
     /// The default JSON encoder. Used as:
     ///
     /// - The default for any ``JWTSigner`` which does not specify its own encoder.
-    public let defaultJSONEncoder: JSONEncoder
+    public let defaultJSONEncoder: any JWTJSONEncoder
     
     /// The default JSON decoder. Used for:
     ///
@@ -22,7 +22,7 @@ public final class JWTSigners {
     /// - Decoding unverified payloads without a signer (see ``JWTSigners/unverified(_:as:)-3qzpk``).
     /// - Decoding token headers to determine a key type (see ``JWTSigners/verify(_:as:)-6tee7``).
     /// - The default for any``JWTSigner`` which does not specify its own encoder.
-    public let defaultJSONDecoder: JSONDecoder
+    public let defaultJSONDecoder: any JWTJSONDecoder
 
     /// Create a new ``JWTSigners``.
     public init() {
@@ -32,7 +32,7 @@ public final class JWTSigners {
     }
     
     /// Create a new ``JWTSigners`` with specific JSON coders.
-    public init(defaultJSONEncoder: JSONEncoder, defaultJSONDecoder: JSONDecoder) {
+    public init(defaultJSONEncoder: any JWTJSONEncoder, defaultJSONDecoder: any JWTJSONDecoder) {
         self.storage = [:]
         self.defaultJSONEncoder = defaultJSONEncoder
         self.defaultJSONDecoder = defaultJSONDecoder
@@ -170,10 +170,10 @@ public final class JWTSigners {
 
 private struct JWKSigner {
     let jwk: JWK
-    let jsonEncoder: JSONEncoder
-    let jsonDecoder: JSONDecoder
+    let jsonEncoder: any JWTJSONEncoder
+    let jsonDecoder: any JWTJSONDecoder
 
-    init(jwk: JWK, jsonEncoder: JSONEncoder, jsonDecoder: JSONDecoder) {
+    init(jwk: JWK, jsonEncoder: any JWTJSONEncoder, jsonDecoder: any JWTJSONDecoder) {
         self.jwk = jwk
         self.jsonEncoder = jsonEncoder
         self.jsonDecoder = jsonDecoder
@@ -278,21 +278,5 @@ private struct JWKSigner {
                 return nil
             }
         }
-    }
-}
-
-extension JSONEncoder {
-    static var defaultForJWT: JSONEncoder {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .secondsSince1970
-        return encoder
-    }
-}
-
-extension JSONDecoder {
-    static var defaultForJWT: JSONDecoder {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .secondsSince1970
-        return decoder
     }
 }

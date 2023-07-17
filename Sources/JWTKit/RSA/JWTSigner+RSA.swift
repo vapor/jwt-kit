@@ -1,11 +1,9 @@
 @_implementationOnly import CJWTKitBoringSSL
-import class Foundation.JSONEncoder
-import class Foundation.JSONDecoder
 
 extension JWTSigner {
     public static func rs256(key: RSAKey) -> JWTSigner { .rs256(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    public static func rs256(key: RSAKey, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) -> JWTSigner {
+    public static func rs256(key: RSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: RSASigner(
             key: key,
             algorithm: CJWTKitBoringSSL_EVP_sha256(),
@@ -15,7 +13,7 @@ extension JWTSigner {
 
     public static func rs384(key: RSAKey) -> JWTSigner { .rs384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    public static func rs384(key: RSAKey, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) -> JWTSigner {
+    public static func rs384(key: RSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: RSASigner(
             key: key,
             algorithm: CJWTKitBoringSSL_EVP_sha384(),
@@ -25,7 +23,7 @@ extension JWTSigner {
 
     public static func rs512(key: RSAKey) -> JWTSigner { .rs512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    public static func rs512(key: RSAKey, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) -> JWTSigner {
+    public static func rs512(key: RSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: RSASigner(
             key: key,
             algorithm: CJWTKitBoringSSL_EVP_sha512(),

@@ -18,12 +18,12 @@ struct JWTParser {
         self.encodedSignature = tokenParts[2]
     }
 
-    func header(jsonDecoder: JSONDecoder) throws -> JWTHeader {
+    func header(jsonDecoder: any JWTJSONDecoder) throws -> JWTHeader {
         try jsonDecoder
             .decode(JWTHeader.self, from: .init(self.encodedHeader.base64URLDecodedBytes()))
     }
 
-    func payload<Payload>(as payload: Payload.Type, jsonDecoder: JSONDecoder) throws -> Payload
+    func payload<Payload>(as payload: Payload.Type, jsonDecoder: any JWTJSONDecoder) throws -> Payload
         where Payload: JWTPayload
     {
         try jsonDecoder

@@ -4,8 +4,8 @@ import Foundation
 public final class JWTSigner {
     public let algorithm: JWTAlgorithm
     
-    internal var jsonEncoder: JSONEncoder?
-    internal var jsonDecoder: JSONDecoder?
+    internal var jsonEncoder: (any JWTJSONEncoder)?
+    internal var jsonDecoder: (any JWTJSONDecoder)?
 
     public init(algorithm: JWTAlgorithm) {
         self.algorithm = algorithm
@@ -13,7 +13,7 @@ public final class JWTSigner {
         self.jsonDecoder = nil
     }
     
-    public init(algorithm: JWTAlgorithm, jsonEncoder: JSONEncoder?, jsonDecoder: JSONDecoder?) {
+    public init(algorithm: JWTAlgorithm, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) {
         self.algorithm = algorithm
         self.jsonEncoder = jsonEncoder
         self.jsonDecoder = jsonDecoder
