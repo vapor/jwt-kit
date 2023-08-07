@@ -3,8 +3,8 @@ import Crypto
 import _CryptoExtras
 
 internal struct RSASigner: JWTAlgorithm, CryptoSigner {
-    var algorithm: DigestAlgorithm
     let key: RSAKey
+    var algorithm: DigestAlgorithm
     let name: String
 
     func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
