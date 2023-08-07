@@ -1,5 +1,5 @@
 internal enum RSAError: Error {
     case privateKeyRequired
-    case signFailure
+    case signFailure(_ error: Error)
     case keyInitializationFailure
 }

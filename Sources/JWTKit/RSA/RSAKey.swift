@@ -1,7 +1,8 @@
-@_implementationOnly import CJWTKitBoringSSL
+import _CryptoExtras
 import Foundation
+import X509
 
-public final class RSAKey: OpenSSLKey {
+public final class RSAKey {
     /// Creates RSAKey from public key pem file.
     ///
     /// Public key pem files look like:
@@ -16,8 +17,8 @@ public final class RSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `public`(pem string: String) throws -> RSAKey {
-        try .public(pem: [UInt8](string.utf8))
+    public static func `public`(pem string: String) throws -> _RSA.Signing.PublicKey {
+        try _RSA.Signing.PublicKey(pemRepresentation: string)
     }
 
     /// Creates RSAKey from public key pem file.
@@ -34,18 +35,14 @@ public final class RSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `public`<Data>(pem data: Data) throws -> RSAKey
+    public static func `public`<Data>(pem data: Data) throws -> _RSA.Signing.PublicKey
         where Data: DataProtocol
     {
-        let pkey = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_PUBKEY(bio, nil, nil, nil)
-        }
-        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
-
-        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
+        guard let string = String(bytes: data, encoding: .utf8) else {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
-        return self.init(c, .public)
+
+        return try _RSA.Signing.PublicKey(pemRepresentation: string)
     }
 
     /// Creates RSAKey from public certificate pem file.
@@ -62,8 +59,8 @@ public final class RSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func certificate(pem string: String) throws -> RSAKey {
-        try self.certificate(pem: [UInt8](string.utf8))
+    public static func certificate(pem string: String) throws -> X509.Certificate {
+        try X509.Certificate(pemEncoded: string)
     }
 
     /// Creates RSAKey from public certificate pem file.
@@ -80,20 +77,14 @@ public final class RSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func certificate<Data>(pem data: Data) throws -> RSAKey
+    public static func certificate<Data>(pem data: Data) throws -> X509.Certificate
         where Data: DataProtocol
     {
-        let x509 = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
-        }
-        defer { CJWTKitBoringSSL_X509_free(x509) }
-        let pkey = CJWTKitBoringSSL_X509_get_pubkey(x509)
-        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
-
-        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
+        guard let string = String(bytes: data, encoding: .utf8) else {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
-        return self.init(c, .public)
+
+        return try self.certificate(pem: string)
     }
 
     /// Creates RSAKey from private key pem file.
@@ -110,8 +101,8 @@ public final class RSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `private`(pem string: String) throws -> RSAKey {
-        try .private(pem: [UInt8](string.utf8))
+    public static func `private`(pem string: String) throws -> _RSA.Signing.PrivateKey {
+        try _RSA.Signing.PrivateKey(pemRepresentation: string)
     }
 
     /// Creates RSAKey from private key pem file.
@@ -128,18 +119,14 @@ public final class RSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `private`<Data>(pem data: Data) throws -> RSAKey
+    public static func `private`<Data>(pem data: Data) throws -> _RSA.Signing.PrivateKey
         where Data: DataProtocol
     {
-        let pkey = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_PrivateKey(bio, nil, nil, nil)
-        }
-        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
-
-        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
+        guard let string = String(bytes: data, encoding: .utf8) else {
             throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
         }
-        return self.init(c, .private)
+
+        return try self.private(pem: string)
     }
 
     public convenience init?(
@@ -154,36 +141,23 @@ public final class RSAKey: OpenSSLKey {
         let e = decode(exponent)
         let d = privateExponent.flatMap { decode($0) }
 
-        guard let rsa = CJWTKitBoringSSL_RSA_new() else {
-            return nil
-        }
-
-        CJWTKitBoringSSL_RSA_set0_key(
-            rsa,
-            CJWTKitBoringSSL_BN_bin2bn(n, numericCast(n.count), nil),
-            CJWTKitBoringSSL_BN_bin2bn(e, numericCast(e.count), nil),
-            d.flatMap { CJWTKitBoringSSL_BN_bin2bn($0, numericCast($0.count), nil) }
-        )
-        self.init(rsa, d == nil ? .public : .private)
-    }
-
-    enum KeyType {
-        case `public`, `private`
+        // ...
     }
 
     let type: KeyType
-    
-    internal var c: UnsafeMutablePointer<RSA> {
-        return self.cRaw.assumingMemoryBound(to: RSA.self)
-    }
-    internal let cRaw: UnsafeMutableRawPointer//RSA
 
-    init(_ c: UnsafeMutablePointer<RSA>, _ type: KeyType) {
-        self.type = type
-        self.cRaw = UnsafeMutableRawPointer(c)
+    let publicKey: _RSA.Signing.PublicKey?
+    let privateKey: _RSA.Encryption.PrivateKey?
+
+    public init(publicKey: _RSA.Signing.PublicKey) {
+        self.type = .public
+        self.publicKey = publicKey
+        self.privateKey = nil
     }
 
-    deinit {
-        CJWTKitBoringSSL_RSA_free(self.c)
+    public init(privateKey: _RSA.Encryption.PrivateKey) {
+        self.type = .private
+        self.publicKey = nil
+        self.privateKey = privateKey
     }
 }
