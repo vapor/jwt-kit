@@ -15,7 +15,7 @@ internal struct RSASigner: JWTAlgorithm, CryptoSigner {
         }
 
         do {
-            let privateKey = try _RSA.Signing.PrivateKey(pemRepresentation: "")
+            let privateKey = self.key.privateKey!
             let digest = try self.digest(plaintext)
             let signature = try privateKey.signature(for: digest)
             return [UInt8](signature.rawRepresentation)
@@ -32,9 +32,9 @@ internal struct RSASigner: JWTAlgorithm, CryptoSigner {
         where Signature: DataProtocol, Plaintext: DataProtocol
     {
         let digest = try self.digest(plaintext)
-        let signature = _RSA.Signing.RSASignature.init(rawRepresentation: signature.copyBytes())
+        let signature = _RSA.Signing.RSASignature(rawRepresentation: signature)
 
-        let publicKey = try _RSA.Signing.PublicKey.init(pemRepresentation: "")
+        let publicKey = self.key.privateKey?.publicKey ?? self.key.publicKey!
         return publicKey.isValidSignature(signature, for: digest)
     }
 }

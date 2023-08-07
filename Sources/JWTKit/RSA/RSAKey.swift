@@ -38,10 +38,7 @@ public final class RSAKey {
     public static func `public`<Data>(pem data: Data) throws -> _RSA.Signing.PublicKey
         where Data: DataProtocol
     {
-        guard let string = String(bytes: data, encoding: .utf8) else {
-            throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
-        }
-
+        let string = String(decoding: data, as: UTF8.self)
         return try _RSA.Signing.PublicKey(pemRepresentation: string)
     }
 
@@ -122,9 +119,7 @@ public final class RSAKey {
     public static func `private`<Data>(pem data: Data) throws -> _RSA.Signing.PrivateKey
         where Data: DataProtocol
     {
-        guard let string = String(bytes: data, encoding: .utf8) else {
-            throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
-        }
+        let string = String(decoding: data, as: UTF8.self) 
 
         return try self.private(pem: string)
     }
@@ -147,7 +142,7 @@ public final class RSAKey {
     let type: KeyType
 
     let publicKey: _RSA.Signing.PublicKey?
-    let privateKey: _RSA.Encryption.PrivateKey?
+    let privateKey: _RSA.Signing.PrivateKey?
 
     public init(publicKey: _RSA.Signing.PublicKey) {
         self.type = .public
@@ -155,7 +150,7 @@ public final class RSAKey {
         self.privateKey = nil
     }
 
-    public init(privateKey: _RSA.Encryption.PrivateKey) {
+    public init(privateKey: _RSA.Signing.PrivateKey) {
         self.type = .private
         self.publicKey = nil
         self.privateKey = privateKey
