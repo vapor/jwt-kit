@@ -16,13 +16,16 @@ let package = Package(
         MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "2.0.0")
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "2.6.0"),
+        .package(url: "https://github.com/apple/swift-certificates.git", exact: "0.6.0")
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
         .target(name: "JWTKit", dependencies: [
             .target(name: "CJWTKitBoringSSL"),
             .product(name: "Crypto", package: "swift-crypto"),
+            .product(name: "_CryptoExtras", package: "swift-crypto"),
+            .product(name: "X509", package: "swift-certificates"),
         ]),
         .testTarget(name: "JWTKitTests", dependencies: [
             .target(name: "JWTKit"),
