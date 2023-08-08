@@ -156,7 +156,7 @@ public final class RSAKey {
 }
 
 extension RSAKey {
-    func calculateDer<Data>(modulus: Data, exponent: Data) -> [UInt8] 
+    func calculateDER<Data>(modulus: Data, exponent: Data) -> [UInt8] 
         where Data: DataProtocol
     {
         var modulus = BigInt(_uncheckedWords: [UInt8](modulus).map { UInt($0) })
@@ -193,6 +193,14 @@ extension RSAKey {
         encodeLength(exponentLengthOctets, into: &buffer)
         
         return buffer
+    }
+    
+    func calculatePrivateDER(modulus: Data, exponent: Data, privateExponent: Data) -> [UInt8] {
+        // Use the CRT algorithm to calculate the private key
+        
+        // Calculate the primes
+        let p = PrimeGenerator.generatePrimeNumber(bitLength: Int(modulus.count * 8 / 2))
+        let q = PrimeGenerator.generatePrimeNumber(bitLength: Int(modulus.count * 8 / 2))
     }
 }
 
