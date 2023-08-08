@@ -1,6 +1,7 @@
 import _CryptoExtras
 import Foundation
 import X509
+import SwiftASN1
 
 public final class RSAKey {
     /// Creates RSAKey from public key pem file.
@@ -195,12 +196,41 @@ extension RSAKey {
         return buffer
     }
     
-    func calculatePrivateDER(modulus: Data, exponent: Data, privateExponent: Data) -> [UInt8] {
+    func calculatePrivateDER(modulus: String, exponent: String, privateExponent: String) -> DERSerializable? {
         // Use the CRT algorithm to calculate the private key
-        
+        guard 
+            let modulus = BigInt(modulus),
+            let exponent = BigInt(exponent),
+            let privateExponent = BigInt(privateExponent) 
+        else {
+            return nil
+        }
+
         // Calculate the primes
-        let p = PrimeGenerator.generatePrimeNumber(bitLength: Int(modulus.count * 8 / 2))
-        let q = PrimeGenerator.generatePrimeNumber(bitLength: Int(modulus.count * 8 / 2))
+        let p = PrimeGenerator.generatePrimeNumber(bitLength: modulus.bitWidth)
+        let q = PrimeGenerator.generatePrimeNumber(bitLength: exponent.bitWidth)
+
+        // https://en.wikipedia.org/wiki/RSA_(cryptosystem)#Using_the_Chinese_remainder_algorithm
+
+        let dp = privateExponent % (p - 1)
+        let dq = privateExponent % (q - 1)
+
+        guard let qInv = q.modularInverse(p) else {
+            return nil
+        }
+
+        let key = RSAPrivateKeyASN1(
+            modulus: ArraySlice(modulus.words.map { UInt8($0) }),
+            publicExponent: ArraySlice(exponent.words.map { UInt8($0) }),
+            privateExponent: ArraySlice(privateExponent.words.map { UInt8($0) }),
+            prime1: ArraySlice(p.words.map { UInt8($0) }),
+            prime2: ArraySlice(q.words.map { UInt8($0) }),
+            exponent1: ArraySlice(dp.words.map { UInt8($0) }),
+            exponent2: ArraySlice(dq.words.map { UInt8($0) }),
+            coefficient: ArraySlice(qInv.words.map { UInt8($0) })
+        )
+
+        return key
     }
 }
 
@@ -212,5 +242,69 @@ extension RSAKey {
             buffer.append(UInt8(length >> 8 | 0x80))
             buffer.append(contentsOf: [UInt8(length & 0xff)])
         }
+    }
+}
+
+extension RSAKey {
+    struct RSAPrivateKeyASN1: DERSerializable {
+        let version: UInt8 = 0
+        let modulus: ArraySlice<UInt8>
+        let publicExponent: ArraySlice<UInt8>
+        let privateExponent: ArraySlice<UInt8>
+        let prime1: ArraySlice<UInt8>
+        let prime2: ArraySlice<UInt8>
+        let exponent1: ArraySlice<UInt8>
+        let exponent2: ArraySlice<UInt8>
+        let coefficient: ArraySlice<UInt8>
+
+        func serialize(into coder: inout DER.Serializer) throws {}
+        
+        func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
+            try coder.appendConstructedNode(identifier: identifier) { coder in
+                try coder.serialize(self.version)
+                try coder.serialize(self.modulus)
+                try coder.serialize(self.publicExponent)
+                try coder.serialize(self.privateExponent)
+                try coder.serialize(self.prime1)
+                try coder.serialize(self.prime2)
+                try coder.serialize(self.exponent1)
+                try coder.serialize(self.exponent2)
+                try coder.serialize(self.coefficient)
+            }
+        }
+    }
+}
+
+extension BigInt {
+    /// The modular multiplicative inverse of a number `a` modulo `m` is a number `b` such that:
+    /// a b ≡ 1 (mod m)
+    /// 
+    /// Or in other words, such that
+    /// Exists k ∈ ℤ : ab = 1 + km
+    func modularInverse(_ m: BigInt) -> BigInt? {
+        let (gcd, x, _) = extendedEuclideanAlgorithm(self, m)
+
+        guard gcd == 1 else {
+            return nil
+        }
+
+        return (x % m + m) % m
+    }
+
+    /// The extended Euclidean algorithm is an extension to the Euclidean algorithm,
+    /// and computes, in addition to the greatest common divisor of integers a and b,
+    /// also the coefficients of Bézout's identity, which are integers x and y such that:
+    /// ax + by = gcd(a, b)
+    private func extendedEuclideanAlgorithm(_ a: BigInt, _ b: BigInt) -> (BigInt, BigInt, BigInt) {
+        if a == 0 {
+            return (b, 0, 1)
+        }
+
+        let (gcd, x1, y1) = extendedEuclideanAlgorithm(b % a, a)
+
+        let x = y1 - (b / a) * x1
+        let y = x1
+
+        return (gcd, x, y)
     }
 }
