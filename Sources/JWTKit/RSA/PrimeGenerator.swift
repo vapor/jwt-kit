@@ -1,71 +1,66 @@
 import Foundation
 
 struct PrimeGenerator {
-    public static func generatePrimeNumber(bitLength: Int) -> BigInt {
-        var random: BigInt
+    /// The following algorithm recovers the prime factors of a modulus, given the public and private exponents. 
+    /// The algorithm is based on Fact 1 in [Boneh 1999].
+    public static func calculatePrimeFactors(n: BigInt, e: BigInt, d: BigInt) throws -> (p: BigInt, q: BigInt) {
+        let k = (d * e) - 1
+
+        guard k % 2 == 0 else {
+            throw RSAError.keyInitializationFailure
+        }
+
+        var r = k
+        var t = 0
+
         repeat {
-            random = BigInt.randomInteger(withExactWidth: bitLength)
-        } while !millerRabinTest(on: random, iterations: 40)
-        return random
-    }
+            r = r / 2
+            t += 1
+        } while r % 2 == 0
 
-    public static func millerRabinTest(on number: BigInt, iterations: Int) -> Bool {
-        if number == 2 || number == 3 {
-            return true
-        }
-        guard number % 2 == 1 else {
-            return false
-        }
+        var y: BigInt = 0
+        var i = 1
 
-        var d = number - 1
-        var s = 0
-        
-        while d % 2 == 0 {
-            d /= 2
-            s += 1
-        }
+        // If the prime factors are not revealed after 100 iterations, 
+        // then the probability is overwhelming that the modulus is not the product of two prime factors, 
+        // or that the public and private exponents are not consistent with each other.
+        while i <= 100 {
+            let g = BigInt.randomInteger(lessThan: n - 1)
+            y = g.power(r, modulus: n)
 
-        var n = 0
-        while n < iterations {
-            let a = BigInt.randomInteger(lessThan: number - 3) + 2
-            var x = powerMod(a, d, number)
-            if x == 1 || x == number - 1 {
+            guard y != 1 && y != n - 1 else {
                 continue
             }
-            var m = 0
-            while m < s {
-                x = powerMod(x, 2, number)
-                if x == 1 {
-                    return false
-                }
-                if x == number - 1 {
+
+            var j = 1
+            var x: BigInt
+
+            while j <= t - 1 {
+                x  = y.power(2, modulus: n)
+
+                guard x != 1 else {
                     break
                 }
-                m &+= 1
+
+                guard x != n - 1 else {
+                    continue
+                }
+
+                y = x
+                j += 1
             }
-            if x != number - 1 {
-                return false
+
+            x = y.power(2, modulus: n)
+            if x == 1 {
+                let p = (y - 1).gcd(with: n)
+                let q = n / p
+
+                return (p, q)
             }
-            n &+= 1
+            i += 1
         }
 
-        return true
-    }
-
-    private static func powerMod(_ base: BigInt, _ exponent: BigInt, _ modulus: BigInt) -> BigInt {
-        var base = base
-        var exponent = exponent
-        var result = BigInt(1)
-
-        while exponent > 0 {
-            if exponent % 2 == 1 {
-                result = (result * base) % modulus
-            }
-            exponent /= 2
-            base = (base * base) % modulus
-        }
-
-        return result
+        throw RSAError.keyInitializationFailure
     }
 }
 
@@ -100,5 +95,35 @@ extension BigInt {
             count += 1
         }
         return Swift.max(0, bitWidth - count)
+    }
+
+
+    func power(_ exponent: BigInt, modulus: BigInt) -> BigInt {
+        var base = self
+        var exponent = exponent
+        var result = BigInt(1)
+
+        while exponent > 0 {
+            if exponent % 2 == 1 {
+                result = (result * base) % modulus
+            }
+            exponent /= 2
+            base = (base * base) % modulus
+        }
+
+        return result
+    }
+
+    func gcd(with other: BigInt) -> BigInt {
+        var a = self
+        var b = other
+
+        while b != 0 {
+            let t = b
+            b = a % b
+            a = t
+        }
+
+        return a
     }
 }

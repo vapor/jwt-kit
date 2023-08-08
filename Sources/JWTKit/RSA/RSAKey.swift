@@ -196,38 +196,36 @@ extension RSAKey {
         return buffer
     }
     
-    func calculatePrivateDER(modulus: String, exponent: String, privateExponent: String) -> DERSerializable? {
+    func calculatePrivateDER(n: String, e: String, d: String) throws -> DERSerializable? {
         // Use the CRT algorithm to calculate the private key
         guard 
-            let modulus = BigInt(modulus),
-            let exponent = BigInt(exponent),
-            let privateExponent = BigInt(privateExponent) 
+            let n = BigInt(n),
+            let e = BigInt(e),
+            let d = BigInt(d) 
         else {
             return nil
         }
 
-        // Calculate the primes
-        let p = PrimeGenerator.generatePrimeNumber(bitLength: modulus.bitWidth)
-        let q = PrimeGenerator.generatePrimeNumber(bitLength: exponent.bitWidth)
+        let (p, q) = try PrimeGenerator.calculatePrimeFactors(n: n, e: e, d: d)
 
         // https://en.wikipedia.org/wiki/RSA_(cryptosystem)#Using_the_Chinese_remainder_algorithm
 
-        let dp = privateExponent % (p - 1)
-        let dq = privateExponent % (q - 1)
+        let dp = d % (p - 1)
+        let dq = d % (q - 1)
 
         guard let qInv = q.modularInverse(p) else {
             return nil
         }
 
         let key = RSAPrivateKeyASN1(
-            modulus: ArraySlice(modulus.words.map { UInt8($0) }),
-            publicExponent: ArraySlice(exponent.words.map { UInt8($0) }),
-            privateExponent: ArraySlice(privateExponent.words.map { UInt8($0) }),
-            prime1: ArraySlice(p.words.map { UInt8($0) }),
-            prime2: ArraySlice(q.words.map { UInt8($0) }),
-            exponent1: ArraySlice(dp.words.map { UInt8($0) }),
-            exponent2: ArraySlice(dq.words.map { UInt8($0) }),
-            coefficient: ArraySlice(qInv.words.map { UInt8($0) })
+            modulus: n.words.withUnsafeBytes(ArraySlice.init),
+            publicExponent: e.words.withUnsafeBytes(ArraySlice.init),
+            privateExponent: d.words.withUnsafeBytes(ArraySlice.init),
+            prime1: p.words.withUnsafeBytes(ArraySlice.init),
+            prime2: q.words.withUnsafeBytes(ArraySlice.init),
+            exponent1: dp.words.withUnsafeBytes(ArraySlice.init),
+            exponent2: dq.words.withUnsafeBytes(ArraySlice.init),
+            coefficient: qInv.words.withUnsafeBytes(ArraySlice.init)
         )
 
         return key
