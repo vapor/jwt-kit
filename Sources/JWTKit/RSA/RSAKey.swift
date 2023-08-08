@@ -77,9 +77,7 @@ public final class RSAKey {
     public static func certificate<Data>(pem data: Data) throws -> X509.Certificate
         where Data: DataProtocol
     {
-        guard let string = String(bytes: data, encoding: .utf8) else {
-            throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
-        }
+        let string = String(decoding: data, as: UTF8.self)
 
         return try self.certificate(pem: string)
     }
@@ -154,5 +152,57 @@ public final class RSAKey {
         self.type = .private
         self.publicKey = nil
         self.privateKey = privateKey
+    }
+}
+
+extension RSAKey {
+    func calculateDer<Data>(modulus: Data, exponent: Data) -> [UInt8] 
+        where Data: DataProtocol
+    {
+        var modulus = BigInt(_uncheckedWords: [UInt8](modulus).map { UInt($0) })
+        let exponent = BigInt(_uncheckedWords: [UInt8](exponent).map { UInt($0) })
+
+        // Ensure the modulus is positive by adding a leading zero if needed
+        if modulus._isNegative {
+            modulus = BigInt(0) - modulus
+        }
+
+        // Get the length of the modulus and exponent
+        // - Adding 7 ensures that you round up to the nearest multiple of 8 bits
+        // - Righ-Shifting by 3 (dividing by 8) converts the number of bits to bytes
+        let modulusLengthOctets = (modulus.bitWidth + 7) >> 3
+        let exponentLengthOctets = (exponent.bitWidth + 7) >> 3
+
+        // The value 15 seems to account for the byte lengths of the ASN.1 DER tags, lengths, 
+        // and other components that are added as part of the encoding structure
+        let totalLengthOctets = 15 + modulusLengthOctets + exponentLengthOctets
+
+        // Create a buffer to hold the DER encoded key
+        var buffer = [UInt8](repeating: 0, count: totalLengthOctets)
+
+        // Container type and size
+        buffer[0] = 0x30
+        encodeLength(totalLengthOctets - 2, into: &buffer)
+
+        // Integer type and size for modulus
+        buffer[0] = 0x02
+        encodeLength(modulusLengthOctets, into: &buffer)
+
+        // Exponent
+        buffer[0] = 0x02
+        encodeLength(exponentLengthOctets, into: &buffer)
+        
+        return buffer
+    }
+}
+
+extension RSAKey {
+    private func encodeLength(_ length: Int, into buffer: inout [UInt8]) {
+        if length < 128 {
+            buffer.append(UInt8(length))
+        } else {
+            buffer.append(UInt8(length >> 8 | 0x80))
+            buffer.append(contentsOf: [UInt8(length & 0xff)])
+        }
     }
 }
