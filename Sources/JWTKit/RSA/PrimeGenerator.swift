@@ -25,13 +25,15 @@ struct PrimeGenerator {
             s += 1
         }
 
-        for _ in 0..<iterations {
+        var n = 0
+        while n < iterations {
             let a = BigInt.randomInteger(lessThan: number - 3) + 2
             var x = powerMod(a, d, number)
             if x == 1 || x == number - 1 {
                 continue
             }
-            for _ in 0..<s {
+            var m = 0
+            while m < s {
                 x = powerMod(x, 2, number)
                 if x == 1 {
                     return false
@@ -39,10 +41,12 @@ struct PrimeGenerator {
                 if x == number - 1 {
                     break
                 }
+                m &+= 1
             }
             if x != number - 1 {
                 return false
             }
+            n &+= 1
         }
 
         return true
