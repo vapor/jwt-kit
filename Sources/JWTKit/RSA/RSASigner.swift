@@ -7,17 +7,24 @@ internal struct RSASigner: JWTAlgorithm, CryptoSigner {
     var algorithm: DigestAlgorithm
     let name: String
 
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
-        where Plaintext: DataProtocol
+    init(key: RSAKey, algorithm: DigestAlgorithm) {
+        self.key = key
+        self.algorithm = algorithm
+        self.name = algorithm.name
+    }
+
+    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8] 
+        where Plaintext: DataProtocol 
     {
-        guard case .private = self.key.type else {
+        guard 
+            case .private = self.key.type,
+            let privateKey = self.key.privateKey 
+        else {
             throw JWTError.signingAlgorithmFailure(RSAError.privateKeyRequired)
         }
 
         do {
-            let privateKey = self.key.privateKey!
-            let digest = try self.digest(plaintext)
-            let signature = try privateKey.signature(for: digest)
+            let signature = try privateKey.signature(for: plaintext)
             return [UInt8](signature.rawRepresentation)
         } catch {
             throw JWTError.signingAlgorithmFailure(RSAError.signFailure(error))
@@ -25,16 +32,15 @@ internal struct RSASigner: JWTAlgorithm, CryptoSigner {
 
     }
 
-    func verify<Signature, Plaintext>(
-        _ signature: Signature,
-        signs plaintext: Plaintext
-    ) throws -> Bool
+    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool 
         where Signature: DataProtocol, Plaintext: DataProtocol
     {
         let digest = try self.digest(plaintext)
         let signature = _RSA.Signing.RSASignature(rawRepresentation: signature)
 
-        let publicKey = self.key.privateKey?.publicKey ?? self.key.publicKey!
+        guard let publicKey = self.key.privateKey?.publicKey ?? self.key.publicKey else {
+            throw JWTError.signingAlgorithmFailure(RSAError.publicKeyRequired)
+        }
         return publicKey.isValidSignature(signature, for: digest)
     }
 }

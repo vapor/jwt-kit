@@ -6,8 +6,7 @@ extension JWTSigner {
     public static func rs256(key: RSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: RSASigner(
             key: key,
-            algorithm: .sha256,
-            name: "RS256"
+            algorithm: .sha256
         ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
 
@@ -16,8 +15,7 @@ extension JWTSigner {
     public static func rs384(key: RSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: RSASigner(
             key: key,
-            algorithm: .sha384,
-            name: "RS384"
+            algorithm: .sha384
         ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
 
@@ -26,8 +24,7 @@ extension JWTSigner {
     public static func rs512(key: RSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .init(algorithm: RSASigner(
             key: key,
-            algorithm: .sha512,
-            name: "RS512"
+            algorithm: .sha512
         ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
 }

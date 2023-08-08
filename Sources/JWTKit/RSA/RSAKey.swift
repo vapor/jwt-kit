@@ -18,8 +18,8 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `public`(pem string: String) throws -> _RSA.Signing.PublicKey {
-        try _RSA.Signing.PublicKey(pemRepresentation: string)
+    public static func `public`(pem string: String) throws -> RSAKey {
+        try RSAKey(publicKey: .init(pemRepresentation: string))
     }
 
     /// Creates RSAKey from public key pem file.
@@ -36,11 +36,11 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `public`<Data>(pem data: Data) throws -> _RSA.Signing.PublicKey
+    public static func `public`<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
         let string = String(decoding: data, as: UTF8.self)
-        return try _RSA.Signing.PublicKey(pemRepresentation: string)
+        return try self.public(pem: string)
     }
 
     /// Creates RSAKey from public certificate pem file.
@@ -57,8 +57,8 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func certificate(pem string: String) throws -> X509.Certificate {
-        try X509.Certificate(pemEncoded: string)
+    public static func certificate(pem string: String) throws -> RSAKey {
+        try RSAKey(certificate: try X509.Certificate(pemEncoded: string))
     }
 
     /// Creates RSAKey from public certificate pem file.
@@ -75,11 +75,10 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func certificate<Data>(pem data: Data) throws -> X509.Certificate
+    public static func certificate<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
         let string = String(decoding: data, as: UTF8.self)
-
         return try self.certificate(pem: string)
     }
 
@@ -97,8 +96,8 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `private`(pem string: String) throws -> _RSA.Signing.PrivateKey {
-        try _RSA.Signing.PrivateKey(pemRepresentation: string)
+    public static func `private`(pem string: String) throws -> RSAKey {
+        try RSAKey(privateKey: .init(pemRepresentation: string))
     }
 
     /// Creates RSAKey from private key pem file.
@@ -115,11 +114,10 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `private`<Data>(pem data: Data) throws -> _RSA.Signing.PrivateKey
+    public static func `private`<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
         let string = String(decoding: data, as: UTF8.self) 
-
         return try self.private(pem: string)
     }
 
@@ -142,62 +140,25 @@ public final class RSAKey {
 
     let publicKey: _RSA.Signing.PublicKey?
     let privateKey: _RSA.Signing.PrivateKey?
+    let certificate: X509.Certificate?
 
-    public init(publicKey: _RSA.Signing.PublicKey) {
-        self.type = .public
+    public init(
+        publicKey: _RSA.Signing.PublicKey? = nil, 
+        privateKey: _RSA.Signing.PrivateKey? = nil, 
+        certificate: X509.Certificate? = nil
+    ) throws {
+        guard publicKey != nil || privateKey != nil || certificate != nil else {
+            throw RSAError.keyInitializationFailure
+        }
+        self.type = publicKey != nil ? .public : privateKey != nil ? .private : .certificate
         self.publicKey = publicKey
-        self.privateKey = nil
-    }
-
-    public init(privateKey: _RSA.Signing.PrivateKey) {
-        self.type = .private
-        self.publicKey = nil
         self.privateKey = privateKey
+        self.certificate = certificate
     }
 }
 
 extension RSAKey {
-    func calculateDER<Data>(modulus: Data, exponent: Data) -> [UInt8] 
-        where Data: DataProtocol
-    {
-        var modulus = BigInt(_uncheckedWords: [UInt8](modulus).map { UInt($0) })
-        let exponent = BigInt(_uncheckedWords: [UInt8](exponent).map { UInt($0) })
-
-        // Ensure the modulus is positive by adding a leading zero if needed
-        if modulus._isNegative {
-            modulus = BigInt(0) - modulus
-        }
-
-        // Get the length of the modulus and exponent
-        // - Adding 7 ensures that you round up to the nearest multiple of 8 bits
-        // - Righ-Shifting by 3 (dividing by 8) converts the number of bits to bytes
-        let modulusLengthOctets = (modulus.bitWidth + 7) >> 3
-        let exponentLengthOctets = (exponent.bitWidth + 7) >> 3
-
-        // The value 15 seems to account for the byte lengths of the ASN.1 DER tags, lengths, 
-        // and other components that are added as part of the encoding structure
-        let totalLengthOctets = 15 + modulusLengthOctets + exponentLengthOctets
-
-        // Create a buffer to hold the DER encoded key
-        var buffer = [UInt8](repeating: 0, count: totalLengthOctets)
-
-        // Container type and size
-        buffer[0] = 0x30
-        encodeLength(totalLengthOctets - 2, into: &buffer)
-
-        // Integer type and size for modulus
-        buffer[0] = 0x02
-        encodeLength(modulusLengthOctets, into: &buffer)
-
-        // Exponent
-        buffer[0] = 0x02
-        encodeLength(exponentLengthOctets, into: &buffer)
-        
-        return buffer
-    }
-    
     func calculatePrivateDER(n: String, e: String, d: String) throws -> DERSerializable? {
-        // Use the CRT algorithm to calculate the private key
         guard 
             let n = BigInt(n),
             let e = BigInt(e),
@@ -205,6 +166,8 @@ extension RSAKey {
         else {
             return nil
         }
+
+        // https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-56Br1.pdf        
 
         let (p, q) = try PrimeGenerator.calculatePrimeFactors(n: n, e: e, d: d)
 
@@ -229,17 +192,6 @@ extension RSAKey {
         )
 
         return key
-    }
-}
-
-extension RSAKey {
-    private func encodeLength(_ length: Int, into buffer: inout [UInt8]) {
-        if length < 128 {
-            buffer.append(UInt8(length))
-        } else {
-            buffer.append(UInt8(length >> 8 | 0x80))
-            buffer.append(contentsOf: [UInt8(length & 0xff)])
-        }
     }
 }
 
