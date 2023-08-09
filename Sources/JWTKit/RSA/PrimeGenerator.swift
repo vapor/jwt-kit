@@ -10,13 +10,7 @@ struct PrimeGenerator {
             throw RSAError.keyInitializationFailure
         }
 
-        var r = k
-        var t = 0
-
-        repeat {
-            r = r / 2
-            t &+= 1
-        } while r.words[0] & 1 == 0
+        let t = k.trailingZeroBitCount, r = k >> t
 
         var y: BigInt = 0
         var i = 1
