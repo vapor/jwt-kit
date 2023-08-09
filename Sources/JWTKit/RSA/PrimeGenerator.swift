@@ -6,7 +6,7 @@ struct PrimeGenerator {
     public static func calculatePrimeFactors(n: BigInt, e: BigInt, d: BigInt) throws -> (p: BigInt, q: BigInt) {
         let k = (d * e) - 1
 
-        guard k % 2 == 0 else {
+        guard k & 1 == 0 else {
             throw RSAError.keyInitializationFailure
         }
 
@@ -15,8 +15,8 @@ struct PrimeGenerator {
 
         repeat {
             r = r / 2
-            t += 1
-        } while r % 2 == 0
+            t &+= 1
+        } while r.words[0] & 1 == 0
 
         var y: BigInt = 0
         var i = 1
@@ -36,7 +36,7 @@ struct PrimeGenerator {
             var x: BigInt
 
             while j <= t - 1 {
-                x  = y.power(2, modulus: n)
+                x = y.power(2, modulus: n)
 
                 guard x != 1 else {
                     break
@@ -87,14 +87,15 @@ extension BigInt {
         return random
     }
     
-    var leadingZeroBitCount: Int {
-        var count = 0
-        var number = self
-        while number > 0 {
-            number /= 2
-            count += 1
+    public var leadingZeroBitCount: Int {
+        var n = bitWidth
+        for w in words.reversed() {
+            n &-= w.leadingZeroBitCount
+            if w != 0 {
+                break
+            }
         }
-        return Swift.max(0, bitWidth - count)
+        return Swift.max(0, n)
     }
 
 
@@ -104,7 +105,7 @@ extension BigInt {
         var result = BigInt(1)
 
         while exponent > 0 {
-            if exponent % 2 == 1 {
+            if exponent.words[0] & 1 != 0 {
                 result = (result * base) % modulus
             }
             exponent /= 2
