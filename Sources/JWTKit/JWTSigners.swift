@@ -188,12 +188,15 @@ private struct JWKSigner {
             guard let exponent = self.jwk.exponent else {
                 return nil
             }
+            let rsaKey: RSAKey
 
-            guard let rsaKey = RSAKey(
-                modulus: modulus,
-                exponent: exponent,
-                privateExponent: self.jwk.privateExponent
-            ) else {
+            do { 
+                rsaKey = try RSAKey(
+                    modulus: modulus,
+                    exponent: exponent,
+                    privateExponent: self.jwk.privateExponent
+                )
+            } catch {
                 return nil
             }
 
