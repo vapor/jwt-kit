@@ -1,21 +1,10 @@
-import Foundation
 import Crypto
+import Foundation
 
 enum DigestAlgorithm {
     case sha256
     case sha384
     case sha512
-
-    var name: String {
-        switch self {
-        case .sha256:
-            return "SHA256"
-        case .sha384:
-            return "SHA384"
-        case .sha512:
-            return "SHA512"
-        }
-    }
 }
 
 protocol CryptoSigner {

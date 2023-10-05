@@ -1,4 +1,4 @@
-internal enum RSAError: Error {
+enum RSAError: Error {
     case privateKeyRequired
     case publicKeyRequired
     case signFailure(_ error: Error)

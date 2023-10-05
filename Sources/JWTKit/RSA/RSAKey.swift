@@ -1,7 +1,7 @@
 import _CryptoExtras
 import Foundation
-import X509
 import SwiftASN1
+import X509
 
 public final class RSAKey {
     /// Creates RSAKey from public key pem file.
@@ -79,7 +79,7 @@ public final class RSAKey {
         where Data: DataProtocol
     {
         let string = String(decoding: data, as: UTF8.self)
-        return try self.certificate(pem: string)
+        return try certificate(pem: string)
     }
 
     /// Creates RSAKey from private key pem file.
@@ -117,7 +117,7 @@ public final class RSAKey {
     public static func `private`<Data>(pem data: Data) throws -> RSAKey
         where Data: DataProtocol
     {
-        let string = String(decoding: data, as: UTF8.self) 
+        let string = String(decoding: data, as: UTF8.self)
         return try self.private(pem: string)
     }
 
@@ -127,23 +127,23 @@ public final class RSAKey {
     let privateKey: _RSA.Signing.PrivateKey?
 
     public init(
-        publicKey: _RSA.Signing.PublicKey? = nil, 
+        publicKey: _RSA.Signing.PublicKey? = nil,
         privateKey: _RSA.Signing.PrivateKey? = nil
     ) throws {
         guard publicKey != nil || privateKey != nil else {
             throw RSAError.keyInitializationFailure
         }
-        self.type = publicKey != nil ? .public : privateKey != nil ? .private : .certificate
+        type = publicKey != nil ? .public : privateKey != nil ? .private : .certificate
         self.publicKey = publicKey
         self.privateKey = privateKey
     }
 
-    public convenience init?(
+    public convenience init(
         modulus: String,
         exponent: String,
         privateExponent: String? = nil
     ) throws {
-        var privateKey: _RSA.Signing.PrivateKey? = nil
+        var privateKey: _RSA.Signing.PrivateKey?
         if let privateExponent {
             guard let privateKeyDER = try RSAKey.calculatePrivateDER(n: modulus, e: exponent, d: privateExponent) else {
                 throw RSAError.keyInitializationFailure
@@ -152,45 +152,14 @@ public final class RSAKey {
             try privateKeyDER.serialize(into: &serializer)
             privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
         }
+        let publicKeyDER = try RSAKey.calculateDER(n: modulus, e: exponent)
+        var serializer = DER.Serializer()
+        try publicKeyDER.serialize(into: &serializer)
         try self.init(
             publicKey: privateKey?.publicKey ?? _RSA.Signing.PublicKey(
-                derRepresentation: RSAKey.calculateDER(n: modulus, e: exponent)
+                derRepresentation: serializer.serializedBytes
             ),
             privateKey: privateKey
         )
-    }
-}
-
-extension BigInt {
-    /// The modular multiplicative inverse of a number `a` modulo `m` is a number `b` such that:
-    /// a b ≡ 1 (mod m)
-    /// 
-    /// Or in other words, such that
-    /// Exists k ∈ ℤ : ab = 1 + km
-    func modularInverse(_ m: BigInt) -> BigInt? {
-        let (gcd, x, _) = extendedEuclideanAlgorithm(self, m)
-
-        guard gcd == 1 else {
-            return nil
-        }
-
-        return (x % m + m) % m
-    }
-
-    /// The extended Euclidean algorithm is an extension to the Euclidean algorithm,
-    /// and computes, in addition to the greatest common divisor of integers a and b,
-    /// also the coefficients of Bézout's identity, which are integers x and y such that:
-    /// ax + by = gcd(a, b)
-    private func extendedEuclideanAlgorithm(_ a: BigInt, _ b: BigInt) -> (BigInt, BigInt, BigInt) {
-        if a == 0 {
-            return (b, 0, 1)
-        }
-
-        let (gcd, x1, y1) = extendedEuclideanAlgorithm(b % a, a)
-
-        let x = y1 - (b / a) * x1
-        let y = x1
-
-        return (gcd, x, y)
     }
 }
