@@ -41,16 +41,6 @@ extension RSAKey {
         return key
     }
 
-    func generatePrime(_ width: Int) -> BigUInt {
-        while true {
-            var random = BigUInt.randomInteger(withExactWidth: width)
-            random |= BigUInt(1)
-            if random.isPrime() {
-                return random
-            }
-        }
-    }
-
     static func calculateDER(n: String, e: String) throws -> DERSerializable {
         guard
             let n = BigUInt(n, radix: 16),
