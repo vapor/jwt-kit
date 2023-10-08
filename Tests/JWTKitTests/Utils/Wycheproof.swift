@@ -2,7 +2,7 @@ import Foundation
 import XCTest
 
 func wycheproof(fileName: String, testFunction: (TestGroup) throws -> Void) throws {
-    let testsDirectory: String = URL(fileURLWithPath: "\(#file)").pathComponents.dropLast(2).joined(separator: "/")
+    let testsDirectory: String = URL(fileURLWithPath: "\(#filePath)").pathComponents.dropLast(2).joined(separator: "/")
     let url = URL(fileURLWithPath: "\(testsDirectory)/TestVectors/\(fileName).json")
     guard
         let data = try? Data(contentsOf: url)

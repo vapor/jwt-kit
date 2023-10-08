@@ -56,12 +56,7 @@ final class RSATests: XCTestCase {
             expiration: .init(value: .distantFuture),
             admin: false
         )
-        do {
-            _ = try publicSigner.sign(payload)
-            XCTFail("cannot sign with public signer")
-        } catch {
-            // pass
-        }
+        XCTAssertThrowsError(_ = try publicSigner.sign(payload))
     }
 
     func testSigningWithRawBuiltPrivateKey() throws {
@@ -90,13 +85,11 @@ final class RSATests: XCTestCase {
             let q = privateKey.q.urlDecodedBigUInt,
             let qi = privateKey.qi.urlDecodedBigUInt
         else {
-            XCTFail("Failed to extract or parse prime factors p, q, or qi")
-            return
+            return XCTFail("Failed to extract or parse prime factors p, q, or qi")
         }
 
         guard let pInverse = q.inverse(p) else {
-            XCTFail("Failed to calculate the modular inverse of p")
-            return
+            return XCTFail("Failed to calculate the modular inverse of p")
         }
         XCTAssertEqual(pInverse, qi, "The modular inverse of p should equal qi; got \(pInverse) != \(qi)")
     }
@@ -107,8 +100,7 @@ final class RSATests: XCTestCase {
             let e = BigUInt(testGroup.e, radix: 16),
             let d = BigUInt(testGroup.d, radix: 16)
         else {
-            XCTFail("Failed to extract or parse modulus 'n', public exponent 'e', or private exponent 'd'")
-            return
+            return XCTFail("Failed to extract or parse modulus 'n', public exponent 'e', or private exponent 'd'")
         }
 
         let (p, q) = try PrimeGenerator.calculatePrimeFactors(n: n, e: e, d: d)
@@ -172,9 +164,7 @@ D2cOo0w4bk/3yb01xz1MEw==
 extension String {
     var urlDecoded: String {
         var result = replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        while result.count % 4 != 0 {
-            result = result.appending("=")
-        }
+        result.append(String(repeating: "=", count: (4 - (result.count & 3)) & 3))
         return result
     }
 

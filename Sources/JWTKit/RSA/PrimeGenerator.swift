@@ -36,11 +36,7 @@ struct PrimeGenerator {
             while j <= t - 1 {
                 x = y.power(2, modulus: n)
 
-                guard x != 1 else {
-                    break
-                }
-
-                guard x != n - 1 else {
+                guard x != 1, x != n - 1 else {
                     break
                 }
 
@@ -84,9 +80,7 @@ extension BigUInt {
         var b = other
 
         while b != 0 {
-            let t = b
-            b = a % b
-            a = t
+            (a, b) = (b, a % b)
         }
 
         return a

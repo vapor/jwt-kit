@@ -122,9 +122,7 @@ extension RSAKey {
 
 extension BigUInt {
     var byteArray: [UInt8] {
-        let bigEndianData = serialize()
         // Remove any leading zero bytes (from the MSB side)
-        let leadingZeroes = bigEndianData.prefix { $0 == 0 }
-        return Array(bigEndianData.dropFirst(leadingZeroes.count))
+        Array(serialize().drop(while: { $0 == 0 }))
     }
 }
