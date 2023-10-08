@@ -1,6 +1,6 @@
 import XCTest
 #if os(Linux)
-import FoundationNetworking
+    import FoundationNetworking
 #endif
 @testable import JWTKit
 
@@ -69,11 +69,6 @@ import FoundationNetworking
 //         // Create signers and add JWKS.
 //         let signers = JWTSigners()
 //         try signers.use(jwks: jwks)
-//     }
-
-//     func testRSADocs() throws {
-//         let signers = JWTSigners()
-//         try signers.use(.rs256(key: .public(pem: rsaPublicKey)))
 //     }
 
 //     func testECDSADocs() throws {
@@ -147,7 +142,7 @@ import FoundationNetworking
 //         let payload = try signers.verify(data, as: TestPayload.self)
 //         XCTAssertEqual(payload.name, "John Doe")
 //     }
-    
+
 //     func testUnsecuredNone() throws {
 //         let data =
 //             "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOjIwMDAwMDAwMDAsImFkbWluIjpmYWxzZSwibmFtZSI6IkZvbyIsInN1YiI6InZhcG9yIn0."
@@ -162,37 +157,6 @@ import FoundationNetworking
 //         try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
 //         try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
 //         XCTAssertTrue(token.hasSuffix("."))
-//     }
-
-//     func testRSA() throws {
-//         let privateSigner = try JWTSigner.rs256(key: .private(pem: rsaPrivateKey.bytes))
-//         let publicSigner = try JWTSigner.rs256(key: .public(pem: rsaPublicKey.bytes))
-
-//         let payload = TestPayload(
-//             sub: "vapor",
-//             name: "Foo",
-//             admin: false,
-//             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-//         )
-//         let privateSigned = try privateSigner.sign(payload)
-//         try XCTAssertEqual(publicSigner.verify(privateSigned.bytes, as: TestPayload.self), payload)
-//         try XCTAssertEqual(privateSigner.verify(privateSigned.bytes, as: TestPayload.self), payload)
-//     }
-
-//     func testRSASignWithPublic() throws {
-//         let publicSigner = try JWTSigner.rs256(key: .public(pem: rsaPublicKey.bytes))
-//         let payload = TestPayload(
-//             sub: "vapor",
-//             name: "Foo",
-//             admin: false,
-//             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-//         )
-//         do {
-//             _ = try publicSigner.sign(payload)
-//             XCTFail("cannot sign with public signer")
-//         } catch {
-//             // pass
-//         }
 //     }
 
 //     func testECDSAGenerate() throws {
@@ -225,7 +189,7 @@ import FoundationNetworking
 //             try XCTAssertEqual(publicSigner.verify(token, as: TestPayload.self), payload)
 //         }
 //     }
-    
+
 //     func testGetECParametersP256() throws {
 //         let message = "test".bytes
 
@@ -239,7 +203,7 @@ import FoundationNetworking
 //         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
 //         XCTAssertEqual(ec.curve, .p256)
 //     }
-    
+
 //     func testGetECParametersP384() throws {
 //         let message = "test".bytes
 
@@ -253,7 +217,7 @@ import FoundationNetworking
 //         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
 //         XCTAssertEqual(ec.curve, .p384)
 //     }
-    
+
 //     func testGetECParametersP521() throws {
 //         let message = "test".bytes
 
@@ -267,22 +231,22 @@ import FoundationNetworking
 //         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
 //         XCTAssertEqual(ec.curve, .p521)
 //     }
-    
+
 //     func testVerifyingECDSAKeyUsingJWK() throws {
 //         struct Foo: JWTPayload {
 //             var bar: Int
 //             func verify(using signer: JWTSigner) throws { }
 //         }
-                
+
 //         // ecdsa key
 //         let x = "0tu/H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT+hHd0ufc/OwjEbqilsYnTdm"
 //         let y = "RWRZz+tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4+sU8uWegwjd72sBK6axj7"
-        
+
 //         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
 //         // sign jwt
 //         let privateSigner = JWTSigner.es384(key: try ECDSAKey(parameters: .init(x: x, y: y), curve: .p384, privateKey: privateKey))
-        
+
 //         let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
 
 //         // verify using jwks without alg
@@ -311,16 +275,16 @@ import FoundationNetworking
 //             var bar: Int
 //             func verify(using signer: JWTSigner) throws { }
 //         }
-                
+
 //         // ecdsa key in base64url format
 //         let x = "0tu_H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT-hHd0ufc_OwjEbqilsYnTdm"
 //         let y = "RWRZz-tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4-sU8uWegwjd72sBK6axj7"
-        
+
 //         let privateKey = "k-1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0-539FSHmJxg"
 
 //         // sign jwt
 //         let privateSigner = JWTSigner.es384(key: try ECDSAKey(parameters: .init(x: x, y: y), curve: .p384, privateKey: privateKey))
-        
+
 //         let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
 
 //         // verify using jwks without alg
@@ -349,17 +313,17 @@ import FoundationNetworking
 //             var bar: Int
 //             func verify(using signer: JWTSigner) throws { }
 //         }
-                
+
 //         // ecdsa key in base64url format
 //         let x = "0tu_H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT-hHd0ufc_OwjEbqilsYnTdm"
 //         let y = "RWRZz-tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4-sU8uWegwjd72sBK6axj7"
-        
+
 //         // private key in base64 format
 //         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
 //         // sign jwt
 //         let privateSigner = JWTSigner.es384(key: try ECDSAKey(parameters: .init(x: x, y: y), curve: .p384, privateKey: privateKey))
-        
+
 //         let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
 
 //         // verify using jwks without alg
@@ -382,7 +346,7 @@ import FoundationNetworking
 //         let foo = try signers.verify(jwt, as: Foo.self)
 //         XCTAssertEqual(foo.bar, 42)
 //     }
-    
+
 //     func testJWTioExample() throws {
 //         let token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HWP_3cYHBw7AhHale5wky6-sVA"
 //         let corruptedToken = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HwP_3cYHBw7AhHale5wky6-sVA"
@@ -435,7 +399,7 @@ import FoundationNetworking
 //             }
 //         }
 //     }
-    
+
 //     func testJWKSigner() throws {
 //         let privateKey = """
 //         {
@@ -478,7 +442,7 @@ import FoundationNetworking
 //         // test public signer decoding
 //         try XCTAssertEqual(publicSigners.verify(data, as: TestPayload.self), payload)
 //     }
-    
+
 //     func testJWKS() throws {
 //         let json = """
 //         {
@@ -488,7 +452,7 @@ import FoundationNetworking
 //             ]
 //         }
 //         """
-        
+
 //         let signers = JWTSigners()
 //         try signers.use(jwksJSON: json)
 
@@ -565,13 +529,13 @@ import FoundationNetworking
 //         let string = String(bytes: encoded, encoding: .utf8)!
 //         XCTAssertEqual(string, ptBR)
 //     }
-    
+
 //     func testSingleAudienceClaim() throws {
 //         let id = UUID()
 //         let str = "{\"audience\":\"\(id.uuidString)\"}"
 //         let data = str.data(using: .utf8)!
 //         let decoded = try! JSONDecoder().decode(AudiencePayload.self, from: data)
-        
+
 //         XCTAssertEqual(decoded.audience.value, [id.uuidString])
 //         XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id.uuidString))
 //         XCTAssertThrowsError(try decoded.audience.verifyIntendedAudience(includes: UUID().uuidString)) {
@@ -589,7 +553,7 @@ import FoundationNetworking
 //         let str = "{\"audience\":[\"\(id1.uuidString)\", \"\(id2.uuidString)\"]}"
 //         let data = str.data(using: .utf8)!
 //         let decoded = try! JSONDecoder().decode(AudiencePayload.self, from: data)
-        
+
 //         XCTAssertEqual(decoded.audience.value, [id1.uuidString, id2.uuidString])
 //         XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id1.uuidString))
 //         XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id2.uuidString))
@@ -669,9 +633,9 @@ import FoundationNetworking
 //             .verify(firebaseJWT, as: FirebasePayload.self)
 //         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
 //     }
-    
+
 //     // MARK: - EdDSA
-    
+
 //     func testEdDSAGenerate() throws {
 //         let payload = TestPayload(
 //             sub: "vapor",
@@ -679,14 +643,14 @@ import FoundationNetworking
 //             admin: false,
 //             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
 //         )
-        
+
 //         let signer = try JWTSigner.eddsa(.generate(curve: .ed25519))
 //         let token = try signer.sign(payload)
 //         try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
 //     }
-    
+
 //     func testEdDSAPublicPrivate() throws {
-        
+
 //         let publicSigner = try JWTSigner.eddsa(
 //             .public(x: eddsaPublicKeyBase64, curve: .ed25519)
 //         )
@@ -706,17 +670,17 @@ import FoundationNetworking
 //             try XCTAssertEqual(publicSigner.verify(token, as: TestPayload.self), payload)
 //         }
 //     }
-        
+
 //     func testVerifyingEdDSAKeyUsingJWK() throws {
 //         struct Foo: JWTPayload {
 //             var bar: Int
 //             func verify(using signer: JWTSigner) throws { }
 //         }
-                
+
 //         // ecdsa key in base64 format
 //         let x = eddsaPublicKeyBase64
 //         let d = eddsaPrivateKeyBae64
-        
+
 //         // sign jwt
 //         let signer = try JWTSigner.eddsa(.private(x: x, d: d, curve: .ed25519))
 //         let jwt = try signer.sign(Foo(bar: 42), kid: "vapor")
@@ -742,13 +706,13 @@ import FoundationNetworking
 //         let foo = try signers.verify(jwt, as: Foo.self)
 //         XCTAssertEqual(foo.bar, 42)
 //     }
-    
+
 //     func testVerifyingEdDSAKeyUsingJWKBase64URL() throws {
 //         struct Foo: JWTPayload {
 //             var bar: Int
 //             func verify(using signer: JWTSigner) throws { }
 //         }
-                
+
 //         // eddsa key in base64url format
 //         let x = eddsaPublicKeyBase64Url
 //         let d = eddsaPrivateKeyBae64Url
@@ -778,13 +742,13 @@ import FoundationNetworking
 //         let foo = try signers.verify(jwt, as: Foo.self)
 //         XCTAssertEqual(foo.bar, 42)
 //     }
-        
+
 //     func testVerifyingEdDSAKeyUsingJWKWithMixedBase64Formats() throws {
 //         struct Foo: JWTPayload {
 //             var bar: Int
 //             func verify(using signer: JWTSigner) throws { }
 //         }
-                
+
 //         // eddsa key in base64url format
 //         let x = eddsaPublicKeyBase64Url
 //         let d = eddsaPrivateKeyBae64
@@ -814,11 +778,11 @@ import FoundationNetworking
 //         let foo = try signers.verify(jwt, as: Foo.self)
 //         XCTAssertEqual(foo.bar, 42)
 //     }
-    
+
 //     func testCustomJSONCoders() throws {
 //         let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
 //         let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
-        
+
 //         let data =
 //             "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOiIyMDMzLTA1LTE4VDAzOjMzOjIwWiIsImFkbWluIjpmYWxzZSwibmFtZSI6IkZvbyIsInN1YiI6InZhcG9yIn0."
 //         let payload = TestPayload(
@@ -833,7 +797,7 @@ import FoundationNetworking
 //         try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
 //         try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
 //         XCTAssertTrue(token.hasSuffix("."))
-        
+
 //         let signers = JWTSigners(defaultJSONEncoder: encoder, defaultJSONDecoder: decoder)
 //         signers.use(.unsecuredNone, isDefault: true)
 //         let token2 = try signers.sign(payload)

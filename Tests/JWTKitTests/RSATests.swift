@@ -75,6 +75,28 @@ final class RSATests: XCTestCase {
         try XCTAssertEqual(privateSigner.verify(privateSigned, as: TestPayload.self), payload)
     }
 
+    func testGCDCalculation() throws {
+        let testsDirectory: String = URL(fileURLWithPath: "\(#filePath)").pathComponents.dropLast(1).joined(separator: "/")
+        let url = URL(fileURLWithPath: "\(testsDirectory)/TestVectors/gcd_test.json")
+        guard let data = try? Data(contentsOf: url) else {
+            return XCTFail("Failed to load greatest common divisor test vectors from file gcd_test.json")
+        }
+
+        let testVectors = try JSONDecoder().decode([GCDTestVector].self, from: data)
+
+        for testVector in testVectors {
+            guard
+                let a = BigUInt(testVector.a, radix: 16),
+                let b = BigUInt(testVector.b, radix: 16),
+                let gcd = BigUInt(testVector.gcd, radix: 16)
+            else {
+                return XCTFail("Failed to extract or parse test vector")
+            }
+
+            XCTAssertEqual(a.gcd(with: b), gcd, "The greatest common divisor of \(a) and \(b) should equal \(gcd)")
+        }
+    }
+
     private func testModularInverse(_ testGroup: TestGroup) throws {
         guard let privateKey = testGroup.privateKeyJwk else {
             return
@@ -160,6 +182,13 @@ O+bbERwCYUChe+piANhnwfwDHzbRd8mmQus54P06X7bWu6Rmi7gbQGVN/Z6VhbIm
 D2cOo0w4bk/3yb01xz1MEw==
 -----END PRIVATE KEY-----
 """
+
+struct GCDTestVector: Codable {
+    let a: String
+    let b: String
+    let lcm: String
+    let gcd: String
+}
 
 extension String {
     var urlDecoded: String {
