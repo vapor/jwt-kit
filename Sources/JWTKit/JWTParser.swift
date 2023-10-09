@@ -32,7 +32,7 @@ struct JWTParser {
 
     func verify(using signer: JWTSigner) throws {
         guard try signer.algorithm.verify(self.signature, signs: self.message) else {
-            throw JWTError.signatureVerifictionFailed
+            throw JWTError.signatureVerificationFailed
         }
     }
 

@@ -4,7 +4,7 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
     case claimVerificationFailure(name: String, reason: String)
     case signingAlgorithmFailure(Error)
     case malformedToken
-    case signatureVerifictionFailed
+    case signatureVerificationFailed
     case missingKIDHeader
     case unknownKID(JWKIdentifier)
     case invalidJWK
@@ -19,7 +19,7 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
             return "signing algorithm error: \(error)"
         case .malformedToken:
             return "malformed JWT"
-        case .signatureVerifictionFailed:
+        case .signatureVerificationFailed:
             return "signature verification failed"
         case .missingKIDHeader:
             return "missing kid field in header"
@@ -41,4 +41,9 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
     public var errorDescription: String? {
         return self.description
     }
+}
+
+extension JWTError {
+    @available(*, deprecated, renamed: "signatureVerificationFailed")
+    public var signatureVerifictionFailed: JWTError { .signatureVerificationFailed }
 }
