@@ -13,11 +13,11 @@ jobs:
     container: swift:5.8-jammy
     steps: 
       - name: Check out JWTKit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: jwt-kit
       - name: Check out JWT provider
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: vapor/jwt
           path: jwt
