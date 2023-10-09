@@ -16,7 +16,7 @@ public final class P256Key: ECDSAKey {
     public var publicKey: PublicKey?
 
     public static func generate() throws -> Self {
-        let privateKey = P256.Signing.PrivateKey()
+        let privateKey = PrivateKey()
         return try .init(privateKey: privateKey, publicKey: privateKey.publicKey)
     }
 
@@ -122,13 +122,17 @@ extension P256.Signing.PrivateKey: ECDSAPrivateKey {
         publicKey
     }
 
-    public func signature<D>(for data: D) throws -> Data where D: DataProtocol {
+    public func signature<D>(for data: D) throws -> Data
+        where D: DataProtocol
+    {
         try signature(for: data).rawRepresentation
     }
 }
 
 extension P256.Signing.PublicKey: ECDSAPublicKey {
-    public func isValidSignature<D>(_ signature: Data, for data: D) throws -> Bool where D: DataProtocol {
+    public func isValidSignature<Signature, Digest>(_ signature: Signature, for data: Digest) throws -> Bool
+        where Signature: DataProtocol, Digest: DataProtocol
+    {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
         return isValidSignature(signature, for: data)
     }

@@ -26,7 +26,7 @@ struct ECDSASigner: JWTAlgorithm, CryptoSigner {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPrivateKey)
         }
         let signature = try privateKey.signature(for: digest)
-        return signature.copyBytes()
+        return [UInt8](signature)
     }
 
     func verify<Signature, Plaintext>(
@@ -38,9 +38,6 @@ struct ECDSASigner: JWTAlgorithm, CryptoSigner {
         let digest = try self.digest(plaintext)
         guard let publicKey = key.publicKey ?? key.privateKey?.pubKey else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPublicKey)
-        }
-        guard let signature = signature as? Data else {
-            throw JWTError.signingAlgorithmFailure(ECDSAError.signFailure)
         }
         return try publicKey.isValidSignature(signature, for: digest)
     }

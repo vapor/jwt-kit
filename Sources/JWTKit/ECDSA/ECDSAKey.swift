@@ -46,7 +46,7 @@ public protocol ECDSAPrivateKey {
 }
 
 public protocol ECDSAPublicKey {
-    func isValidSignature<D>(_ signature: Data, for data: D) throws -> Bool where D: DataProtocol
+    func isValidSignature<Signature, Digest>(_ signature: Signature, for data: Digest) throws -> Bool where Signature: DataProtocol, Digest: DataProtocol
 }
 
 public protocol ECDSAKey {

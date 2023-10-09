@@ -7,6 +7,17 @@ final class ECDSATests: XCTestCase {
         let signers = JWTSigners()
         try signers.use(.es256(key: .public(pem: ecdsaPublicKey)))
     }
+
+    func testECDSAGenerate() throws {
+        let payload = TestPayload(
+            subject: "JWTKit",
+            expiration: .init(value: .distantFuture),
+            admin: true
+        )
+        let signer = try JWTSigner.es256(key: .generate())
+        let token = try signer.sign(payload)
+        try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
+    }
 }
 
 let ecdsaPrivateKey = """
