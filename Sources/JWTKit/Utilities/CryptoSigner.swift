@@ -11,7 +11,7 @@ protocol CryptoSigner {
     var algorithm: DigestAlgorithm { get }
 }
 
-private enum OpenSSLError: Error {
+private enum CryptoError: Error {
     case digestInitializationFailure
     case digestUpdateFailure
     case digestFinalizationFailure
@@ -25,11 +25,11 @@ extension CryptoSigner {
     {
         switch algorithm {
         case .sha256:
-            return SHA256.hash(data: plaintext).map { $0 }
+            SHA256.hash(data: plaintext).map { $0 }
         case .sha384:
-            return SHA384.hash(data: plaintext).map { $0 }
+            SHA384.hash(data: plaintext).map { $0 }
         case .sha512:
-            return SHA512.hash(data: plaintext).map { $0 }
+            SHA512.hash(data: plaintext).map { $0 }
         }
     }
 }

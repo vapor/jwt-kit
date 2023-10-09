@@ -1,22 +1,20 @@
 import Foundation
-@_implementationOnly import CJWTKitBoringSSL
 
-internal struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
-    let key: ECDSAKey
-    let algorithm: OpaquePointer
+struct ECDSASigner: JWTAlgorithm, CryptoSigner {
+    let key: any ECDSAKey
+    let algorithm: DigestAlgorithm
     let name: String
-    
+
     var curveResultSize: Int {
-        let curveName = CJWTKitBoringSSL_EC_GROUP_get_curve_name(CJWTKitBoringSSL_EC_KEY_get0_group(key.c))
-        switch curveName {
-        case NID_X9_62_prime256v1:
+        switch key.curve {
+        case .p256:
             return 32
-        case  NID_secp384r1:
+        case .p384:
             return 48
-        case NID_secp521r1:
+        case .p521:
             return 66
         default:
-            fatalError("Unsupported ECDSA key curve: \(curveName)")
+            fatalError("Unsupported ECDSA key curve: \(key)")
         }
     }
 
@@ -24,27 +22,11 @@ internal struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
         where Plaintext: DataProtocol
     {
         let digest = try self.digest(plaintext)
-        guard let signature = CJWTKitBoringSSL_ECDSA_do_sign(
-            digest,
-            numericCast(digest.count),
-            self.key.c
-        ) else {
-            throw JWTError.signingAlgorithmFailure(ECDSAError.signFailure)
+        guard let privateKey = key.privateKey else {
+            throw JWTError.signingAlgorithmFailure(ECDSAError.noPrivateKey)
         }
-        defer { CJWTKitBoringSSL_ECDSA_SIG_free(signature) }
-
-        // serialize r+s values
-        // see: https://tools.ietf.org/html/rfc7515#appendix-A.3
-        let r = CJWTKitBoringSSL_ECDSA_SIG_get0_r(signature)
-        let s = CJWTKitBoringSSL_ECDSA_SIG_get0_s(signature)
-        let rsSize = self.curveResultSize
-        var rBytes = [UInt8](repeating: 0, count: rsSize)
-        var sBytes = [UInt8](repeating: 0, count: rsSize)
-        let rCount = Int(CJWTKitBoringSSL_BN_bn2bin(r, &rBytes))
-        let sCount = Int(CJWTKitBoringSSL_BN_bn2bin(s, &sBytes))
-        // zero-padding may be on wrong side after write
-        return rBytes.prefix(rCount).zeroPrefixed(upTo: rsSize)
-            + sBytes.prefix(sCount).zeroPrefixed(upTo: rsSize)
+        let signature = try privateKey.signature(for: digest)
+        return signature.copyBytes()
     }
 
     func verify<Signature, Plaintext>(
@@ -54,38 +36,13 @@ internal struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {
         where Signature: DataProtocol, Plaintext: DataProtocol
     {
         let digest = try self.digest(plaintext)
-
-        // parse r+s values
-        // see: https://tools.ietf.org/html/rfc7515#appendix-A.3
-        let signatureBytes = signature.copyBytes()
-        let rsSize = self.curveResultSize
-        guard signatureBytes.count == rsSize * 2 else {
-            return false
+        guard let publicKey = key.publicKey ?? key.privateKey?.pubKey else {
+            throw JWTError.signingAlgorithmFailure(ECDSAError.noPublicKey)
         }
-
-        let signature = CJWTKitBoringSSL_ECDSA_SIG_new()
-        defer { CJWTKitBoringSSL_ECDSA_SIG_free(signature) }
-
-        try signatureBytes.prefix(rsSize).withUnsafeBufferPointer { r in
-            try signatureBytes.suffix(rsSize).withUnsafeBufferPointer { s in
-                // passing bignums to this method transfers ownership
-                // (they will be freed when the signature is freed)
-                guard CJWTKitBoringSSL_ECDSA_SIG_set0(
-                    signature,
-                    CJWTKitBoringSSL_BN_bin2bn(r.baseAddress, rsSize, nil),
-                    CJWTKitBoringSSL_BN_bin2bn(s.baseAddress, rsSize, nil)
-                ) == 1 else {
-                    throw JWTError.signingAlgorithmFailure(ECDSAError.signFailure)
-                }
-            }
+        guard let signature = signature as? Data else {
+            throw JWTError.signingAlgorithmFailure(ECDSAError.signFailure)
         }
-
-        return CJWTKitBoringSSL_ECDSA_do_verify(
-            digest,
-            numericCast(digest.count),
-            signature,
-            self.key.c
-        ) == 1
+        return try publicKey.isValidSignature(signature, for: digest)
     }
 }
 
