@@ -1,4 +1,5 @@
 import _CryptoExtras
+import Crypto
 import Foundation
 import SwiftASN1
 import X509
@@ -19,7 +20,11 @@ public final class RSAKey {
     /// - parameters:
     ///     - pem: Contents of pem file.
     public static func `public`(pem string: String) throws -> RSAKey {
-        try RSAKey(publicKey: .init(pemRepresentation: string))
+        do {
+            return try RSAKey(publicKey: .init(pemRepresentation: string))
+        } catch CryptoKitError.incorrectParameterSize {
+            throw RSAError.keySizeTooSmall
+        }
     }
 
     /// Creates RSAKey from public key pem file.
@@ -58,7 +63,11 @@ public final class RSAKey {
     /// - parameters:
     ///     - pem: Contents of pem file.
     public static func certificate(pem string: String) throws -> RSAKey {
-        try RSAKey(publicKey: .init(pemRepresentation: string))
+        do {
+            return try RSAKey(certificate: .init(pemEncoded: string))
+        } catch CryptoKitError.incorrectParameterSize {
+            throw RSAError.keySizeTooSmall
+        }
     }
 
     /// Creates RSAKey from public certificate pem file.
@@ -97,7 +106,11 @@ public final class RSAKey {
     /// - parameters:
     ///     - pem: Contents of pem file.
     public static func `private`(pem string: String) throws -> RSAKey {
-        try RSAKey(privateKey: .init(pemRepresentation: string))
+        do {
+            return try RSAKey(privateKey: .init(pemRepresentation: string))
+        } catch CryptoKitError.incorrectParameterSize {
+            throw RSAError.keySizeTooSmall
+        }
     }
 
     /// Creates RSAKey from private key pem file.
@@ -125,17 +138,27 @@ public final class RSAKey {
 
     let publicKey: _RSA.Signing.PublicKey?
     let privateKey: _RSA.Signing.PrivateKey?
+    let certificate: X509.Certificate?
 
-    public init(
-        publicKey: _RSA.Signing.PublicKey? = nil,
-        privateKey: _RSA.Signing.PrivateKey? = nil
-    ) throws {
-        guard publicKey != nil || privateKey != nil else {
-            throw RSAError.keyInitializationFailure
-        }
-        type = publicKey != nil ? .public : privateKey != nil ? .private : .certificate
+    public init(publicKey: _RSA.Signing.PublicKey) {
+        type = .public
         self.publicKey = publicKey
+        privateKey = nil
+        certificate = nil
+    }
+
+    public init(privateKey: _RSA.Signing.PrivateKey) {
+        type = .private
+        publicKey = privateKey.publicKey
         self.privateKey = privateKey
+        certificate = nil
+    }
+
+    public init(certificate: X509.Certificate) {
+        type = .certificate
+        publicKey = .init(certificate.publicKey)
+        privateKey = nil
+        self.certificate = certificate
     }
 
     public convenience init(
@@ -143,7 +166,7 @@ public final class RSAKey {
         exponent: String,
         privateExponent: String? = nil
     ) throws {
-        var privateKey: _RSA.Signing.PrivateKey?
+        var privateKey: _RSA.Signing.PrivateKey
         if let privateExponent {
             guard let privateKeyDER = try RSAKey.calculatePrivateDER(n: modulus, e: exponent, d: privateExponent) else {
                 throw RSAError.keyInitializationFailure
@@ -151,15 +174,13 @@ public final class RSAKey {
             var serializer = DER.Serializer()
             try privateKeyDER.serialize(into: &serializer)
             privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
+            self.init(privateKey: privateKey)
+            return
         }
         let publicKeyDER = try RSAKey.calculateDER(n: modulus, e: exponent)
         var serializer = DER.Serializer()
         try publicKeyDER.serialize(into: &serializer)
-        try self.init(
-            publicKey: privateKey?.publicKey ?? _RSA.Signing.PublicKey(
-                derRepresentation: serializer.serializedBytes
-            ),
-            privateKey: privateKey
-        )
+        let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)
+        self.init(publicKey: publicKey)
     }
 }

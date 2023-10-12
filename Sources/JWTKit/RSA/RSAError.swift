@@ -3,4 +3,5 @@ enum RSAError: Error {
     case publicKeyRequired
     case signFailure(_ error: Error)
     case keyInitializationFailure
+    case keySizeTooSmall
 }
