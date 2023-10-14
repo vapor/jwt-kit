@@ -1,43 +1,9 @@
 import Foundation
 import SwiftASN1
 
-// public struct ECDSACurve {
-//     let curve: String
-
-//     static var p256: Self {
-//         Self(curve: "P-256")
-//     }
-
-//     static var p384: Self {
-//         Self(curve: "P-384")
-//     }
-
-//     static var p521: Self {
-//         Self(curve: "P-521")
-//     }
-
-//     static var ed25519: Self {
-//         Self(curve: "Ed25519")
-//     }
-
-//     static var ed448: Self {
-//         Self(curve: "Ed448")
-//     }
-// }
-
-public enum ECDSACurve: String {
-    case p256 = "P-256"
-    case p384 = "P-384"
-    case p521 = "P-521"
-    case ed25519 = "Ed25519"
-    case ed448 = "Ed448"
-}
-
-extension ECDSACurve: Equatable {}
-
 public struct ECDSAParameters {
-    public let r: String
-    public let s: String
+    public let x: String
+    public let y: String
 }
 
 public protocol ECDSAPrivateKey {
@@ -49,13 +15,14 @@ public protocol ECDSAPublicKey {
     func isValidSignature<Signature, Digest>(_ signature: Signature, for data: Digest) throws -> Bool where Signature: DataProtocol, Digest: DataProtocol
 }
 
-public protocol ECDSAKey {
+public protocol ECDSAKeyType {
     associatedtype PrivateKey: ECDSAPrivateKey
     associatedtype PublicKey: ECDSAPublicKey
 
     var curve: ECDSACurve { get }
     var privateKey: PrivateKey? { get }
     var publicKey: PublicKey? { get }
+    var parameters: ECDSAParameters? { get }
 
     static func generate() throws -> Self
     static func certificate(pem string: String) throws -> Self

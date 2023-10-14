@@ -228,7 +228,7 @@ private struct JWKSigner {
 
             let curve: ECDSACurve
 
-            if let jwkCurve = (jwk.curve.flatMap { ECDSACurve(rawValue: $0.rawValue) }) {
+            if let jwkCurve = (jwk.curve.flatMap { ECDSACurve(curve: $0.rawValue) }) {
                 curve = jwkCurve
             } else {
                 switch algorithm {

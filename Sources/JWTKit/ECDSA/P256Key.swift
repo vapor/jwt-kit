@@ -3,8 +3,19 @@ import Foundation
 import SwiftASN1
 import X509
 
-public final class P256Key: ECDSAKey {
+public final class P256Key: ECDSAKeyType {
     public var curve: ECDSACurve = .p256
+
+    public var parameters: ECDSAParameters? {
+        guard let privateKey = privateKey else {
+            return nil
+        }
+        let publicKey = privateKey.publicKey
+        // 0x04 || x || y
+        let x = publicKey.x963Representation[1 ..< 33].base64EncodedString()
+        let y = publicKey.x963Representation[33 ..< 65].base64EncodedString()
+        return ECDSAParameters(x: x, y: y)
+    }
 
     public typealias Signature = P256.Signing.ECDSASignature
     public typealias PrivateKey = P256.Signing.PrivateKey
@@ -68,14 +79,14 @@ public final class P256Key: ECDSAKey {
         }
     }
 
-    public static func `private`<Data>(pem: Data) throws -> P256Key
+    public static func `private`<Data>(pem: Data) throws -> Self
         where Data: DataProtocol
     {
         let string = String(decoding: pem, as: UTF8.self)
         return try self.private(pem: string)
     }
 
-    public convenience init(parameters: Parameters, privateKey: String? = nil) throws {
+    public convenience init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
         let privateKeyBytes: [UInt8]?
         if let privateKey = privateKey, let privateKeyData = Data(base64Encoded: privateKey) {
             privateKeyBytes = Array(privateKeyData)
@@ -87,10 +98,10 @@ public final class P256Key: ECDSAKey {
             let x = Data(base64Encoded: parameters.x),
             let y = Data(base64Encoded: parameters.y)
         else {
-            throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x or y as Data")
+            throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x and y as base64 encoded data")
         }
 
-        let publicKey = try PublicKey(x963Representation: x + y)
+        let publicKey = try PublicKey(x963Representation: Data([0x04]) + x + y)
 
         if let privateKeyBytes = privateKeyBytes {
             guard let privateKey = try? PrivateKey(rawRepresentation: privateKeyBytes) else {
@@ -109,11 +120,6 @@ public final class P256Key: ECDSAKey {
         type = privateKey != nil ? .private : publicKey != nil ? .public : .certificate
         self.privateKey = privateKey
         self.publicKey = publicKey
-    }
-
-    public struct Parameters {
-        let x: String
-        let y: String
     }
 }
 
