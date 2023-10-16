@@ -1,3 +1,4 @@
+import Foundation
 @_implementationOnly import CJWTKitBoringSSL
 
 internal struct ECDSASigner: JWTAlgorithm, OpenSSLSigner {

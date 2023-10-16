@@ -94,6 +94,9 @@ OPENSSL_EXPORT int DSA_up_ref(DSA *dsa);
 
 // Properties.
 
+// DSA_bits returns the size of |dsa|'s group modulus, in bits.
+OPENSSL_EXPORT unsigned DSA_bits(const DSA *dsa);
+
 // DSA_get0_pub_key returns |dsa|'s public key.
 OPENSSL_EXPORT const BIGNUM *DSA_get0_pub_key(const DSA *dsa);
 
@@ -439,5 +442,6 @@ BSSL_NAMESPACE_END
 #define DSA_R_DECODE_ERROR 105
 #define DSA_R_ENCODE_ERROR 106
 #define DSA_R_INVALID_PARAMETERS 107
+#define DSA_R_TOO_MANY_ITERATIONS 108
 
 #endif  // OPENSSL_HEADER_DSA_H

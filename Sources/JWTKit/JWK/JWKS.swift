@@ -15,7 +15,7 @@ public struct JWKS: Codable {
     ///   - identifier: The `kid` value to lookup.
     ///   - type: The `kty` value.
     public func find(identifier: String, type: JWK.KeyType) -> JWK? {
-        self.keys.filter { $0.keyType == type && $0.keyIdentifier?.string == identifier }.first
+        self.keys.first(where: { $0.keyType == type && $0.keyIdentifier?.string == identifier })
     }
 
     /// Retrieves the desired key from the JSON Web Key Set

@@ -1,29 +1,28 @@
-<img 
-    src="https://user-images.githubusercontent.com/1342803/59471117-1c77b300-8e08-11e9-838e-441b280855b3.png" 
-    height="64" 
-    alt="JWTKit"
-/>
+<p align="center">
+    <img 
+        src="https://user-images.githubusercontent.com/1342803/59471117-1c77b300-8e08-11e9-838e-441b280855b3.png" 
+        height="64" 
+        alt="JWTKit">
+    <a href="https://docs.vapor.codes/4.0/">
+        <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
+    </a>
+    <a href="https://discord.gg/vapor">
+        <img src="https://img.shields.io/discord/431917998102675485.svg" alt="Team Chat">
+    </a>
+    <a href="LICENSE">
+        <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
+    </a>
+    <a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml">
+        <img src="https://github.com/vapor/jwt-kit/actions/workflows/test.yml/badge.svg?event=push" alt="CI">
+    </a>
+    <a href="https://swift.org">
+        <img src="http://img.shields.io/badge/swift-5.6-brightgreen.svg" alt="Swift 5.6">
+    </a>
+</p>
 
-
-<a href="https://docs.vapor.codes/4.0/">
-    <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
-</a>
-<a href="https://discord.gg/vapor">
-    <img src="https://img.shields.io/discord/431917998102675485.svg" alt="Team Chat">
-</a>
-<a href="LICENSE">
-    <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
-</a>
-<a href="https://github.com/vapor/jwt-kit/actions">
-    <img src="https://github.com/vapor/jwt-kit/workflows/test/badge.svg" alt="Continuous Integration">
-</a>
-<a href="https://swift.org">
-    <img src="http://img.shields.io/badge/swift-5.2-brightgreen.svg" alt="Swift 5.2">
-</a>
 <br>
-<br>
 
-🔑 JSON Web Token signing and verification (HMAC, RSA, ECDSA) using BoringSSL.
+🔑 JSON Web Token signing and verification (HMAC, RSA, ECDSA, EdDSA) using SwiftCrypto and BoringSSL.
 
 ### Major Releases
 
@@ -31,10 +30,7 @@ The table below shows a list of JWTKit major releases alongside their compatible
 
 |Version|Swift|SPM|
 |---|---|---|
-|4.0|5.2+|`from: "4.0.0"`|
-|3.0|4.0+|`from: "3.0.0"`|
-|2.0|3.1+|`from: "2.0.0"`|
-|1.0|3.1+|`from: "1.0.0"`|
+|4.0|5.6+|`from: "4.0.0"`|
 
 Use the SPM string to easily include the dependendency in your `Package.swift` file.
 
@@ -42,38 +38,49 @@ Use the SPM string to easily include the dependendency in your `Package.swift` f
 .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0")
 ```
 
-> Note: Prior to version 4.0, this package was included in `vapor/jwt.git`. 
+> Note: Prior to version 4.0, this package was part of [vapor/jwt](https://github.com/vapor/jwt). 
 
 ### Supported Platforms
 
-JWTKit supports the following platforms:
-
-- Ubuntu 16.04, 18.04, 20.04
-- macOS 10.15, 11
-- CentOS 8
-- Amazon Linux 2
+JWTKit supports all platforms supported by Swift 5.6 and later, with the exception of Windows.
 
 ## Overview
 
-JWTKit provides APIs for signing and verifying JSON Web Tokens ([RFC7519](https://tools.ietf.org/html/rfc7519)). It supports the following features:
+JWTKit provides APIs for signing and verifying JSON Web Tokens, as specified by [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html). The following features are supported:
 
-- Verifying (parsing)
-- Signing (serializing)
-- RSA (RS256, RS384, RS512)
-- ECDSA (ES256, ES384, ES512)
-- HMAC (HS256, HS384, HS512)
-- Claims (aud, exp, iss, etc)
-- JSON Web Keys (JWK, JWKS)
+- Parsing
+- Signature verification
+- Payload signing
+- Serialization
+- Claim validation (`aud`, `exp`, `jti`, `iss`, `iat`, `nbf`, `sub`, and custom claims)
+- JSON Web Keys (`JWK`, `JWKS`)
 
-This package ships a private copy of BoringSSL for cryptography.
+ The following algorithms, as defined in [RFC 7518 § 3](https://www.rfc-editor.org/rfc/rfc7518.html#section-3) and [RFC 8037 § 3](https://www.rfc-editor.org/rfc/rfc8037.html#section-3), are supported for both signing and verification:
+
+- HS256, HS384, HS512 (HMAC with SHA-2)
+- RS256, RS384, RS512 (RSA with SHA-2)
+- ES256, ES384, ES512 (ECDSA with SHA-2)
+- EdDSA
+- none (unsigned)
+
+For those algorithms which specify a curve type (`crv`), the following curves, as defined in [RFC 7518 § 6](https://www.rfc-editor.org/rfc/rfc7518.html#section-6) and [RFC 8037 § 3](https://www.rfc-editor.org/rfc/rfc8037.html#section-3), are supported:
+
+- P-256 (ES256 algorithm only)
+- P-384 (ES384 algorithm only)
+- P-521 (ES512 algorithm only)
+- Ed25519 (EdDSA algorithm only)
+
+This package includes a vendored internal-only copy of [BoringSSL](https://boringssl.googlesource.com), used for certain cryptographic operations not currently available via [SwiftCrypto](https://github.com/apple/swift-crypto).
+
+> Note: The `P-521` elliptic curve used with the ES512 signing algorithm is often assumed to be a typo, but confusingly, it is not. 
 
 ## Vapor
 
-If you are using Vapor, check out the [JWT](https://github.com/vapor/jwt) package which makes it easier to configure and use JWTKit in your project.
+The [vapor/jwt](https://github.com/vapor/jwt) package provides first-class integration with Vapor and is recommended for all Vapor projects which want to use JWTKit.
 
 ## Getting Started
 
-To start verifying or signing JWT tokens, you will need an instance of `JWTSigners`. 
+A `JWTSigners` object is used to load signing keys and keysets, and to sign and verify tokens: 
 
 ```swift
 import JWTKit
@@ -82,79 +89,60 @@ import JWTKit
 let signers = JWTSigners()
 ```
 
-Let's add a simple HS256 signer for testing. HMAC signers can sign _and_ verify tokens. 
+The `JWTSigner` class encapsulates a signature algorithm and an appropriate signing key. To use a signer, register it with the `JWTSigners` object:
 
 ```swift
-// Add HMAC with SHA-256 signer.
+// Registers a HS256 (HMAC-SHA-256) signer.
 signers.use(.hs256(key: "secret"))
 ```
 
-For this example, we'll use the very secure key _secret_. 
+This example uses the _very_ secure key `"secret"`.
 
 ### Verifying
 
-Let's try to verify the following example JWT.
+Let's try to verify the following example JWT:
 
 ```swift
-let jwt = """
+let exampleJWT = """
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo
 """
 ```
 
 You can inspect the contents of this token by visiting [jwt.io](https://jwt.io) and pasting the token in the debugger. Set the key in the "Verify Signature" section to `secret`. 
 
-We need to create a struct conforming to `JWTPayload` that represents the JWT's structure. We'll use JWTKit's included [claims](#claims) to handle common fields like `sub` and `exp`. 
+To verify a token, the format of the payload must be known. This is accomplished by defining a type conforming to the `JWTPayload` protocol. Each property of the payload type corresponds to a claim in the token. JWTKit provides predefined types for all of the claims specified by RFC 7519, as well as some convenience types for working with custom claims. For the example token, the payload looks like this:
 
 ```swift
-// JWT payload structure.
-struct TestPayload: JWTPayload, Equatable {
-    // Maps the longer Swift property names to the
-    // shortened keys used in the JWT payload.
-    enum CodingKeys: String, CodingKey {
-        case subject = "sub"
-        case expiration = "exp"
-        case isAdmin = "admin"
-    }
+struct ExamplePayload: JWTPayload {
+    var sub: SubjectClaim
+    var exp: ExpirationClaim
+    var admin: BoolClaim
 
-    // The "sub" (subject) claim identifies the principal that is the
-    // subject of the JWT.
-    var subject: SubjectClaim
-
-    // The "exp" (expiration time) claim identifies the expiration time on
-    // or after which the JWT MUST NOT be accepted for processing.
-    var expiration: ExpirationClaim
-
-    // Custom data.
-    // If true, the user is an admin.
-    var isAdmin: Bool
-
-    // Run any additional verification logic beyond
-    // signature verification here.
-    // Since we have an ExpirationClaim, we will
-    // call its verify method.
     func verify(using signer: JWTSigner) throws {
-        try self.expiration.verifyNotExpired()
+        try self.exp.verifyNotExpired()
     }
 }
 ```
 
-Now that we have a `JWTPayload`, we can use `JWTSigners` to parse and verify the JWT.
+Using this payload, the `JWTSigners` object can process and verify the example JWT, returning its payload on success:
 
 ```swift
-// Parses the JWT and verifies its signature.
-let payload = try signers.verify(jwt, as: TestPayload.self)
+// Parses the JWT, verifies its signature, and decodes its content.
+let payload = try signers.verify(exampleJWT, as: ExamplePayload.self)
 print(payload)
 ```
 
-If everything worked, you should see the payload printed:
+If all works correctly, this code will print something like this:
 
 ```swift
 TestPayload(
-    subject: "vapor", 
-    expiration: 4001-01-01 00:00:00 +0000, 
-    isAdmin: true
+    sub: SubjectClaim(value: "vapor"),
+    exp: ExpirationClaim(value: 4001-01-01 00:00:00 +0000),
+    admin: BoolClaim(value: true)
 )
 ```
+
+> Note: The `admin` property of the example payload did not have to use the `BoolClaim` type; a simple `Bool` would have worked as well. The `BoolClaim` type is provided by JWTKit for convenience in working with the many JWT implementations which encode boolean values as JSON strings (e.g. `"true"` and `"false"`) rather than using JSON's `true` and `false` keywords.   
 
 ### Signing
 
@@ -162,7 +150,7 @@ We can also _generate_ JWTs, also known as signing. To demonstrate this, let's u
 
 ```swift
 // Create a new instance of our JWTPayload
-let payload = TestPayload(
+let payload = ExamplePayload(
     subject: "vapor",
     expiration: .init(value: .distantFuture),
     isAdmin: true
@@ -181,15 +169,9 @@ You should see a JWT printed. This can be fed back into the `verify` method to a
 
 ## JWK
 
-A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) data structure that represents a cryptographic key ([RFC7517](https://tools.ietf.org/html/rfc7517)). These are commonly used to supply clients with keys for verifying JWTs.
+A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) data structure that represents a cryptographic key, defined in [RFC7517](https://www.rfc-editor.org/rfc/rfc7517.html). These are commonly used to supply clients with keys for verifying JWTs. For example, Apple hosts their _Sign in with Apple_ JWKS at the URL `https://appleid.apple.com/auth/keys`.
 
-For example, Apple hosts their _Sign in with Apple_ JWKS at the following URL.
-
-```http
-GET https://appleid.apple.com/auth/keys
-```
-
-You can add this JSON Web Key Set (JWKS) to your `JWTSigners`. 
+You can add this JSON Web Key Set (JWKS) to your `JWTSigners`: 
 
 ```swift
 import Foundation
@@ -197,21 +179,16 @@ import JWTKit
 
 // Download the JWKS.
 // This could be done asynchronously if needed.
-let jwksData = try Data(
+let jwksData = try String(
     contentsOf: URL(string: "https://appleid.apple.com/auth/keys")!
 )
 
-// Decode the downloaded JSON.
-let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
-
 // Create signers and add JWKS.
 let signers = JWTSigners()
-try signers.use(jwks: jwks)
+try signers.use(jwksJSON: jwksData)
 ```
 
-You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification.
-
-> Note: As of writing, JWK only supports RSA keys.
+You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.  
 
 ## HMAC
 
@@ -230,7 +207,7 @@ signers.use(.hs256(key: "secret"))
 
 RSA is the most commonly used JWT signing algorithm. It supports distinct public and private keys. This means that a public key can be distributed for verifying JWTs are authentic while the private key that generates them is kept secret.
 
-To create an RSA signer, first initialize an `RSAKey`. This can be done by passing in the components.
+To create an RSA signer, first initialize an `RSAKey`. This can be done by passing in the components:
 
 ```swift
 // Initialize an RSA key with components.
@@ -270,7 +247,7 @@ Use `.certificate` for loading X.509 certificates. These start with:
 -----BEGIN CERTIFICATE-----
 ```
 
-Once you have the RSAKey, you can use it to create an RSA signer.
+Once you have the RSAKey, you can use it to create an RSA signer:
 
 - `rs256`: RSA with SHA-256
 - `rs384`: RSA with SHA-384
@@ -281,9 +258,13 @@ Once you have the RSAKey, you can use it to create an RSA signer.
 try signers.use(.rs256(key: .public(pem: rsaPublicKey)))
 ```
 
+> Important: RSA, despite still being the common algorithm in use, is no longer recommended for new applications. If possible, use EdDSA or ECDSA instead.
+
 ## ECDSA
 
-ECDSA is a more modern algorithm that is similar to RSA. It is considered to be more secure for a given key length than RSA<sup>[1](#1)</sup>. However, you should do your own research before deciding. 
+ECDSA is a more modern algorithm that is similar to RSA. It is considered to be more secure for a given key length than RSA. [Infosec Insights' June 2020 blog post "ECDSA vs RSA: Everything You Need to Know"](https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/) provides a detailed discussion on the differences between the two.
+
+> IMPORTANT: Cryptography is a complex topic, and the decision of algorithm can directly impact the integrity, security, and privacy of your data. This README does not attempt to offer a meaningful discussion of these concerns; the package authors recommend doing your own research before making a final decision.
 
 Like RSA, you can load ECDSA keys using PEM files: 
 
@@ -305,11 +286,11 @@ Use `.private` for loading private ECDSA pem keys. These start with:
 -----BEGIN PRIVATE KEY-----
 ```
 
-Once you have the ECDSAKey, you can use it to create an ECDSA signer.
+Once you have the ECDSAKey, you can use it to create an ECDSA signer:
 
-- `es256`: ECDSA with SHA-256
-- `es384`: ECDSA with SHA-384
-- `es512`: ECDSA with SHA-512
+- `es256`: ECDSA with SHA-256 and P-256
+- `es384`: ECDSA with SHA-384 and P-384
+- `es512`: ECDSA with SHA-512 and P-521
 
 ```swift
 // Add ECDSA with SHA-256 signer.
@@ -318,7 +299,7 @@ try signers.use(.es256(key: .public(pem: ecdsaPublicKey)))
 
 ## Claims
 
-JWTKit includes several helpers for implementing common [JWT claims](https://tools.ietf.org/html/rfc7519#section-4.1). 
+JWTKit includes several helpers for implementing the "standard" JWT claims defined by [RFC § 4.1](https://www.rfc-editor.org/rfc/rfc7519.html#section-4.1): 
 
 |Claim|Type|Verify Method|
 |---|---|---|
@@ -327,16 +308,19 @@ JWTKit includes several helpers for implementing common [JWT claims](https://too
 |`jti`|`IDClaim`|n/a|
 |`iat`|`IssuedAtClaim`|n/a|
 |`iss`|`IssuerClaim`|n/a|
-|`locale`|`LocaleClaim`|n/a|
 |`nbf`|`NotBeforeClaim`|`verifyNotBefore(currentDate:)`|
 |`sub`|`SubjectClaim`|n/a|
 
-All claims should be verified in the `JWTPayload.verify` method. If the claim has a special verify method, you can use that. Otherwise, access the value of the claim using `value` and check that it is valid.
+Whenever possible, all of a payload's claims should be verified in the `verify(using:)` method; those which do not have verification methods of their own may be verified manually.
+
+Additional helpers are provided for common types of claims not defined by the RFC:
+
+- `BoolClaim`: May be used for any claim whose value is a boolean flag. Will recognize both boolean JSON values and the strings `"true"` and `"false"`.
+- `GoogleHostedDomainClaim`: For use with the `GoogleIdentityToken` vendor token type.
+- `JWTMultiValueClaim`: A protocol for claims, such as `AudienceClaim` which can optionally be encoded as an array with multiple values.
+- `JWTUnixEpochClaim`: A protocol for claims, such as `ExpirationClaim` and `IssuedAtClaim`, whose value is a count of seconds since the UNIX epoch (midnight of January 1, 1970).
+- `LocaleClaim`: A claim whose value is a [BCP 47](https://www.rfc-editor.org/info/bcp47) language tag. Also used by `GoogleIdentityToken`.
 
 ---
 
-This package was originally authored by the wonderful [@siemensikkema](http://github.com/siemensikkema).
-
----
-
-<a name="1">1</a>: [https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/](https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/)
+_This package was originally authored by the wonderful [@siemensikkema](https://github.com/siemensikkema)._

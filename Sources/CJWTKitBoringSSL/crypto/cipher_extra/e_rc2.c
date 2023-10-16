@@ -57,6 +57,7 @@
 #include <CJWTKitBoringSSL_cipher.h>
 #include <CJWTKitBoringSSL_nid.h>
 
+#include "../fipsmodule/cipher/internal.h"
 #include "../internal.h"
 
 

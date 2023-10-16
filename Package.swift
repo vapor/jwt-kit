@@ -1,4 +1,4 @@
-// swift-tools-version:5.4
+// swift-tools-version:5.6
 import PackageDescription
 
 let package = Package(
@@ -16,7 +16,7 @@ let package = Package(
         MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "3.0.0")
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "2.0.0")
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),

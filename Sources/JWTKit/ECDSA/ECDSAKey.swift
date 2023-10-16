@@ -1,34 +1,14 @@
+import Foundation
 @_implementationOnly import CJWTKitBoringSSL
 
 public final class ECDSAKey: OpenSSLKey {
+    
     public enum Curve: String, Codable {
         case p256 = "P-256"
         case p384 = "P-384"
         case p521 = "P-521"
-
-        var cName: Int32 {
-            switch self {
-            case .p256:
-                return NID_X9_62_prime256v1
-            case .p384:
-                return NID_secp384r1
-            case .p521:
-                return NID_secp521r1
-            }
-        }
-      
-        init?(cName: Int32) {
-            switch cName {
-            case NID_X9_62_prime256v1:
-                self = .p256
-            case NID_secp384r1:
-                self = .p384
-            case NID_secp521r1:
-                self = .p521
-            default:
-                return nil
-            }
-        }
+        case ed25519 = "Ed25519"
+        case ed448 = "Ed448"
     }
     
     public static func generate(curve: Curve = .p521) throws -> ECDSAKey {
@@ -39,6 +19,53 @@ public final class ECDSAKey: OpenSSLKey {
             throw JWTError.signingAlgorithmFailure(ECDSAError.generateKeyFailure)
         }
         return .init(c)
+    }
+    
+    /// Creates ECDSAKey from public certificate pem file.
+    ///
+    /// Certificate pem files look like:
+    ///
+    ///     -----BEGIN CERTIFICATE-----
+    ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
+    ///     ...
+    ///     -----END CERTIFICATE-----
+    ///
+    /// This key can only be used to verify JWTs.
+    ///
+    /// - parameters:
+    ///     - pem: Contents of pem file.
+    public static func certificate(pem string: String) throws -> ECDSAKey {
+        try self.certificate(pem: [UInt8](string.utf8))
+    }
+
+    /// Creates ECDSAKey from public certificate pem file.
+    ///
+    /// Certificate pem files look like:
+    ///
+    ///     -----BEGIN CERTIFICATE-----
+    ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
+    ///     ...
+    ///     aX4rbSL49Z3dAQn8vQIDAQAB
+    ///     -----END CERTIFICATE-----
+    ///
+    /// This key can only be used to verify JWTs.
+    ///
+    /// - parameters:
+    ///     - pem: Contents of pem file.
+    public static func certificate<Data>(pem data: Data) throws -> ECDSAKey
+        where Data: DataProtocol
+    {
+        let x509 = try self.load(pem: data) { bio in
+            CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
+        }
+        defer { CJWTKitBoringSSL_X509_free(x509) }
+        let pkey = CJWTKitBoringSSL_X509_get_pubkey(x509)
+        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
+
+        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_EC_KEY(pkey) else {
+            throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
+        }
+        return self.init(c)
     }
     
     public static func `public`(pem string: String) throws -> ECDSAKey {
@@ -127,5 +154,39 @@ public final class ECDSAKey: OpenSSLKey {
     public struct Parameters {
         public let x: String
         public let y: String
+    }
+}
+
+extension ECDSAKey.Curve {
+    var cName: Int32 {
+        switch self {
+        case .p256:
+            return NID_X9_62_prime256v1
+        case .p384:
+            return NID_secp384r1
+        case .p521:
+            return NID_secp521r1
+        case .ed25519:
+            return NID_ED25519
+        case .ed448:
+            return NID_ED448
+        }
+    }
+  
+    init?(cName: Int32) {
+        switch cName {
+        case NID_X9_62_prime256v1:
+            self = .p256
+        case NID_secp384r1:
+            self = .p384
+        case NID_secp521r1:
+            self = .p521
+        case NID_ED25519:
+            self = .ed25519
+        case NID_ED448:
+            self = .ed448
+        default:
+            return nil
+        }
     }
 }
