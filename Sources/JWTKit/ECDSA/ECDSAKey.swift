@@ -3,7 +3,7 @@ import Foundation
 import SwiftASN1
 import X509
 
-public final class P256Key: ECDSAKeyType {
+public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
     public var curve: ECDSACurve = .p256
 
     public var parameters: ECDSAParameters? {
@@ -17,9 +17,9 @@ public final class P256Key: ECDSAKeyType {
         return ECDSAParameters(x: x, y: y)
     }
 
-    public typealias Signature = P256.Signing.ECDSASignature
-    public typealias PrivateKey = P256.Signing.PrivateKey
-    public typealias PublicKey = P256.Signing.PublicKey
+    public typealias Signature = Curve.Signature
+    public typealias PrivateKey = Curve.PrivateKey
+    public typealias PublicKey = Curve.PrivateKey.PublicKey
 
     var type: KeyType
 
@@ -120,26 +120,5 @@ public final class P256Key: ECDSAKeyType {
         type = privateKey != nil ? .private : publicKey != nil ? .public : .certificate
         self.privateKey = privateKey
         self.publicKey = publicKey
-    }
-}
-
-extension P256.Signing.PrivateKey: ECDSAPrivateKey {
-    public var pubKey: ECDSAPublicKey {
-        publicKey
-    }
-
-    public func signature<D>(for data: D) throws -> Data
-        where D: DataProtocol
-    {
-        try signature(for: data).rawRepresentation
-    }
-}
-
-extension P256.Signing.PublicKey: ECDSAPublicKey {
-    public func isValidSignature<Signature, Digest>(_ signature: Signature, for data: Digest) throws -> Bool
-        where Signature: DataProtocol, Digest: DataProtocol
-    {
-        let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
-        return isValidSignature(signature, for: data)
     }
 }

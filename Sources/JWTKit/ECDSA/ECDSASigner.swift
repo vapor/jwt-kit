@@ -1,9 +1,9 @@
 import Foundation
 
-struct ECDSASigner: JWTAlgorithm, CryptoSigner {
-    let key: any ECDSAKey
+public struct ECDSASigner: JWTAlgorithm, CryptoSigner {
+    let key: any ECDSAKeyType
     let algorithm: DigestAlgorithm
-    let name: String
+    public let name: String
 
     var curveResultSize: Int {
         switch key.curve {
@@ -18,7 +18,7 @@ struct ECDSASigner: JWTAlgorithm, CryptoSigner {
         }
     }
 
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
+    public func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
         where Plaintext: DataProtocol
     {
         let digest = try self.digest(plaintext)
@@ -29,14 +29,14 @@ struct ECDSASigner: JWTAlgorithm, CryptoSigner {
         return [UInt8](signature)
     }
 
-    func verify<Signature, Plaintext>(
+    public func verify<Signature, Plaintext>(
         _ signature: Signature,
         signs plaintext: Plaintext
     ) throws -> Bool
         where Signature: DataProtocol, Plaintext: DataProtocol
     {
         let digest = try self.digest(plaintext)
-        guard let publicKey = key.publicKey ?? key.privateKey?.pubKey else {
+        guard let publicKey = key.publicKey ?? key.privateKey?.publicKey else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPublicKey)
         }
         return try publicKey.isValidSignature(signature, for: digest)
