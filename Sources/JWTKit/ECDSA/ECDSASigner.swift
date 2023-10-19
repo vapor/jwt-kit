@@ -26,7 +26,7 @@ public struct ECDSASigner: JWTAlgorithm, CryptoSigner {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPrivateKey)
         }
         let signature = try privateKey.signature(for: digest)
-        return [UInt8](signature)
+        return [UInt8](signature.rawRepresentation)
     }
 
     public func verify<Signature, Plaintext>(
@@ -40,15 +40,5 @@ public struct ECDSASigner: JWTAlgorithm, CryptoSigner {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPublicKey)
         }
         return try publicKey.isValidSignature(signature, for: digest)
-    }
-}
-
-private extension Collection where Element == UInt8 {
-    func zeroPrefixed(upTo count: Int) -> [UInt8] {
-        if self.count < count {
-            return [UInt8](repeating: 0, count: count - self.count) + self
-        } else {
-            return .init(self)
-        }
     }
 }

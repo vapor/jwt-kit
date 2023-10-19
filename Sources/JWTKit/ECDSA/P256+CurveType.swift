@@ -17,12 +17,7 @@ extension P256.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-extension P256.Signing.PrivateKey: ECDSAPrivateKey {
-    public typealias PublicKey = P256.Signing.PublicKey
-
-    public func signature<D>(for data: D) throws -> Data where D: DataProtocol {
-        try signature(for: data).rawRepresentation
-    }
-}
+extension P256.Signing.ECDSASignature: ECDSASignature {}
+extension P256.Signing.PrivateKey: ECDSAPrivateKey {}
 
 public typealias P256Key = ECDSAKey<P256>

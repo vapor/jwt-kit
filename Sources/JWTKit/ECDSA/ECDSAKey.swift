@@ -4,9 +4,9 @@ import SwiftASN1
 import X509
 
 public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
-    public var curve: ECDSACurve = .p256
+    var curve: ECDSACurve = Curve.curve
 
-    public var parameters: ECDSAParameters? {
+    var parameters: ECDSAParameters? {
         guard let privateKey = privateKey else {
             return nil
         }
@@ -14,17 +14,17 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
         // 0x04 || x || y
         let x = publicKey.x963Representation[1 ..< 33].base64EncodedString()
         let y = publicKey.x963Representation[33 ..< 65].base64EncodedString()
-        return ECDSAParameters(x: x, y: y)
+        return .init(x: x, y: y)
     }
 
-    public typealias Signature = Curve.Signature
-    public typealias PrivateKey = Curve.PrivateKey
-    public typealias PublicKey = Curve.PrivateKey.PublicKey
+    typealias Signature = Curve.Signature
+    typealias PrivateKey = Curve.PrivateKey
+    typealias PublicKey = Curve.PrivateKey.PublicKey
 
     var type: KeyType
 
-    public var privateKey: PrivateKey?
-    public var publicKey: PublicKey?
+    var privateKey: PrivateKey?
+    var publicKey: PublicKey?
 
     public static func generate() throws -> Self {
         let privateKey = PrivateKey()
@@ -113,7 +113,7 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
         }
     }
 
-    public init(privateKey: PrivateKey? = nil, publicKey: PublicKey? = nil) throws {
+    init(privateKey: PrivateKey? = nil, publicKey: PublicKey? = nil) throws {
         guard privateKey != nil || publicKey != nil else {
             throw ECDSAError.generateKeyFailure
         }

@@ -12,23 +12,23 @@ public extension JWTSigner {
         ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
 
-    // static func es384(key: ECDSAKey) -> JWTSigner { .es384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
+    static func es384(key: P384Key) -> JWTSigner { .es384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    // static func es384(key: ECDSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
-    //     .init(algorithm: ECDSASigner(
-    //         key: key,
-    //         algorithm: .sha384,
-    //         name: "ES384"
-    //     ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
-    // }
+    static func es384(key: P384Key, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
+        .init(algorithm: ECDSASigner(
+            key: key,
+            algorithm: .sha384,
+            name: "ES384"
+        ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+    }
 
-    // static func es512(key: ECDSAKey) -> JWTSigner { .es512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
+    static func es512(key: P521Key) -> JWTSigner { .es512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
-    // static func es512(key: ECDSAKey, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
-    //     .init(algorithm: ECDSASigner(
-    //         key: key,
-    //         algorithm: .sha512,
-    //         name: "ES512"
-    //     ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
-    // }
+    static func es512(key: P521Key, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
+        .init(algorithm: ECDSASigner(
+            key: key,
+            algorithm: .sha512,
+            name: "ES512"
+        ), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+    }
 }
