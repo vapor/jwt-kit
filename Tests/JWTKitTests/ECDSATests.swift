@@ -51,6 +51,34 @@ final class ECDSATests: XCTestCase {
         XCTAssertEqual(ec.curve, .p256)
     }
 
+    func testGetECParametersP384() throws {
+        let message = "test".bytes
+
+        let ec = try P384Key.generate()
+        let ecSigner = JWTSigner.es384(key: ec)
+
+        let signature = try ecSigner.algorithm.sign(message)
+
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es384(key: .init(parameters: params))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p384)
+    }
+
+    func testGetECParametersP521() throws {
+        let message = "test".bytes
+
+        let ec = try P521Key.generate()
+        let ecSigner = JWTSigner.es512(key: ec)
+
+        let signature = try ecSigner.algorithm.sign(message)
+
+        let params = ec.parameters!
+        let ecVerifier = try JWTSigner.es512(key: P521Key(parameters: params))
+        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p521)
+    }
+
     func testJWTPayloadVerification() throws {
         struct NotBar: Error {
             let foo: String
@@ -77,34 +105,6 @@ final class ECDSATests: XCTestCase {
             XCTAssertEqual(payload.foo, "bar")
         }
     }
-
-//     func testGetECParametersP384() throws {
-//         let message = "test".bytes
-
-//         let ec = try ECDSAKey.generate(curve: .p384)
-//         let ecSigner = JWTSigner.es384(key: ec)
-
-//         let signature = try ecSigner.algorithm.sign(message)
-
-//         let params = ec.parameters!
-//         let ecVerifier = try JWTSigner.es384(key: ECDSAKey(parameters: params, curve: .p384))
-//         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
-//         XCTAssertEqual(ec.curve, .p384)
-//     }
-
-//     func testGetECParametersP521() throws {
-//         let message = "test".bytes
-
-//         let ec = try ECDSAKey.generate(curve: .p521)
-//         let ecSigner = JWTSigner.es512(key: ec)
-
-//         let signature = try ecSigner.algorithm.sign(message)
-
-//         let params = ec.parameters!
-//         let ecVerifier = try JWTSigner.es512(key: ECDSAKey(parameters: params, curve: .p521))
-//         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
-//         XCTAssertEqual(ec.curve, .p521)
-//     }
 }
 
 let ecdsaPrivateKey = """

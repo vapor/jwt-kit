@@ -190,11 +190,7 @@ private struct JWKSigner {
             let rsaKey: RSAKey
 
             do {
-                rsaKey = try RSAKey(
-                    modulus: modulus,
-                    exponent: exponent,
-                    privateExponent: jwk.privateExponent
-                )
+                rsaKey = try RSAKey(modulus: modulus, exponent: exponent, privateExponent: jwk.privateExponent)
             } catch {
                 return nil
             }
@@ -225,37 +221,32 @@ private struct JWKSigner {
             guard let algorithm = algorithm ?? jwk.algorithm else {
                 return nil
             }
-
-            let curve: ECDSACurve
-
-            if let jwkCurve = (jwk.curve.flatMap { ECDSACurve(curve: $0.rawValue) }) {
-                curve = jwkCurve
-            } else {
+            do {
                 switch algorithm {
                 case .es256:
-                    curve = .p256
+                    return try JWTSigner.es256(
+                        key: P256Key(parameters: .init(x: x, y: y), privateKey: jwk.privateExponent),
+                        jsonEncoder: jsonEncoder,
+                        jsonDecoder: jsonDecoder
+                    )
                 case .es384:
-                    curve = .p384
+                    return try JWTSigner.es384(
+                        key: P384Key(parameters: .init(x: x, y: y), privateKey: jwk.privateExponent),
+                        jsonEncoder: jsonEncoder,
+                        jsonDecoder: jsonDecoder
+                    )
                 case .es512:
-                    curve = .p521
+                    return try JWTSigner.es512(
+                        key: P521Key(parameters: .init(x: x, y: y), privateKey: jwk.privateExponent),
+                        jsonEncoder: jsonEncoder,
+                        jsonDecoder: jsonDecoder
+                    )
                 default:
                     return nil
                 }
-            }
-
-            let ecKey = try! P256Key(parameters: .init(x: x, y: y), privateKey: jwk.privateExponent)
-
-            switch algorithm {
-            case .es256:
-                return JWTSigner.es256(key: ecKey, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
-            // case .es384:
-            //     return JWTSigner.es384(key: ecKey, jsonEncoder: self.jsonEncoder, jsonDecoder: self.jsonDecoder)
-            // case .es512:
-            //     return JWTSigner.es512(key: ecKey, jsonEncoder: self.jsonEncoder, jsonDecoder: self.jsonDecoder)
-            default:
+            } catch {
                 return nil
             }
-
         case .octetKeyPair:
             guard let algorithm = algorithm ?? jwk.algorithm else {
                 return nil

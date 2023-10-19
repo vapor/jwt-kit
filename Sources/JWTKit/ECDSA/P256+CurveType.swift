@@ -6,6 +6,8 @@ extension P256: CurveType {
     public typealias PrivateKey = P256.Signing.PrivateKey
 
     public static let curve: ECDSACurve = .p256
+
+    public static let byteRanges: (first: Range<Int>, second: Range<Int>) = (1 ..< 33, 33 ..< 65)
 }
 
 extension P256.Signing.PublicKey: ECDSAPublicKey {
