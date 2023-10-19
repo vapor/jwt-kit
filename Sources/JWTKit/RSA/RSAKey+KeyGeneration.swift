@@ -5,14 +5,10 @@ import SwiftASN1
 
 extension RSAKey {
     /// Creates a new private key using modulus, exponent and private exponent.
-    static func calculatePrivateDER(n: String, e: String, d: String) throws -> DERSerializable? {
-        guard
-            let n = BigUInt(n, radix: 16),
-            let e = BigUInt(e, radix: 16),
-            let d = BigUInt(d, radix: 16)
-        else {
-            return nil
-        }
+    static func calculatePrivateDER(n: Data, e: Data, d: Data) throws -> DERSerializable? {
+        let n = BigUInt(n)
+        let e = BigUInt(e)
+        let d = BigUInt(d)
 
         // https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-56Br1.pdf
 
@@ -41,13 +37,9 @@ extension RSAKey {
         return key
     }
 
-    static func calculateDER(n: String, e: String) throws -> DERSerializable {
-        guard
-            let n = BigUInt(n, radix: 16),
-            let e = BigUInt(e, radix: 16)
-        else {
-            throw RSAError.keyInitializationFailure
-        }
+    static func calculateDER(n: Data, e: Data) throws -> DERSerializable {
+        let n = BigUInt(n)
+        let e = BigUInt(e)
 
         let key = RSAPublicKeyASN1(
             modulus: ArraySlice(n.byteArray),

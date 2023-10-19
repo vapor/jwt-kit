@@ -166,9 +166,20 @@ public final class RSAKey {
         exponent: String,
         privateExponent: String? = nil
     ) throws {
+        func decode(_ string: String) throws -> Data {
+            guard let data = string.base64URLDecodedData() else {
+                throw RSAError.keyInitializationFailure
+            }
+            return data
+        }
+
+        let n = try decode(modulus)
+        let e = try decode(exponent)
+        let d = try privateExponent.map(decode)
+
         var privateKey: _RSA.Signing.PrivateKey
-        if let privateExponent {
-            guard let privateKeyDER = try RSAKey.calculatePrivateDER(n: modulus, e: exponent, d: privateExponent) else {
+        if let d {
+            guard let privateKeyDER = try RSAKey.calculatePrivateDER(n: n, e: e, d: d) else {
                 throw RSAError.keyInitializationFailure
             }
             var serializer = DER.Serializer()
@@ -177,7 +188,7 @@ public final class RSAKey {
             self.init(privateKey: privateKey)
             return
         }
-        let publicKeyDER = try RSAKey.calculateDER(n: modulus, e: exponent)
+        let publicKeyDER = try RSAKey.calculateDER(n: n, e: e)
         var serializer = DER.Serializer()
         try publicKeyDER.serialize(into: &serializer)
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)

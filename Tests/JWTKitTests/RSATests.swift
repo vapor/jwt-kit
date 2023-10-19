@@ -108,11 +108,11 @@ final class RSATests: XCTestCase {
             exp: .init(value: .distantFuture)
         )
         let jwt = try JWTSigner.rs256(
-            key: .private(pem: rsa2PrivateKey)
+            key: .private(pem: certPrivateKey)
         ).sign(test)
 
         let payload = try JWTSigner.rs256(
-            key: .certificate(pem: rsa2Cert)
+            key: .certificate(pem: cert)
         ).verify(jwt, as: TestPayload.self)
         XCTAssertEqual(payload, test)
     }
@@ -157,13 +157,13 @@ final class RSATests: XCTestCase {
 }
 
 let modulus = """
-00d0941e63a980fa92fb25ed4c7b3307f827023034ae7f1a7491f0699ca7607285e62ad8e994bac21b8b6e305e334f4874067d28e304230dca7f0e85f7ce595770b6e054c9f844ba86c0696eeba0769d8d4a347e8fe85c724ac1c44994af18a39e719f721f1bc50c46a39e6c075fcd1649f01f22608ce7dc6955502258336987d9
+gWu7yhI35FScdKARYboJoAm-T7yJfJ9JTvAok_RKOJYcL8oLIRSeLqQX83PPZiWdKTdXaiGWntpDu6vW7VAb-HWPF6tNYSLKDSmR3sEu2488ibWijZtNTCKOSb_1iAKAI5BJ80LTqyQtqaKzT0XUBtMsde8vX1nKI05UxujfTX3kqUtkZgLv1Yk1ZDpUoLOWUTtCm68zpjtBrPiN8bU2jqCGFyMyyXys31xFRzz4MyJ5tREHkQCzx0g7AvW0ge_sBTPQ2U6NSkcZvQyDbfDv27cMUHij1Sjx16SY9a2naTuOgamjtUzyClPLVpchX-McNyS0tjdxWY_yRL9MYuw4AQ
 """
 
-let publicExponent = "010001"
+let publicExponent = "AQAB"
 
 let privateExponent = """
-5ff4a47e690ea338573e3d8b3fea5c32378ff4296855a51017cba86a9f3de9b1dc0fbe36c76b9bbd1c4a170a5f448c2a8489b3f3ac858be4aacb3daaa14dccc183622eedd3ae6f0427a2a298b51b97818a5430f13705f42d8b25476f939c935e389e30d9ade5d0180920135f5aef0c5fecd15f00b83b51dab8ba930d88826801
+L4z0tz7QWE0aGuOA32YqCSnrSYKdBTPFDILCdfHonzfP7WMPibz4jWxu_FzNk9s4Dh-uN2lV3NGW10pAsnqffD89LtYanRjaIdHnLW_PFo5fEL2yltK7qMB9hO1JegppKCfoc79W4-dr-4qy1Op0B3npOP-DaUYlNamfDmIbQW32UKeJzdGIn-_ryrBT7hQW6_uHLS2VFPPk0rNkPPKZYoNaqGnJ0eaFFF-dFwiThXIpPz--dxTAL8xYf275rjG8C9lh6awOfJSIdXMVuQITWf62E0mSQPR2-219bShMKriDYcYLbT3BJEgOkRBBHGuHo9R5TN298anxZqV1u5jtUQ
 """
 
 let publicKey = """

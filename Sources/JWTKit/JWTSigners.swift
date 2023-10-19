@@ -181,12 +181,13 @@ private struct JWKSigner {
     func signer(for algorithm: JWK.Algorithm? = nil) -> JWTSigner? {
         switch jwk.keyType {
         case .rsa:
-            guard let modulus = jwk.modulus else {
+            guard
+                let modulus = jwk.modulus,
+                let exponent = jwk.exponent
+            else {
                 return nil
             }
-            guard let exponent = jwk.exponent else {
-                return nil
-            }
+
             let rsaKey: RSAKey
 
             do {

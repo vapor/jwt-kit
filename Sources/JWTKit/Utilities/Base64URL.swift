@@ -11,15 +11,22 @@ extension String {
 
         return Data(base64Encoded: base64URL)
     }
+
+    func base64URLDecoded() -> String? {
+        guard let data = base64URLDecodedData() else {
+            return nil
+        }
+        return String(data: data, encoding: .utf8)
+    }
 }
 
 extension DataProtocol {
     func base64URLDecodedBytes() -> [UInt8] {
-        return Data(base64Encoded: Data(copyBytes()).base64URLUnescaped())?.copyBytes() ?? []
+        Data(base64Encoded: Data(copyBytes()).base64URLUnescaped())?.copyBytes() ?? []
     }
 
     func base64URLEncodedBytes() -> [UInt8] {
-        return Data(copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
+        Data(copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
     }
 }
 
