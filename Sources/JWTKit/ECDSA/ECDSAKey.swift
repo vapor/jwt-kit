@@ -88,15 +88,18 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
 
     public convenience init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
         let privateKeyBytes: [UInt8]?
-        if let privateKey = privateKey, let privateKeyData = Data(base64Encoded: privateKey) {
+        if
+            let privateKey = privateKey,
+            let privateKeyData = privateKey.base64URLDecodedData()
+        {
             privateKeyBytes = Array(privateKeyData)
         } else {
             privateKeyBytes = nil
         }
 
         guard
-            let x = Data(base64Encoded: parameters.x),
-            let y = Data(base64Encoded: parameters.y)
+            let x = parameters.x.base64URLDecodedData(),
+            let y = parameters.y.base64URLDecodedData()
         else {
             throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x and y as base64 encoded data")
         }

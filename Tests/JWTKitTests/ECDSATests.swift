@@ -10,9 +10,10 @@ final class ECDSATests: XCTestCase {
 
     func testECDSAGenerate() throws {
         let payload = TestPayload(
-            subject: "JWTKit",
-            expiration: .init(value: .distantFuture),
-            admin: true
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         let signer = try JWTSigner.es256(key: .generate())
         let token = try signer.sign(payload)
@@ -24,9 +25,10 @@ final class ECDSATests: XCTestCase {
         let privateSigner = try JWTSigner.es256(key: .private(pem: ecdsaPrivateKey))
 
         let payload = TestPayload(
-            subject: "JWTKit",
-            expiration: .init(value: .distantFuture),
-            admin: true
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         for _ in 0 ..< 1000 {
             let token = try privateSigner.sign(payload)
@@ -77,6 +79,122 @@ final class ECDSATests: XCTestCase {
         let ecVerifier = try JWTSigner.es512(key: P521Key(parameters: params))
         XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p521)
+    }
+
+    func testVerifyingECDSAKeyUsingJWK() throws {
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using _: JWTSigner) throws {}
+        }
+
+        // ecdsa key
+        let x = "0tu/H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT+hHd0ufc/OwjEbqilsYnTdm"
+        let y = "RWRZz+tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4+sU8uWegwjd72sBK6axj7"
+
+        let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
+
+        // sign jwt
+        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: .init(x: x, y: y), privateKey: privateKey))
+
+        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                    "kty": "EC",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "y": "\(y)"
+                 }
+            ]
+        }
+        """
+
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
+    }
+
+    func testVerifyingECDSAKeyUsingJWKBase64URL() throws {
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using _: JWTSigner) throws {}
+        }
+
+        // ecdsa key in base64url format
+        let x = "0tu_H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT-hHd0ufc_OwjEbqilsYnTdm"
+        let y = "RWRZz-tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4-sU8uWegwjd72sBK6axj7"
+
+        // private key in base64url format
+        let privateKey = "k-1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0-539FSHmJxg"
+
+        // sign jwt
+        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: .init(x: x, y: y), privateKey: privateKey))
+
+        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                    "kty": "EC",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "y": "\(y)"
+                 }
+            ]
+        }
+        """
+
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
+    }
+
+    func testVerifyingECDSAKeyUsingJWKWithMixedBase64Formats() throws {
+        struct Foo: JWTPayload {
+            var bar: Int
+            func verify(using _: JWTSigner) throws {}
+        }
+
+        // ecdsa key in base64url format
+        let x = "0tu_H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT-hHd0ufc_OwjEbqilsYnTdm"
+        let y = "RWRZz-tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4-sU8uWegwjd72sBK6axj7"
+
+        // private key in base64 format
+        let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
+
+        // sign jwt
+        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: .init(x: x, y: y), privateKey: privateKey))
+
+        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+
+        // verify using jwks without alg
+        let jwksString = """
+        {
+            "keys": [
+                {
+                    "kty": "EC",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "y": "\(y)"
+                 }
+            ]
+        }
+        """
+
+        let signers = JWTSigners()
+        try signers.use(jwksJSON: jwksString)
+        let foo = try signers.verify(jwt, as: Foo.self)
+        XCTAssertEqual(foo.bar, 42)
     }
 
     func testJWTPayloadVerification() throws {

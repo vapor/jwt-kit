@@ -38,9 +38,10 @@ final class RSATests: XCTestCase {
         let publicSigner = try JWTSigner.rs256(key: .public(pem: publicKey))
 
         let payload = TestPayload(
-            subject: "JWTKit",
-            expiration: .init(value: .distantFuture),
-            admin: true
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
         let privateSigned = try privateSigner.sign(payload)
@@ -52,9 +53,10 @@ final class RSATests: XCTestCase {
         let publicSigner = try JWTSigner.rs256(key: .public(pem: publicKey))
 
         let payload = TestPayload(
-            subject: "vapor",
-            expiration: .init(value: .distantFuture),
-            admin: false
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         XCTAssertThrowsError(_ = try publicSigner.sign(payload))
     }
@@ -65,9 +67,10 @@ final class RSATests: XCTestCase {
         let publicSigner = try JWTSigner.rs256(key: .public(pem: privateKey.publicKey.pemRepresentation))
 
         let payload = TestPayload(
-            subject: "JWTKit",
-            expiration: .init(value: .distantFuture),
-            admin: true
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
         let privateSigned = try privateSigner.sign(payload)
@@ -99,17 +102,17 @@ final class RSATests: XCTestCase {
 
     func testRSACertificate() throws {
         let test = TestPayload(
-            subject: "JWTKit",
-            expiration: .init(value: .distantFuture),
-            admin: true
+            sub: "vapor",
+            name: "foo",
+            admin: true,
+            exp: .init(value: .distantFuture)
         )
-
         let jwt = try JWTSigner.rs256(
-            key: .private(pem: certPrivateKey)
+            key: .private(pem: rsa2PrivateKey)
         ).sign(test)
 
         let payload = try JWTSigner.rs256(
-            key: .certificate(pem: cert)
+            key: .certificate(pem: rsa2Cert)
         ).verify(jwt, as: TestPayload.self)
         XCTAssertEqual(payload, test)
     }

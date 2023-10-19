@@ -5,19 +5,6 @@ public struct ECDSASigner: JWTAlgorithm, CryptoSigner {
     let algorithm: DigestAlgorithm
     public let name: String
 
-    var curveResultSize: Int {
-        switch key.curve {
-        case .p256:
-            return 32
-        case .p384:
-            return 48
-        case .p521:
-            return 66
-        default:
-            fatalError("Unsupported ECDSA key curve: \(key)")
-        }
-    }
-
     public func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
         where Plaintext: DataProtocol
     {
