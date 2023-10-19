@@ -12,8 +12,8 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
         }
         let publicKey = privateKey.publicKey
         // 0x04 || x || y
-        let x = publicKey.x963Representation[Curve.byteRanges.first].base64EncodedString()
-        let y = publicKey.x963Representation[Curve.byteRanges.second].base64EncodedString()
+        let x = publicKey.x963Representation[Curve.byteRanges.x].base64EncodedString()
+        let y = publicKey.x963Representation[Curve.byteRanges.y].base64EncodedString()
         return .init(x: x, y: y)
     }
 

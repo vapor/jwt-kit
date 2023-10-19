@@ -7,7 +7,7 @@ extension P384: CurveType {
 
     public static let curve: ECDSACurve = .p384
 
-    public static let byteRanges: (first: Range<Int>, second: Range<Int>) = (1 ..< 49, 49 ..< 97)
+    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 49, 49 ..< 97)
 }
 
 extension P384.Signing.PublicKey: ECDSAPublicKey {

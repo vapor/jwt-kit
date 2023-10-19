@@ -63,8 +63,12 @@ public final class RSAKey {
     /// - parameters:
     ///     - pem: Contents of pem file.
     public static func certificate(pem string: String) throws -> RSAKey {
+        let cert = try X509.Certificate(pemEncoded: string)
         do {
-            return try RSAKey(certificate: .init(pemEncoded: string))
+            guard let publicKey = _RSA.Signing.PublicKey(cert.publicKey) else {
+                throw RSAError.keyInitializationFailure
+            }
+            return RSAKey(publicKey: publicKey)
         } catch CryptoKitError.incorrectParameterSize {
             throw RSAError.keySizeTooSmall
         }
@@ -138,27 +142,17 @@ public final class RSAKey {
 
     let publicKey: _RSA.Signing.PublicKey?
     let privateKey: _RSA.Signing.PrivateKey?
-    let certificate: X509.Certificate?
 
     public init(publicKey: _RSA.Signing.PublicKey) {
         type = .public
         self.publicKey = publicKey
         privateKey = nil
-        certificate = nil
     }
 
     public init(privateKey: _RSA.Signing.PrivateKey) {
         type = .private
         publicKey = privateKey.publicKey
         self.privateKey = privateKey
-        certificate = nil
-    }
-
-    public init(certificate: X509.Certificate) {
-        type = .certificate
-        publicKey = .init(certificate.publicKey)
-        privateKey = nil
-        self.certificate = certificate
     }
 
     public convenience init(

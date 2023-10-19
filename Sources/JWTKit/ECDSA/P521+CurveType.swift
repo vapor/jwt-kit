@@ -7,7 +7,7 @@ extension P521: CurveType {
 
     public static let curve: ECDSACurve = .p521
 
-    public static let byteRanges: (first: Range<Int>, second: Range<Int>) = (1 ..< 67, 67 ..< 133)
+    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 67, 67 ..< 133)
 }
 
 extension P521.Signing.PublicKey: ECDSAPublicKey {
