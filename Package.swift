@@ -18,9 +18,7 @@ let package = Package(
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
     ],
     targets: [
-        .target(name: "CJWTKitBoringSSL"),
         .target(name: "JWTKit", dependencies: [
-            .target(name: "CJWTKitBoringSSL"),
             .product(name: "Crypto", package: "swift-crypto"),
             .product(name: "_CryptoExtras", package: "swift-crypto"),
             .product(name: "X509", package: "swift-certificates"),
