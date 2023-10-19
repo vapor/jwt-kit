@@ -162,7 +162,7 @@ public final class RSAKey {
     ) throws {
         func decode(_ string: String) throws -> Data {
             guard let data = string.base64URLDecodedData() else {
-                throw RSAError.keyInitializationFailure
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url string: \(string)")
             }
             return data
         }
@@ -180,12 +180,12 @@ public final class RSAKey {
             try privateKeyDER.serialize(into: &serializer)
             privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
             self.init(privateKey: privateKey)
-            return
+        } else {
+            let publicKeyDER = try RSAKey.calculateDER(n: n, e: e)
+            var serializer = DER.Serializer()
+            try publicKeyDER.serialize(into: &serializer)
+            let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)
+            self.init(publicKey: publicKey)
         }
-        let publicKeyDER = try RSAKey.calculateDER(n: n, e: e)
-        var serializer = DER.Serializer()
-        try publicKeyDER.serialize(into: &serializer)
-        let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)
-        self.init(publicKey: publicKey)
     }
 }
