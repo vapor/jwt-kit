@@ -72,7 +72,7 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
             let der = string.replacingOccurrences(of: "-----BEGIN PRIVATE KEY-----", with: "")
                 .replacingOccurrences(of: "-----END PRIVATE KEY-----", with: "")
                 .replacingOccurrences(of: "\n", with: "")
-            guard let derData = Foundation.Data(base64Encoded: der) else {
+            guard let derData = Data(base64Encoded: der) else {
                 throw JWTError.signingAlgorithmFailure(ECDSAError.generateKeyFailure)
             }
             return try .init(privateKey: PrivateKey(x963Representation: derData))

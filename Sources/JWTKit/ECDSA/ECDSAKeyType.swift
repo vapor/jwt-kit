@@ -1,3 +1,4 @@
+import Crypto
 import Foundation
 import SwiftASN1
 import X509
@@ -24,7 +25,7 @@ public protocol ECDSAPrivateKey {
     var derRepresentation: Data { get }
     @available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, *)
     var pemRepresentation: String { get }
-    func signature<D>(for data: D) throws -> Signature where D: DataProtocol
+    func signature<D>(for data: D) throws -> Signature where D: Digest
 }
 
 public protocol ECDSAPublicKey {
@@ -47,7 +48,7 @@ public protocol ECDSAPublicKey {
     var derRepresentation: Data { get }
     @available(iOS 14.0, macOS 11.0, watchOS 7.0, tvOS 14.0, *)
     var pemRepresentation: String { get }
-    func isValidSignature<Signature, Digest>(_ signature: Signature, for data: Digest) throws -> Bool where Signature: DataProtocol, Digest: DataProtocol
+    func isValidSignature<Signature, D>(_ signature: Signature, for data: D) throws -> Bool where Signature: DataProtocol, D: Digest
 }
 
 public protocol ECDSASignature {

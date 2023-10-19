@@ -20,16 +20,16 @@ private enum CryptoError: Error {
 }
 
 extension CryptoSigner {
-    func digest<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
+    func digest<Plaintext>(_ plaintext: Plaintext) throws -> any Digest
         where Plaintext: DataProtocol
     {
         switch algorithm {
         case .sha256:
-            SHA256.hash(data: plaintext).map { $0 }
+            SHA256.hash(data: plaintext)
         case .sha384:
-            SHA384.hash(data: plaintext).map { $0 }
+            SHA384.hash(data: plaintext)
         case .sha512:
-            SHA512.hash(data: plaintext).map { $0 }
+            SHA512.hash(data: plaintext)
         }
     }
 }

@@ -11,8 +11,8 @@ extension P521: CurveType {
 }
 
 extension P521.Signing.PublicKey: ECDSAPublicKey {
-    public func isValidSignature<Signature, Digest>(_ signature: Signature, for data: Digest) throws -> Bool
-        where Signature: DataProtocol, Digest: DataProtocol
+    public func isValidSignature<Signature, D>(_ signature: Signature, for data: D) throws -> Bool
+        where Signature: DataProtocol, D: Digest
     {
         let signature = try P521.Signing.ECDSASignature(rawRepresentation: signature)
         return isValidSignature(signature, for: data)
