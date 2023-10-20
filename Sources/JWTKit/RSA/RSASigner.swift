@@ -6,11 +6,13 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
     let key: RSAKey
     var algorithm: DigestAlgorithm
     let name: String
+    let padding: _RSA.Signing.Padding
 
-    init(key: RSAKey, algorithm: DigestAlgorithm, name: String) {
+    init(key: RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding = .PSS) {
         self.key = key
         self.algorithm = algorithm
         self.name = name
+        self.padding = padding
     }
 
     func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
@@ -42,6 +44,6 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         guard let publicKey = key.privateKey?.publicKey ?? key.publicKey else {
             throw JWTError.signingAlgorithmFailure(RSAError.publicKeyRequired)
         }
-        return publicKey.isValidSignature(signature, for: digest)
+        return publicKey.isValidSignature(signature, for: digest, padding: padding)
     }
 }
