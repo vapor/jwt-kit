@@ -41,7 +41,7 @@ extension JWTAlgorithm {
         where Signature: DataProtocol, Plaintext: DataProtocol
     {
         // create test signature
-        let check = try self.sign(plaintext)
+        let check = try sign(plaintext)
 
         // byte-by-byte comparison to avoid timing attacks
         var match = true
