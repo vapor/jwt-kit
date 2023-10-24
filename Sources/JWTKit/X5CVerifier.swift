@@ -99,22 +99,21 @@ public class X5CVerifier {
     ) async throws -> Payload
         where Message: DataProtocol, Payload: JWTPayload
     {
+        // Parse the JWS header to get the header
         let parser = try JWTParser(token: token)
         let header = try parser.header(jsonDecoder: jsonDecoder)
 
-        guard
-            let headerAlg = header.alg,
-            headerAlg == "ES256"
-        else {
+        // Ensure the algorithm used is ES256, as it's the only supported one (for now)
+        guard let headerAlg = header.alg, headerAlg == "ES256" else {
             throw JWTError.generic(identifier: "JWS", reason: "Only ES256 is currently supported")
         }
-        guard
-            let x5c = header.x5c,
-            !x5c.isEmpty
-        else {
+
+        // Ensure the x5c header parameter is present and not empty
+        guard let x5c = header.x5c, !x5c.isEmpty else {
             throw JWTError.generic(identifier: "JWS", reason: "No x5c certificates provided")
         }
 
+        // Decode the x5c certificates
         let certificateData = try x5c.map {
             guard let data = Data(base64Encoded: $0) else {
                 throw JWTError.generic(identifier: "JWS", reason: "Invalid x5c certificate")
@@ -123,103 +122,30 @@ public class X5CVerifier {
         }
 
         // Setup an untrusted chain using all the certificates in the x5c.
-        let untrustedChain = try UnverifiedCertificateChain(certificateData.map {
+        let untrustedChain = try CertificateStore(certificateData.map {
             try Certificate(derEncoded: [UInt8]($0))
         })
 
+        // Setup the verifier using the predefined trusted store
         var verifier = Verifier(rootCertificates: trustedStore) { RFC5280Policy(validationTime: Date()) }
 
-        // The first cert in x5c is used to sign the JWS, so that's what we're targeting.
-        let result = await verifier.validate(leafCertificate: untrustedChain[0], intermediates: trustedStore)
+        // Extract the leaf certificate (first certificate in x5c)
+        let leafCertificate = try Certificate(derEncoded: [UInt8](certificateData[0]))
+
+        // Validate the leaf certificate against the trusted store
+        let result = await verifier.validate(leafCertificate: leafCertificate, intermediates: untrustedChain)
 
         switch result {
         case let .validCertificate(certificateChain):
-            print("Certificate is valid: \(certificateChain)")
+            print("Certificates are valid: \(certificateChain)")
         case let .couldNotValidate(failures):
             throw JWTError.generic(identifier: "JWS", reason: "Invalid x5c chain: \(failures)")
         }
 
-        // Now that we know the chain is valid, we have
-        // to verify that the token was signed with the
-        // known-valid signing cert.
+        // Assuming the chain is valid, verify the token was signed by the valid certificate.
+        let ecdsaKey = try P256Key.certificate(pem: leafCertificate.serializeAsPEM().pemString)
 
-        let signingCert = x5c[0] // We verify above that this isn't empty
-        let keyData = addBoundaryToCert(signingCert)
-        let ecdsaKey = try P256Key.certificate(pem: keyData)
-
-        let signer = JWTSigner(
-            algorithm: ECDSASigner(
-                key: ecdsaKey,
-                algorithm: .sha256,
-                name: headerAlg
-            )
-        )
+        let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
         return try signer.verify(parser: parser)
     }
 }
-
-/// Base64 DER format -> PEM format
-private func addBoundaryToCert(_ cert: String) -> String {
-    """
-    -----BEGIN CERTIFICATE-----
-    \(cert)
-    -----END CERTIFICATE-----
-    """
-}
-
-// /// Wraps a CJWTKitBoringSSL X509 pointer.
-// ///
-// /// You must manually call `free()`.
-// private struct X509Pointer {
-//     var certificate: X509.Certificate
-
-//     /// Read a pem string.
-//     init<Message: DataProtocol>(pem cert: Message) throws {
-//         let string = String(decoding: cert, as: UTF8.self)
-//         certificate = try X509.Certificate(pemEncoded: string)
-//     }
-
-//     /// Read an x5c claim.
-//     init(x5c claim: String) throws {
-//         certificate = try X509.Certificate(pemEncoded: claim)
-//     }
-// }
-
-// private struct X509TrustStore {
-//     private var trustedCertificates: [X509.Certificate]
-
-//     init(trustedCertificates: [X509.Certificate] = []) {
-//         self.trustedCertificates = trustedCertificates
-//     }
-
-//     /// Add this certificate to the trust store.
-//     mutating func trust(_ certificate: X509.Certificate) {
-//         trustedCertificates.append(certificate)
-//     }
-// }
-
-/// Wraps a CJWTKitBoringSSL `STACK_OF(X509)`.
-///
-/// You must manually call `freeAll()`.
-// private struct X509Chain {
-//     var certificates: [X509.Certificate]
-
-//     init() {
-//         certificates = []
-//     }
-
-//     mutating func push(_ certificate: X509.Certificate) {
-//         certificates.append(certificate)
-//     }
-
-//     /// Get the X509 at the index (0-based).
-//     subscript(index: Int) -> X509.Certificate? {
-//         guard
-//             index >= 0,
-//             index < certificates.count
-//         else {
-//             return nil
-//         }
-//         return certificates[index]
-//     }
-// }
