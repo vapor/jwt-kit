@@ -8,7 +8,7 @@ import X509
 /// Usage:
 /// ```
 /// let verifier = try X5CVerifier(rootCertificates: myRoots)
-/// let payload = try verifier.verifyJWS(myJWS, as: MyPayload.self)
+/// let payload = try await verifier.verifyJWS(myJWS, as: MyPayload.self)
 /// // payload is now known to be valid!
 /// ```
 ///
