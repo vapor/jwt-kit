@@ -5,7 +5,7 @@ import XCTest
 final class ECDSATests: XCTestCase {
     func testECDSADocs() throws {
         let signers = JWTSigners()
-        try signers.use(.es256(key: .public(pem: ecdsaPublicKey)))
+        XCTAssertNoThrow(try signers.use(.es256(key: .public(pem: ecdsaPublicKey))))
     }
 
     func testECDSAGenerate() throws {

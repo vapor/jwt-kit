@@ -1,21 +1,7 @@
-@testable import JWTKit
+import JWTKit
 import XCTest
 
 final class ClaimTests: XCTestCase {
-    func testClaimDocs() throws {
-        struct TestPayload: JWTPayload {
-            enum CodingKeys: String, CodingKey {
-                case audience = "aud"
-            }
-
-            var audience: AudienceClaim
-
-            func verify(using _: JWTSigner) throws {
-                try audience.verifyIntendedAudience(includes: "foo")
-            }
-        }
-    }
-
     func testBoolClaim() throws {
         let str = #"{"trueStr":"true","trueBool":true,"falseStr":"false","falseBool":false}"#
         var data = str.data(using: .utf8)!

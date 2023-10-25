@@ -1,4 +1,4 @@
-@testable import JWTKit
+import JWTKit
 
 struct TestPayload: JWTPayload, Equatable {
     var sub: SubjectClaim

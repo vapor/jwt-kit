@@ -1,8 +1,5 @@
-import XCTest
-#if os(Linux)
-    import FoundationNetworking
-#endif
 @testable import JWTKit
+import XCTest
 
 class JWTKitTests: XCTestCase {
     func testGettingStarted() throws {

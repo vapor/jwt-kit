@@ -3,7 +3,7 @@ import Foundation
 import SwiftASN1
 import X509
 
-public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
+public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     var curve: ECDSACurve = Curve.curve
 
     var parameters: ECDSAParameters? {
@@ -47,15 +47,7 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
     }
 
     public static func `public`(pem string: String) throws -> Self {
-        if #available(macOS 11.0, *) {
-            return try .init(publicKey: PublicKey(pemRepresentation: string))
-        } else {
-            let publicKey = try X509.Certificate.PublicKey(pemEncoded: string)
-            guard let p256PublicKey = PublicKey(publicKey) else {
-                throw ECDSAError.generateKeyFailure
-            }
-            return try .init(publicKey: p256PublicKey)
-        }
+        try .init(publicKey: PublicKey(pemRepresentation: string))
     }
 
     public static func `public`<Data>(pem: Data) throws -> Self
@@ -66,17 +58,7 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
     }
 
     public static func `private`(pem string: String) throws -> Self {
-        if #available(macOS 11.0, *) {
-            return try .init(privateKey: PrivateKey(pemRepresentation: string))
-        } else {
-            let der = string.replacingOccurrences(of: "-----BEGIN PRIVATE KEY-----", with: "")
-                .replacingOccurrences(of: "-----END PRIVATE KEY-----", with: "")
-                .replacingOccurrences(of: "\n", with: "")
-            guard let derData = Data(base64Encoded: der) else {
-                throw JWTError.signingAlgorithmFailure(ECDSAError.generateKeyFailure)
-            }
-            return try .init(privateKey: PrivateKey(x963Representation: derData))
-        }
+        try .init(privateKey: PrivateKey(pemRepresentation: string))
     }
 
     public static func `private`<Data>(pem: Data) throws -> Self
@@ -86,7 +68,7 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
         return try self.private(pem: string)
     }
 
-    public convenience init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
+    public init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
         let privateKeyBytes: [UInt8]?
         if
             let privateKey = privateKey,
@@ -120,7 +102,15 @@ public final class ECDSAKey<Curve>: ECDSAKeyType where Curve: CurveType {
         guard privateKey != nil || publicKey != nil else {
             throw ECDSAError.generateKeyFailure
         }
-        type = privateKey != nil ? .private : publicKey != nil ? .public : .certificate
+
+        if privateKey != nil {
+            type = .private
+        } else if publicKey != nil {
+            type = .public
+        } else {
+            type = .certificate
+        }
+
         self.privateKey = privateKey
         self.publicKey = publicKey
     }

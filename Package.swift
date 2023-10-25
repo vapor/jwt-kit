@@ -13,7 +13,7 @@ let package = Package(
         .library(name: "JWTKit", targets: ["JWTKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", "2.6.0" ..< "4.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0"),
         .package(url: "https://github.com/apple/swift-certificates.git", branch: "main"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
     ],
@@ -36,6 +36,5 @@ let package = Package(
                 .copy("TestVectors"),
             ]
         ),
-    ],
-    cxxLanguageStandard: .cxx11
+    ]
 )

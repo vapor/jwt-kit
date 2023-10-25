@@ -100,24 +100,24 @@ public struct JWK: Codable {
     }
 
     public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String? = nil) -> JWK {
-        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent)
+        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, modulus: modulus, exponent: exponent, privateExponent: privateExponent)
     }
 
     public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSACurve?, privateKey: String? = nil) -> JWK {
-        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.curve) })
+        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.curve) })
     }
 
     public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y _: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
+        return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
     }
 
     private init(
         keyType: KeyType,
         algorithm: Algorithm? = nil,
         keyIdentifier: JWKIdentifier? = nil,
-        n: String? = nil,
-        e: String? = nil,
-        d: String? = nil,
+        modulus: String? = nil,
+        exponent: String? = nil,
+        privateExponent: String? = nil,
         x: String? = nil,
         y: String? = nil,
         curve: Curve? = nil
@@ -125,9 +125,9 @@ public struct JWK: Codable {
         self.keyType = keyType
         self.algorithm = algorithm
         self.keyIdentifier = keyIdentifier
-        modulus = n
-        exponent = e
-        privateExponent = d
+        self.modulus = modulus
+        self.exponent = exponent
+        self.privateExponent = privateExponent
         self.x = x
         self.y = y
         self.curve = curve
