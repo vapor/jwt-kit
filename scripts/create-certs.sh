@@ -1,3 +1,10 @@
+#!/usr/bin/env bash
+
+set -e -o pipefail
+
+mkdir jwt_x5c_certs
+pushd jwt_x5c_certs
+
 # Create a Root Certificate (self-signed):
 
 # Generate a private key for the Root CA
@@ -14,11 +21,13 @@ openssl ecparam -name prime256v1 -genkey -noout -out intermediate_key.pem
 # Create a certificate signing request for the Intermediate CA
 openssl req -new -key intermediate_key.pem -out intermediate_csr.pem
 
-# Create a configuration file (intermediate_ca.cnf) to specify the basicConstraints extension
-echo "basicConstraints=CA:TRUE" > intermediate.cnf
-
 # Sign the Intermediate CA certificate with the Root, specifying the basicConstraints extension
-openssl x509 -req -in intermediate_csr.pem -CA root_cert.pem -CAkey root_key.pem -out intermediate_cert.pem -days 1825 -extfile intermediate.cnf
+openssl x509 -req \
+    -in intermediate_csr.pem \
+    -CA root_cert.pem -CAkey root_key.pem \
+    -out intermediate_cert.pem \
+    -days 1825 \
+    -extfile <(echo 'basicConstraints=CA:TRUE')
 
 # Create a Leaf Certificate (signed by the Intermediate):
 
@@ -40,4 +49,4 @@ openssl ecparam -name prime256v1 -genkey -noout -out expired_leaf_key.pem
 openssl req -new -key expired_leaf_key.pem -out expired_leaf_csr.pem
 
 # Sign the Leaf certificate with the Intermediate
-openssl x509 -req -in expired_leaf_csr.pem -CA intermediate_cert.pem -CAkey intermediate_key.pem -out expired_leaf_cert.pem -days -365
+openssl x509 -req -in expired_leaf_csr.pem -CA intermediate_cert.pem -CAkey intermediate_key.pem -out expired_leaf_cert.pem -days -1

@@ -1,9 +1,6 @@
 import Foundation
+import JWTKit
 import XCTest
-#if os(Linux)
-    import FoundationNetworking
-#endif
-@testable import JWTKit
 
 /// This test suite is basically the same as the `X5CTests` suite,
 /// but it uses the certificates hashed with SHA256 instead of the SHA1.
