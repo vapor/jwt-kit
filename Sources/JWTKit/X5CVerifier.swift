@@ -135,10 +135,7 @@ public class X5CVerifier {
         // Validate the leaf certificate against the trusted store
         let result = await verifier.validate(leafCertificate: leafCertificate, intermediates: untrustedChain)
 
-        switch result {
-        case let .validCertificate(certificateChain):
-            print("Certificates are valid: \(certificateChain)")
-        case let .couldNotValidate(failures):
+        if case let .couldNotValidate(failures) = result {
             throw JWTError.generic(identifier: "JWS", reason: "Invalid x5c chain: \(failures)")
         }
 
