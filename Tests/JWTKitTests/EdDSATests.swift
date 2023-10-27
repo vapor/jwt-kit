@@ -1,4 +1,4 @@
-@testable import JWTKit
+import JWTKit
 import XCTest
 
 final class EdDSATests: XCTestCase {

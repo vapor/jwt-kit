@@ -143,18 +143,36 @@ public final class RSAKey {
     let publicKey: _RSA.Signing.PublicKey?
     let privateKey: _RSA.Signing.PrivateKey?
 
-    public init(publicKey: _RSA.Signing.PublicKey) {
+    init(publicKey: _RSA.Signing.PublicKey) {
         type = .public
         self.publicKey = publicKey
         privateKey = nil
     }
 
-    public init(privateKey: _RSA.Signing.PrivateKey) {
+    init(privateKey: _RSA.Signing.PrivateKey) {
         type = .private
         publicKey = privateKey.publicKey
         self.privateKey = privateKey
     }
 
+    /// Initializes a new RSA key instance with modulus, exponent, and an optional private exponent.
+    ///
+    /// This convenience initializer creates an RSA key using the modulus, exponent, and an optional private exponent.
+    /// All these parameters are expected to be base64 URL encoded strings.
+    /// If the private exponent is provided, the initializer creates an RSA private key. Otherwise, it initializes an RSA public key.
+    ///
+    /// - Parameters:
+    ///   - modulus: The modulus of the RSA key, represented as a base64 URL encoded string.
+    ///   - exponent: The exponent of the RSA key, represented as a base64 URL encoded string.
+    ///   - privateExponent: An optional base64 URL encoded string representing the private exponent of the RSA key. If this parameter is nil, only a public key is generated. Defaults to `nil`.
+    ///
+    /// - Throws:
+    ///   - `JWTError.generic` with the identifier "RSAKey" if either the modulus or exponent cannot be decoded from their base64 URL encoded strings.
+    ///   - `RSAError.keyInitializationFailure` if there is a failure in initializing the RSA key, especially when the private key components are involved.
+    ///
+    /// - Note:
+    ///   - The provided modulus and exponent are key components for creating RSA public keys.
+    ///   - The private exponent is an additional parameter required for creating RSA private keys.
     public convenience init(
         modulus: String,
         exponent: String,

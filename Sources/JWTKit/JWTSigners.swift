@@ -226,19 +226,19 @@ private struct JWKSigner {
                 switch algorithm {
                 case .es256:
                     return try JWTSigner.es256(
-                        key: P256Key(parameters: .init(x: x, y: y), privateKey: jwk.privateExponent),
+                        key: P256Key(parameters: (x, y), privateKey: jwk.privateExponent),
                         jsonEncoder: jsonEncoder,
                         jsonDecoder: jsonDecoder
                     )
                 case .es384:
                     return try JWTSigner.es384(
-                        key: P384Key(parameters: .init(x: x, y: y), privateKey: jwk.privateExponent),
+                        key: P384Key(parameters: (x, y), privateKey: jwk.privateExponent),
                         jsonEncoder: jsonEncoder,
                         jsonDecoder: jsonDecoder
                     )
                 case .es512:
                     return try JWTSigner.es512(
-                        key: P521Key(parameters: .init(x: x, y: y), privateKey: jwk.privateExponent),
+                        key: P521Key(parameters: (x, y), privateKey: jwk.privateExponent),
                         jsonEncoder: jsonEncoder,
                         jsonDecoder: jsonDecoder
                     )

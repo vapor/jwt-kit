@@ -3,10 +3,16 @@ import Foundation
 import SwiftASN1
 import X509
 
-public struct ECDSAParameters {
-    public let x: String
-    public let y: String
-}
+/// A typealias representing the parameters of an ECDSA (Elliptic Curve Digital Signature Algorithm) key.
+///
+/// This tuple consists of two strings representing the x and y coordinates on the elliptic curve. These coordinates are crucial in defining the public key in ECDSA cryptography. They are typically encoded in Base64 or a similar encoding format.
+///
+/// The `x` and `y` coordinates are represented as strings for easier handling and conversion, especially when dealing with different encoding and serialization formats like PEM, DER, or others commonly used in cryptographic operations.
+///
+/// - Parameters:
+///   - x: A `String` representing the x-coordinate on the elliptic curve.
+///   - y: A `String` representing the y-coordinate on the elliptic curve.
+public typealias ECDSAParameters = (x: String, y: String)
 
 public protocol ECDSAPrivateKey {
     associatedtype PublicKey: ECDSAPublicKey

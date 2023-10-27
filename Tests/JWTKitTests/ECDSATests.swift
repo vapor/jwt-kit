@@ -94,7 +94,7 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
         // sign jwt
-        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: .init(x: x, y: y), privateKey: privateKey))
+        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: (x, y), privateKey: privateKey))
 
         let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
 
@@ -133,7 +133,7 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k-1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0-539FSHmJxg"
 
         // sign jwt
-        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: .init(x: x, y: y), privateKey: privateKey))
+        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: (x, y), privateKey: privateKey))
 
         let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
 
@@ -172,7 +172,7 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
         // sign jwt
-        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: .init(x: x, y: y), privateKey: privateKey))
+        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: (x, y), privateKey: privateKey))
 
         let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
 
