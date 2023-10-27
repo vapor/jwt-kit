@@ -42,6 +42,11 @@ private extension Data {
             default: break
             }
         }
+        /// https://stackoverflow.com/questions/43499651/decode-base64url-to-base64-swift
+        let padding = count % 4
+        if padding > 0 {
+            self += Data(repeating: 0x3D, count: 4 - count % 4)
+        }
     }
 
     /// Converts base64 encoded data to a base64-url encoded data.
@@ -55,6 +60,7 @@ private extension Data {
             default: break
             }
         }
+        self = split(separator: 0x3D).first ?? .init()
     }
 
     /// Converts base64-url encoded data to a base64 encoded data.
