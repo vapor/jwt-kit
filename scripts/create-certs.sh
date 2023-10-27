@@ -50,3 +50,5 @@ openssl req -new -key expired_leaf_key.pem -out expired_leaf_csr.pem
 
 # Sign the Leaf certificate with the Intermediate
 openssl x509 -req -in expired_leaf_csr.pem -CA intermediate_cert.pem -CAkey intermediate_key.pem -out expired_leaf_cert.pem -days -1
+
+popd
