@@ -33,7 +33,7 @@ struct PrimeGenerator {
             var j = 1
             var x: BigUInt
 
-            while j <= t - 1 {
+            while j <= t &- 1 {
                 x = y.power(2, modulus: n)
 
                 guard x != 1, x != n - 1 else {
@@ -41,48 +41,19 @@ struct PrimeGenerator {
                 }
 
                 y = x
-                j += 1
+                j &+= 1
             }
 
             x = y.power(2, modulus: n)
             if x == 1 {
-                let p = (y - 1).gcd(with: n)
+                let p = (y - 1).greatestCommonDivisor(with: n)
                 let q = n / p
 
                 return (p, q)
             }
-            i += 1
+            i &+= 1
         }
 
         throw RSAError.keyInitializationFailure
-    }
-}
-
-extension BigUInt {
-    func power(_ exponent: BigUInt, modulus: BigUInt) -> BigUInt {
-        var base = self
-        var exponent = exponent
-        var result = BigUInt(1)
-
-        while exponent > 0 {
-            if exponent.words[0] & 1 != 0 {
-                result = (result * base) % modulus
-            }
-            exponent /= 2
-            base = (base * base) % modulus
-        }
-
-        return result
-    }
-
-    func gcd(with other: BigUInt) -> BigUInt {
-        var a = self
-        var b = other
-
-        while b != 0 {
-            (a, b) = (b, a % b)
-        }
-
-        return a
     }
 }
