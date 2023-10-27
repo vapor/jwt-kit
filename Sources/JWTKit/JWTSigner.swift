@@ -3,16 +3,16 @@ import Foundation
 /// A JWT signer.
 public final class JWTSigner {
     public let algorithm: JWTAlgorithm
-    
-    internal var jsonEncoder: (any JWTJSONEncoder)?
-    internal var jsonDecoder: (any JWTJSONDecoder)?
+
+    var jsonEncoder: (any JWTJSONEncoder)?
+    var jsonDecoder: (any JWTJSONDecoder)?
 
     public init(algorithm: JWTAlgorithm) {
         self.algorithm = algorithm
         self.jsonEncoder = nil
         self.jsonDecoder = nil
     }
-    
+
     public init(algorithm: JWTAlgorithm, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) {
         self.algorithm = algorithm
         self.jsonEncoder = jsonEncoder
@@ -32,36 +32,36 @@ public final class JWTSigner {
 
     public func unverified<Payload>(
         _ token: String,
-        as payload: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self
     ) throws -> Payload
         where Payload: JWTPayload
     {
         try self.unverified([UInt8](token.utf8))
     }
 
-    public func unverified<Message, Payload>(
-        _ token: Message,
-        as payload: Payload.Type = Payload.self
+    public func unverified<Payload>(
+        _ token: some DataProtocol,
+        as _: Payload.Type = Payload.self
     ) throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
+        where Payload: JWTPayload
     {
         try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
     }
 
     public func verify<Payload>(
         _ token: String,
-        as payload: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self
     ) throws -> Payload
         where Payload: JWTPayload
     {
         try self.verify([UInt8](token.utf8), as: Payload.self)
     }
 
-    public func verify<Message, Payload>(
-        _ token: Message,
-        as payload: Payload.Type = Payload.self
+    public func verify<Payload>(
+        _ token: some DataProtocol,
+        as _: Payload.Type = Payload.self
     ) throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
+        where Payload: JWTPayload
     {
         let parser = try JWTParser(token: token)
         return try self.verify(parser: parser)

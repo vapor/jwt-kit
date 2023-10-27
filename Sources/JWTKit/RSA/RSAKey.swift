@@ -41,9 +41,7 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `public`<Data>(pem data: Data) throws -> RSAKey
-        where Data: DataProtocol
-    {
+    public static func `public`(pem data: some DataProtocol) throws -> RSAKey {
         let string = String(decoding: data, as: UTF8.self)
         return try self.public(pem: string)
     }
@@ -88,9 +86,7 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func certificate<Data>(pem data: Data) throws -> RSAKey
-        where Data: DataProtocol
-    {
+    public static func certificate(pem data: some DataProtocol) throws -> RSAKey {
         let string = String(decoding: data, as: UTF8.self)
         return try certificate(pem: string)
     }

@@ -26,14 +26,14 @@ public final class JWTSigners {
 
     /// Create a new ``JWTSigners``.
     public init() {
-        storage = [:]
-        defaultJSONEncoder = .defaultForJWT
-        defaultJSONDecoder = .defaultForJWT
+        self.storage = [:]
+        self.defaultJSONEncoder = .defaultForJWT
+        self.defaultJSONDecoder = .defaultForJWT
     }
 
     /// Create a new ``JWTSigners`` with specific JSON coders.
     public init(defaultJSONEncoder: any JWTJSONEncoder, defaultJSONDecoder: any JWTJSONDecoder) {
-        storage = [:]
+        self.storage = [:]
         self.defaultJSONEncoder = defaultJSONEncoder
         self.defaultJSONDecoder = defaultJSONDecoder
     }
@@ -44,11 +44,11 @@ public final class JWTSigners {
         kid: JWKIdentifier? = nil,
         isDefault: Bool? = nil
     ) {
-        signer.jsonEncoder = signer.jsonEncoder ?? defaultJSONEncoder
-        signer.jsonDecoder = signer.jsonDecoder ?? defaultJSONDecoder
+        signer.jsonEncoder = signer.jsonEncoder ?? self.defaultJSONEncoder
+        signer.jsonDecoder = signer.jsonDecoder ?? self.defaultJSONDecoder
 
         if let kid = kid {
-            storage[kid] = .jwt(signer)
+            self.storage[kid] = .jwt(signer)
         }
         switch (self.default, isDefault) {
         case (.none, .none), (_, .some(true)):
@@ -60,8 +60,8 @@ public final class JWTSigners {
     /// Adds a `JWKS` (JSON Web Key Set) to this signers collection
     /// by first decoding the JSON string.
     public func use(jwksJSON json: String) throws {
-        let jwks = try defaultJSONDecoder.decode(JWKS.self, from: Data(json.utf8))
-        try use(jwks: jwks)
+        let jwks = try self.defaultJSONDecoder.decode(JWKS.self, from: Data(json.utf8))
+        try self.use(jwks: jwks)
     }
 
     /// Adds a `JWKS` (JSON Web Key Set) to this signers collection.
@@ -77,8 +77,8 @@ public final class JWTSigners {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK
         }
-        let signer = JWKSigner(jwk: jwk, jsonEncoder: defaultJSONEncoder, jsonDecoder: defaultJSONDecoder)
-        storage[kid] = .jwk(signer)
+        let signer = JWKSigner(jwk: jwk, jsonEncoder: self.defaultJSONEncoder, jsonDecoder: self.defaultJSONDecoder)
+        self.storage[kid] = .jwk(signer)
         switch (self.default, isDefault) {
         case (.none, .none), (_, .some(true)):
             self.default = .jwk(signer)
@@ -89,7 +89,7 @@ public final class JWTSigners {
     /// Gets a signer for the supplied `kid`, if one exists.
     public func get(kid: JWKIdentifier? = nil, alg: String? = nil) -> JWTSigner? {
         let signer: Signer
-        if let kid = kid, let stored = storage[kid] {
+        if let kid = kid, let stored = self.storage[kid] {
             signer = stored
         } else if let d = self.default {
             signer = d
@@ -105,7 +105,7 @@ public final class JWTSigners {
     }
 
     public func require(kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTSigner {
-        guard let signer = get(kid: kid, alg: alg) else {
+        guard let signer = self.get(kid: kid, alg: alg) else {
             if let kid = kid {
                 throw JWTError.unknownKID(kid)
             } else {
@@ -124,11 +124,11 @@ public final class JWTSigners {
         try unverified([UInt8](token.utf8))
     }
 
-    public func unverified<Message, Payload>(
-        _ token: Message,
+    public func unverified<Payload>(
+        _ token: some DataProtocol,
         as _: Payload.Type = Payload.self
     ) throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
+        where Payload: JWTPayload
     {
         try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: defaultJSONDecoder)
     }
@@ -142,15 +142,15 @@ public final class JWTSigners {
         try verify([UInt8](token.utf8), as: Payload.self)
     }
 
-    public func verify<Message, Payload>(
-        _ token: Message,
+    public func verify<Payload>(
+        _ token: some DataProtocol,
         as _: Payload.Type = Payload.self
     ) throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
+        where Payload: JWTPayload
     {
         let parser = try JWTParser(token: token)
-        let header = try parser.header(jsonDecoder: defaultJSONDecoder)
-        let signer = try require(kid: header.kid, alg: header.alg)
+        let header = try parser.header(jsonDecoder: self.defaultJSONDecoder)
+        let signer = try self.require(kid: header.kid, alg: header.alg)
         return try signer.verify(parser: parser)
     }
 
@@ -161,8 +161,7 @@ public final class JWTSigners {
     ) throws -> String
         where Payload: JWTPayload
     {
-        let signer = try require(kid: kid)
-
+        let signer = try self.require(kid: kid)
         return try signer.sign(payload, typ: typ, kid: kid)
     }
 }
@@ -182,8 +181,8 @@ private struct JWKSigner {
         switch jwk.keyType {
         case .rsa:
             guard
-                let modulus = jwk.modulus,
-                let exponent = jwk.exponent
+                let modulus = self.jwk.modulus,
+                let exponent = self.jwk.exponent
             else {
                 return nil
             }
@@ -191,56 +190,56 @@ private struct JWKSigner {
             let rsaKey: RSAKey
 
             do {
-                rsaKey = try RSAKey(modulus: modulus, exponent: exponent, privateExponent: jwk.privateExponent)
+                rsaKey = try RSAKey(modulus: modulus, exponent: exponent, privateExponent: self.jwk.privateExponent)
             } catch {
                 return nil
             }
 
-            guard let algorithm = algorithm ?? jwk.algorithm else {
+            guard let algorithm = algorithm ?? self.jwk.algorithm else {
                 return nil
             }
 
             switch algorithm {
             case .rs256:
-                return JWTSigner.rs256(key: rsaKey, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+                return JWTSigner.rs256(key: rsaKey, jsonEncoder: self.jsonEncoder, jsonDecoder: self.jsonDecoder)
             case .rs384:
-                return JWTSigner.rs384(key: rsaKey, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+                return JWTSigner.rs384(key: rsaKey, jsonEncoder: self.jsonEncoder, jsonDecoder: self.jsonDecoder)
             case .rs512:
-                return JWTSigner.rs512(key: rsaKey, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+                return JWTSigner.rs512(key: rsaKey, jsonEncoder: self.jsonEncoder, jsonDecoder: self.jsonDecoder)
             default:
                 return nil
             }
 
         case .ecdsa:
-            guard let x = jwk.x else {
+            guard let x = self.jwk.x else {
                 return nil
             }
-            guard let y = jwk.y else {
+            guard let y = self.jwk.y else {
                 return nil
             }
 
-            guard let algorithm = algorithm ?? jwk.algorithm else {
+            guard let algorithm = algorithm ?? self.jwk.algorithm else {
                 return nil
             }
             do {
                 switch algorithm {
                 case .es256:
                     return try JWTSigner.es256(
-                        key: P256Key(parameters: (x, y), privateKey: jwk.privateExponent),
-                        jsonEncoder: jsonEncoder,
-                        jsonDecoder: jsonDecoder
+                        key: P256Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
+                        jsonEncoder: self.jsonEncoder,
+                        jsonDecoder: self.jsonDecoder
                     )
                 case .es384:
                     return try JWTSigner.es384(
-                        key: P384Key(parameters: (x, y), privateKey: jwk.privateExponent),
-                        jsonEncoder: jsonEncoder,
-                        jsonDecoder: jsonDecoder
+                        key: P384Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
+                        jsonEncoder: self.jsonEncoder,
+                        jsonDecoder: self.jsonDecoder
                     )
                 case .es512:
                     return try JWTSigner.es512(
-                        key: P521Key(parameters: (x, y), privateKey: jwk.privateExponent),
-                        jsonEncoder: jsonEncoder,
-                        jsonDecoder: jsonDecoder
+                        key: P521Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
+                        jsonEncoder: self.jsonEncoder,
+                        jsonDecoder: self.jsonDecoder
                     )
                 default:
                     return nil
@@ -249,15 +248,15 @@ private struct JWKSigner {
                 return nil
             }
         case .octetKeyPair:
-            guard let algorithm = algorithm ?? jwk.algorithm else {
+            guard let algorithm = algorithm ?? self.jwk.algorithm else {
                 return nil
             }
 
-            guard let curve = jwk.curve.flatMap({ EdDSAKey.Curve(rawValue: $0.rawValue) }) else {
+            guard let curve = self.jwk.curve.flatMap({ EdDSAKey.Curve(rawValue: $0.rawValue) }) else {
                 return nil
             }
 
-            switch (algorithm, jwk.x, jwk.privateExponent) {
+            switch (algorithm, self.jwk.x, self.jwk.privateExponent) {
             case let (.eddsa, .some(x), .some(d)):
                 let key = try? EdDSAKey.private(x: x, d: d, curve: curve)
                 return key.map { .eddsa($0, jsonEncoder: self.jsonEncoder, jsonDecoder: self.jsonDecoder) }

@@ -75,11 +75,11 @@ public class X5CVerifier {
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
     /// - Returns: The decoded payload, if verified.
-    public func verifyJWS<Message, Payload>(
-        _ token: Message,
+    public func verifyJWS<Payload>(
+        _ token: some DataProtocol,
         as _: Payload.Type = Payload.self
     ) async throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
+        where Payload: JWTPayload
     {
         try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
     }
@@ -92,12 +92,12 @@ public class X5CVerifier {
     ///   - payload: The type to decode from the token payload.
     ///   - jsonDecoder: The JSON decoder to use for dcoding the token.
     /// - Returns: The decoded payload, if verified.
-    public func verifyJWS<Message, Payload>(
-        _ token: Message,
+    public func verifyJWS<Payload>(
+        _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder
     ) async throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
+        where Payload: JWTPayload
     {
         // Parse the JWS header to get the header
         let parser = try JWTParser(token: token)

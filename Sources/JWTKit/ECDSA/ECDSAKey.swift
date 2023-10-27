@@ -39,17 +39,17 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// Generates a new ECDSA key.
     ///
     /// - Throws: If there is a problem generating the key.
-    /// - Returns: A new `ECDSAKey` instance with a generated private and corresponding public key.
+    /// - Returns: A new ``ECDSAKey`` instance with a generated private and corresponding public key.
     public static func generate() throws -> Self {
         let privateKey = PrivateKey()
         return try .init(privateKey: privateKey, publicKey: privateKey.publicKey)
     }
 
-    /// Creates an `ECDSAKey` instance from a PEM encoded certificate string.
+    /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate string.
     ///
     /// - Parameter pem: The PEM encoded certificate string.
     /// - Throws: If there is a problem parsing the certificate or deriving the public key.
-    /// - Returns: A new `ECDSAKey` instance with the public key from the certificate.
+    /// - Returns: A new ``ECDSAKey`` instance with the public key from the certificate.
     public static func certificate(pem string: String) throws -> Self {
         let cert = try X509.Certificate(pemEncoded: string)
         guard let publicKey = PublicKey(cert.publicKey) else {
@@ -58,56 +58,50 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         return try .init(publicKey: publicKey)
     }
 
-    /// Creates an `ECDSAKey` instance from a PEM encoded certificate data.
+    /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate data.
     ///
     /// - Parameter pem: The PEM encoded certificate data.
     /// - Throws: If there is a problem parsing the certificate or deriving the public key.
-    /// - Returns: A new `ECDSAKey` instance with the public key from the certificate.
-    public static func certificate<Data>(pem: Data) throws -> Self
-        where Data: DataProtocol
-    {
+    /// - Returns: A new ``ECDSAKey`` instance with the public key from the certificate.
+    public static func certificate(pem: some DataProtocol) throws -> Self {
         let string = String(decoding: pem, as: UTF8.self)
         return try certificate(pem: string)
     }
 
-    /// Creates an `ECDSAKey` instance from a PEM encoded private key string.
+    /// Creates an ``ECDSAKey`` instance from a PEM encoded private key string.
     ///
     /// - Parameter pem: The PEM encoded private key string.
     /// - Throws: If there is a problem parsing the private key.
-    /// - Returns: A new `ECDSAKey` instance with the private key.
+    /// - Returns: A new ``ECDSAKey`` instance with the private key.
     public static func `public`(pem string: String) throws -> Self {
         try .init(publicKey: PublicKey(pemRepresentation: string))
     }
 
-    /// Creates an `ECDSAKey` instance from a PEM encoded private key data.
+    /// Creates an ``ECDSAKey`` instance from a PEM encoded private key data.
     ///
     /// - Parameter pem: The PEM encoded private key data.
     /// - Throws: If there is a problem parsing the private key.
-    /// - Returns: A new `ECDSAKey` instance with the private key.
-    public static func `public`<Data>(pem: Data) throws -> Self
-        where Data: DataProtocol
-    {
+    /// - Returns: A new ``ECDSAKey`` instance with the private key.
+    public static func `public`(pem: some DataProtocol) throws -> Self {
         let string = String(decoding: pem, as: UTF8.self)
         return try self.public(pem: string)
     }
 
-    /// Creates an `ECDSAKey` instance from a PEM encoded private key string.
+    /// Creates an ``ECDSAKey`` instance from a PEM encoded private key string.
     ///
     /// - Parameter pem: The PEM encoded private key string.
     /// - Throws: If there is a problem parsing the private key.
-    /// - Returns: A new `ECDSAKey` instance with the private key.
+    /// - Returns: A new ``ECDSAKey`` instance with the private key.
     public static func `private`(pem string: String) throws -> Self {
         try .init(privateKey: PrivateKey(pemRepresentation: string))
     }
 
-    /// Creates an `ECDSAKey` instance from a PEM encoded private key data.
+    /// Creates an ``ECDSAKey`` instance from a PEM encoded private key data.
     ///
     /// - Parameter data: The PEM encoded private key data.
     /// - Throws: If there is a problem parsing the private key.
-    /// - Returns: A new `ECDSAKey` instance with the private key.
-    public static func `private`<Data>(pem: Data) throws -> Self
-        where Data: DataProtocol
-    {
+    /// - Returns: A new ``ECDSAKey`` instance with the private key.
+    public static func `private`(pem: some DataProtocol) throws -> Self {
         let string = String(decoding: pem, as: UTF8.self)
         return try self.private(pem: string)
     }
@@ -119,15 +113,15 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// it initializes the instance using only the public key derived from the given ECDSA parameters.
     ///
     /// - Parameters:
-    ///   - parameters: The `ECDSAParameters` tuple containing the x and y coordinates of the public key. These coordinates should be base64 URL encoded strings.
+    ///   - parameters: The ``ECDSAParameters`` tuple containing the x and y coordinates of the public key. These coordinates should be base64 URL encoded strings.
     ///   - privateKey: An optional base64 URL encoded string representation of the private key. If provided, it is used to create the private key for the instance. Defaults to `nil`.
     ///
     /// - Throws:
-    ///   - `JWTError.generic` with the identifier "ecCoordinates" if the x and y coordinates from `parameters` cannot be interpreted as base64 encoded data.
-    ///   - `JWTError.generic` with the identifier "ecPrivateKey" if the provided `privateKey` is non-nil but cannot be interpreted as a valid ECDSAPrivateKey.
+    ///   - ``JWTError/generic`` with the identifier `ecCoordinates`` if the x and y coordinates from `parameters` cannot be interpreted as base64 encoded data.
+    ///   - ``JWTError/generic`` with the identifier `ecPrivateKey`` if the provided `privateKey` is non-nil but cannot be interpreted as a valid `PrivateKey`.
     ///
     /// - Note:
-    ///   The ECDSAParameters tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
+    ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
     public init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
         let privateKeyBytes: [UInt8]?
         if

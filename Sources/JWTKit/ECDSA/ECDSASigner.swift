@@ -5,9 +5,7 @@ struct ECDSASigner: JWTAlgorithm, CryptoSigner {
     let algorithm: DigestAlgorithm
     public let name: String
 
-    public func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
-        where Plaintext: DataProtocol
-    {
+    func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
         let digest = try self.digest(plaintext)
         guard let privateKey = key.privateKey else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPrivateKey)
@@ -16,12 +14,7 @@ struct ECDSASigner: JWTAlgorithm, CryptoSigner {
         return [UInt8](signature.rawRepresentation)
     }
 
-    public func verify<Signature, Plaintext>(
-        _ signature: Signature,
-        signs plaintext: Plaintext
-    ) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
-    {
+    public func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         let digest = try self.digest(plaintext)
         guard let publicKey = key.publicKey ?? key.privateKey?.publicKey else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPublicKey)

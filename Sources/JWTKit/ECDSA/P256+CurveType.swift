@@ -25,9 +25,7 @@ extension P256.Signing.PublicKey: ECDSAPublicKey {
     ///   - digest: The digest to verify the signature against.
     /// - Returns: True if the signature is valid for the given digest, false otherwise.
     /// - Throws: If there is a problem verifying the signature.
-    public func isValidSignature<Signature, D>(_ signature: Signature, for data: D) throws -> Bool
-        where Signature: DataProtocol, D: Digest
-    {
+    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
         return isValidSignature(signature, for: data)
     }

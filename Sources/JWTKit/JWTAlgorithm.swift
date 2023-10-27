@@ -12,8 +12,7 @@ public protocol JWTAlgorithm {
     /// - parameters:
     ///     - plaintext: Plaintext data to sign.
     /// - returns: Signature unique to the supplied data.
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
-        where Plaintext: DataProtocol
+    func sign(_ plaintext: some DataProtocol) throws -> [UInt8]
 
     /// Returns `true` if the signature was creating by signing the plaintext.
     ///
@@ -31,15 +30,12 @@ public protocol JWTAlgorithm {
     ///     - signature: Signature data resulting from a previous call to `sign(:_)`.
     ///     - plaintext: Plaintext data to check signature against.
     /// - returns: Returns `true` if the signature was created by the supplied plaintext data.
-    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool
 }
 
 extension JWTAlgorithm {
     /// See `JWTAlgorithm`.
-    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
-    {
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         // create test signature
         let check = try sign(plaintext)
 

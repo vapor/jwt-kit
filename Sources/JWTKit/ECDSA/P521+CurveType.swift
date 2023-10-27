@@ -19,9 +19,14 @@ extension P521: ECDSACurveType {
 }
 
 extension P521.Signing.PublicKey: ECDSAPublicKey {
-    public func isValidSignature<Signature, D>(_ signature: Signature, for data: D) throws -> Bool
-        where Signature: DataProtocol, D: Digest
-    {
+    /// Verifies that the P256 key signature is valid for the given digest.
+    ///
+    /// - Parameters:
+    ///   - signature: The signature to verify.
+    ///   - digest: The digest to verify the signature against.
+    /// - Returns: True if the signature is valid for the given digest, false otherwise.
+    /// - Throws: If there is a problem verifying the signature.
+    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool {
         let signature = try P521.Signing.ECDSASignature(rawRepresentation: signature)
         return isValidSignature(signature, for: data)
     }

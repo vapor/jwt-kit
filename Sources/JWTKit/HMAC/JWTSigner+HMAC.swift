@@ -12,9 +12,7 @@ public extension JWTSigner {
         .hs256(key: [UInt8](key.utf8), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
 
-    static func hs256<Key>(key: Key, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner
-        where Key: DataProtocol
-    {
+    static func hs256(key: some DataProtocol, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         let symmetricKey = SymmetricKey(data: key.copyBytes())
         return .hs256(key: symmetricKey, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
@@ -26,16 +24,14 @@ public extension JWTSigner {
     // MARK: 384
 
     static func hs384(key: String) -> JWTSigner { .hs384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
-    static func hs384<Key: DataProtocol>(key: Key) -> JWTSigner { .hs384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
+    static func hs384(key: some DataProtocol) -> JWTSigner { .hs384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
     static func hs384(key: SymmetricKey) -> JWTSigner { .hs384(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
     static func hs384(key: String, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .hs384(key: [UInt8](key.utf8), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
 
-    static func hs384<Key>(key: Key, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner
-        where Key: DataProtocol
-    {
+    static func hs384(key: some DataProtocol, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         let symmetricKey = SymmetricKey(data: key.copyBytes())
         return .hs384(key: symmetricKey, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
@@ -47,16 +43,14 @@ public extension JWTSigner {
     // MARK: 512
 
     static func hs512(key: String) -> JWTSigner { .hs512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
-    static func hs512<Key: DataProtocol>(key: Key) -> JWTSigner { .hs512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
+    static func hs512(key: some DataProtocol) -> JWTSigner { .hs512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
     static func hs512(key: SymmetricKey) -> JWTSigner { .hs512(key: key, jsonEncoder: nil, jsonDecoder: nil) }
 
     static func hs512(key: String, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         .hs512(key: [UInt8](key.utf8), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }
 
-    static func hs512<Key>(key: Key, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner
-        where Key: DataProtocol
-    {
+    static func hs512(key: some DataProtocol, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) -> JWTSigner {
         let symmetricKey = SymmetricKey(data: key.copyBytes())
         return .hs512(key: symmetricKey, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
     }

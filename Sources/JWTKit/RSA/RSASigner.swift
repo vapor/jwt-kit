@@ -15,9 +15,7 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         self.padding = padding
     }
 
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
-        where Plaintext: DataProtocol
-    {
+    func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
         guard
             case .private = key.type,
             let privateKey = key.privateKey
@@ -35,9 +33,7 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         }
     }
 
-    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
-    {
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         let digest = try self.digest(plaintext)
         let signature = _RSA.Signing.RSASignature(rawRepresentation: signature)
 

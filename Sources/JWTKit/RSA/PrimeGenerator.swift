@@ -1,5 +1,4 @@
 import BigInt
-import Foundation
 
 struct PrimeGenerator {
     /// The following algorithm recovers the prime factors of a modulus, given the public and private exponents.

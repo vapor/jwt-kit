@@ -5,9 +5,7 @@ extension String {
         var base64URL = replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
 
-        while base64URL.count % 4 != 0 {
-            base64URL.append("=")
-        }
+        base64URL.append(contentsOf: "===".prefix((4 - (base64URL.count & 3)) & 3))
 
         return Data(base64Encoded: base64URL)
     }
@@ -37,17 +35,12 @@ private extension Data {
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
     mutating func base64URLUnescape() {
-        for (i, byte) in enumerated() {
-            switch byte {
-            case 0x2D: self[index(startIndex, offsetBy: i)] = 0x2B
-            case 0x5F: self[index(startIndex, offsetBy: i)] = 0x2F
+        for idx in self.indices {
+            switch self[idx] {
+            case 0x2D /* - */: self[idx] = 0x2B /* + */
+            case 0x5F /* _ */: self[idx] = 0x2F /* / */
             default: break
             }
-        }
-        /// https://stackoverflow.com/questions/43499651/decode-base64url-to-base64-swift
-        let padding = count % 4
-        if padding > 0 {
-            self += Data(repeating: 0x3D, count: 4 - count % 4)
         }
     }
 
@@ -55,14 +48,13 @@ private extension Data {
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
     mutating func base64URLEscape() {
-        for (i, byte) in enumerated() {
-            switch byte {
-            case 0x2B: self[index(startIndex, offsetBy: i)] = 0x2D
-            case 0x2F: self[index(startIndex, offsetBy: i)] = 0x5F
+        for idx in self.indices {
+            switch self[idx] {
+            case 0x2B /* + */: self[idx] = 0x2D /* - */
+            case 0x2F /* / */: self[idx] = 0x5F /* _ */
             default: break
             }
         }
-        self = split(separator: 0x3D).first ?? .init()
     }
 
     /// Converts base64-url encoded data to a base64 encoded data.

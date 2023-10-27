@@ -1,15 +1,15 @@
-import Foundation
 import Crypto
+import Foundation
 
-internal struct EdDSASigner: JWTAlgorithm {
+struct EdDSASigner: JWTAlgorithm {
     let key: EdDSAKey
     let name = "EdDSA"
-    
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8] where Plaintext : DataProtocol {                
+
+    func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
         guard let privateKey = key.privateKey else {
-            throw  JWTError.signingAlgorithmFailure(EdDSAError.privateKeyMissing)
+            throw JWTError.signingAlgorithmFailure(EdDSAError.privateKeyMissing)
         }
-        
+
         switch key.curve {
         case .ed25519:
             return try Curve25519.Signing.PrivateKey(
@@ -19,8 +19,8 @@ internal struct EdDSASigner: JWTAlgorithm {
             ).copyBytes()
         }
     }
-    
-    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool where Signature : DataProtocol, Plaintext : DataProtocol {
+
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         switch key.curve {
         case .ed25519:
             return try Curve25519.Signing.PublicKey(
