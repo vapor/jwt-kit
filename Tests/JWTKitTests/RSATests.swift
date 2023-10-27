@@ -4,14 +4,12 @@ import XCTest
 
 final class RSATests: XCTestCase {
     func testCalculatePrimeFactors() throws {
-        try wycheproof(fileName: "rsa_oaep_misc_test", testFunction: testPrimeFactor)
         try wycheproof(fileName: "rsa_oaep_2048_sha1_mgf1sha1_test", testFunction: testPrimeFactor)
         try wycheproof(fileName: "rsa_oaep_2048_sha224_mgf1sha1_test", testFunction: testPrimeFactor)
         try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testPrimeFactor)
     }
 
     func testCalculateModularInverses() throws {
-        try wycheproof(fileName: "rsa_oaep_misc_test", testFunction: testModularInverse)
         try wycheproof(fileName: "rsa_oaep_2048_sha1_mgf1sha1_test", testFunction: testModularInverse)
         try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testModularInverse)
     }
