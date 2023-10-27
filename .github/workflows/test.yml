@@ -10,14 +10,14 @@ jobs:
   linux-integration:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
-    container: swift:5.8-jammy
+    container: swift:jammy
     steps: 
       - name: Check out JWTKit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: jwt-kit
       - name: Check out JWT provider
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: vapor/jwt
           path: jwt
@@ -27,7 +27,4 @@ jobs:
         run: swift test --package-path jwt --sanitize=thread
 
   unit-tests:
-     uses: vapor/ci/.github/workflows/run-unit-tests.yml@reusable-workflows
-     with:
-       with_coverage: true
-       with_tsan: true
+     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main

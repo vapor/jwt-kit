@@ -16,7 +16,7 @@ let package = Package(
         MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "2.0.0")
+        .package(url: "https://github.com/apple/swift-crypto.git", "2.0.0" ..< "4.0.0")
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
