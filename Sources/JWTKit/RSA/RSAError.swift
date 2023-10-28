@@ -1,5 +1,7 @@
-internal enum RSAError: Error {
+enum RSAError: Error {
     case privateKeyRequired
-    case signFailure
+    case publicKeyRequired
+    case signFailure(_ error: Error)
     case keyInitializationFailure
+    case keySizeTooSmall
 }

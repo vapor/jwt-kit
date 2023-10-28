@@ -1,19 +1,15 @@
 import Foundation
 
-internal struct UnsecuredNoneSigner: JWTAlgorithm {
+struct UnsecuredNoneSigner: JWTAlgorithm {
     var name: String {
         "none"
     }
-    
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
-        where Plaintext: DataProtocol
-    {
+
+    func sign(_: some DataProtocol) throws -> [UInt8] {
         []
     }
-    
-    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
-    {
+
+    func verify(_ signature: some DataProtocol, signs _: some DataProtocol) throws -> Bool {
         signature.isEmpty
     }
 }

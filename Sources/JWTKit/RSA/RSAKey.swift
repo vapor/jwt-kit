@@ -1,10 +1,13 @@
-@_implementationOnly import CJWTKitBoringSSL
+import _CryptoExtras
+import Crypto
 import Foundation
+import SwiftASN1
+import X509
 
-public final class RSAKey: OpenSSLKey {
-    /// Creates RSAKey from public key pem file.
+public struct RSAKey {
+    /// Creates ``RSAKey`` from public key PEM file.
     ///
-    /// Public key pem files look like:
+    /// Public key PEM files look like:
     ///
     ///     -----BEGIN PUBLIC KEY-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -15,14 +18,18 @@ public final class RSAKey: OpenSSLKey {
     /// This key can only be used to verify JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
+    ///     - pem: Contents of PEM file.
     public static func `public`(pem string: String) throws -> RSAKey {
-        try .public(pem: [UInt8](string.utf8))
+        do {
+            return try RSAKey(publicKey: .init(pemRepresentation: string))
+        } catch CryptoKitError.incorrectParameterSize {
+            throw RSAError.keySizeTooSmall
+        }
     }
 
-    /// Creates RSAKey from public key pem file.
+    /// Creates ``RSAKey`` from public key PEM file.
     ///
-    /// Public key pem files look like:
+    /// Public key PEM files look like:
     ///
     ///     -----BEGIN PUBLIC KEY-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -33,22 +40,13 @@ public final class RSAKey: OpenSSLKey {
     /// This key can only be used to verify JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
-    public static func `public`<Data>(pem data: Data) throws -> RSAKey
-        where Data: DataProtocol
-    {
-        let pkey = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_PUBKEY(bio, nil, nil, nil)
-        }
-        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
-
-        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
-            throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
-        }
-        return self.init(c, .public)
+    ///     - pem: Contents of PEM file.
+    public static func `public`(pem data: some DataProtocol) throws -> RSAKey {
+        let string = String(decoding: data, as: UTF8.self)
+        return try self.public(pem: string)
     }
 
-    /// Creates RSAKey from public certificate pem file.
+    /// Creates ``RSAKey`` from public certificate PEM file.
     ///
     /// Certificate pem files look like:
     ///
@@ -63,12 +61,20 @@ public final class RSAKey: OpenSSLKey {
     /// - parameters:
     ///     - pem: Contents of pem file.
     public static func certificate(pem string: String) throws -> RSAKey {
-        try self.certificate(pem: [UInt8](string.utf8))
+        let cert = try X509.Certificate(pemEncoded: string)
+        do {
+            guard let publicKey = _RSA.Signing.PublicKey(cert.publicKey) else {
+                throw RSAError.keyInitializationFailure
+            }
+            return RSAKey(publicKey: publicKey)
+        } catch CryptoKitError.incorrectParameterSize {
+            throw RSAError.keySizeTooSmall
+        }
     }
 
-    /// Creates RSAKey from public certificate pem file.
+    /// Creates ``RSAKey`` from public certificate PEM file.
     ///
-    /// Certificate pem files look like:
+    /// Certificate PEM files look like:
     ///
     ///     -----BEGIN CERTIFICATE-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -79,26 +85,15 @@ public final class RSAKey: OpenSSLKey {
     /// This key can only be used to verify JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
-    public static func certificate<Data>(pem data: Data) throws -> RSAKey
-        where Data: DataProtocol
-    {
-        let x509 = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_X509(bio, nil, nil, nil)
-        }
-        defer { CJWTKitBoringSSL_X509_free(x509) }
-        let pkey = CJWTKitBoringSSL_X509_get_pubkey(x509)
-        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
-
-        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
-            throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
-        }
-        return self.init(c, .public)
+    ///     - pem: Contents of PEM file.
+    public static func certificate(pem data: some DataProtocol) throws -> RSAKey {
+        let string = String(decoding: data, as: UTF8.self)
+        return try certificate(pem: string)
     }
 
-    /// Creates RSAKey from private key pem file.
+    /// Creates ``RSAKey`` from private key PEM file.
     ///
-    /// Private key pem files look like:
+    /// Private key PEM files look like:
     ///
     ///     -----BEGIN PRIVATE KEY-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -109,12 +104,16 @@ public final class RSAKey: OpenSSLKey {
     /// This key can be used to verify and sign JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
+    ///     - pem: Contents of PEM file.
     public static func `private`(pem string: String) throws -> RSAKey {
-        try .private(pem: [UInt8](string.utf8))
+        do {
+            return try RSAKey(privateKey: .init(pemRepresentation: string))
+        } catch CryptoKitError.incorrectParameterSize {
+            throw RSAError.keySizeTooSmall
+        }
     }
 
-    /// Creates RSAKey from private key pem file.
+    /// Creates ``RSAKey`` from private key pem file.
     ///
     /// Private key pem files look like:
     ///
@@ -128,64 +127,78 @@ public final class RSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `private`<Data>(pem data: Data) throws -> RSAKey
-        where Data: DataProtocol
-    {
-        let pkey = try self.load(pem: data) { bio in
-            CJWTKitBoringSSL_PEM_read_bio_PrivateKey(bio, nil, nil, nil)
-        }
-        defer { CJWTKitBoringSSL_EVP_PKEY_free(pkey) }
-
-        guard let c = CJWTKitBoringSSL_EVP_PKEY_get1_RSA(pkey) else {
-            throw JWTError.signingAlgorithmFailure(RSAError.keyInitializationFailure)
-        }
-        return self.init(c, .private)
-    }
-
-    public convenience init?(
-        modulus: String,
-        exponent: String,
-        privateExponent: String? = nil
-    ) {
-        func decode(_ string: String) -> [UInt8] {
-            return [UInt8](string.utf8).base64URLDecodedBytes()
-        }
-        let n = decode(modulus)
-        let e = decode(exponent)
-        let d = privateExponent.flatMap { decode($0) }
-
-        guard let rsa = CJWTKitBoringSSL_RSA_new() else {
-            return nil
-        }
-
-        CJWTKitBoringSSL_RSA_set0_key(
-            rsa,
-            CJWTKitBoringSSL_BN_bin2bn(n, numericCast(n.count), nil),
-            CJWTKitBoringSSL_BN_bin2bn(e, numericCast(e.count), nil),
-            d.flatMap { CJWTKitBoringSSL_BN_bin2bn($0, numericCast($0.count), nil) }
-        )
-        self.init(rsa, d == nil ? .public : .private)
-    }
-
-    enum KeyType {
-        case `public`, `private`
+    public static func `private`(pem data: some DataProtocol) throws -> RSAKey {
+        let string = String(decoding: data, as: UTF8.self)
+        return try self.private(pem: string)
     }
 
     let type: KeyType
 
-    internal var c: OpaquePointer {
-        return CJWTKitBoringSSL_EVP_PKEY_get1_RSA(self.cRaw)
-    }
-    
-    let cRaw: OpaquePointer
+    let publicKey: _RSA.Signing.PublicKey?
+    let privateKey: _RSA.Signing.PrivateKey?
 
-    init(_ c: OpaquePointer, _ type: KeyType) {
-        self.type = type
-        self.cRaw = CJWTKitBoringSSL_EVP_PKEY_new()
-        CJWTKitBoringSSL_EVP_PKEY_assign_RSA(cRaw, c)
+    init(publicKey: _RSA.Signing.PublicKey) {
+        type = .public
+        self.publicKey = publicKey
+        privateKey = nil
     }
 
-    deinit {
-        CJWTKitBoringSSL_EVP_PKEY_free(self.c)
+    init(privateKey: _RSA.Signing.PrivateKey) {
+        type = .private
+        publicKey = privateKey.publicKey
+        self.privateKey = privateKey
+    }
+
+    /// Initializes a new RSA key instance with modulus, exponent, and an optional private exponent.
+    ///
+    /// This convenience initializer creates an RSA key using the modulus, exponent, and an optional private exponent.
+    /// All these parameters are expected to be base64 URL encoded strings.
+    /// If the private exponent is provided, the initializer creates an RSA private key. Otherwise, it initializes an RSA public key.
+    ///
+    /// - Parameters:
+    ///   - modulus: The modulus of the RSA key, represented as a base64 URL encoded string.
+    ///   - exponent: The exponent of the RSA key, represented as a base64 URL encoded string.
+    ///   - privateExponent: An optional base64 URL encoded string representing the private exponent of the RSA key. If this parameter is nil, only a public key is generated. Defaults to `nil`.
+    ///
+    /// - Throws:
+    ///   - ``JWTError/generic`` with the identifier `RSAKey`` if either the modulus or exponent cannot be decoded from their base64 URL encoded strings.
+    ///   - ``RSAError/keyInitializationFailure`` if there is a failure in initializing the RSA key, especially when the private key components are involved.
+    ///
+    /// - Note:
+    ///   - The provided modulus and exponent are key components for creating RSA public keys.
+    ///   - The private exponent is an additional parameter required for creating RSA private keys.
+    public init(
+        modulus: String,
+        exponent: String,
+        privateExponent: String? = nil
+    ) throws {
+        // Helper function to decode base64URL strings
+        func decode(_ string: String) throws -> Data {
+            guard let data = string.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url string: \(string)")
+            }
+            return data
+        }
+
+        // Decoding input strings
+        let n = try decode(modulus)
+        let e = try decode(exponent)
+        let d = try privateExponent.map(decode)
+
+        // Serializer to be used for DER serialization
+        var serializer = DER.Serializer()
+
+        // Creating key based on the presence of a private exponent
+        if let d = d, let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d) {
+            try privateKeyDER.serialize(into: &serializer)
+            let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
+            self.init(privateKey: privateKey)
+        } else if let publicKeyDER = try? RSAKey.calculateDER(n: n, e: e) {
+            try publicKeyDER.serialize(into: &serializer)
+            let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)
+            self.init(publicKey: publicKey)
+        } else {
+            throw RSAError.keyInitializationFailure
+        }
     }
 }

@@ -5,7 +5,6 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable {
-    
     public enum Curve: String, Codable {
         case p256 = "P-256"
         case p384 = "P-384"
@@ -13,7 +12,7 @@ public struct JWK: Codable {
         case ed25519 = "Ed25519"
         case ed448 = "Ed448"
     }
-    
+
     /// Supported `kty` key types.
     public enum KeyType: String, Codable {
         /// RSA
@@ -23,12 +22,12 @@ public struct JWK: Codable {
         /// Octet Key Pair
         case octetKeyPair = "OKP"
     }
-     
+
     /// The `kty` (key type) parameter identifies the cryptographic algorithm
     /// family used with the key, such as `RSA` or `ECDSA`. The `kty` value
     /// is a case-sensitive string.
     public var keyType: KeyType
-     
+
     /// Supported `alg` algorithms
     public enum Algorithm: String, Codable {
         /// RSA with SHA256
@@ -46,11 +45,11 @@ public struct JWK: Codable {
         /// EdDSA
         case eddsa = "EdDSA"
     }
-     
-     /// The `alg` (algorithm) parameter identifies the algorithm intended for
-     /// use with the key. The `alg` value is a case-sensitive ASCII string.
-     public var algorithm: Algorithm?
-     
+
+    /// The `alg` (algorithm) parameter identifies the algorithm intended for
+    /// use with the key. The `alg` value is a case-sensitive ASCII string.
+    public var algorithm: Algorithm?
+
     /// The `kid` (key ID) parameter is used to match a specific key. This is
     /// used, for instance, to choose among a set of keys within a JWK Set
     /// during key rollover.
@@ -81,9 +80,9 @@ public struct JWK: Codable {
     public var x: String?
 
     public var y: String?
-    
+
     public var curve: Curve?
-        
+
     private enum CodingKeys: String, CodingKey {
         case keyType = "kty"
         case algorithm = "alg"
@@ -99,26 +98,26 @@ public struct JWK: Codable {
     public init(json: String) throws {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
-    
+
     public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String? = nil) -> JWK {
-        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, n: modulus, e: exponent, d: privateExponent)
+        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, modulus: modulus, exponent: exponent, privateExponent: privateExponent)
     }
-    
-    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        return JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
+
+    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSACurve?, privateKey: String? = nil) -> JWK {
+        JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.curve) })
     }
-    
-    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        return JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, d: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
+
+    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y _: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
+        JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
     }
-    
+
     private init(
         keyType: KeyType,
         algorithm: Algorithm? = nil,
         keyIdentifier: JWKIdentifier? = nil,
-        n: String? = nil,
-        e: String? = nil,
-        d: String? = nil,
+        modulus: String? = nil,
+        exponent: String? = nil,
+        privateExponent: String? = nil,
         x: String? = nil,
         y: String? = nil,
         curve: Curve? = nil
@@ -126,9 +125,9 @@ public struct JWK: Codable {
         self.keyType = keyType
         self.algorithm = algorithm
         self.keyIdentifier = keyIdentifier
-        self.modulus = n
-        self.exponent = e
-        self.privateExponent = d
+        self.modulus = modulus
+        self.exponent = exponent
+        self.privateExponent = privateExponent
         self.x = x
         self.y = y
         self.curve = curve

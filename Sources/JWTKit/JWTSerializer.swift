@@ -1,16 +1,14 @@
 import class Foundation.JSONEncoder
 
 struct JWTSerializer {
-    func sign<Payload>(
-        _ payload: Payload,
+    func sign(
+        _ payload: some JWTPayload,
         using signer: JWTSigner,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
         jsonEncoder: any JWTJSONEncoder
-    ) throws -> String
-        where Payload: JWTPayload
-    {
+    ) throws -> String {
         // encode header, copying header struct to mutate alg
         var header = JWTHeader()
         header.kid = kid
@@ -30,11 +28,10 @@ struct JWTSerializer {
 
         // yield complete jwt
         let bytes = encodedHeader
-                + [.period]
-                + encodedPayload
-                + [.period]
-                + signatureData.base64URLEncodedBytes()
+            + [.period]
+            + encodedPayload
+            + [.period]
+            + signatureData.base64URLEncodedBytes()
         return String(decoding: bytes, as: UTF8.self)
     }
 }
-

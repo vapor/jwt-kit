@@ -1,16 +1,16 @@
 import Foundation
 
-public protocol JWTUnixEpochClaim: JWTClaim where Value == Date { }
+public protocol JWTUnixEpochClaim: JWTClaim where Value == Date {}
 
-extension JWTUnixEpochClaim {
+public extension JWTUnixEpochClaim {
     /// See `Decodable`.
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.init(value: try container.decode(Date.self))
+        try self.init(value: container.decode(Date.self))
     }
-    
+
     /// See `Encodable`.
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.value)
     }
