@@ -172,6 +172,7 @@ public final class RSAKey {
         exponent: String,
         privateExponent: String? = nil
     ) throws {
+        // Helper function to decode base64URL strings
         func decode(_ string: String) throws -> Data {
             guard let data = string.base64URLDecodedData() else {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url string: \(string)")
@@ -179,25 +180,25 @@ public final class RSAKey {
             return data
         }
 
+        // Decoding input strings
         let n = try decode(modulus)
         let e = try decode(exponent)
         let d = try privateExponent.map(decode)
 
-        var privateKey: _RSA.Signing.PrivateKey
-        if let d {
-            guard let privateKeyDER = try RSAKey.calculatePrivateDER(n: n, e: e, d: d) else {
-                throw RSAError.keyInitializationFailure
-            }
-            var serializer = DER.Serializer()
+        // Serializer to be used for DER serialization
+        var serializer = DER.Serializer()
+
+        // Creating key based on the presence of a private exponent
+        if let d = d, let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d) {
             try privateKeyDER.serialize(into: &serializer)
-            privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
+            let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
             self.init(privateKey: privateKey)
-        } else {
-            let publicKeyDER = try RSAKey.calculateDER(n: n, e: e)
-            var serializer = DER.Serializer()
+        } else if let publicKeyDER = try? RSAKey.calculateDER(n: n, e: e) {
             try publicKeyDER.serialize(into: &serializer)
             let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)
             self.init(publicKey: publicKey)
+        } else {
+            throw RSAError.keyInitializationFailure
         }
     }
 }
