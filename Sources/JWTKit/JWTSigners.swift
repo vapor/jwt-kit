@@ -19,8 +19,8 @@ public final class JWTSigners {
     /// The default JSON decoder. Used for:
     ///
     /// - Parsing the JSON form of a JWKS (see ``JWTSigners/use(jwksJSON:)``.
-    /// - Decoding unverified payloads without a signer (see ``JWTSigners/unverified(_:as:)-3qzpk``).
-    /// - Decoding token headers to determine a key type (see ``JWTSigners/verify(_:as:)-6tee7``).
+    /// - Decoding unverified payloads without a signer (see ``JWTSigners/unverified(_:as:)-2gqbz``).
+    /// - Decoding token headers to determine a key type (see ``JWTSigners/verify(_:as:)-38to``).
     /// - The default for any``JWTSigner`` which does not specify its own encoder.
     public let defaultJSONDecoder: any JWTJSONDecoder
 

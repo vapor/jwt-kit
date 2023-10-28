@@ -4,10 +4,10 @@ import Foundation
 import SwiftASN1
 import X509
 
-public final class RSAKey {
-    /// Creates RSAKey from public key pem file.
+public struct RSAKey {
+    /// Creates ``RSAKey`` from public key PEM file.
     ///
-    /// Public key pem files look like:
+    /// Public key PEM files look like:
     ///
     ///     -----BEGIN PUBLIC KEY-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -18,7 +18,7 @@ public final class RSAKey {
     /// This key can only be used to verify JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
+    ///     - pem: Contents of PEM file.
     public static func `public`(pem string: String) throws -> RSAKey {
         do {
             return try RSAKey(publicKey: .init(pemRepresentation: string))
@@ -27,9 +27,9 @@ public final class RSAKey {
         }
     }
 
-    /// Creates RSAKey from public key pem file.
+    /// Creates ``RSAKey`` from public key PEM file.
     ///
-    /// Public key pem files look like:
+    /// Public key PEM files look like:
     ///
     ///     -----BEGIN PUBLIC KEY-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -40,13 +40,13 @@ public final class RSAKey {
     /// This key can only be used to verify JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
+    ///     - pem: Contents of PEM file.
     public static func `public`(pem data: some DataProtocol) throws -> RSAKey {
         let string = String(decoding: data, as: UTF8.self)
         return try self.public(pem: string)
     }
 
-    /// Creates RSAKey from public certificate pem file.
+    /// Creates ``RSAKey`` from public certificate PEM file.
     ///
     /// Certificate pem files look like:
     ///
@@ -72,9 +72,9 @@ public final class RSAKey {
         }
     }
 
-    /// Creates RSAKey from public certificate pem file.
+    /// Creates ``RSAKey`` from public certificate PEM file.
     ///
-    /// Certificate pem files look like:
+    /// Certificate PEM files look like:
     ///
     ///     -----BEGIN CERTIFICATE-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -85,15 +85,15 @@ public final class RSAKey {
     /// This key can only be used to verify JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
+    ///     - pem: Contents of PEM file.
     public static func certificate(pem data: some DataProtocol) throws -> RSAKey {
         let string = String(decoding: data, as: UTF8.self)
         return try certificate(pem: string)
     }
 
-    /// Creates RSAKey from private key pem file.
+    /// Creates ``RSAKey`` from private key PEM file.
     ///
-    /// Private key pem files look like:
+    /// Private key PEM files look like:
     ///
     ///     -----BEGIN PRIVATE KEY-----
     ///     MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
@@ -104,7 +104,7 @@ public final class RSAKey {
     /// This key can be used to verify and sign JWTs.
     ///
     /// - parameters:
-    ///     - pem: Contents of pem file.
+    ///     - pem: Contents of PEM file.
     public static func `private`(pem string: String) throws -> RSAKey {
         do {
             return try RSAKey(privateKey: .init(pemRepresentation: string))
@@ -113,7 +113,7 @@ public final class RSAKey {
         }
     }
 
-    /// Creates RSAKey from private key pem file.
+    /// Creates ``RSAKey`` from private key pem file.
     ///
     /// Private key pem files look like:
     ///
@@ -161,13 +161,13 @@ public final class RSAKey {
     ///   - privateExponent: An optional base64 URL encoded string representing the private exponent of the RSA key. If this parameter is nil, only a public key is generated. Defaults to `nil`.
     ///
     /// - Throws:
-    ///   - `JWTError.generic` with the identifier "RSAKey" if either the modulus or exponent cannot be decoded from their base64 URL encoded strings.
-    ///   - `RSAError.keyInitializationFailure` if there is a failure in initializing the RSA key, especially when the private key components are involved.
+    ///   - ``JWTError/generic`` with the identifier `RSAKey`` if either the modulus or exponent cannot be decoded from their base64 URL encoded strings.
+    ///   - ``RSAError/keyInitializationFailure`` if there is a failure in initializing the RSA key, especially when the private key components are involved.
     ///
     /// - Note:
     ///   - The provided modulus and exponent are key components for creating RSA public keys.
     ///   - The private exponent is an additional parameter required for creating RSA private keys.
-    public convenience init(
+    public init(
         modulus: String,
         exponent: String,
         privateExponent: String? = nil

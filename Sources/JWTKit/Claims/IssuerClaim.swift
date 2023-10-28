@@ -3,10 +3,10 @@
 /// The "iss" value is a case-sensitive string containing a StringOrURI
 /// value.  Use of this claim is OPTIONAL.
 public struct IssuerClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public var value: String
 
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public init(value: String) {
         self.value = value
     }

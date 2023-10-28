@@ -1,8 +1,8 @@
 public struct GoogleHostedDomainClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public var value: String
 
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public init(value: String) {
         self.value = value
     }

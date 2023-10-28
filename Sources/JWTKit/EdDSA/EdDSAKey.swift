@@ -28,7 +28,8 @@ public struct EdDSAKey {
     ///   - x: A `String` representing the x-coordinate of the public key. This should be a Base64 URL encoded string.
     ///   - curve: The ``Curve`` representing the elliptic curve used for the EdDSA public key.
     ///
-    /// - Throws: ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
+    /// - Throws:
+    ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
     ///
     /// - Returns: An initialized ``EdDSAKey`` instance with the provided public key data and curve.
     public static func `public`(x: String, curve: Curve) throws -> EdDSAKey {

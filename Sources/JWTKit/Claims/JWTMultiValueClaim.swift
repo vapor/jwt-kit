@@ -13,7 +13,7 @@ public extension JWTMultiValueClaim {
     }
 
     /// Because multi-value claims can take either singular or plural form in
-    /// JSON, the default conformance to `Decodable` from `JWTClaim` isn't good
+    /// JSON, the default conformance to `Decodable` from ``JWTClaim`` isn't good
     /// enough.
     ///
     /// - Note: The spec is mute on what multi-value claims like `aud` with an
@@ -32,7 +32,7 @@ public extension JWTMultiValueClaim {
     ///   and a fallback value, or we would have to export extensions on
     ///   `KeyedEncodingContainer` and `KeyedEncodingContainerProtocol` to
     ///   explicitly override behavior for types confroming to
-    ///   `JWTMultiValueClaim`, a tricky and error-prone approach relying on
+    ///   ``JWTMultiValueClaim``, a tricky and error-prone approach relying on
     ///   poorly-understood mechanics of static versus dynamic dispatch.
     ///
     /// - Note: The spec is also mute regarding the behavior of duplicate values
@@ -80,7 +80,7 @@ public extension JWTMultiValueClaim {
 /// An extremely specialized `Decoder` whose only purpose is to spoon-feed the
 /// type being decoded a single unkeyed element. This ridiculously intricate
 /// workaround is used to get around the problem of `Collection` not having any
-/// initializers for the single-value initializer of `JWTMultiValueClaim`. The
+/// initializers for the single-value initializer of ``JWTMultiValueClaim``. The
 /// other workaround would be to require conformance to
 /// `ExpressibleByArrayLiteral`, but what fun would that be?
 private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer where T: Collection, T: Codable, T.Element: Codable {
@@ -91,7 +91,7 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
     /// The single value we're returning.
     var value: T.Element
 
-    /// The `currentIndex` for `UnkeyedDecodingContainer`.
+    /// The `currentIndex` for ``UnkeyedDecodingContainer``.
     var currentIndex: Int = 0
 
     /// We are our own unkeyed decoding container.
@@ -109,7 +109,7 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
     /// Standard `decode<T>(_:)` implementation. If the type is correct, we
     /// return our singular value, otherwise error. We throw nice errors instead
     /// of using `fatalError()` mostly just in case someone implemented a
-    /// `Collection` with a really weird `Decodable` conformance.
+    /// ``Collection`` with a really weird `Decodable` conformance.
     mutating func decode<U>(_: U.Type) throws -> U where U: Decodable {
         guard !self.isAtEnd else {
             throw DecodingError.valueNotFound(U.self, .init(codingPath: [], debugDescription: "Unkeyed container went past the end?"))
@@ -123,13 +123,12 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
         return value as! U
     }
 
-    /// The error we throw for all operations we don't support (which is most
-    /// of them).
+    /// The error we throw for all operations we don't support (which is most of them).
     private var unsupportedError: DecodingError {
         return DecodingError.typeMismatch(Any.self, .init(codingPath: [], debugDescription: "This decoder doesn't support most things."))
     }
 
-    // `Decoder` and `UnkeyedDecodingContainer` conformance requirements. We don't bother tracking any coding path or
+    // ``Decoder`` and ``UnkeyedDecodingContainer`` conformance requirements. We don't bother tracking any coding path or
     // user info and we just fail instantly if asked for anything other than an unnested unkeyed container. The count
     // of the unkeyed container is always exactly one.
 
