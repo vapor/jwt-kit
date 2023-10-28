@@ -154,13 +154,11 @@ public final class JWTSigners {
         return try signer.verify(parser: parser)
     }
 
-    public func sign<Payload>(
-        _ payload: Payload,
+    public func sign(
+        _ payload: some JWTPayload,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil
-    ) throws -> String
-        where Payload: JWTPayload
-    {
+    ) throws -> String {
         let signer = try self.require(kid: kid)
         return try signer.sign(payload, typ: typ, kid: kid)
     }

@@ -5,9 +5,7 @@ struct JWTParser {
     let encodedPayload: ArraySlice<UInt8>
     let encodedSignature: ArraySlice<UInt8>
 
-    init<Token>(token: Token) throws
-        where Token: DataProtocol
-    {
+    init(token: some DataProtocol) throws {
         let tokenParts = token.copyBytes()
             .split(separator: .period, omittingEmptySubsequences: false)
         guard tokenParts.count == 3 else {

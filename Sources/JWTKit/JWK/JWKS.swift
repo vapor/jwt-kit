@@ -5,7 +5,7 @@
 public struct JWKS: Codable {
     /// All JSON Web Keys
     public var keys: [JWK]
-    
+
     public init(keys: [JWK]) {
         self.keys = keys
     }

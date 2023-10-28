@@ -127,9 +127,7 @@ public final class RSAKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
-    public static func `private`<Data>(pem data: Data) throws -> RSAKey
-        where Data: DataProtocol
-    {
+    public static func `private`(pem data: some DataProtocol) throws -> RSAKey {
         let string = String(decoding: data, as: UTF8.self)
         return try self.private(pem: string)
     }

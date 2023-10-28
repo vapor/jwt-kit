@@ -20,9 +20,7 @@ private enum CryptoError: Error {
 }
 
 extension CryptoSigner {
-    func digest<Plaintext>(_ plaintext: Plaintext) throws -> any Digest
-        where Plaintext: DataProtocol
-    {
+    func digest(_ plaintext: some DataProtocol) throws -> any Digest {
         switch algorithm {
         case .sha256:
             SHA256.hash(data: plaintext)

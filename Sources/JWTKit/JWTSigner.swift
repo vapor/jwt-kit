@@ -19,14 +19,12 @@ public final class JWTSigner {
         self.jsonDecoder = jsonDecoder
     }
 
-    public func sign<Payload>(
-        _ payload: Payload,
+    public func sign(
+        _ payload: some JWTPayload,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
         cty: String? = nil
-    ) throws -> String
-        where Payload: JWTPayload
-    {
+    ) throws -> String {
         try JWTSerializer().sign(payload, using: self, typ: typ, kid: kid, cty: cty, jsonEncoder: self.jsonEncoder ?? .defaultForJWT)
     }
 

@@ -117,8 +117,8 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     ///   - privateKey: An optional base64 URL encoded string representation of the private key. If provided, it is used to create the private key for the instance. Defaults to `nil`.
     ///
     /// - Throws:
-    ///   - ``JWTError/generic`` with the identifier `ecCoordinates`` if the x and y coordinates from `parameters` cannot be interpreted as base64 encoded data.
-    ///   - ``JWTError/generic`` with the identifier `ecPrivateKey`` if the provided `privateKey` is non-nil but cannot be interpreted as a valid `PrivateKey`.
+    ///   - ``JWTError/generic`` with the identifier `ecCoordinates` if the x and y coordinates from `parameters` cannot be interpreted as base64 encoded data.
+    ///   - ``JWTError/generic`` with the identifier `ecPrivateKey` if the provided `privateKey` is non-nil but cannot be interpreted as a valid `PrivateKey`.
     ///
     /// - Note:
     ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
