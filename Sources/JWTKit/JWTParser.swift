@@ -5,42 +5,40 @@ struct JWTParser {
     let encodedPayload: ArraySlice<UInt8>
     let encodedSignature: ArraySlice<UInt8>
 
-    init<Token>(token: Token) throws
-        where Token: DataProtocol
-    {
+    init(token: some DataProtocol) throws {
         let tokenParts = token.copyBytes()
             .split(separator: .period, omittingEmptySubsequences: false)
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken
         }
-        self.encodedHeader = tokenParts[0]
-        self.encodedPayload = tokenParts[1]
-        self.encodedSignature = tokenParts[2]
+        encodedHeader = tokenParts[0]
+        encodedPayload = tokenParts[1]
+        encodedSignature = tokenParts[2]
     }
 
     func header(jsonDecoder: any JWTJSONDecoder) throws -> JWTHeader {
         try jsonDecoder
-            .decode(JWTHeader.self, from: .init(self.encodedHeader.base64URLDecodedBytes()))
+            .decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
     }
 
-    func payload<Payload>(as payload: Payload.Type, jsonDecoder: any JWTJSONDecoder) throws -> Payload
+    func payload<Payload>(as _: Payload.Type, jsonDecoder: any JWTJSONDecoder) throws -> Payload
         where Payload: JWTPayload
     {
         try jsonDecoder
-            .decode(Payload.self, from: .init(self.encodedPayload.base64URLDecodedBytes()))
+            .decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
     }
 
     func verify(using signer: JWTSigner) throws {
-        guard try signer.algorithm.verify(self.signature, signs: self.message) else {
+        guard try signer.algorithm.verify(signature, signs: message) else {
             throw JWTError.signatureVerifictionFailed
         }
     }
 
     private var signature: [UInt8] {
-        self.encodedSignature.base64URLDecodedBytes()
+        encodedSignature.base64URLDecodedBytes()
     }
 
     private var message: ArraySlice<UInt8> {
-        self.encodedHeader + [.period] + self.encodedPayload
+        encodedHeader + [.period] + encodedPayload
     }
 }

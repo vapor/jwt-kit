@@ -5,10 +5,10 @@ import Foundation
 /// value MUST be a number containing a NumericDate value.  Use of this
 /// claim is OPTIONAL.
 public struct IssuedAtClaim: JWTUnixEpochClaim, Equatable {
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public var value: Date
 
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public init(value: Date) {
         self.value = value
     }

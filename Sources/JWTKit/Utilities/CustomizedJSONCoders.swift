@@ -12,8 +12,8 @@ extension JSONDecoder: JWTJSONDecoder {}
 
 extension JSONEncoder: JWTJSONEncoder {}
 
-extension JSONDecoder.DateDecodingStrategy {
-    public static var integerSecondsSince1970: Self {
+public extension JSONDecoder.DateDecodingStrategy {
+    static var integerSecondsSince1970: Self {
         .custom { decoder in
             let container = try decoder.singleValueContainer()
             return try Date(timeIntervalSince1970: Double(container.decode(Int.self)))
@@ -21,8 +21,8 @@ extension JSONDecoder.DateDecodingStrategy {
     }
 }
 
-extension JSONEncoder.DateEncodingStrategy {
-    public static var integerSecondsSince1970: Self {
+public extension JSONEncoder.DateEncodingStrategy {
+    static var integerSecondsSince1970: Self {
         .custom { date, encoder in
             var container = encoder.singleValueContainer()
             try container.encode(Int(date.timeIntervalSince1970.rounded(.towardZero)))
