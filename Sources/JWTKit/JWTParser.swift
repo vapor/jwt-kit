@@ -28,8 +28,8 @@ struct JWTParser {
             .decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
     }
 
-    func verify(using signer: JWTSigner) throws {
-        guard try signer.algorithm.verify(signature, signs: message) else {
+    func verify(using algorithm: JWTAlgorithm) throws {
+        guard try algorithm.verify(signature, signs: message) else {
             throw JWTError.signatureVerifictionFailed
         }
     }

@@ -1,4 +1,4 @@
-public struct JWKIdentifier: Hashable, Equatable {
+public struct JWKIdentifier: Hashable, Equatable, Sendable {
     public let string: String
 
     public init(string: String) {

@@ -1,8 +1,8 @@
 import Crypto
 import Foundation
 
-public struct EdDSAKey {
-    public enum Curve: String, Codable {
+public struct EdDSAKey: Sendable {
+    public enum Curve: String, Codable, Sendable {
         case ed25519 = "Ed25519"
     }
 

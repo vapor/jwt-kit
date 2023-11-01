@@ -2,7 +2,7 @@
 import XCTest
 
 class JWTKitTests: XCTestCase {
-    func testGettingStarted() throws {
+    func testGettingStarted() async throws {
         // JWT payload structure.
         struct TestPayload: JWTPayload, Equatable {
             // Maps the longer Swift property names to the
@@ -29,17 +29,17 @@ class JWTKitTests: XCTestCase {
             //
             // Since we have an ExpirationClaim, we will
             // call its verify method.
-            func verify(using _: JWTSigner) throws {
+            func verify(using _: JWTAlgorithm) throws {
                 try expiration.verifyNotExpired()
             }
         }
 
-        let signers = JWTSigners()
-        signers.use(.hs256(key: "secret"))
+        let keyCollection = await JWTKeyCollection()
+            .addHS256(key: "secret")
 
         do {
             let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo"
-            let payload = try signers.verify(jwt, as: TestPayload.self)
+            let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
             XCTAssertEqual(payload.admin, true)
         }
 
@@ -49,11 +49,11 @@ class JWTKitTests: XCTestCase {
                 expiration: .init(value: .distantFuture),
                 admin: true
             )
-            XCTAssertNoThrow(try signers.sign(payload))
+            await XCTAssertNoThrowAsync(try await keyCollection.sign(payload))
         }
     }
 
-    func testJWKsApple() throws {
+    func testJWKsApple() async throws {
         // Download the JWKS.
         // This could be done asynchronously if needed.
         let jwksData = try Data(
@@ -64,25 +64,26 @@ class JWTKitTests: XCTestCase {
         let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
 
         // Create signers and add JWKS.
-        let signers = JWTSigners()
-        try signers.use(jwks: jwks)
+        let keyCollection = JWTKeyCollection()
+        try await keyCollection.add(jwks: jwks)
     }
 
-    func testParse() throws {
+    func testParse() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
 
-        let test = try JWTSigner.hs256(key: "secret".bytes)
+        let test = try await JWTKeyCollection().addHS256(key: "secret".bytes)
             .verify(data, as: TestPayload.self)
+
         XCTAssertEqual(test.name, "John Doe")
         XCTAssertEqual(test.sub.value, "1234567890")
         XCTAssertEqual(test.admin, true)
     }
 
-    func testExpired() throws {
+    func testExpired() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MX0.-x_DAYIg4R4R9oZssqgWyJP_oWO1ESj8DgKrGCk7i5o"
 
         do {
-            _ = try JWTSigner.hs256(key: "secret".bytes)
+            _ = try await JWTKeyCollection().addHS256(key: "secret".bytes)
                 .verify(data, as: TestPayload.self)
         } catch let error as JWTError {
             switch error {
@@ -94,34 +95,33 @@ class JWTKitTests: XCTestCase {
         }
     }
 
-    func testExpirationDecoding() throws {
+    func testExpirationDecoding() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwMDAwMDAwMDB9.JgCO_GqUQnbS0z2hCxJLE9Tpt5SMoZObHBxzGBWuTYQ"
 
-        let test = try JWTSigner.hs256(key: "secret".bytes)
+        let test = try await JWTKeyCollection().addHS256(key: "secret".bytes)
             .verify(data, as: ExpirationPayload.self)
         XCTAssertEqual(test.exp.value, Date(timeIntervalSince1970: 2_000_000_000))
     }
 
-    func testExpirationEncoding() throws {
+    func testExpirationEncoding() async throws {
         let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
-        let jwt = try JWTSigner.hs256(key: "secret".bytes)
-            .sign(ExpirationPayload(exp: exp))
+        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
+        let jwt = try await keyCollection.sign(ExpirationPayload(exp: exp))
         let parser = try JWTParser(token: jwt.bytes)
         try XCTAssertEqual(parser.header(jsonDecoder: .defaultForJWT).typ, "JWT")
         try XCTAssertEqual(parser.header(jsonDecoder: .defaultForJWT).alg, "HS256")
         try XCTAssertEqual(parser.payload(as: ExpirationPayload.self, jsonDecoder: .defaultForJWT).exp, exp)
-        try parser.verify(using: .hs256(key: "secret".bytes))
+        try await parser.verify(using: keyCollection.signer()!.algorithm)
     }
 
-    func testSigners() throws {
+    func testSigners() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZvbyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5OTl9.Gf7leJ8i30LmMI7GBTpWDMXV60y1wkTOCOBudP9v9ms"
-        let signers = JWTSigners()
-        signers.use(.hs256(key: "bar".bytes), kid: "foo")
-        let payload = try signers.verify(data, as: TestPayload.self)
+        let keyCollection = await JWTKeyCollection().addHS256(key: "bar".bytes, kid: "foo")
+        let payload = try await keyCollection.verify(data, as: TestPayload.self)
         XCTAssertEqual(payload.name, "John Doe")
     }
 
-    func testUnsecuredNone() throws {
+    func testUnsecuredNone() async throws {
         let data =
             "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOjIwMDAwMDAwMDAsImFkbWluIjpmYWxzZSwibmFtZSI6IkZvbyIsInN1YiI6InZhcG9yIn0."
         let payload = TestPayload(
@@ -130,14 +130,15 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let signer = JWTSigner.unsecuredNone
-        let token = try signer.sign(payload)
-        try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
-        try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
+
+        let keyCollection = await JWTKeyCollection().addUnsecured()
+        let token = try await keyCollection.sign(payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(token.bytes, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
     }
 
-    func testJWTioExample() throws {
+    func testJWTioExample() async throws {
         let token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HWP_3cYHBw7AhHale5wky6-sVA"
         let corruptedToken = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HwP_3cYHBw7AhHale5wky6-sVA"
 
@@ -160,16 +161,16 @@ class JWTKitTests: XCTestCase {
             var admin: Bool
             var iat: IssuedAtClaim
 
-            func verify(using _: JWTSigner) throws {
+            func verify(using _: JWTAlgorithm) throws {
                 // no verifiable claims
             }
         }
 
         // create public key signer (verifier)
-        let publicSigner = try JWTSigner.es256(key: .public(pem: publicKey.bytes))
+        let keyCollection = try await JWTKeyCollection().addES256(key: .public(pem: publicKey.bytes))
 
         // decode jwt and test payload contents
-        let jwt = try publicSigner.verify(token, as: JWTioPayload.self)
+        let jwt = try await keyCollection.verify(token, as: JWTioPayload.self)
         XCTAssertEqual(jwt.sub, "1234567890")
         XCTAssertEqual(jwt.name, "John Doe")
         XCTAssertEqual(jwt.admin, true)
@@ -178,7 +179,7 @@ class JWTKitTests: XCTestCase {
         // test corrupted token
         // this should fail
         do {
-            _ = try publicSigner.verify(corruptedToken, as: JWTioPayload.self)
+            _ = try await keyCollection.verify(corruptedToken, as: JWTioPayload.self)
         } catch let error as JWTError {
             switch error {
             case .signatureVerifictionFailed:
@@ -190,7 +191,7 @@ class JWTKitTests: XCTestCase {
         }
     }
 
-    func testJWKSigner() throws {
+    func testJWKSigner() async throws {
         let privateKey = """
         {
             "kty": "RSA",
@@ -214,11 +215,9 @@ class JWTKitTests: XCTestCase {
         }
         """
 
-        let publicSigners = JWTSigners()
-        try publicSigners.use(jwk: .init(json: publicKey))
-
-        let privateSigners = JWTSigners()
-        try privateSigners.use(jwk: .init(json: privateKey))
+        let keyCollection = try await JWTKeyCollection()
+            .add(jwk: .init(json: publicKey))
+            .add(jwk: .init(json: privateKey))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -226,14 +225,14 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let data = try privateSigners.sign(payload, kid: "1234")
+        let data = try await keyCollection.sign(payload, kid: "1234")
         // test private signer decoding
-        try XCTAssertEqual(privateSigners.verify(data, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(data, as: TestPayload.self), payload)
         // test public signer decoding
-        try XCTAssertEqual(publicSigners.verify(data, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(data, as: TestPayload.self), payload)
     }
 
-    func testJWKS() throws {
+    func testJWKS() async throws {
         let json = """
         {
             "keys": [
@@ -243,15 +242,14 @@ class JWTKitTests: XCTestCase {
         }
         """
 
-        let signers = JWTSigners()
-        try signers.use(jwksJSON: json)
+        let keyCollection = try await JWTKeyCollection().use(jwksJSON: json)
 
-        XCTAssertNotNil(signers.get())
-        guard let a = signers.get(kid: "a") else {
+        await XCTAssertNotNilAsync(await keyCollection.signer())
+        guard let a = await keyCollection.signer(for: "a") else {
             XCTFail("expected signer a")
             return
         }
-        guard let b = signers.get(kid: "b") else {
+        guard let b = await keyCollection.signer(for: "b") else {
             XCTFail("expected signer b")
             return
         }
@@ -259,50 +257,50 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(b.algorithm.name, "RS512")
     }
 
-    func testJWTPayloadVerification() throws {
+    func testJWTPayloadVerification() async throws {
         struct NotBar: Error {
             let foo: String
         }
         struct Payload: JWTPayload {
             let foo: String
-            func verify(using _: JWTSigner) throws {
+            func verify(using _: JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }
             }
         }
 
-        let signer = try JWTSigner.es256(key: .generate())
+        let keyCollection = try await JWTKeyCollection().addES256(key: .generate())
         do {
-            let token = try signer.sign(Payload(foo: "qux"))
-            _ = try signer.verify(token, as: Payload.self)
+            let token = try await keyCollection.sign(Payload(foo: "qux"))
+            _ = try await keyCollection.verify(token, as: Payload.self)
         } catch let error as NotBar {
             XCTAssertEqual(error.foo, "qux")
         }
         do {
-            let token = try signer.sign(Payload(foo: "bar"))
-            let payload = try signer.verify(token, as: Payload.self)
+            let token = try await keyCollection.sign(Payload(foo: "bar"))
+            let payload = try await keyCollection.verify(token, as: Payload.self)
             XCTAssertEqual(payload.foo, "bar")
         }
     }
 
-    func testAlgorithmInJWTHeaderOnly() throws {
+    func testAlgorithmInJWTHeaderOnly() async throws {
         // rsa key
         let modulus = "mSfWGBcXRBPgnwnL_ymDCkBaL6vcMcLpBEomzf-wZPajcQFiq4n4MHScyo85Te6GU-YuErVvHKK0D72JhMNWAQXbiF5Hh7swSYX9QsycWwHBgOBNfp51Fm_HTU7ikDBEdSonrmSep8wNqi_PX2_jVBsoxYNeiCQyDLFLHOAAcbIE4Y6lpJy76GpdHJscMO2RsUznjv5VPOQVa_BlQRIIZ0YoSsq9EEZna9O370wZy8jnOthQIXoegQ7sItS1JMKk4X5DdoRenIfbfWLy88XxKOPlIHA5ekT8TyzeI2Uqkg3YMETTDPrSROVO1Qdl2W1uMdfIZ94DgKpZN2VW-w0fLw"
         let exponent = "AQAB"
         let privateExponent = "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
 
         // sign jwt
-        let privateSigner = try JWTSigner.rs256(key: RSAKey(
+        let keyCollection = try await JWTKeyCollection().addRS256(key: RSAKey(
             modulus: modulus,
             exponent: exponent,
             privateExponent: privateExponent
         ))
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTSigner) throws {}
+            func verify(using _: JWTAlgorithm) throws {}
         }
-        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -319,24 +317,22 @@ class JWTKitTests: XCTestCase {
         }
         """
 
-        let signers = JWTSigners()
-        try signers.use(jwksJSON: jwksString)
-        let foo = try signers.verify(jwt, as: Foo.self)
+        try await keyCollection.use(jwksJSON: jwksString)
+        let foo = try await keyCollection.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
 
-    func testMicrosoftJWKs() throws {
-        let signers = JWTSigners()
-        try signers.use(jwksJSON: microsoftJWKS)
+    func testMicrosoftJWKs() async throws {
+        await XCTAssertNoThrowAsync(try await JWTKeyCollection().use(jwksJSON: microsoftJWKS))
     }
 
-    func testFirebaseJWTAndCertificate() throws {
-        let payload = try JWTSigner.rs256(key: .certificate(pem: firebaseCert), padding: .insecurePKCS1v1_5)
+    func testFirebaseJWTAndCertificate() async throws {
+        let payload = try await JWTKeyCollection().addRS256(key: .certificate(pem: firebaseCert), padding: .insecurePKCS1v1_5)
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
 
-    func testCustomJSONCoders() throws {
+    func testCustomJSONCoders() async throws {
         let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
         let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
 
@@ -348,19 +344,11 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let signer = JWTSigner.unsecuredNone(jsonEncoder: encoder, jsonDecoder: decoder)
-        let token = try signer.sign(payload)
+        let keyCollection = await JWTKeyCollection().addUnsecured(jsonEncoder: encoder, jsonDecoder: decoder)
+        let token = try await keyCollection.sign(payload)
         XCTAssert((token.split(separator: ".").dropFirst(1).first.map { String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self) } ?? "").contains(#""exp":""#))
-        try XCTAssertEqual(signer.verify(token.bytes, as: TestPayload.self), payload)
-        try XCTAssertEqual(signer.verify(data.bytes, as: TestPayload.self), payload)
-        XCTAssertTrue(token.hasSuffix("."))
-
-        let signers = JWTSigners(defaultJSONEncoder: encoder, defaultJSONDecoder: decoder)
-        signers.use(.unsecuredNone, isDefault: true)
-        let token2 = try signers.sign(payload)
-        XCTAssert((token2.split(separator: ".").dropFirst(1).first.map { String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self) } ?? "").contains(#""exp":""#))
-        try XCTAssertEqual(signers.verify(token.bytes, as: TestPayload.self), payload)
-        try XCTAssertEqual(signers.verify(data.bytes, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(token.bytes, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
     }
 }
@@ -394,7 +382,7 @@ struct BadBoolPayload: Decodable {
 struct ExpirationPayload: JWTPayload {
     var exp: ExpirationClaim
 
-    func verify(using _: JWTSigner) throws {
+    func verify(using _: JWTAlgorithm) throws {
         try exp.verifyNotExpired()
     }
 }
@@ -468,7 +456,7 @@ struct FirebasePayload: JWTPayload, Equatable {
     let issuedAt: IssuedAtClaim
     let expiration: ExpirationClaim
 
-    func verify(using _: JWTSigner) throws {
+    func verify(using _: JWTAlgorithm) throws {
         try expiration.verifyNotExpired(currentDate: .distantPast)
     }
 }

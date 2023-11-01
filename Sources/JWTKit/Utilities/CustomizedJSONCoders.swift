@@ -1,10 +1,10 @@
 import Foundation
 
-public protocol JWTJSONDecoder {
+public protocol JWTJSONDecoder: Sendable {
     func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
 }
 
-public protocol JWTJSONEncoder {
+public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 

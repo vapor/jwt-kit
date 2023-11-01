@@ -4,7 +4,7 @@ import Foundation
 import SwiftASN1
 import X509
 
-public struct RSAKey {
+public struct RSAKey: Sendable {
     /// Creates ``RSAKey`` from public key PEM file.
     ///
     /// Public key PEM files look like:

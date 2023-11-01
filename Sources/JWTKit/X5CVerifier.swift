@@ -140,7 +140,7 @@ public class X5CVerifier {
         }
 
         // Assuming the chain is valid, verify the token was signed by the valid certificate.
-        let ecdsaKey = try P256Key.certificate(pem: leafCertificate.serializeAsPEM().pemString)
+        let ecdsaKey = try ES256Key.certificate(pem: leafCertificate.serializeAsPEM().pemString)
 
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
         return try signer.verify(parser: parser)

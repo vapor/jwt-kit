@@ -1,7 +1,7 @@
 import Foundation
 
 /// Algorithm powering a `JWTSigner`.
-public protocol JWTAlgorithm {
+public protocol JWTAlgorithm: Sendable {
     /// Unique JWT-standard name for this algorithm.
     var name: String { get }
 

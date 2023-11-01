@@ -34,4 +34,4 @@ extension P256.Signing.PublicKey: ECDSAPublicKey {
 extension P256.Signing.ECDSASignature: ECDSASignature {}
 extension P256.Signing.PrivateKey: ECDSAPrivateKey {}
 
-public typealias P256Key = ECDSAKey<P256>
+public typealias ES256Key = ECDSAKey<P256>
