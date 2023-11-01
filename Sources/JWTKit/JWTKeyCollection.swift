@@ -49,8 +49,14 @@ public actor JWTKeyCollection: Sendable {
         let signer = JWTSigner(algorithm: signer.algorithm, jsonEncoder: signer.jsonEncoder, jsonDecoder: signer.jsonDecoder)
 
         if let kid = kid {
+            if self.storage[kid] != nil {
+                print("Warning: Overwriting existing JWT signer for key identifier '\(kid)'.")
+            }
             self.storage[kid] = .jwt(signer)
         } else {
+            if self.default != nil {
+                print("Warning: Overwriting existing default JWT signer.")
+            }
             self.default = .jwt(signer)
         }
         if self.default == nil {
