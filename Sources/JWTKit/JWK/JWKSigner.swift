@@ -1,4 +1,4 @@
-struct JWKSigner {
+struct JWKSigner: Sendable {
     let jwk: JWK
     let jsonEncoder: any JWTJSONEncoder
     let jsonDecoder: any JWTJSONDecoder
