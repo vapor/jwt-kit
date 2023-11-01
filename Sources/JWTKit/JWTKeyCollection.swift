@@ -35,8 +35,7 @@ public actor JWTKeyCollection: Sendable {
     /// Adds a `JWTSigner` to this signers collection.
     @discardableResult
     func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
-        signer.jsonEncoder = signer.jsonEncoder ?? self.defaultJSONEncoder
-        signer.jsonDecoder = signer.jsonDecoder ?? self.defaultJSONDecoder
+        let signer = JWTSigner(algorithm: signer.algorithm, jsonEncoder: signer.jsonEncoder, jsonDecoder: signer.jsonDecoder)
 
         if let kid = kid {
             self.storage[kid] = .jwt(signer)

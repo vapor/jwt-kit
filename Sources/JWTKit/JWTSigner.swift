@@ -1,11 +1,11 @@
 import Foundation
 
 /// A JWT signer.
-final class JWTSigner {
+final class JWTSigner: Sendable {
     let algorithm: JWTAlgorithm
 
-    var jsonEncoder: (any JWTJSONEncoder)?
-    var jsonDecoder: (any JWTJSONDecoder)?
+    let jsonEncoder: (any JWTJSONEncoder)?
+    let jsonDecoder: (any JWTJSONDecoder)?
 
     init(
         algorithm: JWTAlgorithm,
