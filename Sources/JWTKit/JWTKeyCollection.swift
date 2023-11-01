@@ -1,5 +1,9 @@
 import Foundation
 
+/// A collection of JWT and JWK signers for handling JSON Web Tokens (JWTs).
+///
+/// This class provides methods to manage multiple signers, allowing the addition and retrieval of ``JWTSigner`` and ``JWKSigner`` instances.
+/// It also facilitates the encoding and decoding of JWTs using custom or default JSON encoders and decoders.
 public actor JWTKeyCollection: Sendable {
     private enum Signer {
         case jwt(JWTSigner)
@@ -32,7 +36,14 @@ public actor JWTKeyCollection: Sendable {
         self.defaultJSONDecoder = jsonDecoder ?? .defaultForJWT
     }
 
-    /// Adds a `JWTSigner` to this signers collection.
+    /// Adds a ``JWTSigner`` to the collection, optionally associating it with a specific key identifier (KID).
+    ///
+    /// If no KID is provided, and no default signer is set, this signer becomes the default.
+    ///
+    /// - Parameters:
+    ///   - signer: The `JWTSigner` instance to add.
+    ///   - kid: An optional `JWKIdentifier` to associate with the signer.
+    /// - Returns: Self for chaining.
     @discardableResult
     func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
         let signer = JWTSigner(algorithm: signer.algorithm, jsonEncoder: signer.jsonEncoder, jsonDecoder: signer.jsonDecoder)
@@ -48,22 +59,35 @@ public actor JWTKeyCollection: Sendable {
         return self
     }
 
-    /// Adds a `JWKS` (JSON Web Key Set) to this signers collection
-    /// by first decoding the JSON string.
+    /// Adds a `JWKS` (JSON Web Key Set) to the collection by decoding a JSON string.
+    ///
+    /// - Parameter json: A JSON string representing a JWKS.
+    /// - Throws: An error if the JSON string cannot be decoded into a `JWKS` instance.
+    /// - Returns: Self for chaining.
     @discardableResult
     public func use(jwksJSON json: String) throws -> Self {
         let jwks = try self.defaultJSONDecoder.decode(JWKS.self, from: Data(json.utf8))
         return try self.add(jwks: jwks)
     }
 
-    /// Adds a `JWKS` (JSON Web Key Set) to this signers collection.
+    /// Adds a `JWKS` (JSON Web Key Set) directly to the collection.
+    ///
+    /// - Parameter jwks: A `JWKS` instance.
+    /// - Throws: An error if the JWKS cannot be added.
+    /// - Returns: Self for chaining.
     @discardableResult
     public func add(jwks: JWKS) throws -> Self {
         try jwks.keys.forEach { try self.add(jwk: $0) }
         return self
     }
 
-    /// Adds a `JWK` (JSON Web Key) to this signers collection.
+    /// Adds a single `JWK` (JSON Web Key) to the collection.
+    ///
+    /// - Parameters:
+    ///   - jwk: A `JWK` instance to be added.
+    ///   - isDefault: An optional Boolean indicating whether this key should be the default signer.
+    /// - Throws: An error if the JWK cannot be added, typically due to missing key identifier.
+    /// - Returns: Self for chaining.
     @discardableResult
     public func add(
         jwk: JWK,
@@ -82,7 +106,12 @@ public actor JWTKeyCollection: Sendable {
         return self
     }
 
-    /// Returns the signer for the supplied `kid` (key identifier) or `nil` if none is found.
+    /// Retrieves a `JWTSigner` associated with the provided key identifier (KID) and algorithm (ALG), if available.
+    ///
+    /// - Parameters:
+    ///   - kid: An optional `JWKIdentifier`. If not provided, the default signer is returned.
+    ///   - alg: An optional algorithm identifier.
+    /// - Returns: A `JWTSigner` if one is found; otherwise, `nil`.
     func signer(for kid: JWKIdentifier? = nil, alg: String? = nil) -> JWTSigner? {
         let signer: Signer
         if let kid = kid, let stored = self.storage[kid] {
@@ -100,7 +129,13 @@ public actor JWTKeyCollection: Sendable {
         }
     }
 
-    /// Returns the signer for the supplied `kid` (key identifier) or throws an error if none is found.
+    /// Retrieves a `JWTSigner` for the provided key identifier (KID) and algorithm (ALG), or throws an error if not found.
+    ///
+    /// - Parameters:
+    ///   - kid: An optional `JWKIdentifier`. If not provided, the default signer is returned.
+    ///   - alg: An optional algorithm identifier.
+    /// - Throws: `JWTError.unknownKID` if the KID is unknown or `JWTError.missingKIDHeader` if the KID is missing.
+    /// - Returns: A `JWTSigner`.
     func require(kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTSigner {
         guard let signer = self.signer(for: kid, alg: alg) else {
             if let kid = kid {
@@ -112,6 +147,14 @@ public actor JWTKeyCollection: Sendable {
         return signer
     }
 
+    /// Decodes an unverified JWT payload.
+    ///
+    /// This method does not verify the signature of the JWT and should be used with caution.
+    ///
+    /// - Parameters:
+    ///   - token: A JWT token string.
+    /// - Throws: An error if the payload cannot be decoded.
+    /// - Returns: The decoded payload of the specified type.
     public func unverified<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self
@@ -121,6 +164,14 @@ public actor JWTKeyCollection: Sendable {
         try self.unverified([UInt8](token.utf8))
     }
 
+    /// Decodes an unverified JWT payload.
+    ///
+    /// This method does not verify the signature of the JWT and should be used with caution.
+    ///
+    /// - Parameters:
+    ///   - token: A JWT token.
+    /// - Throws: An error if the payload cannot be decoded.
+    /// - Returns: The decoded payload of the specified type.
     public func unverified<Payload>(
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self
@@ -130,6 +181,12 @@ public actor JWTKeyCollection: Sendable {
         try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: self.defaultJSONDecoder)
     }
 
+    /// Verifies and decodes a JWT token to extract the payload.
+    ///
+    /// - Parameters:
+    ///   - token: A JWT token string.
+    /// - Throws: An error if the token cannot be verified or decoded.
+    /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self
@@ -139,6 +196,12 @@ public actor JWTKeyCollection: Sendable {
         try self.verify([UInt8](token.utf8), as: Payload.self)
     }
 
+    /// Verifies and decodes a JWT token to extract the payload.
+    ///
+    /// - Parameters:
+    ///   - token: A JWT token.
+    /// - Throws: An error if the token cannot be verified or decoded.
+    /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self
@@ -151,19 +214,14 @@ public actor JWTKeyCollection: Sendable {
         return try signer.verify(parser: parser)
     }
 
-    func verify<Payload>(parser: JWTParser) throws -> Payload
-        where Payload: JWTPayload
-    {
-        let header = try parser.header(jsonDecoder: self.defaultJSONDecoder)
-        guard let signer = self.signer(for: JWKIdentifier(string: header.alg ?? "")) else {
-            throw JWTError.unknownKID(header.kid ?? "")
-        }
-        try parser.verify(using: signer.algorithm)
-        let payload = try parser.payload(as: Payload.self, jsonDecoder: self.defaultJSONDecoder)
-        try payload.verify(using: signer.algorithm)
-        return payload
-    }
-
+    /// Signs a JWT payload and returns the JWT string.
+    ///
+    /// - Parameters:
+    ///   - payload: The payload to sign.
+    ///   - typ: The JWT type header parameter. Defaults to "JWT".
+    ///   - kid: An optional key identifier to specify the signer. If not provided, the default signer is used.
+    /// - Throws: An error if the payload cannot be signed.
+    /// - Returns: A signed JWT token string.
     public func sign(
         _ payload: some JWTPayload,
         typ: String = "JWT",
