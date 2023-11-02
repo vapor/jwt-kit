@@ -7,7 +7,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addRS256(key: myRSAKey)
     /// ```
     ///

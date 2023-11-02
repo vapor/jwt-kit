@@ -8,7 +8,7 @@ public extension JWTKeyCollection {
     ///
     /// Usage Example:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addEdDSA(key: myEdDSAKey)
     /// ```
     ///

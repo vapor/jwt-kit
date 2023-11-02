@@ -1,4 +1,4 @@
-extension JWTKeyCollection {
+public extension JWTKeyCollection {
     /// Adds a configuration for JWTs without a signature.
     ///
     /// This method configures JWT processing to accept tokens with the 'none' algorithm, indicating that the JWT
@@ -10,7 +10,7 @@ extension JWTKeyCollection {
     ///
     /// Usage Example:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addUnsecuredNone()
     /// ```
     ///

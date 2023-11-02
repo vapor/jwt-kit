@@ -10,7 +10,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS256(key: "mySecretKey")
     /// ```
     ///
@@ -40,7 +40,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS256(key: "mySecretKey")
     /// ```
     ///
@@ -71,7 +71,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS256(key: "mySecretKey")
     /// ```
     ///
@@ -105,7 +105,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS384(key: "mySecretKey")
     /// ```
     ///
@@ -135,7 +135,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS384(key: "mySecretKey")
     /// ```
     ///
@@ -166,7 +166,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS384(key: "mySecretKey")
     /// ```
     ///
@@ -200,7 +200,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS256(key: "mySecretKey")
     /// ```
     ///
@@ -230,7 +230,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS256(key: "mySecretKey")
     /// ```
     ///
@@ -260,7 +260,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addHS256(key: "mySecretKey")
     /// ```
     ///

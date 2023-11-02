@@ -5,7 +5,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addES256(key: myES256Key)
     /// ```
     ///
@@ -34,7 +34,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addES384(key: myES384Key)
     /// ```
     ///
@@ -63,7 +63,7 @@ public extension JWTKeyCollection {
     ///
     /// Example Usage:
     /// ```
-    /// let collection = try await JWTKeyCollection()
+    /// let collection = await JWTKeyCollection()
     ///     .addES521(key: myES521Key)
     /// ```
     ///

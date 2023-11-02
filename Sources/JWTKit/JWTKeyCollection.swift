@@ -118,7 +118,7 @@ public actor JWTKeyCollection: Sendable {
     ///   - kid: An optional ``JWKIdentifier``. If not provided, the default signer is returned.
     ///   - alg: An optional algorithm identifier.
     /// - Returns: A ``JWTSigner`` if one is found; otherwise, `nil`.
-    func signer(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTSigner {
+    func getSigner(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTSigner {
         let signer: Signer
         if let kid = kid, let stored = self.storage[kid] {
             signer = stored
@@ -138,6 +138,16 @@ public actor JWTKeyCollection: Sendable {
                 throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")
             }
         }
+    }
+
+    /// Retrieves the key associated with the provided key identifier (KID) and algorithm (ALG), if available.
+    /// - Parameters:
+    ///  - kid: An optional ``JWKIdentifier``. If not provided, the default signer is returned.
+    ///  - alg: An optional algorithm identifier.
+    /// - Returns: A ``JWTKey`` if one is found; otherwise, `nil`.
+    /// - Throws: ``JWTError/generic`` if the algorithm cannot be retrieved.
+    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTAlgorithm {
+        try self.getSigner(for: kid, alg: alg).algorithm
     }
 
     /// Decodes an unverified JWT payload.
@@ -203,7 +213,7 @@ public actor JWTKeyCollection: Sendable {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header(jsonDecoder: self.defaultJSONDecoder)
-        let signer = try self.signer(for: header.kid, alg: header.alg)
+        let signer = try self.getSigner(for: header.kid, alg: header.alg)
         return try await signer.verify(parser: parser)
     }
 
@@ -220,7 +230,7 @@ public actor JWTKeyCollection: Sendable {
         typ: String = "JWT",
         kid: JWKIdentifier? = nil
     ) throws -> String {
-        let signer = try self.signer(for: kid)
+        let signer = try self.getSigner(for: kid)
         return try signer.sign(payload, typ: typ, kid: kid)
     }
 }
