@@ -1,6 +1,7 @@
 import Foundation
 
-/// Algorithm powering a `JWTSigner`.
+/// A protocol defining the necessary functionality for a JWT (JSON Web Token) algorithm.
+/// All algorithms conform to ``JWTAlgorithm`` to provide custom signing and verification logic for JWT tokens.
 public protocol JWTAlgorithm: Sendable {
     /// Unique JWT-standard name for this algorithm.
     var name: String { get }
@@ -34,7 +35,7 @@ public protocol JWTAlgorithm: Sendable {
 }
 
 extension JWTAlgorithm {
-    /// See `JWTAlgorithm`.
+    /// See ``JWTAlgorithm``.
     func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         // create test signature
         let check = try sign(plaintext)

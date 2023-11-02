@@ -131,7 +131,7 @@ class JWTKitTests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let keyCollection = await JWTKeyCollection().addUnsecured()
+        let keyCollection = await JWTKeyCollection().addUnsecuredNone()
         let token = try await keyCollection.sign(payload)
         try await XCTAssertEqualAsync(await keyCollection.verify(token.bytes, as: TestPayload.self), payload)
         try await XCTAssertEqualAsync(await keyCollection.verify(data.bytes, as: TestPayload.self), payload)
@@ -350,7 +350,7 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let keyCollection = await JWTKeyCollection().addUnsecured(jsonEncoder: encoder, jsonDecoder: decoder)
+        let keyCollection = await JWTKeyCollection().addUnsecuredNone(jsonEncoder: encoder, jsonDecoder: decoder)
         let token = try await keyCollection.sign(payload)
         XCTAssert((token.split(separator: ".").dropFirst(1).first.map { String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self) } ?? "").contains(#""exp":""#))
         try await XCTAssertEqualAsync(await keyCollection.verify(token.bytes, as: TestPayload.self), payload)

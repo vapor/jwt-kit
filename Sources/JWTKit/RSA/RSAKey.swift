@@ -4,8 +4,12 @@ import Foundation
 import SwiftASN1
 import X509
 
+/// A structure that represents an RSA key which can be used for cryptographic operations.
+///
+/// ``RSAKey`` provides functionality to create RSA keys from different sources such as PEM files or specific key components.
+/// It supports both public and private RSA keys.
 public struct RSAKey: Sendable {
-    /// Creates ``RSAKey`` from public key PEM file.
+    /// Creates an ``RSAKey`` from public key PEM file.
     ///
     /// Public key PEM files look like:
     ///
@@ -27,7 +31,7 @@ public struct RSAKey: Sendable {
         }
     }
 
-    /// Creates ``RSAKey`` from public key PEM file.
+    /// Creates an ``RSAKey`` from public key PEM file.
     ///
     /// Public key PEM files look like:
     ///
@@ -46,7 +50,7 @@ public struct RSAKey: Sendable {
         return try self.public(pem: string)
     }
 
-    /// Creates ``RSAKey`` from public certificate PEM file.
+    /// Creates an ``RSAKey`` from public certificate PEM file.
     ///
     /// Certificate pem files look like:
     ///
@@ -72,7 +76,7 @@ public struct RSAKey: Sendable {
         }
     }
 
-    /// Creates ``RSAKey`` from public certificate PEM file.
+    /// Creates  an``RSAKey`` from public certificate PEM file.
     ///
     /// Certificate PEM files look like:
     ///
@@ -91,7 +95,7 @@ public struct RSAKey: Sendable {
         return try certificate(pem: string)
     }
 
-    /// Creates ``RSAKey`` from private key PEM file.
+    /// Creates an``RSAKey`` from private key PEM file.
     ///
     /// Private key PEM files look like:
     ///
@@ -113,7 +117,7 @@ public struct RSAKey: Sendable {
         }
     }
 
-    /// Creates ``RSAKey`` from private key pem file.
+    /// Creates an ``RSAKey`` from private key pem file.
     ///
     /// Private key pem files look like:
     ///
