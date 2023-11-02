@@ -2,5 +2,5 @@
 /// Each variable represents a claim.
 public protocol JWTPayload: Codable, Sendable {
     /// Verifies that the payload's claims are correct or throws an error.
-    func verify(using signer: JWTAlgorithm) throws
+    func verify(using signer: JWTAlgorithm) async throws
 }

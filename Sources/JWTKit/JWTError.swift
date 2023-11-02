@@ -13,9 +13,9 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
 
     public var reason: String {
         switch self {
-        case .claimVerificationFailure(let name, let reason):
+        case let .claimVerificationFailure(name, reason):
             return "\(name) claim verification failed: \(reason)"
-        case .signingAlgorithmFailure(let error):
+        case let .signingAlgorithmFailure(error):
             return "signing algorithm error: \(error)"
         case .malformedToken:
             return "malformed JWT"
@@ -23,21 +23,21 @@ public enum JWTError: Error, CustomStringConvertible, LocalizedError {
             return "signature verification failed"
         case .missingKIDHeader:
             return "missing kid field in header"
-        case .unknownKID(let kid):
+        case let .unknownKID(kid):
             return "unknown kid: \(kid)"
         case .invalidJWK:
             return "invalid JWK"
-        case .invalidBool(let str):
+        case let .invalidBool(str):
             return "invalid boolean value: \(str)"
-        case .generic(let identifier, let reason):
-                return "missing '\(identifier). \(reason)"
+        case let .generic(identifier, reason):
+            return "missing '\(identifier). \(reason)"
         }
     }
 
     public var description: String {
         return "JWTKit error: \(self.reason)"
     }
-    
+
     public var errorDescription: String? {
         return self.description
     }

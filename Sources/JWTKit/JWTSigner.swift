@@ -47,28 +47,28 @@ final class JWTSigner: Sendable {
     func verify<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self
-    ) throws -> Payload
+    ) async throws -> Payload
         where Payload: JWTPayload
     {
-        try self.verify([UInt8](token.utf8), as: Payload.self)
+        try await self.verify([UInt8](token.utf8), as: Payload.self)
     }
 
     func verify<Payload>(
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self
-    ) throws -> Payload
+    ) async throws -> Payload
         where Payload: JWTPayload
     {
         let parser = try JWTParser(token: token)
-        return try self.verify(parser: parser)
+        return try await self.verify(parser: parser)
     }
 
-    func verify<Payload>(parser: JWTParser) throws -> Payload
+    func verify<Payload>(parser: JWTParser) async throws -> Payload
         where Payload: JWTPayload
     {
         try parser.verify(using: algorithm)
         let payload = try parser.payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
-        try payload.verify(using: algorithm)
+        try await payload.verify(using: algorithm)
         return payload
     }
 }

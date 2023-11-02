@@ -111,7 +111,7 @@ class JWTKitTests: XCTestCase {
         try XCTAssertEqual(parser.header(jsonDecoder: .defaultForJWT).typ, "JWT")
         try XCTAssertEqual(parser.header(jsonDecoder: .defaultForJWT).alg, "HS256")
         try XCTAssertEqual(parser.payload(as: ExpirationPayload.self, jsonDecoder: .defaultForJWT).exp, exp)
-        try await parser.verify(using: keyCollection.signer()!.algorithm)
+        try await parser.verify(using: keyCollection.signer().algorithm)
     }
 
     func testSigners() async throws {
@@ -244,15 +244,21 @@ class JWTKitTests: XCTestCase {
 
         let keyCollection = try await JWTKeyCollection().use(jwksJSON: json)
 
-        await XCTAssertNotNilAsync(await keyCollection.signer())
-        guard let a = await keyCollection.signer(for: "a") else {
-            XCTFail("expected signer a")
+        await XCTAssertNoThrowAsync(try await keyCollection.signer())
+        var a: JWTSigner, b: JWTSigner
+        do {
+            a = try await keyCollection.signer(for: "a")
+        } catch {
+            XCTFail("expected signer a, but encountered error: \(error)")
             return
         }
-        guard let b = await keyCollection.signer(for: "b") else {
-            XCTFail("expected signer b")
+        do {
+            b = try await keyCollection.signer(for: "b")
+        } catch {
+            XCTFail("expected signer b, but encountered error: \(error)")
             return
         }
+        
         XCTAssertEqual(a.algorithm.name, "RS256")
         XCTAssertEqual(b.algorithm.name, "RS512")
     }

@@ -143,6 +143,6 @@ public class X5CVerifier {
         let ecdsaKey = try ES256Key.certificate(pem: leafCertificate.serializeAsPEM().pemString)
 
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
-        return try signer.verify(parser: parser)
+        return try await signer.verify(parser: parser)
     }
 }

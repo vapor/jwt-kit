@@ -46,11 +46,11 @@ final class ECDSATests: XCTestCase {
         let ec = try ES256Key.generate()
         let keys = await JWTKeyCollection().addES256(key: ec, kid: "initial")
 
-        let signature = try await keys.signer(for: "initial")!.algorithm.sign(message)
+        let signature = try await keys.signer(for: "initial").algorithm.sign(message)
 
         let params = ec.parameters!
         try await keys.addES256(key: ES256Key(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.signer(for: "params")!.algorithm.verify(signature, signs: message))
+        try await XCTAssertTrueAsync(try await keys.signer(for: "params").algorithm.verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p256)
     }
 
@@ -60,11 +60,11 @@ final class ECDSATests: XCTestCase {
         let ec = try ES384Key.generate()
         let keys = await JWTKeyCollection().addES384(key: ec, kid: "initial")
 
-        let signature = try await keys.signer(for: "initial")!.algorithm.sign(message)
+        let signature = try await keys.signer(for: "initial").algorithm.sign(message)
 
         let params = ec.parameters!
         try await keys.addES384(key: ES384Key(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.signer(for: "params")!.algorithm.verify(signature, signs: message))
+        try await XCTAssertTrueAsync(try await keys.signer(for: "params").algorithm.verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p384)
     }
 
@@ -74,11 +74,11 @@ final class ECDSATests: XCTestCase {
         let ec = try ES521Key.generate()
         let keys = await JWTKeyCollection().addES521(key: ec, kid: "initial")
 
-        let signature = try await keys.signer(for: "initial")!.algorithm.sign(message)
+        let signature = try await keys.signer(for: "initial").algorithm.sign(message)
 
         let params = ec.parameters!
         try await keys.addES521(key: ES521Key(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.signer(for: "params")!.algorithm.verify(signature, signs: message))
+        try await XCTAssertTrueAsync(try await keys.signer(for: "params").algorithm.verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p521)
     }
 
