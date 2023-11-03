@@ -331,7 +331,7 @@ class JWTKitTests: XCTestCase {
     }
 
     func testFirebaseJWTAndCertificate() throws {
-        let payload = try JWTSigner.rs256(key: .certificate(pem: firebaseCert), padding: .insecurePKCS1v1_5)
+        let payload = try JWTSigner.rs256(key: .certificate(pem: firebaseCert))
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
