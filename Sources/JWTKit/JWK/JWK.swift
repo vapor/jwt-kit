@@ -4,8 +4,8 @@ import class Foundation.JSONDecoder
 /// A JSON Web Key.
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
-public struct JWK: Codable {
-    public enum Curve: String, Codable {
+public struct JWK: Codable, Sendable {
+    public enum Curve: String, Codable, Sendable {
         case p256 = "P-256"
         case p384 = "P-384"
         case p521 = "P-521"
@@ -14,7 +14,7 @@ public struct JWK: Codable {
     }
 
     /// Supported `kty` key types.
-    public enum KeyType: String, Codable {
+    public enum KeyType: String, Codable, Sendable {
         /// RSA
         case rsa = "RSA"
         /// ECDSA
@@ -29,7 +29,7 @@ public struct JWK: Codable {
     public var keyType: KeyType
 
     /// Supported `alg` algorithms
-    public enum Algorithm: String, Codable {
+    public enum Algorithm: String, Codable, Sendable {
         /// RSA with SHA256
         case rs256 = "RS256"
         /// RSA with SHA384

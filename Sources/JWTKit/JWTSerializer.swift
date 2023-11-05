@@ -1,5 +1,3 @@
-import class Foundation.JSONEncoder
-
 struct JWTSerializer {
     func sign(
         _ payload: some JWTPayload,

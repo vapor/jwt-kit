@@ -35,4 +35,4 @@ extension P521.Signing.PublicKey: ECDSAPublicKey {
 extension P521.Signing.ECDSASignature: ECDSASignature {}
 extension P521.Signing.PrivateKey: ECDSAPrivateKey {}
 
-public typealias P521Key = ECDSAKey<P521>
+public typealias ES521Key = ECDSAKey<P521>

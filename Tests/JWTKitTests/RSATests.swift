@@ -14,9 +14,8 @@ final class RSATests: XCTestCase {
         try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testModularInverse)
     }
 
-    func testRSADocs() throws {
-        let signers = JWTSigners()
-        try signers.use(.rs256(key: .public(pem: publicKey)))
+    func testRSADocs() async throws {
+        await XCTAssertNoThrowAsync(try await JWTKeyCollection().addRS256(key: .public(pem: publicKey)))
     }
 
     func testPublicKeyInitialization() throws {
@@ -31,9 +30,10 @@ final class RSATests: XCTestCase {
         XCTAssertNotNil(rsaKey.privateKey)
     }
 
-    func testSigning() throws {
-        let privateSigner = try JWTSigner.rs256(key: .private(pem: privateKey))
-        let publicSigner = try JWTSigner.rs256(key: .public(pem: publicKey))
+    func testSigning() async throws {
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .private(pem: privateKey), kid: "private")
+            .addRS256(key: .public(pem: publicKey), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -42,13 +42,14 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let privateSigned = try privateSigner.sign(payload)
-        try XCTAssertEqual(publicSigner.verify(privateSigned, as: TestPayload.self), payload)
-        try XCTAssertEqual(privateSigner.verify(privateSigned, as: TestPayload.self), payload)
+        let privateSigned = try await keyCollection.sign(payload, kid: "private")
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
     }
 
-    func testSigningWithPublic() throws {
-        let publicSigner = try JWTSigner.rs256(key: .public(pem: publicKey))
+    func testSigningWithPublic() async throws {
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .public(pem: publicKey), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -56,13 +57,15 @@ final class RSATests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        XCTAssertThrowsError(_ = try publicSigner.sign(payload))
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload))
     }
 
-    func testSigningWithRawBuiltPrivateKey() throws {
+    func testSigningWithRawBuiltPrivateKey() async throws {
         let privateKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent).privateKey!
-        let privateSigner = try JWTSigner.rs256(key: .private(pem: privateKey.pemRepresentation))
-        let publicSigner = try JWTSigner.rs256(key: .public(pem: privateKey.publicKey.pemRepresentation))
+
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .private(pem: privateKey.pemRepresentation), kid: "private")
+            .addRS256(key: .public(pem: privateKey.publicKey.pemRepresentation), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -71,30 +74,29 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let privateSigned = try privateSigner.sign(payload)
-        try XCTAssertEqual(publicSigner.verify(privateSigned, as: TestPayload.self), payload)
-        try XCTAssertEqual(privateSigner.verify(privateSigned, as: TestPayload.self), payload)
+        let privateSigned = try await keyCollection.sign(payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
     }
 
-    func testRSACertificate() throws {
+    func testRSACertificate() async throws {
         let test = TestPayload(
             sub: "vapor",
             name: "foo",
             admin: true,
             exp: .init(value: .distantFuture)
         )
-        let jwt = try JWTSigner.rs256(
-            key: .private(pem: certPrivateKey)
-        ).sign(test)
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .private(pem: certPrivateKey), kid: "private")
+            .addRS256(key: .certificate(pem: cert), kid: "cert")
 
-        let payload = try JWTSigner.rs256(
-            key: .certificate(pem: cert)
-        ).verify(jwt, as: TestPayload.self)
+        let jwt = try await keyCollection.sign(test, kid: "private")
+        let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
         XCTAssertEqual(payload, test)
     }
 
-    func testKeySizeTooSmall() throws {
-        XCTAssertThrowsError(try JWTSigner.rs256(key: .private(pem: _512BytesKey)))
+    func testKeySizeTooSmall() async throws {
+        await XCTAssertThrowsErrorAsync(try await JWTKeyCollection().addRS256(key: .private(pem: _512BytesKey)))
     }
 
     // MARK: Private functions

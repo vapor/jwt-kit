@@ -9,7 +9,7 @@
 ///
 /// The use of ``ECDSACurve`` in cryptographic operations allows for easy specification and interchange of
 /// the elliptic curves based on security requirements and application needs.
-public struct ECDSACurve {
+public struct ECDSACurve: Sendable {
     let curve: String
 
     static var p256: Self {

@@ -34,4 +34,4 @@ extension P384.Signing.PublicKey: ECDSAPublicKey {
 extension P384.Signing.ECDSASignature: ECDSASignature {}
 extension P384.Signing.PrivateKey: ECDSAPrivateKey {}
 
-public typealias P384Key = ECDSAKey<P384>
+public typealias ES384Key = ECDSAKey<P384>

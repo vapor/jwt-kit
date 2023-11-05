@@ -16,20 +16,20 @@ struct JWTParser {
         encodedSignature = tokenParts[2]
     }
 
-    func header(jsonDecoder: any JWTJSONDecoder) throws -> JWTHeader {
+    func header(jsonDecoder: any JWTJSONDecoder = .defaultForJWT) throws -> JWTHeader {
         try jsonDecoder
             .decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
     }
 
-    func payload<Payload>(as _: Payload.Type, jsonDecoder: any JWTJSONDecoder) throws -> Payload
+    func payload<Payload>(as _: Payload.Type, jsonDecoder: any JWTJSONDecoder = .defaultForJWT) throws -> Payload
         where Payload: JWTPayload
     {
         try jsonDecoder
             .decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
     }
 
-    func verify(using signer: JWTSigner) throws {
-        guard try signer.algorithm.verify(signature, signs: message) else {
+    func verify(using algorithm: JWTAlgorithm) throws {
+        guard try algorithm.verify(signature, signs: message) else {
             throw JWTError.signatureVerifictionFailed
         }
     }

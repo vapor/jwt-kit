@@ -161,7 +161,7 @@ eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsIng1YyI6WyJNSUlCanpDQ0FUVUNGSDhFWFBJbDBRbDQw
 private struct TokenPayload: JWTPayload {
     var cool: Bool
 
-    func verify(using _: JWTSigner) throws {
+    func verify(using _: JWTAlgorithm) throws {
         if !cool {
             throw JWTError.claimVerificationFailure(name: "cool", reason: "not cool")
         }
