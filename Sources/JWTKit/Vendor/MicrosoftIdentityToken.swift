@@ -106,7 +106,7 @@ public struct MicrosoftIdentityToken: JWTPayload {
     /// Indicates the version of the id_token.
     public let version: String?
 
-    public func verify(using signer: JWTSigner) throws {
+    public func verify(using _: JWTAlgorithm) throws {
         guard let tenantId = self.tenantId else {
             throw JWTError.claimVerificationFailure(name: "tid", reason: "Token must contain tenant Id")
         }

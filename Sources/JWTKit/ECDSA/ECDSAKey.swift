@@ -33,7 +33,6 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     var type: KeyType
 
     var privateKey: PrivateKey?
-
     var publicKey: PublicKey?
 
     /// Generates a new ECDSA key.

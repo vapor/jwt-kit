@@ -1,8 +1,16 @@
 import Crypto
 import Foundation
 
-public struct EdDSAKey {
-    public enum Curve: String, Codable {
+/// A structure representing an EdDSA (Edwards-curve Digital Signature Algorithm) key.
+///
+/// ``EdDSAKey`` is used to represent keys for EdDSA, a digital signature scheme using
+/// a variant of the Schnorr signature based on twisted Edwards curves. This structure
+/// provides functionalities to create and manage EdDSA keys.
+///
+/// It supports the `Ed25519` curve, widely recognized for its strength and efficiency.
+public struct EdDSAKey: Sendable {
+    /// An enum defining supported curves for EdDSA keys.
+    public enum Curve: String, Codable, Sendable {
         case ed25519 = "Ed25519"
     }
 
@@ -84,6 +92,14 @@ public struct EdDSAKey {
         self.curve = curve
     }
 
+    /// Generates a new ``EdDSAKey`` instance with both public and private key components.
+    ///
+    /// This method generates a new key pair suitable for signing and verifying signatures.
+    /// The generated keys use the specified curve, currently limited to ``Curve/ed25519``.
+    ///
+    /// - Parameter curve: The curve to be used for key generation.
+    /// - Throws: An error if key generation fails.
+    /// - Returns: A new ``EdDSAKey`` instance with a freshly generated key pair.
     public static func generate(curve: Curve) throws -> EdDSAKey {
         switch curve {
         case .ed25519:

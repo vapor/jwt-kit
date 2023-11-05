@@ -1,7 +1,7 @@
 import Crypto
 import Foundation
 
-struct EdDSASigner: JWTAlgorithm {
+struct EdDSASigner: JWTAlgorithm, Sendable {
     let key: EdDSAKey
     let name = "EdDSA"
 
