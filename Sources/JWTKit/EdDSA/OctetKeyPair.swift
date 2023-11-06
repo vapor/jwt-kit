@@ -1,7 +1,7 @@
 import Foundation
 
 // https://www.rfc-editor.org/rfc/rfc8037.html#appendix-A
-enum OctetKeyPair {
+enum OctetKeyPair: Sendable {
     case `public`(x: Data)
     case `private`(x: Data, d: Data)
 

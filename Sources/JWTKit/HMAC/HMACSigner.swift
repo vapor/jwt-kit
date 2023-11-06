@@ -1,4 +1,4 @@
-import Crypto
+@preconcurrency import Crypto
 import Foundation
 
 struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {
