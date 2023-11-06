@@ -2,6 +2,8 @@ import Foundation
 import SwiftASN1
 import X509
 
+/// A X5CVerifier that correctly verifies StoreKit 2 receipts and App Store Server Notifications
+/// as specified in https://developer.apple.com/documentation/appstoreservernotifications
 public class AppStoreX5CVerifier: X5CVerifier {
     
     /// A payload that only contains the `signedDate`
@@ -16,12 +18,6 @@ public class AppStoreX5CVerifier: X5CVerifier {
         
         let signedDate: Date
     }
-    
-    public static let appStoreJsonDecoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .millisecondsSince1970
-        return decoder
-    }()
     
     /// Verify a JWS with the `x5c` header parameter against the trusted root
     /// certificates.
