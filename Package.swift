@@ -40,6 +40,7 @@ let package = Package(
                 .copy("TestVectors"),
             ],
             swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
                 .enableUpcomingFeature("ConciseMagicFile"),
             ]
         ),

@@ -1,4 +1,4 @@
-@preconcurrency import _CryptoExtras
+import _CryptoExtras
 import Foundation
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
@@ -42,3 +42,5 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         return publicKey.isValidSignature(signature, for: digest, padding: padding)
     }
 }
+
+extension _RSA.Signing.Padding: @unchecked Sendable {}
