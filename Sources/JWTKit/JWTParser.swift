@@ -1,6 +1,6 @@
 import Foundation
 
-struct JWTParser {
+struct JWTParser: Sendable {
     let encodedHeader: ArraySlice<UInt8>
     let encodedPayload: ArraySlice<UInt8>
     let encodedSignature: ArraySlice<UInt8>

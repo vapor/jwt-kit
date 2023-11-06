@@ -1,5 +1,4 @@
-import _CryptoExtras
-import Crypto
+@preconcurrency import _CryptoExtras
 import Foundation
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {

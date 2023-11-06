@@ -14,7 +14,7 @@ import X509
 ///
 /// See [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515#section-4.1.6)
 /// for details on the `x5c` header parameter.
-public class X5CVerifier {
+public final class X5CVerifier: Sendable {
     private let trustedStore: X509.CertificateStore
 
     /// Create a new X5CVerifier trusting `rootCertificates`.

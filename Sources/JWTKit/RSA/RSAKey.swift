@@ -1,4 +1,4 @@
-import _CryptoExtras
+@preconcurrency import _CryptoExtras
 import Crypto
 import Foundation
 import SwiftASN1
@@ -142,14 +142,14 @@ public struct RSAKey: Sendable {
     let privateKey: _RSA.Signing.PrivateKey?
 
     init(publicKey: _RSA.Signing.PublicKey) {
-        type = .public
+        self.type = .public
         self.publicKey = publicKey
-        privateKey = nil
+        self.privateKey = nil
     }
 
     init(privateKey: _RSA.Signing.PrivateKey) {
-        type = .private
-        publicKey = privateKey.publicKey
+        self.type = .private
+        self.publicKey = privateKey.publicKey
         self.privateKey = privateKey
     }
 
