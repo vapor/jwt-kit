@@ -50,7 +50,7 @@ public protocol ECDSAPublicKey: Sendable {
     func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool
 }
 
-public protocol ECDSASignature {
+public protocol ECDSASignature: Sendable {
     var rawRepresentation: Data { get set }
 }
 

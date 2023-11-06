@@ -7,7 +7,7 @@ enum DigestAlgorithm {
     case sha512
 }
 
-protocol CryptoSigner {
+protocol CryptoSigner: Sendable {
     var algorithm: DigestAlgorithm { get }
 }
 
