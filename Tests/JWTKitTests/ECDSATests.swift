@@ -68,16 +68,16 @@ final class ECDSATests: XCTestCase {
         XCTAssertEqual(ec.curve, .p384)
     }
 
-    func testGetECParametersES521() async throws {
+    func testGetECParametersES512() async throws {
         let message = "test".bytes
 
-        let ec = try ES521Key.generate()
-        let keys = await JWTKeyCollection().addES521(key: ec, kid: "initial")
+        let ec = try ES512Key.generate()
+        let keys = await JWTKeyCollection().addES512(key: ec, kid: "initial")
 
         let signature = try await keys.getKey(for: "initial").sign(message)
 
         let params = ec.parameters!
-        try await keys.addES521(key: ES521Key(parameters: params), kid: "params")
+        try await keys.addES512(key: ES512Key(parameters: params), kid: "params")
         try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p521)
     }
