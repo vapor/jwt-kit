@@ -57,18 +57,18 @@ public extension JWTKeyCollection {
         add(.init(algorithm: ECDSASigner(key: key, algorithm: .sha384, name: "ES384"), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
     }
 
-    /// Adds an ES521 key to the collection.
+    /// Adds an ES512 key to the collection.
     ///
-    /// This method configures and adds an ES521 (ECDSA using P-521 and SHA-512) key to the collection.
+    /// This method configures and adds an ES512 (ECDSA using P-521 and SHA-512) key to the collection.
     ///
     /// Example Usage:
     /// ```
     /// let collection = await JWTKeyCollection()
-    ///     .addES521(key: myES521Key)
+    ///     .addES512(key: myES512Key)
     /// ```
     ///
     /// - Parameters:
-    ///   - key: The ``ES521Key`` to be used for signing. This key should be securely stored and not exposed.
+    ///   - key: The ``ES512Key`` to be used for signing. This key should be securely stored and not exposed.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, this identifier will be used in the JWT `kid`
     ///          header field to identify the key.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder``, used for encoding JWTs.
@@ -76,8 +76,8 @@ public extension JWTKeyCollection {
     ///   - jsonDecoder: An optional custom JSON decoder conforming to ``JWTJSONDecoder``, used for decoding JWTs.
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
-    @discardableResult func addES521(
-        key: ES521Key,
+    @discardableResult func addES512(
+        key: ES512Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
