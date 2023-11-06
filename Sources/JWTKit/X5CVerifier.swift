@@ -45,12 +45,11 @@ public class X5CVerifier {
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
     /// - Returns: The decoded payload, if verified.
-    public func verifyJWS<Payload: JWTPayload, Policy: VerifierPolicy>(
+    public func verifyJWS<Payload: JWTPayload>(
         _ token: String,
-        as _: Payload.Type = Payload.self,
-        @PolicyBuilder policy: () -> Policy = { RFC5280Policy(validationTime: Date()) }
+        as _: Payload.Type = Payload.self
     ) async throws -> Payload {
-        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT, policy: policy)
+        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
     }
 
     /// Verify a JWS with the `x5c` header parameter against the trusted root
@@ -61,13 +60,12 @@ public class X5CVerifier {
     ///   - payload: The type to decode from the token payload.
     ///   - jsonDecoder: The JSON decoder to use for decoding the token.
     /// - Returns: The decoded payload, if verified.
-    public func verifyJWS<Payload: JWTPayload, Policy: VerifierPolicy>(
+    public func verifyJWS<Payload: JWTPayload>(
         _ token: String,
         as _: Payload.Type = Payload.self,
-        jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () -> Policy = { RFC5280Policy(validationTime: Date()) }
+        jsonDecoder: any JWTJSONDecoder
     ) async throws -> Payload {
-        try await verifyJWS(Array(token.utf8), as: Payload.self, jsonDecoder: jsonDecoder, policy: policy)
+        try await verifyJWS(Array(token.utf8), as: Payload.self, jsonDecoder: jsonDecoder)
     }
 
     /// Verify a JWS with `x5c` claims against the
@@ -77,14 +75,13 @@ public class X5CVerifier {
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
     /// - Returns: The decoded payload, if verified.
-    public func verifyJWS<Payload, Policy: VerifierPolicy>(
+    public func verifyJWS<Payload>(
         _ token: some DataProtocol,
-        as _: Payload.Type = Payload.self,
-        @PolicyBuilder policy: () -> Policy = { RFC5280Policy(validationTime: Date()) }
+        as _: Payload.Type = Payload.self
     ) async throws -> Payload
         where Payload: JWTPayload
     {
-        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT, policy: policy)
+        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
     }
 
     /// Verify a JWS with `x5c` claims against the
@@ -95,16 +92,26 @@ public class X5CVerifier {
     ///   - payload: The type to decode from the token payload.
     ///   - jsonDecoder: The JSON decoder to use for dcoding the token.
     /// - Returns: The decoded payload, if verified.
-    public func verifyJWS<Payload, Policy: VerifierPolicy>(
+    public func verifyJWS<Payload>(
         _ token: some DataProtocol,
+        as _: Payload.Type = Payload.self,
+        jsonDecoder: any JWTJSONDecoder
+    ) async throws -> Payload
+        where Payload: JWTPayload
+    {
+        let parser = try JWTParser(token: token)
+        return try await verifyJWS(parser, jsonDecoder: jsonDecoder)
+    }
+    
+    func verifyJWS<Payload, Policy: VerifierPolicy>(
+        _ parser: JWTParser,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
         @PolicyBuilder policy: () -> Policy = { RFC5280Policy(validationTime: Date()) }
     ) async throws -> Payload
         where Payload: JWTPayload
     {
-        // Parse the JWS header to get the header
-        let parser = try JWTParser(token: token)
+        // Parse the header
         let header = try parser.header(jsonDecoder: jsonDecoder)
 
         // Ensure the algorithm used is ES256, as it's the only supported one (for now)
