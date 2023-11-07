@@ -100,14 +100,25 @@ public struct X5CVerifier: Sendable {
         where Payload: JWTPayload
     {
         let parser = try JWTParser(token: token)
-        return try await verifyJWS(parser, jsonDecoder: jsonDecoder)
+        return try await verifyJWS(parser, jsonDecoder: jsonDecoder, validationTime: Date())
     }
     
-    func verifyJWS<Payload, Policy: VerifierPolicy>(
+    
+    
+    /// Verify a JWS with `x5c` claims against the
+    /// trusted root certificates, overriding the default JSON decoder
+    /// and validation policy.
+    /// - Parameters:
+    ///   - parser: The parser of the JWS to verify.
+    ///   - payload: The type to decode from the contents of the parser.
+    ///   - jsonDecoder: The JSON decoder to use for decoding the contents of the parser.
+    ///   - validationTime: The time the certificates will be verified against.
+    /// - Returns: The decoded payload, if verified.
+    func verifyJWS<Payload>(
         _ parser: JWTParser,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () -> Policy = { RFC5280Policy(validationTime: Date()) }
+        validationTime: Date
     ) async throws -> Payload
         where Payload: JWTPayload
     {
@@ -138,7 +149,7 @@ public struct X5CVerifier: Sendable {
         })
 
         // Setup the verifier using the predefined trusted store
-        var verifier = Verifier(rootCertificates: trustedStore, policy: policy)
+        var verifier = Verifier(rootCertificates: trustedStore, policy: { RFC5280Policy(validationTime: validationTime) })
 
         // Extract the leaf certificate (first certificate in x5c)
         let leafCertificate = try Certificate(derEncoded: [UInt8](certificateData[0]))
