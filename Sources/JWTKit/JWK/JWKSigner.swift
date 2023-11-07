@@ -69,7 +69,7 @@ struct JWKSigner: Sendable {
                     ))
                 case .es512:
                     return try .init(algorithm: ECDSASigner(
-                        key: ES521Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
+                        key: ES512Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
                         algorithm: .sha512,
                         name: "ES512"
                     ))
