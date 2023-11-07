@@ -114,7 +114,7 @@ public struct X5CVerifier: Sendable {
     ///   - jsonDecoder: The JSON decoder to use for decoding the contents of the parser.
     ///   - validationTime: The time the certificates will be verified against.
     /// - Returns: The decoded payload, if verified.
-    func verifyJWS<Payload>(
+    public func verifyJWS<Payload>(
         _ parser: JWTParser,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
