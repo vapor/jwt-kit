@@ -2,7 +2,6 @@ import Foundation
 
 public protocol JWTJSONDecoder: Sendable {
     func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
-    var dateDecodingStrategy: JSONDecoder.DateDecodingStrategy { get set }
 }
 
 public protocol JWTJSONEncoder: Sendable {

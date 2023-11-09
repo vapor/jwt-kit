@@ -126,16 +126,15 @@ public struct X5CVerifier: Sendable {
             try Certificate(derEncoded: [UInt8]($0))
         })
 
-        var date = Date()
-        var decoder = jsonDecoder
-        if Payload.self is ValidationTimePayload.Type {
-            decoder.dateDecodingStrategy = .millisecondsSince1970
-        }
+        let payload = try parser.payload(as: Payload.self, jsonDecoder: jsonDecoder)
 
-        let payload = try parser.payload(as: Payload.self, jsonDecoder: decoder)
-
+        let date: Date
+        // Some JWT implementations have the sign date in the payload.
+        // If it's such a payload, we'll use that date for validation
         if let validationTimePayload = payload as? ValidationTimePayload {
             date = validationTimePayload.signedDate
+        } else {
+            date = Date()
         }
 
         // Setup the verifier using the predefined trusted store
@@ -159,8 +158,4 @@ public struct X5CVerifier: Sendable {
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
         return try await signer.verify(parser: parser)
     }
-}
-
-public protocol ValidationTimePayload: JWTPayload {
-    var signedDate: Date { get }
 }
