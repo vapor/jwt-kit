@@ -11,7 +11,7 @@ import X509
 ///
 /// - Generic Parameter Curve: The curve type associated with the ECDSA key.
 public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
-    /// The elliptic curve used by this key.
+    /// The elliptic curve used by this key
     var curve: ECDSACurve = Curve.curve
 
     /// Parameters derived from the ECDSA key, if available.
@@ -105,6 +105,28 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         return try self.private(pem: string)
     }
 
+    /// Exports the current public key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a public key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public func exportPublicKeyAsPEM() throws -> String {
+        guard let publicKey else {
+            throw ECDSAError.noPublicKey
+        }
+        return publicKey.pemRepresentation
+    }
+
+    /// Exports the current private key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a private key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public func exportPrivateKeyAsPEM() throws -> String {
+        guard let privateKey else {
+            throw ECDSAError.noPrivateKey
+        }
+        return privateKey.pemRepresentation
+    }
+
     /// Initializes a new instance with ECDSA parameters and an optional private key.
     ///
     /// This initializer takes ECDSA parameters and an optional private key in its base64 URL encoded string representation.
@@ -124,7 +146,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     public init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
         let privateKeyBytes: [UInt8]?
         if
-            let privateKey = privateKey,
+            let privateKey,
             let privateKeyData = privateKey.base64URLDecodedData()
         {
             privateKeyBytes = Array(privateKeyData)
@@ -142,7 +164,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         // The key is structured as: 0x04 || x || y
         let publicKey = try PublicKey(x963Representation: Data([0x04]) + x + y)
 
-        if let privateKeyBytes = privateKeyBytes {
+        if let privateKeyBytes {
             guard let privateKey = try? PrivateKey(rawRepresentation: privateKeyBytes) else {
                 throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to interpret privateKey as ECDSAPrivateKey")
             }

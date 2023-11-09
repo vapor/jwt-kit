@@ -225,6 +225,36 @@ final class ECDSATests: XCTestCase {
             XCTAssertEqual(payload.foo, "bar")
         }
     }
+
+    func testExportPublicKeyAsPEM() async throws {
+        let key = try ES256Key.public(pem: ecdsaPublicKey)
+        let pem = try key.exportPublicKeyAsPEM()
+        let key2 = try ES256Key.public(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+
+    func testExportPrivateKeyAsPEM() async throws {
+        let key = try ES256Key.private(pem: ecdsaPrivateKey)
+        let pem = try key.exportPrivateKeyAsPEM()
+        let key2 = try ES256Key.private(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+
+    func testExportPublicKeyWhenKeyIsPrivateThrows() async throws {
+        let key = try ES256Key.private(pem: ecdsaPrivateKey)
+        XCTAssertThrowsError(try key.exportPublicKeyAsPEM())
+    }
+
+    func testExportPrivateKeyWhenKeyIsPublicThrows() async throws {
+        let key = try ES256Key.public(pem: ecdsaPublicKey)
+        XCTAssertThrowsError(try key.exportPrivateKeyAsPEM())
+    }
+}
+
+extension ECDSAKey: Equatable {
+    public static func == (lhs: ECDSAKey, rhs: ECDSAKey) -> Bool {
+        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+    }
 }
 
 let ecdsaPrivateKey = """
