@@ -35,5 +35,4 @@ extension CryptoSigner {
 enum KeyType {
     case `public`
     case `private`
-    case certificate
 }
