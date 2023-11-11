@@ -11,7 +11,7 @@ import X509
 ///
 /// - Generic Parameter Curve: The curve type associated with the ECDSA key.
 public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
-    /// The elliptic curve used by this key
+    /// The elliptic curve used by this key.
     var curve: ECDSACurve = Curve.curve
 
     /// Parameters derived from the ECDSA key, if available.
@@ -41,7 +41,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// - Returns: A new ``ECDSAKey`` instance with a generated private and corresponding public key.
     public static func generate() throws -> Self {
         let privateKey = PrivateKey()
-        return try .init(privateKey: privateKey, publicKey: privateKey.publicKey)
+        return try .init(privateKey: privateKey)
     }
 
     /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate string.
@@ -188,6 +188,6 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         }
 
         self.privateKey = privateKey
-        self.publicKey = publicKey
+        self.publicKey = publicKey ?? privateKey?.publicKey
     }
 }
