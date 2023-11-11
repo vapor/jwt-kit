@@ -1,3 +1,5 @@
+import Foundation
+
 /// A protocol defining the requirements for payloads that include a validation time.
 ///
 /// This protocol extends `JWTPayload` to include an additional `signedDate` property.
