@@ -41,7 +41,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// - Returns: A new ``ECDSAKey`` instance with a generated private and corresponding public key.
     public static func generate() throws -> Self {
         let privateKey = PrivateKey()
-        return try .init(privateKey: privateKey)
+        return .init(privateKey: privateKey)
     }
 
     /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate string.
@@ -54,7 +54,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         guard let publicKey = PublicKey(cert.publicKey) else {
             throw ECDSAError.generateKeyFailure
         }
-        return try .init(publicKey: publicKey)
+        return .init(publicKey: publicKey)
     }
 
     /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate data.
@@ -168,26 +168,20 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
             guard let privateKey = try? PrivateKey(rawRepresentation: privateKeyBytes) else {
                 throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to interpret privateKey as ECDSAPrivateKey")
             }
-            try self.init(privateKey: privateKey)
+            self.init(privateKey: privateKey)
         } else {
-            try self.init(publicKey: publicKey)
+            self.init(publicKey: publicKey)
         }
     }
-
-    init(privateKey: PrivateKey? = nil, publicKey: PublicKey? = nil) throws {
-        guard privateKey != nil || publicKey != nil else {
-            throw ECDSAError.generateKeyFailure
-        }
-
-        if privateKey != nil {
-            type = .private
-        } else if publicKey != nil {
-            type = .public
-        } else {
-            type = .certificate
-        }
-
+    
+    init(privateKey: PrivateKey) {
         self.privateKey = privateKey
-        self.publicKey = publicKey ?? privateKey?.publicKey
+        self.publicKey = privateKey.publicKey
+        self.type = .private
+    }
+    
+    init(publicKey: PublicKey) {
+        self.publicKey = publicKey
+        self.type = .public
     }
 }
