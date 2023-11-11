@@ -41,7 +41,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// - Returns: A new ``ECDSAKey`` instance with a generated private and corresponding public key.
     public static func generate() throws -> Self {
         let privateKey = PrivateKey()
-        return try .init(privateKey: privateKey, publicKey: privateKey.publicKey)
+        return .init(privateKey: privateKey)
     }
 
     /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate string.
@@ -54,7 +54,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         guard let publicKey = PublicKey(cert.publicKey) else {
             throw ECDSAError.generateKeyFailure
         }
-        return try .init(publicKey: publicKey)
+        return .init(publicKey: publicKey)
     }
 
     /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate data.
@@ -105,6 +105,28 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         return try self.private(pem: string)
     }
 
+    /// Exports the current public key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a public key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public func exportPublicKeyAsPEM() throws -> String {
+        guard let publicKey else {
+            throw ECDSAError.noPublicKey
+        }
+        return publicKey.pemRepresentation
+    }
+
+    /// Exports the current private key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a private key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public func exportPrivateKeyAsPEM() throws -> String {
+        guard let privateKey else {
+            throw ECDSAError.noPrivateKey
+        }
+        return privateKey.pemRepresentation
+    }
+
     /// Initializes a new instance with ECDSA parameters and an optional private key.
     ///
     /// This initializer takes ECDSA parameters and an optional private key in its base64 URL encoded string representation.
@@ -124,7 +146,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     public init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
         let privateKeyBytes: [UInt8]?
         if
-            let privateKey = privateKey,
+            let privateKey,
             let privateKeyData = privateKey.base64URLDecodedData()
         {
             privateKeyBytes = Array(privateKeyData)
@@ -142,30 +164,24 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         // The key is structured as: 0x04 || x || y
         let publicKey = try PublicKey(x963Representation: Data([0x04]) + x + y)
 
-        if let privateKeyBytes = privateKeyBytes {
+        if let privateKeyBytes {
             guard let privateKey = try? PrivateKey(rawRepresentation: privateKeyBytes) else {
                 throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to interpret privateKey as ECDSAPrivateKey")
             }
-            try self.init(privateKey: privateKey)
+            self.init(privateKey: privateKey)
         } else {
-            try self.init(publicKey: publicKey)
+            self.init(publicKey: publicKey)
         }
     }
-
-    init(privateKey: PrivateKey? = nil, publicKey: PublicKey? = nil) throws {
-        guard privateKey != nil || publicKey != nil else {
-            throw ECDSAError.generateKeyFailure
-        }
-
-        if privateKey != nil {
-            type = .private
-        } else if publicKey != nil {
-            type = .public
-        } else {
-            type = .certificate
-        }
-
+    
+    init(privateKey: PrivateKey) {
         self.privateKey = privateKey
+        self.publicKey = privateKey.publicKey
+        self.type = .private
+    }
+    
+    init(publicKey: PublicKey) {
         self.publicKey = publicKey
+        self.type = .public
     }
 }
