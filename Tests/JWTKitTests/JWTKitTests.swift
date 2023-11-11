@@ -1,4 +1,5 @@
 @testable import JWTKit
+import X509
 import XCTest
 
 class JWTKitTests: XCTestCase {
