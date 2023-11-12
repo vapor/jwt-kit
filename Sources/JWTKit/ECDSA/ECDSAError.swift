@@ -4,4 +4,5 @@ enum ECDSAError: Error {
     case signFailure
     case noPublicKey
     case noPrivateKey
+    case wrongCurve
 }

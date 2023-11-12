@@ -76,7 +76,8 @@ public extension JWTKeyCollection {
     ///   - jsonDecoder: An optional custom JSON decoder conforming to ``JWTJSONDecoder``, used for decoding JWTs.
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
-    @discardableResult func addES512(
+    @discardableResult 
+    func addES512(
         key: ES512Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,

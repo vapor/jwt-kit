@@ -1,9 +1,5 @@
-import Foundation
 import XCTest
-#if os(Linux)
-    import FoundationNetworking
-#endif
-@testable import JWTKit
+import JWTKit
 
 /// Test the x5c verification abilities of JWTSigners.
 ///

@@ -1,4 +1,4 @@
-@testable import JWTKit
+import JWTKit
 import X509
 import XCTest
 

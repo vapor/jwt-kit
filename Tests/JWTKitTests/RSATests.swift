@@ -1,5 +1,5 @@
 import BigInt
-@testable import JWTKit
+import JWTKit
 import XCTest
 
 final class RSATests: XCTestCase {
@@ -8,26 +8,21 @@ final class RSATests: XCTestCase {
         try wycheproof(fileName: "rsa_oaep_2048_sha224_mgf1sha1_test", testFunction: testPrimeFactor)
         try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testPrimeFactor)
     }
-
-    func testCalculateModularInverses() throws {
-        try wycheproof(fileName: "rsa_oaep_2048_sha1_mgf1sha1_test", testFunction: testModularInverse)
-        try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testModularInverse)
-    }
-
+    
     func testRSADocs() async throws {
         await XCTAssertNoThrowAsync(try await JWTKeyCollection().addRS256(key: .public(pem: publicKey)))
     }
-
+    
     func testPublicKeyInitialization() throws {
         let rsaKey = try RSAKey(modulus: modulus, exponent: publicExponent)
-        XCTAssertNotNil(rsaKey.publicKey)
-        XCTAssertNil(rsaKey.privateKey)
+        XCTAssertNoThrow(try rsaKey.publicKeyPEMRepresentation)
+        XCTAssertThrowsError(try rsaKey.privateKeyPEMRepresentation)
     }
 
     func testPrivateKeyInitialization() throws {
         let rsaKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
-        XCTAssertNotNil(rsaKey.publicKey)
-        XCTAssertNotNil(rsaKey.privateKey)
+        XCTAssertNoThrow(try rsaKey.publicKeyPEMRepresentation)
+        XCTAssertNoThrow(try rsaKey.privateKeyPEMRepresentation)
     }
 
     func testSigning() async throws {
@@ -61,11 +56,11 @@ final class RSATests: XCTestCase {
     }
 
     func testSigningWithRawBuiltPrivateKey() async throws {
-        let privateKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent).privateKey!
+        let privateKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
 
         let keyCollection = try await JWTKeyCollection()
-            .addRS256(key: .private(pem: privateKey.pemRepresentation), kid: "private")
-            .addRS256(key: .public(pem: privateKey.publicKey.pemRepresentation), kid: "public")
+            .addRS256(key: .private(pem: privateKey.privateKeyPEMRepresentation), kid: "private")
+            .addRS256(key: .public(pem: privateKey.publicKeyPEMRepresentation), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -116,28 +111,43 @@ final class RSATests: XCTestCase {
         let payload = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(payload, testPayload)
     }
-
-    // MARK: Private functions
-
-    private func testModularInverse(_ testGroup: TestGroup) throws {
-        guard let privateKey = testGroup.privateKeyJwk else {
-            return
-        }
-
-        guard
-            let p = privateKey.p.urlDecodedBigUInt,
-            let q = privateKey.q.urlDecodedBigUInt,
-            let qi = privateKey.qi.urlDecodedBigUInt
-        else {
-            return XCTFail("Failed to extract or parse prime factors p, q, or qi")
-        }
-
-        guard let pInverse = q.inverse(p) else {
-            return XCTFail("Failed to calculate the modular inverse of p")
-        }
-        XCTAssertEqual(pInverse, qi, "The modular inverse of p should equal qi; got \(pInverse) != \(qi)")
+    
+    func testExportPublicKeyAsPEM() async throws {
+        let key = try RSAKey.public(pem: publicKey)
+        let pem = try key.publicKeyPEMRepresentation
+        let key2 = try RSAKey.public(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+    
+    func testExportPrivateKeyAsPEM() async throws {
+        let key = try RSAKey.private(pem: privateKey)
+        let pem = try key.privateKeyPEMRepresentation
+        let key2 = try RSAKey.private(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+    
+    func testExportPublicKeyWhenKeyIsPrivate() async throws {
+        let privateKey = try RSAKey.private(pem: privateKey)
+        let pem = try privateKey.publicKeyPEMRepresentation
+        let publicKeyFromPrivate = try RSAKey.public(pem: pem)
+        let publicKey = try RSAKey.public(pem: publicKey)
+        XCTAssertEqual(publicKeyFromPrivate, publicKey)
     }
 
+    func testExportPrivateKeyWhenKeyIsPublicThrows() async throws {
+        let key = try RSAKey.public(pem: publicKey)
+        XCTAssertThrowsError(try key.privateKeyPEMRepresentation)
+    }
+    
+    func testExportKeyAsPEMWhenRawBuilt() async throws {
+        let key = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let pem = try key.privateKeyPEMRepresentation
+        let key2 = try RSAKey.private(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+    
+    // MARK: Private Functions
+    
     private func testPrimeFactor(_ testGroup: TestGroup) throws {
         guard
             let n = BigUInt(testGroup.n, radix: 16),
@@ -310,27 +320,3 @@ cKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbc
 mwIDAQAB
 -----END PUBLIC KEY-----
 """
-
-struct GCDTestVector: Codable {
-    let a: String
-    let b: String
-    let lcm: String
-    let gcd: String
-}
-
-extension String {
-    var urlDecoded: String {
-        var result = replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        result.append(String(repeating: "=", count: (4 - (result.count & 3)) & 3))
-        return result
-    }
-
-    var urlDecodedData: Data? {
-        Data(base64Encoded: urlDecoded)
-    }
-
-    var urlDecodedBigUInt: BigUInt? {
-        guard let data = urlDecodedData else { return nil }
-        return BigUInt(data)
-    }
-}
