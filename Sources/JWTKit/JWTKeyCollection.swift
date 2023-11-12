@@ -132,7 +132,7 @@ public actor JWTKeyCollection: Sendable {
         case let .jwt(jwt):
             return jwt
         case let .jwk(jwk):
-            if let signer = jwk.signer(for: alg.flatMap { JWK.Algorithm(rawValue: $0) }) {
+            if let signer = jwk.signer(for: alg.flatMap { JWK.Algorithm($0) }) {
                 return signer
             } else {
                 throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")

@@ -10,7 +10,7 @@ struct JWKSigner: Sendable {
     }
 
     func signer(for algorithm: JWK.Algorithm? = nil) -> JWTSigner? {
-        switch jwk.keyType {
+        switch jwk.keyType.backing {
         case .rsa:
             guard
                 let modulus = self.jwk.modulus,
@@ -84,7 +84,7 @@ struct JWKSigner: Sendable {
                 return nil
             }
 
-            guard let curve = self.jwk.curve.flatMap({ EdDSAKey.Curve(rawValue: $0.rawValue) }) else {
+            guard let curve = self.jwk.curve.flatMap({ EdDSAKey.Curve($0.description) }) else {
                 return nil
             }
 

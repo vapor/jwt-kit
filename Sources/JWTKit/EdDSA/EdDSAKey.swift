@@ -10,8 +10,29 @@ import Foundation
 /// It supports the `Ed25519` curve, widely recognized for its strength and efficiency.
 public struct EdDSAKey: Sendable {
     /// An enum defining supported curves for EdDSA keys.
-    public enum Curve: String, Codable, Sendable {
-        case ed25519 = "Ed25519"
+    public struct Curve: Codable, Equatable, LosslessStringConvertible, Sendable {
+        let backing: Backing
+        
+        public var description: String {
+            backing.rawValue
+        }
+        
+        public static let ed25519 = Self(backing: .ed25519)
+        
+        enum Backing: String, Codable {
+            case ed25519 = "Ed25519"
+        }
+        
+        init(backing: Backing) {
+            self.backing = backing
+        }
+        
+        public init?(_ description: String) {
+            guard let backing = Backing(rawValue: description) else {
+                return nil
+            }
+            self.init(backing: backing)
+        }
     }
 
     let keyPair: OctetKeyPair
@@ -101,7 +122,7 @@ public struct EdDSAKey: Sendable {
     /// - Throws: An error if key generation fails.
     /// - Returns: A new ``EdDSAKey`` instance with a freshly generated key pair.
     public static func generate(curve: Curve) throws -> EdDSAKey {
-        switch curve {
+        switch curve.backing {
         case .ed25519:
             let key = Curve25519.Signing.PrivateKey()
             return try .init(

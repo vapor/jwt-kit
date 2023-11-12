@@ -5,22 +5,70 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable, Sendable {
-    public enum Curve: String, Codable, Sendable {
-        case p256 = "P-256"
-        case p384 = "P-384"
-        case p521 = "P-521"
-        case ed25519 = "Ed25519"
-        case ed448 = "Ed448"
+    public struct Curve: Codable, LosslessStringConvertible, Sendable {
+        let backing: Backing
+
+        public var description: String {
+            backing.rawValue
+        }
+
+        public static let p256 = Self(backing: .p256)
+        public static let p384 = Self(backing: .p384)
+        public static let p521 = Self(backing: .p521)
+        public static let ed25519 = Self(backing: .ed25519)
+        public static let ed448 = Self(backing: .ed448)
+
+        enum Backing: String, Codable {
+            case p256 = "P-256"
+            case p384 = "P-384"
+            case p521 = "P-521"
+            case ed25519 = "Ed25519"
+            case ed448 = "Ed448"
+        }
+
+        init(backing: Backing) {
+            self.backing = backing
+        }
+
+        public init?(_ description: String) {
+            guard let backing = Backing(rawValue: description) else {
+                return nil
+            }
+            self.init(backing: backing)
+        }
     }
 
     /// Supported `kty` key types.
-    public enum KeyType: String, Codable, Sendable {
-        /// RSA
-        case rsa = "RSA"
-        /// ECDSA
-        case ecdsa = "EC"
-        /// Octet Key Pair
-        case octetKeyPair = "OKP"
+    public struct KeyType: Codable, LosslessStringConvertible, Equatable, Sendable {
+        let backing: Backing
+
+        public var description: String {
+            backing.rawValue
+        }
+
+        public static let rsa = Self(backing: .rsa)
+        public static let ecdsa = Self(backing: .ecdsa)
+        public static let octetKeyPair = Self(backing: .octetKeyPair)
+
+        enum Backing: String, Codable {
+            /// RSA
+            case rsa = "RSA"
+            /// ECDSA
+            case ecdsa = "EC"
+            /// Octet Key Pair
+            case octetKeyPair = "OKP"
+        }
+
+        init(backing: Backing) {
+            self.backing = backing
+        }
+
+        public init?(_ description: String) {
+            guard let backing = Backing(rawValue: description) else {
+                return nil
+            }
+            self.init(backing: backing)
+        }
     }
 
     /// The `kty` (key type) parameter identifies the cryptographic algorithm
@@ -29,21 +77,48 @@ public struct JWK: Codable, Sendable {
     public var keyType: KeyType
 
     /// Supported `alg` algorithms
-    public enum Algorithm: String, Codable, Sendable {
-        /// RSA with SHA256
-        case rs256 = "RS256"
-        /// RSA with SHA384
-        case rs384 = "RS384"
-        /// RSA with SHA512
-        case rs512 = "RS512"
-        /// EC with SHA256
-        case es256 = "ES256"
-        /// EC with SHA384
-        case es384 = "ES384"
-        /// EC with SHA512
-        case es512 = "ES512"
-        /// EdDSA
-        case eddsa = "EdDSA"
+    public struct Algorithm: Codable, LosslessStringConvertible, Equatable, Sendable {
+        let backing: Backing
+
+        public var description: String {
+            backing.rawValue
+        }
+
+        public static let rs256 = Self(backing: .rs256)
+        public static let rs384 = Self(backing: .rs384)
+        public static let rs512 = Self(backing: .rs512)
+        public static let es256 = Self(backing: .es256)
+        public static let es384 = Self(backing: .es384)
+        public static let es512 = Self(backing: .es512)
+        public static let eddsa = Self(backing: .eddsa)
+
+        enum Backing: String, Codable {
+            /// RSA with SHA256
+            case rs256 = "RS256"
+            /// RSA with SHA384
+            case rs384 = "RS384"
+            /// RSA with SHA512
+            case rs512 = "RS512"
+            /// EC with SHA256
+            case es256 = "ES256"
+            /// EC with SHA384
+            case es384 = "ES384"
+            /// EC with SHA512
+            case es512 = "ES512"
+            /// EdDSA
+            case eddsa = "EdDSA"
+        }
+
+        init(backing: Backing) {
+            self.backing = backing
+        }
+
+        public init?(_ description: String) {
+            guard let backing = Backing(rawValue: description) else {
+                return nil
+            }
+            self.init(backing: backing)
+        }
     }
 
     /// The `alg` (algorithm) parameter identifies the algorithm intended for
@@ -104,11 +179,11 @@ public struct JWK: Codable, Sendable {
     }
 
     public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSACurve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.description) })
+        JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve($0.description) })
     }
 
     public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y _: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
+        JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve($0.description) })
     }
 
     private init(
