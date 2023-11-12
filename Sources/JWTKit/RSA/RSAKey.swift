@@ -230,21 +230,11 @@ public struct RSAKey: Sendable {
 
 extension RSAKey: Equatable {
     public static func == (lhs: RSAKey, rhs: RSAKey) -> Bool {
-        // Compare public keys
-        guard lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation else {
-            return false
+        if let lhsPrivateKey = lhs.privateKey, let rhsPrivateKey = rhs.privateKey {
+            assert(lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation,
+                   "Public keys should match when private keys are present")
+            return lhsPrivateKey.derRepresentation == rhsPrivateKey.derRepresentation
         }
-        
-        // Compare private keys
-        if 
-            let lhsPrivateKey = lhs.privateKey,
-            let rhsPrivateKey = rhs.privateKey,
-            lhsPrivateKey.derRepresentation != rhsPrivateKey.derRepresentation
-        {
-            return false
-        }
-
-        // If both public and private keys match or are nil, the keys are equal
-        return true
+        return lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation
     }
 }
