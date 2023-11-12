@@ -40,7 +40,6 @@ let package = Package(
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),
-//                .enableExperimentalFeature("AccessLevelOnImport"),
                 .enableUpcomingFeature("ConciseMagicFile"),
             ]
         ),
