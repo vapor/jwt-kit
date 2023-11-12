@@ -33,22 +33,16 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     var type: KeyType
 
     var privateKey: PrivateKey?
-    var publicKey: PublicKey?
+    var publicKey: PublicKey
     
-    /// Exports the current public key as a PEM encoded string.
+    /// The current public key as a PEM encoded string.
     ///
-    /// - Throws: If the key is not a public key.
     /// - Returns: A PEM encoded string representation of the key.
     public var publicKeyPEMRepresentation: String {
-        get throws {
-            guard let publicKey else {
-                throw ECDSAError.noPublicKey
-            }
-            return publicKey.pemRepresentation
-        }
+        publicKey.pemRepresentation
     }
 
-    /// Exports the current private key as a PEM encoded string.
+    /// The current private key as a PEM encoded string.
     ///
     /// - Throws: If the key is not a private key.
     /// - Returns: A PEM encoded string representation of the key.
@@ -60,7 +54,6 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
             return privateKey.pemRepresentation
         }
     }
-
 
     /// Generates a new ECDSA key.
     ///
@@ -188,5 +181,11 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     init(publicKey: PublicKey) {
         self.publicKey = publicKey
         self.type = .public
+    }
+}
+
+extension ECDSAKey: Equatable {
+    public static func == (lhs: ECDSAKey, rhs: ECDSAKey) -> Bool {
+        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
     }
 }

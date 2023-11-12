@@ -1,4 +1,4 @@
-enum RSAError: Error {
+package enum RSAError: Error {
     case privateKeyRequired
     case publicKeyRequired
     case signFailure(_ error: Error)

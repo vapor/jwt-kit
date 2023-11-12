@@ -15,14 +15,14 @@ final class RSATests: XCTestCase {
     
     func testPublicKeyInitialization() throws {
         let rsaKey = try RSAKey(modulus: modulus, exponent: publicExponent)
-        XCTAssertNoThrow(try rsaKey.publicKeyPEMRepresentation)
-        XCTAssertThrowsError(try rsaKey.privateKeyPEMRepresentation)
+        XCTAssertNotNil(rsaKey.publicKey)
+        XCTAssertNil(rsaKey.privateKey)
     }
 
     func testPrivateKeyInitialization() throws {
         let rsaKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
-        XCTAssertNoThrow(try rsaKey.publicKeyPEMRepresentation)
-        XCTAssertNoThrow(try rsaKey.privateKeyPEMRepresentation)
+        XCTAssertNotNil(rsaKey.publicKey)
+        XCTAssertNotNil(rsaKey.privateKey)
     }
 
     func testSigning() async throws {
@@ -114,7 +114,7 @@ final class RSATests: XCTestCase {
     
     func testExportPublicKeyAsPEM() async throws {
         let key = try RSAKey.public(pem: publicKey)
-        let pem = try key.publicKeyPEMRepresentation
+        let pem = key.publicKeyPEMRepresentation
         let key2 = try RSAKey.public(pem: pem)
         XCTAssertEqual(key, key2)
     }
@@ -128,7 +128,7 @@ final class RSATests: XCTestCase {
     
     func testExportPublicKeyWhenKeyIsPrivate() async throws {
         let privateKey = try RSAKey.private(pem: privateKey)
-        let pem = try privateKey.publicKeyPEMRepresentation
+        let pem = privateKey.publicKeyPEMRepresentation
         let publicKeyFromPrivate = try RSAKey.public(pem: pem)
         let publicKey = try RSAKey.public(pem: publicKey)
         XCTAssertEqual(publicKeyFromPrivate, publicKey)

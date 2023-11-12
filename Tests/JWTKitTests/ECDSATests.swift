@@ -229,7 +229,7 @@ final class ECDSATests: XCTestCase {
 
     func testExportPublicKeyAsPEM() async throws {
         let key = try ES256Key.public(pem: ecdsaPublicKey)
-        let pem = try key.publicKeyPEMRepresentation
+        let pem = key.publicKeyPEMRepresentation
         let key2 = try ES256Key.public(pem: pem)
         XCTAssertEqual(key, key2)
     }
@@ -243,7 +243,7 @@ final class ECDSATests: XCTestCase {
 
     func testExportPublicKeyWhenKeyIsPrivate() async throws {
         let privateKey = try ES256Key.private(pem: ecdsaPrivateKey)
-        let pem = try privateKey.publicKeyPEMRepresentation
+        let pem = privateKey.publicKeyPEMRepresentation
         let publicKeyFromPrivate = try ES256Key.public(pem: pem)
         let publicKey = try ES256Key.public(pem: ecdsaPublicKey)
         XCTAssertEqual(publicKeyFromPrivate, publicKey)

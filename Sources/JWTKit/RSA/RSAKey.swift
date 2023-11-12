@@ -11,15 +11,9 @@ import X509
 public struct RSAKey: Sendable {
     /// Exports the current public key as a PEM encoded string.
     ///
-    /// - Throws: If the key is not a public key.
     /// - Returns: A PEM encoded string representation of the key.
     public var publicKeyPEMRepresentation: String {
-        get throws {
-            guard let publicKey else {
-                throw RSAError.publicKeyRequired
-            }
-            return publicKey.pemRepresentation
-        }
+        publicKey.pemRepresentation
     }
 
     /// Exports the current private key as a PEM encoded string.
@@ -164,7 +158,7 @@ public struct RSAKey: Sendable {
 
     let type: KeyType
 
-    package let publicKey: _RSA.Signing.PublicKey?
+    package let publicKey: _RSA.Signing.PublicKey
     package let privateKey: _RSA.Signing.PrivateKey?
 
     init(publicKey: _RSA.Signing.PublicKey) {
@@ -219,9 +213,7 @@ public struct RSAKey: Sendable {
         var serializer = DER.Serializer()
 
         // Creating key based on the presence of a private exponent
-        if 
-            let d,
-            let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d)
+        if let d, let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d)
         {
             try privateKeyDER.serialize(into: &serializer)
             let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
@@ -233,5 +225,26 @@ public struct RSAKey: Sendable {
         } else {
             throw RSAError.keyInitializationFailure
         }
+    }
+}
+
+extension RSAKey: Equatable {
+    public static func == (lhs: RSAKey, rhs: RSAKey) -> Bool {
+        // Compare public keys
+        guard lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation else {
+            return false
+        }
+        
+        // Compare private keys
+        if 
+            let lhsPrivateKey = lhs.privateKey,
+            let rhsPrivateKey = rhs.privateKey,
+            lhsPrivateKey.derRepresentation != rhsPrivateKey.derRepresentation
+        {
+            return false
+        }
+
+        // If both public and private keys match or are nil, the keys are equal
+        return true
     }
 }
