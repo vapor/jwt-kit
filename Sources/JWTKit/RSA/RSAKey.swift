@@ -9,6 +9,26 @@ import X509
 /// ``RSAKey`` provides functionality to create RSA keys from different sources such as PEM files or specific key components.
 /// It supports both public and private RSA keys.
 public struct RSAKey: Sendable {
+    /// Exports the current public key as a PEM encoded string.
+    ///
+    /// - Returns: A PEM encoded string representation of the key.
+    public var publicKeyPEMRepresentation: String {
+        publicKey.pemRepresentation
+    }
+
+    /// Exports the current private key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a private key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public var privateKeyPEMRepresentation: String {
+        get throws {
+            guard let privateKey else {
+                throw RSAError.privateKeyRequired
+            }
+            return privateKey.pemRepresentation
+        }
+    }
+    
     /// Creates an ``RSAKey`` from public key PEM file.
     ///
     /// Public key PEM files look like:
@@ -138,8 +158,8 @@ public struct RSAKey: Sendable {
 
     let type: KeyType
 
-    let publicKey: _RSA.Signing.PublicKey?
-    let privateKey: _RSA.Signing.PrivateKey?
+    package let publicKey: _RSA.Signing.PublicKey
+    package let privateKey: _RSA.Signing.PrivateKey?
 
     init(publicKey: _RSA.Signing.PublicKey) {
         self.type = .public
@@ -193,7 +213,8 @@ public struct RSAKey: Sendable {
         var serializer = DER.Serializer()
 
         // Creating key based on the presence of a private exponent
-        if let d = d, let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d) {
+        if let d, let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d)
+        {
             try privateKeyDER.serialize(into: &serializer)
             let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
             self.init(privateKey: privateKey)
@@ -204,5 +225,16 @@ public struct RSAKey: Sendable {
         } else {
             throw RSAError.keyInitializationFailure
         }
+    }
+}
+
+extension RSAKey: Equatable {
+    public static func == (lhs: RSAKey, rhs: RSAKey) -> Bool {
+        if let lhsPrivateKey = lhs.privateKey, let rhsPrivateKey = rhs.privateKey {
+            assert(lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation,
+                   "Public keys should match when private keys are present")
+            return lhsPrivateKey.derRepresentation == rhsPrivateKey.derRepresentation
+        }
+        return lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation
     }
 }

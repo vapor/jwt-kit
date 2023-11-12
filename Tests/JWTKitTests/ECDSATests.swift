@@ -1,5 +1,5 @@
 import BigInt
-@testable import JWTKit
+import JWTKit
 import XCTest
 
 final class ECDSATests: XCTestCase {
@@ -38,48 +38,6 @@ final class ECDSATests: XCTestCase {
             // test public signer decoding
             try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
         }
-    }
-
-    func testGetECParametersES256() async throws {
-        let message = "test".bytes
-
-        let ec = try ES256Key.generate()
-        let keys = await JWTKeyCollection().addES256(key: ec, kid: "initial")
-
-        let signature = try await keys.getKey(for: "initial").sign(message)
-
-        let params = ec.parameters!
-        try await keys.addES256(key: ES256Key(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
-        XCTAssertEqual(ec.curve, .p256)
-    }
-
-    func testGetECParametersES384() async throws {
-        let message = "test".bytes
-
-        let ec = try ES384Key.generate()
-        let keys = await JWTKeyCollection().addES384(key: ec, kid: "initial")
-
-        let signature = try await keys.getKey(for: "initial").sign(message)
-
-        let params = ec.parameters!
-        try await keys.addES384(key: ES384Key(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
-        XCTAssertEqual(ec.curve, .p384)
-    }
-
-    func testGetECParametersES512() async throws {
-        let message = "test".bytes
-
-        let ec = try ES512Key.generate()
-        let keys = await JWTKeyCollection().addES512(key: ec, kid: "initial")
-
-        let signature = try await keys.getKey(for: "initial").sign(message)
-
-        let params = ec.parameters!
-        try await keys.addES512(key: ES512Key(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
-        XCTAssertEqual(ec.curve, .p521)
     }
 
     func testVerifyingECDSAKeyUsingJWK() async throws {
@@ -225,24 +183,67 @@ final class ECDSATests: XCTestCase {
             XCTAssertEqual(payload.foo, "bar")
         }
     }
+    
+    func testGetECParametersES256() async throws {
+        let message = "test".bytes
+
+        let ec = try ES256Key.generate()
+        let keys = await JWTKeyCollection().addES256(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES256(key: ES256Key(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p256)
+    }
+
+    func testGetECParametersES384() async throws {
+        let message = "test".bytes
+
+        let ec = try ES384Key.generate()
+        let keys = await JWTKeyCollection().addES384(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES384(key: ES384Key(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p384)
+    }
+
+    func testGetECParametersES512() async throws {
+        let message = "test".bytes
+
+        let ec = try ES512Key.generate()
+        let keys = await JWTKeyCollection().addES512(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES512(key: ES512Key(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p521)
+    }
+
 
     func testExportPublicKeyAsPEM() async throws {
         let key = try ES256Key.public(pem: ecdsaPublicKey)
-        let pem = try key.exportPublicKeyAsPEM()
+        let pem = key.publicKeyPEMRepresentation
         let key2 = try ES256Key.public(pem: pem)
         XCTAssertEqual(key, key2)
     }
 
     func testExportPrivateKeyAsPEM() async throws {
         let key = try ES256Key.private(pem: ecdsaPrivateKey)
-        let pem = try key.exportPrivateKeyAsPEM()
+        let pem = try key.privateKeyPEMRepresentation
         let key2 = try ES256Key.private(pem: pem)
         XCTAssertEqual(key, key2)
     }
 
     func testExportPublicKeyWhenKeyIsPrivate() async throws {
         let privateKey = try ES256Key.private(pem: ecdsaPrivateKey)
-        let pem = try privateKey.exportPublicKeyAsPEM()
+        let pem = privateKey.publicKeyPEMRepresentation
         let publicKeyFromPrivate = try ES256Key.public(pem: pem)
         let publicKey = try ES256Key.public(pem: ecdsaPublicKey)
         XCTAssertEqual(publicKeyFromPrivate, publicKey)
@@ -250,13 +251,7 @@ final class ECDSATests: XCTestCase {
 
     func testExportPrivateKeyWhenKeyIsPublicThrows() async throws {
         let key = try ES256Key.public(pem: ecdsaPublicKey)
-        XCTAssertThrowsError(try key.exportPrivateKeyAsPEM())
-    }
-}
-
-extension ECDSAKey: Equatable {
-    public static func == (lhs: ECDSAKey, rhs: ECDSAKey) -> Bool {
-        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+        XCTAssertThrowsError(try key.privateKeyPEMRepresentation)
     }
 }
 
