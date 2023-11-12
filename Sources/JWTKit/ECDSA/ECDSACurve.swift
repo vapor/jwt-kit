@@ -9,27 +9,36 @@
 ///
 /// The use of ``ECDSACurve`` in cryptographic operations allows for easy specification and interchange of
 /// the elliptic curves based on security requirements and application needs.
-public struct ECDSACurve: Sendable {
-    let curve: String
-
-    static var p256: Self {
-        Self(curve: "P-256")
+public struct ECDSACurve: LosslessStringConvertible, Sendable {
+    let kind: Kind
+    
+    public var description: String {
+        kind.rawValue
     }
 
-    static var p384: Self {
-        Self(curve: "P-384")
+    package static let p256 = Self(curve: .p256)
+    package static let p384 = Self(curve: .p384)
+    package static let p521 = Self(curve: .p521)
+    package static let ed25519 = Self(curve: .ed25519)
+    package static let ed448 = Self(curve: .ed448)
+    
+    enum Kind: String {
+        case p256 = "P-256"
+        case p384 = "P-384"
+        case p521 = "P-521"
+        case ed25519 = "Ed25519"
+        case ed448 = "Ed448"
     }
-
-    static var p521: Self {
-        Self(curve: "P-521")
+    
+    init(curve: Kind) {
+        self.kind = curve
     }
-
-    static var ed25519: Self {
-        Self(curve: "Ed25519")
-    }
-
-    static var ed448: Self {
-        Self(curve: "Ed448")
+    
+    public init?(_ description: String) {
+        guard let kind = Kind(rawValue: description) else {
+            return nil
+        }
+        self.init(curve: kind)
     }
 }
 

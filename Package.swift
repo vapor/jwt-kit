@@ -25,7 +25,6 @@ let package = Package(
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "BigInt", package: "BigInt"),
-
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),

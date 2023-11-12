@@ -66,7 +66,7 @@ protocol ECDSAKeyType: Sendable {
 
     var curve: ECDSACurve { get }
     var privateKey: PrivateKey? { get }
-    var publicKey: PublicKey? { get }
+    var publicKey: PublicKey { get }
     var parameters: ECDSAParameters? { get }
 
     static func generate() throws -> Self

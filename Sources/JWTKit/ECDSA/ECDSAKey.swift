@@ -12,11 +12,11 @@ import X509
 /// - Generic Parameter Curve: The curve type associated with the ECDSA key.
 public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// The elliptic curve used by this key.
-    var curve: ECDSACurve = Curve.curve
+    package var curve: ECDSACurve = Curve.curve
 
     /// Parameters derived from the ECDSA key, if available.
-    var parameters: ECDSAParameters? {
-        guard let privateKey = privateKey else {
+    package var parameters: ECDSAParameters? {
+        guard let privateKey else {
             return nil
         }
         let publicKey = privateKey.publicKey
@@ -33,7 +33,27 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     var type: KeyType
 
     var privateKey: PrivateKey?
-    var publicKey: PublicKey?
+    var publicKey: PublicKey
+    
+    /// The current public key as a PEM encoded string.
+    ///
+    /// - Returns: A PEM encoded string representation of the key.
+    public var publicKeyPEMRepresentation: String {
+        publicKey.pemRepresentation
+    }
+
+    /// The current private key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a private key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public var privateKeyPEMRepresentation: String {
+        get throws {
+            guard let privateKey else {
+                throw ECDSAError.noPrivateKey
+            }
+            return privateKey.pemRepresentation
+        }
+    }
 
     /// Generates a new ECDSA key.
     ///
@@ -104,29 +124,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         let string = String(decoding: pem, as: UTF8.self)
         return try self.private(pem: string)
     }
-
-    /// Exports the current public key as a PEM encoded string.
-    ///
-    /// - Throws: If the key is not a public key.
-    /// - Returns: A PEM encoded string representation of the key.
-    public func exportPublicKeyAsPEM() throws -> String {
-        guard let publicKey else {
-            throw ECDSAError.noPublicKey
-        }
-        return publicKey.pemRepresentation
-    }
-
-    /// Exports the current private key as a PEM encoded string.
-    ///
-    /// - Throws: If the key is not a private key.
-    /// - Returns: A PEM encoded string representation of the key.
-    public func exportPrivateKeyAsPEM() throws -> String {
-        guard let privateKey else {
-            throw ECDSAError.noPrivateKey
-        }
-        return privateKey.pemRepresentation
-    }
-
+    
     /// Initializes a new instance with ECDSA parameters and an optional private key.
     ///
     /// This initializer takes ECDSA parameters and an optional private key in its base64 URL encoded string representation.
@@ -183,5 +181,11 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     init(publicKey: PublicKey) {
         self.publicKey = publicKey
         self.type = .public
+    }
+}
+
+extension ECDSAKey: Equatable {
+    public static func == (lhs: ECDSAKey, rhs: ECDSAKey) -> Bool {
+        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
     }
 }
