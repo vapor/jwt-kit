@@ -46,11 +46,10 @@ final class ClaimTests: XCTestCase {
         XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id.uuidString))
         XCTAssertThrowsError(try decoded.audience.verifyIntendedAudience(includes: UUID().uuidString)) {
             guard let jwtError = try? XCTUnwrap($0 as? JWTError) else { return }
-            guard case let .claimVerificationFailure(name, _) = jwtError else {
-                XCTFail("Unexpectedly got \(jwtError) instead of claim verification failure.")
-                return
-            }
-            XCTAssertEqual(name, "aud")
+            XCTAssert(
+                jwtError.description.contains("Claim verification failed for aud"),
+                "Unexpectedly got \(jwtError) instead of 'aud' claim verification failure."
+            )
         }
     }
 
@@ -65,11 +64,10 @@ final class ClaimTests: XCTestCase {
         XCTAssertNoThrow(try decoded.audience.verifyIntendedAudience(includes: id2.uuidString))
         XCTAssertThrowsError(try decoded.audience.verifyIntendedAudience(includes: UUID().uuidString)) {
             guard let jwtError = try? XCTUnwrap($0 as? JWTError) else { return }
-            guard case let .claimVerificationFailure(name, _) = jwtError else {
-                XCTFail("Unexpectedly got \(jwtError) instead of claim verification failure.")
-                return
-            }
-            XCTAssertEqual(name, "aud")
+            XCTAssert(
+                jwtError.description.contains("Claim verification failed for aud"),
+                "Unexpectedly got \(jwtError) instead of 'aud' claim verification failure."
+            )
         }
     }
 }
