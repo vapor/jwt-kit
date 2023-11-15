@@ -36,6 +36,15 @@ public struct JWK: Codable, Sendable {
             }
             self.init(backing: backing)
         }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            guard let backingValue = Backing(rawValue: rawValue) else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize JWK.Curve.Backing with raw value: \(rawValue)")
+            }
+            self.backing = backingValue
+        }
     }
 
     /// Supported `kty` key types.
@@ -68,6 +77,15 @@ public struct JWK: Codable, Sendable {
                 return nil
             }
             self.init(backing: backing)
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            guard let backingValue = Backing(rawValue: rawValue) else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize JWK.KeyType.Backing with raw value: \(rawValue)")
+            }
+            self.backing = backingValue
         }
     }
 
@@ -118,6 +136,15 @@ public struct JWK: Codable, Sendable {
                 return nil
             }
             self.init(backing: backing)
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            let rawValue = try container.decode(String.self)
+            guard let backingValue = Backing(rawValue: rawValue) else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize JWK.Algorithm.Backing with raw value: \(rawValue)")
+            }
+            self.backing = backingValue
         }
     }
 
