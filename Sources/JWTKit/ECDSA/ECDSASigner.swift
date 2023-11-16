@@ -16,9 +16,6 @@ struct ECDSASigner: JWTAlgorithm, CryptoSigner {
 
     public func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         let digest = try self.digest(plaintext)
-        guard let publicKey = key.publicKey ?? key.privateKey?.publicKey else {
-            throw JWTError.signingAlgorithmFailure(ECDSAError.noPublicKey)
-        }
-        return try publicKey.isValidSignature(signature, for: digest)
+        return try key.publicKey.isValidSignature(signature, for: digest)
     }
 }

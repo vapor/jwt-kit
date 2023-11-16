@@ -34,7 +34,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
 
     var privateKey: PrivateKey?
     var publicKey: PublicKey
-    
+
     /// The current public key as a PEM encoded string.
     ///
     /// - Returns: A PEM encoded string representation of the key.
@@ -124,7 +124,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         let string = String(decoding: pem, as: UTF8.self)
         return try self.private(pem: string)
     }
-    
+
     /// Initializes a new instance with ECDSA parameters and an optional private key.
     ///
     /// This initializer takes ECDSA parameters and an optional private key in its base64 URL encoded string representation.
@@ -171,13 +171,13 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
             self.init(publicKey: publicKey)
         }
     }
-    
+
     init(privateKey: PrivateKey) {
         self.privateKey = privateKey
         self.publicKey = privateKey.publicKey
         self.type = .private
     }
-    
+
     init(publicKey: PublicKey) {
         self.publicKey = publicKey
         self.type = .public

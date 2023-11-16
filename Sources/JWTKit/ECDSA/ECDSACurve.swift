@@ -11,7 +11,7 @@
 /// the elliptic curves based on security requirements and application needs.
 public struct ECDSACurve: Codable, RawRepresentable, Sendable {
     let backing: Backing
-    
+
     /// Textual representation of the elliptic curve.
     public var rawValue: String {
         backing.rawValue
@@ -25,28 +25,28 @@ public struct ECDSACurve: Codable, RawRepresentable, Sendable {
 
     /// Represents the P-521 elliptic curve.
     public static let p521 = Self(.p521)
-    
+
     enum Backing: String, Codable {
         case p256 = "P-256"
         case p384 = "P-384"
         case p521 = "P-521"
     }
-    
+
     init(_ backing: Backing) {
         self.backing = backing
     }
-    
+
     public init?(rawValue: String) {
         guard let backing = Backing(rawValue: rawValue) else {
             return nil
         }
         self.init(backing)
     }
-    
+
     public init(from decoder: any Decoder) throws {
-        self.init(try decoder.singleValueContainer().decode(Backing.self))
+        try self.init(decoder.singleValueContainer().decode(Backing.self))
     }
-    
+
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(self.backing)

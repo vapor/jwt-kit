@@ -7,31 +7,31 @@ import class Foundation.JSONDecoder
 public struct JWK: Codable, Sendable {
     public struct Curve: Codable, RawRepresentable, Sendable {
         let backing: Backing
-        
+
         public var rawValue: String {
             switch backing {
-            case .ecdsa(let ecdsaCurve):
+            case let .ecdsa(ecdsaCurve):
                 ecdsaCurve.rawValue
-            case .eddsa(let eddsaCurve):
+            case let .eddsa(eddsaCurve):
                 eddsaCurve.rawValue
             }
         }
-        
+
         /// Represents an ECDSA curve.
         public static func ecdsa(_ curve: ECDSACurve) -> Self { .init(.ecdsa(curve)) }
 
         /// Represents an EdDSA curve.
         public static func eddsa(_ curve: EdDSACurve) -> Self { .init(.eddsa(curve)) }
-        
+
         enum Backing: Codable {
             case ecdsa(ECDSACurve)
             case eddsa(EdDSACurve)
         }
-        
+
         init(_ backing: Backing) {
             self.backing = backing
         }
-        
+
         public init?(rawValue: String) {
             if let ecdsaCurve = ECDSACurve(rawValue: rawValue) {
                 self.init(.ecdsa(ecdsaCurve))
@@ -41,7 +41,7 @@ public struct JWK: Codable, Sendable {
                 return nil
             }
         }
-        
+
         public init(from decoder: any Decoder) throws {
             let container = try decoder.singleValueContainer()
             if let ecdsaCurve = try? container.decode(ECDSACurve.self) {
@@ -52,12 +52,12 @@ public struct JWK: Codable, Sendable {
                 throw DecodingError.dataCorruptedError(in: container, debugDescription: "Curve type not supported")
             }
         }
-        
+
         public func encode(to encoder: any Encoder) throws {
             switch backing {
-            case .ecdsa(let ecdsaCurve):
+            case let .ecdsa(ecdsaCurve):
                 try ecdsaCurve.encode(to: encoder)
-            case .eddsa(let eddsaCurve):
+            case let .eddsa(eddsaCurve):
                 try eddsaCurve.encode(to: encoder)
             }
         }
@@ -66,7 +66,7 @@ public struct JWK: Codable, Sendable {
     /// Supported `kty` key types.
     public struct KeyType: Codable, RawRepresentable, Equatable, Sendable {
         public typealias RawValue = String
-        
+
         let backing: Backing
 
         public var rawValue: String {
@@ -96,11 +96,11 @@ public struct JWK: Codable, Sendable {
             }
             self.init(backing: backing)
         }
-        
+
         public init(from decoder: any Decoder) throws {
-            self.init(backing: try decoder.singleValueContainer().decode(Backing.self))
+            try self.init(backing: decoder.singleValueContainer().decode(Backing.self))
         }
-        
+
         public func encode(to encoder: any Encoder) throws {
             var container = encoder.singleValueContainer()
             try container.encode(self.backing)
@@ -115,7 +115,7 @@ public struct JWK: Codable, Sendable {
     /// Supported `alg` algorithms
     public struct Algorithm: Codable, RawRepresentable, Equatable, Sendable {
         public typealias RawValue = String
-        
+
         let backing: Backing
 
         public var rawValue: String {
@@ -157,11 +157,11 @@ public struct JWK: Codable, Sendable {
             }
             self.init(backing: backing)
         }
-        
+
         public init(from decoder: any Decoder) throws {
-            self.init(backing: try decoder.singleValueContainer().decode(Backing.self))
+            try self.init(backing: decoder.singleValueContainer().decode(Backing.self))
         }
-        
+
         public func encode(to encoder: any Encoder) throws {
             var container = encoder.singleValueContainer()
             try container.encode(self.backing)
