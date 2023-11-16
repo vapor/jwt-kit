@@ -84,7 +84,7 @@ struct JWKSigner: Sendable {
                 return nil
             }
 
-            guard let curve = self.jwk.curve.flatMap({ EdDSAKey.Curve(rawValue: $0.rawValue) }) else {
+            guard let curve = self.jwk.curve.flatMap({ EdDSACurve(rawValue: $0.rawValue) }) else {
                 return nil
             }
 

@@ -207,16 +207,58 @@ public struct JWK: Codable, Sendable {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
 
-    public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String? = nil) -> JWK {
-        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, modulus: modulus, exponent: exponent, privateExponent: privateExponent)
+    public static func rsa(
+        _ algorithm: Algorithm?,
+        identifier: JWKIdentifier?,
+        modulus: String?,
+        exponent: String?,
+        privateExponent: String? = nil
+    ) -> JWK {
+        .init(
+            keyType: .rsa,
+            algorithm: algorithm,
+            keyIdentifier: identifier,
+            modulus: modulus,
+            exponent: exponent,
+            privateExponent: privateExponent
+        )
     }
 
-    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSACurve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.description) })
+    public static func ecdsa(
+        _ algorithm: Algorithm?,
+        identifier: JWKIdentifier?,
+        x: String?,
+        y: String?,
+        curve: ECDSACurve?,
+        privateKey: String? = nil
+    ) -> JWK {
+        .init(
+            keyType: .ecdsa,
+            algorithm: algorithm,
+            keyIdentifier: identifier,
+            privateExponent: privateKey,
+            x: x,
+            y: y,
+            curve: curve.flatMap { Curve(rawValue: $0.rawValue) }
+        )
     }
 
-    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y _: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
+    public static func octetKeyPair(
+        _ algorithm: Algorithm?,
+        identifier: JWKIdentifier?,
+        x: String?,
+        y _: String?,
+        curve: EdDSACurve?,
+        privateKey: String? = nil
+    ) -> JWK {
+        .init(
+            keyType: .octetKeyPair,
+            algorithm: algorithm,
+            keyIdentifier: identifier,
+            privateExponent: privateKey,
+            x: x,
+            curve: curve.flatMap { Curve(rawValue: $0.rawValue) }
+        )
     }
 
     private init(

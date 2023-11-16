@@ -9,34 +9,6 @@ import Foundation
 ///
 /// It supports the `Ed25519` curve, widely recognized for its strength and efficiency.
 public struct EdDSAKey: Sendable {
-    /// An enum defining supported curves for EdDSA keys.
-    public struct Curve: Codable, Equatable, RawRepresentable, Sendable {
-        public typealias RawValue = String
-        
-        let backing: Backing
-        
-        public var rawValue: String {
-            backing.rawValue
-        }
-        
-        public static let ed25519 = Self(backing: .ed25519)
-        
-        enum Backing: String, Codable {
-            case ed25519 = "Ed25519"
-        }
-        
-        init(backing: Backing) {
-            self.backing = backing
-        }
-        
-        public init?(rawValue: String) {
-            guard let backing = Backing(rawValue: rawValue) else {
-                return nil
-            }
-            self.init(backing: backing)
-        }
-    }
-
     let keyPair: OctetKeyPair
     var publicKey: Data {
         keyPair.publicKey
@@ -46,7 +18,7 @@ public struct EdDSAKey: Sendable {
         keyPair.privateKey
     }
 
-    let curve: Curve
+    let curve: EdDSACurve
 
     /// Creates an ``EdDSAKey`` instance using the public key x-coordinate and specified curve.
     ///
@@ -63,7 +35,7 @@ public struct EdDSAKey: Sendable {
     ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
     ///
     /// - Returns: An initialized ``EdDSAKey`` instance with the provided public key data and curve.
-    public static func `public`(x: String, curve: Curve) throws -> EdDSAKey {
+    public static func `public`(x: String, curve: EdDSACurve) throws -> EdDSAKey {
         guard let xData = x.data(using: .utf8), !xData.isEmpty else {
             throw EdDSAError.publicKeyMissing
         }
@@ -92,7 +64,7 @@ public struct EdDSAKey: Sendable {
     ///   - ``EdDSAError/privateKeyMissing`` if the private key data is missing or cannot be properly converted.
     ///
     /// - Returns: An initialized ``EdDSAKey`` instance with the specified public and private key components and curve.
-    public static func `private`(x: String, d: String, curve: Curve) throws -> EdDSAKey {
+    public static func `private`(x: String, d: String, curve: EdDSACurve) throws -> EdDSAKey {
         guard let xData = x.data(using: .utf8), !xData.isEmpty else {
             throw EdDSAError.publicKeyMissing
         }
@@ -110,7 +82,7 @@ public struct EdDSAKey: Sendable {
         )
     }
 
-    init(keyPair: OctetKeyPair, curve: Curve) throws {
+    init(keyPair: OctetKeyPair, curve: EdDSACurve) throws {
         self.keyPair = keyPair
         self.curve = curve
     }
@@ -123,7 +95,7 @@ public struct EdDSAKey: Sendable {
     /// - Parameter curve: The curve to be used for key generation.
     /// - Throws: An error if key generation fails.
     /// - Returns: A new ``EdDSAKey`` instance with a freshly generated key pair.
-    public static func generate(curve: Curve) throws -> EdDSAKey {
+    public static func generate(curve: EdDSACurve = .ed25519) throws -> EdDSAKey {
         switch curve.backing {
         case .ed25519:
             let key = Curve25519.Signing.PrivateKey()

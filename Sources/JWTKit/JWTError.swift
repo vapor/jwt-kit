@@ -68,80 +68,43 @@ public struct JWTError: Error, @unchecked Sendable {
         init(errorType: ErrorType) {
             self.errorType = errorType
         }
-        
-        func copy() -> Self {
-            let new = Self.init(errorType: self.errorType)
-            new.name = self.name
-            new.reason = self.reason
-            new.underlying = self.underlying
-            new.kid = self.kid
-            new.identifier = self.identifier
-            return new
-        }
     }
     
     private var backing: Backing
     
-    private mutating func copyBackingStorageIfNecessary() {
-        if !isKnownUniquelyReferenced(&self.backing) {
-            self.backing = self.backing.copy()
-        }
-    }
-    
     public internal(set) var errorType: ErrorType {
         get { self.backing.errorType }
-        set {
-            self.copyBackingStorageIfNecessary()
-            self.backing.errorType = newValue
-        }
+        set { self.backing.errorType = newValue }
     }
     
     public internal(set) var name: String? {
         get { self.backing.name }
-        set {
-            self.copyBackingStorageIfNecessary()
-            self.backing.name = newValue
-        }
+        set { self.backing.name = newValue }
     }
     
     public internal(set) var reason: String? {
         get { self.backing.reason }
-        set {
-            self.copyBackingStorageIfNecessary()
-            self.backing.reason = newValue
-        }
+        set { self.backing.reason = newValue }
     }
     
     public internal(set) var underlying: Error? {
         get { self.backing.underlying }
-        set {
-            self.copyBackingStorageIfNecessary()
-            self.backing.underlying = newValue
-        }
+        set { self.backing.underlying = newValue }
     }
     
     public internal(set) var kid: JWKIdentifier? {
         get { self.backing.kid }
-        set {
-            self.copyBackingStorageIfNecessary()
-            self.backing.kid = newValue
-        }
+        set { self.backing.kid = newValue }
     }
     
     public internal(set) var identifier: String? {
         get { self.backing.identifier }
-        set {
-            self.copyBackingStorageIfNecessary()
-            self.backing.identifier = newValue
-        }
+        set { self.backing.identifier = newValue }
     }
     
     public internal(set) var failedClaim: (any JWTClaim)? {
         get { self.backing.failedClaim }
-        set {
-            self.copyBackingStorageIfNecessary()
-            self.backing.failedClaim = newValue
-        }
+        set { self.backing.failedClaim = newValue }
     }
     
     init(errorType: ErrorType) {
