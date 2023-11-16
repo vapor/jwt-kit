@@ -44,29 +44,29 @@ public struct AppleIdentityToken: JWTPayload {
 
     /// Managed Apple ID organization (see https://developer.apple.com/documentation/rosterapi/integrating_with_roster_api_and_sign_in_with_apple)
     public let orgId: String?
-    
+
     /// A Boolean value that indicates whether the service has verified the email. The value of this claim is always true because the servers only return verified email addresses.
     public let emailVerified: BoolClaim?
-    
+
     /// A Boolean value that indicates whether the email shared by the user is the proxy address. It is absent (nil) if the user is not using a proxy email address.
     public let isPrivateEmail: BoolClaim?
 
     /// A value that indicates whether the user appears to be a real person.
     public let realUserStatus: UserDetectionStatus?
 
-    public func verify(using signer: JWTSigner) throws {
+    public func verify(using _: JWTAlgorithm) throws {
         guard self.issuer.value == "https://appleid.apple.com" else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Apple")
+            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Apple")
         }
 
         try self.expires.verifyNotExpired()
     }
 }
 
-extension AppleIdentityToken {
+public extension AppleIdentityToken {
     /// Taken from https://developer.apple.com/documentation/authenticationservices/asuserdetectionstatus
     /// With slight modification to make adding new cases non-breaking.
-    public struct UserDetectionStatus: OptionSet, Codable {
+    struct UserDetectionStatus: OptionSet, Codable, Sendable {
         /// Used for decoding/encoding
         private enum Status: Int, Codable {
             case unsupported
@@ -92,18 +92,18 @@ extension AppleIdentityToken {
         public init(from decoder: Decoder) throws {
             let value = try decoder.singleValueContainer().decode(Status.self)
             switch value {
-            case .unsupported:  self = .unsupported
-            case .unknown:      self = .unknown
-            case .likelyReal:   self = .likelyReal
+            case .unsupported: self = .unsupported
+            case .unknown: self = .unknown
+            case .likelyReal: self = .likelyReal
             }
         }
 
         public func encode(to encoder: Encoder) throws {
             var container = encoder.singleValueContainer()
             switch self {
-            case .unsupported:  try container.encode(Status.unsupported)
-            case .unknown:      try container.encode(Status.unknown)
-            case .likelyReal:   try container.encode(Status.likelyReal)
+            case .unsupported: try container.encode(Status.unsupported)
+            case .unknown: try container.encode(Status.unknown)
+            case .likelyReal: try container.encode(Status.likelyReal)
             default:
                 let context = EncodingError.Context(codingPath: encoder.codingPath, debugDescription: "Invalid enum value: \(self)")
                 throw EncodingError.invalidValue(self, context)

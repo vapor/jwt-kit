@@ -18,15 +18,18 @@ let package = Package(
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
     ],
     targets: [
-        .target(name: "JWTKit", dependencies: [
-            .product(name: "Crypto", package: "swift-crypto"),
-            .product(name: "_CryptoExtras", package: "swift-crypto"),
-            .product(name: "X509", package: "swift-certificates"),
-            .product(name: "BigInt", package: "BigInt"),
-        ],
-        swiftSettings: [
-            .enableUpcomingFeature("ConciseMagicFile"),
-        ]),
+        .target(
+            name: "JWTKit",
+            dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "_CryptoExtras", package: "swift-crypto"),
+                .product(name: "X509", package: "swift-certificates"),
+                .product(name: "BigInt", package: "BigInt"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
+            ]
+        ),
         .testTarget(
             name: "JWTKitTests",
             dependencies: [
@@ -34,6 +37,10 @@ let package = Package(
             ],
             resources: [
                 .copy("TestVectors"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ConciseMagicFile"),
             ]
         ),
     ]

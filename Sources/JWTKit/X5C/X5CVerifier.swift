@@ -14,7 +14,7 @@ import X509
 ///
 /// See [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515#section-4.1.6)
 /// for details on the `x5c` header parameter.
-public class X5CVerifier {
+public struct X5CVerifier: Sendable {
     private let trustedStore: X509.CertificateStore
 
     /// Create a new X5CVerifier trusting `rootCertificates`.
@@ -32,7 +32,7 @@ public class X5CVerifier {
     /// Create a new X5CVerifier trusting `rootCertificates`.
     ///
     /// - Parameter rootCertificates: The root certificates to be trusted.
-    public convenience init<Message: DataProtocol>(rootCertificates: [Message]) throws {
+    public init<Message: DataProtocol>(rootCertificates: [Message]) throws {
         try self.init(rootCertificates: rootCertificates.map {
             String(decoding: $0, as: UTF8.self)
         })
@@ -121,13 +121,26 @@ public class X5CVerifier {
             return data
         }
 
-        // Setup an untrusted chain using all the certificates in the x5c.
+        // Setup an untrusted chain using all the certificates in the x5c
         let untrustedChain = try CertificateStore(certificateData.map {
             try Certificate(derEncoded: [UInt8]($0))
         })
 
+        let payload = try parser.payload(as: Payload.self, jsonDecoder: jsonDecoder)
+
+        let date: Date
+        // Some JWT implementations have the sign date in the payload.
+        // If it's such a payload, we'll use that date for validation
+        if let validationTimePayload = payload as? ValidationTimePayload {
+            date = validationTimePayload.signedDate
+        } else {
+            date = Date()
+        }
+
         // Setup the verifier using the predefined trusted store
-        var verifier = Verifier(rootCertificates: trustedStore) { RFC5280Policy(validationTime: Date()) }
+        var verifier = Verifier(rootCertificates: trustedStore) {
+            RFC5280Policy(validationTime: date)
+        }
 
         // Extract the leaf certificate (first certificate in x5c)
         let leafCertificate = try Certificate(derEncoded: [UInt8](certificateData[0]))
@@ -139,10 +152,10 @@ public class X5CVerifier {
             throw JWTError.generic(identifier: "JWS", reason: "Invalid x5c chain: \(failures)")
         }
 
-        // Assuming the chain is valid, verify the token was signed by the valid certificate.
-        let ecdsaKey = try P256Key.certificate(pem: leafCertificate.serializeAsPEM().pemString)
+        // Assuming the chain is valid, verify the token was signed by the valid certificate
+        let ecdsaKey = try ES256Key.certificate(pem: leafCertificate.serializeAsPEM().pemString)
 
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
-        return try signer.verify(parser: parser)
+        return try await signer.verify(parser: parser)
     }
 }

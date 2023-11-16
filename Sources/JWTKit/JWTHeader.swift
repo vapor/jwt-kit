@@ -1,21 +1,20 @@
 /// The header (details) used for signing and processing the JWT.
-struct JWTHeader: Codable {
+package struct JWTHeader: Codable, Sendable {
     /// The algorithm used with the signing.
-    var alg: String?
-    
+    package var alg: String?
+
     /// The Signature's Content Type.
-    var typ: String?
-    
+    package var typ: String?
+
     /// The Payload's Content Type.
-    var cty: String?
+    package var cty: String?
 
     /// Critical fields.
-    var crit: [String]?
+    package var crit: [String]?
 
     /// The JWT key identifier.
-    var kid: JWKIdentifier?
+    package var kid: JWKIdentifier?
 
     /// The x5c certificate chain.
-    var x5c: [String]?
+    package var x5c: [String]?
 }
-

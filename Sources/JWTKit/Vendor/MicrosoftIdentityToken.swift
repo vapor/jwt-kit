@@ -96,7 +96,7 @@ public struct MicrosoftIdentityToken: JWTPayload {
     /// A GUID that represents the Azure AD tenant that the user is from. For work and school accounts, the GUID is the
     /// immutable tenant ID of the organization that the user belongs to. For personal accounts, the value is
     /// 9188040d-6c67-4c5b-b112-36a304b66dad. The profile scope is required to receive this claim.
-    public let tenantId: String?
+    public let tenantId: TenantIDClaim
 
     /// Provides a human readable value that identifies the subject of the token. This value is unique at any given point in time
     ///  but as emails and other identifiers can be reused, this value can reappear on other accounts, and should therefore be
@@ -106,13 +106,13 @@ public struct MicrosoftIdentityToken: JWTPayload {
     /// Indicates the version of the id_token.
     public let version: String?
 
-    public func verify(using signer: JWTSigner) throws {
-        guard let tenantId = self.tenantId else {
-            throw JWTError.claimVerificationFailure(name: "tid", reason: "Token must contain tenant Id")
+    public func verify(using _: JWTAlgorithm) throws {
+        guard let tenantId = self.tenantId.value else {
+            throw JWTError.claimVerificationFailure(failedClaim: tenantId, reason: "Token must contain tenant Id")
         }
 
         guard self.issuer.value == "https://login.microsoftonline.com/\(tenantId)/v2.0" else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Microsoft")
+            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Microsoft")
         }
 
         try self.expires.verifyNotExpired()

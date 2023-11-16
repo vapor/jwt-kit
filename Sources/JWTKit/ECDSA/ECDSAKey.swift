@@ -12,11 +12,11 @@ import X509
 /// - Generic Parameter Curve: The curve type associated with the ECDSA key.
 public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// The elliptic curve used by this key.
-    var curve: ECDSACurve = Curve.curve
+    package var curve: ECDSACurve = Curve.curve
 
     /// Parameters derived from the ECDSA key, if available.
-    var parameters: ECDSAParameters? {
-        guard let privateKey = privateKey else {
+    package var parameters: ECDSAParameters? {
+        guard let privateKey else {
             return nil
         }
         let publicKey = privateKey.publicKey
@@ -33,8 +33,27 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     var type: KeyType
 
     var privateKey: PrivateKey?
+    var publicKey: PublicKey
 
-    var publicKey: PublicKey?
+    /// The current public key as a PEM encoded string.
+    ///
+    /// - Returns: A PEM encoded string representation of the key.
+    public var publicKeyPEMRepresentation: String {
+        publicKey.pemRepresentation
+    }
+
+    /// The current private key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a private key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public var privateKeyPEMRepresentation: String {
+        get throws {
+            guard let privateKey else {
+                throw ECDSAError.noPrivateKey
+            }
+            return privateKey.pemRepresentation
+        }
+    }
 
     /// Generates a new ECDSA key.
     ///
@@ -42,7 +61,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     /// - Returns: A new ``ECDSAKey`` instance with a generated private and corresponding public key.
     public static func generate() throws -> Self {
         let privateKey = PrivateKey()
-        return try .init(privateKey: privateKey, publicKey: privateKey.publicKey)
+        return .init(privateKey: privateKey)
     }
 
     /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate string.
@@ -55,7 +74,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         guard let publicKey = PublicKey(cert.publicKey) else {
             throw ECDSAError.generateKeyFailure
         }
-        return try .init(publicKey: publicKey)
+        return .init(publicKey: publicKey)
     }
 
     /// Creates an ``ECDSAKey`` instance from a PEM encoded certificate data.
@@ -125,7 +144,7 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
     public init(parameters: ECDSAParameters, privateKey: String? = nil) throws {
         let privateKeyBytes: [UInt8]?
         if
-            let privateKey = privateKey,
+            let privateKey,
             let privateKeyData = privateKey.base64URLDecodedData()
         {
             privateKeyBytes = Array(privateKeyData)
@@ -143,30 +162,30 @@ public struct ECDSAKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
         // The key is structured as: 0x04 || x || y
         let publicKey = try PublicKey(x963Representation: Data([0x04]) + x + y)
 
-        if let privateKeyBytes = privateKeyBytes {
+        if let privateKeyBytes {
             guard let privateKey = try? PrivateKey(rawRepresentation: privateKeyBytes) else {
                 throw JWTError.generic(identifier: "ecPrivateKey", reason: "Unable to interpret privateKey as ECDSAPrivateKey")
             }
-            try self.init(privateKey: privateKey)
+            self.init(privateKey: privateKey)
         } else {
-            try self.init(publicKey: publicKey)
+            self.init(publicKey: publicKey)
         }
     }
 
-    init(privateKey: PrivateKey? = nil, publicKey: PublicKey? = nil) throws {
-        guard privateKey != nil || publicKey != nil else {
-            throw ECDSAError.generateKeyFailure
-        }
-
-        if privateKey != nil {
-            type = .private
-        } else if publicKey != nil {
-            type = .public
-        } else {
-            type = .certificate
-        }
-
+    init(privateKey: PrivateKey) {
         self.privateKey = privateKey
+        self.publicKey = privateKey.publicKey
+        self.type = .private
+    }
+
+    init(publicKey: PublicKey) {
         self.publicKey = publicKey
+        self.type = .public
+    }
+}
+
+extension ECDSAKey: Equatable {
+    public static func == (lhs: ECDSAKey, rhs: ECDSAKey) -> Bool {
+        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
     }
 }

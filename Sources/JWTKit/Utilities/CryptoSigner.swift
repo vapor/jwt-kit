@@ -7,7 +7,7 @@ enum DigestAlgorithm {
     case sha512
 }
 
-protocol CryptoSigner {
+protocol CryptoSigner: Sendable {
     var algorithm: DigestAlgorithm { get }
 }
 
@@ -35,5 +35,4 @@ extension CryptoSigner {
 enum KeyType {
     case `public`
     case `private`
-    case certificate
 }

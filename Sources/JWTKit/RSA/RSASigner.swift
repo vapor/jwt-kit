@@ -1,5 +1,4 @@
 import _CryptoExtras
-import Crypto
 import Foundation
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
@@ -37,9 +36,8 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         let digest = try self.digest(plaintext)
         let signature = _RSA.Signing.RSASignature(rawRepresentation: signature)
 
-        guard let publicKey = key.privateKey?.publicKey ?? key.publicKey else {
-            throw JWTError.signingAlgorithmFailure(RSAError.publicKeyRequired)
-        }
-        return publicKey.isValidSignature(signature, for: digest, padding: padding)
+        return key.publicKey.isValidSignature(signature, for: digest, padding: padding)
     }
 }
+
+extension _RSA.Signing.Padding: @unchecked Sendable {}

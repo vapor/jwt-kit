@@ -1,11 +1,14 @@
 import Crypto
 import Foundation
 
-public struct EdDSAKey {
-    public enum Curve: String, Codable {
-        case ed25519 = "Ed25519"
-    }
-
+/// A structure representing an EdDSA (Edwards-curve Digital Signature Algorithm) key.
+///
+/// ``EdDSAKey`` is used to represent keys for EdDSA, a digital signature scheme using
+/// a variant of the Schnorr signature based on twisted Edwards curves. This structure
+/// provides functionalities to create and manage EdDSA keys.
+///
+/// It supports the `Ed25519` curve, widely recognized for its strength and efficiency.
+public struct EdDSAKey: Sendable {
     let keyPair: OctetKeyPair
     var publicKey: Data {
         keyPair.publicKey
@@ -15,7 +18,7 @@ public struct EdDSAKey {
         keyPair.privateKey
     }
 
-    let curve: Curve
+    let curve: EdDSACurve
 
     /// Creates an ``EdDSAKey`` instance using the public key x-coordinate and specified curve.
     ///
@@ -32,7 +35,7 @@ public struct EdDSAKey {
     ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
     ///
     /// - Returns: An initialized ``EdDSAKey`` instance with the provided public key data and curve.
-    public static func `public`(x: String, curve: Curve) throws -> EdDSAKey {
+    public static func `public`(x: String, curve: EdDSACurve) throws -> EdDSAKey {
         guard let xData = x.data(using: .utf8), !xData.isEmpty else {
             throw EdDSAError.publicKeyMissing
         }
@@ -61,7 +64,7 @@ public struct EdDSAKey {
     ///   - ``EdDSAError/privateKeyMissing`` if the private key data is missing or cannot be properly converted.
     ///
     /// - Returns: An initialized ``EdDSAKey`` instance with the specified public and private key components and curve.
-    public static func `private`(x: String, d: String, curve: Curve) throws -> EdDSAKey {
+    public static func `private`(x: String, d: String, curve: EdDSACurve) throws -> EdDSAKey {
         guard let xData = x.data(using: .utf8), !xData.isEmpty else {
             throw EdDSAError.publicKeyMissing
         }
@@ -79,13 +82,21 @@ public struct EdDSAKey {
         )
     }
 
-    init(keyPair: OctetKeyPair, curve: Curve) throws {
+    init(keyPair: OctetKeyPair, curve: EdDSACurve) throws {
         self.keyPair = keyPair
         self.curve = curve
     }
 
-    public static func generate(curve: Curve) throws -> EdDSAKey {
-        switch curve {
+    /// Generates a new ``EdDSAKey`` instance with both public and private key components.
+    ///
+    /// This method generates a new key pair suitable for signing and verifying signatures.
+    /// The generated keys use the specified curve, currently limited to ``Curve/ed25519``.
+    ///
+    /// - Parameter curve: The curve to be used for key generation.
+    /// - Throws: An error if key generation fails.
+    /// - Returns: A new ``EdDSAKey`` instance with a freshly generated key pair.
+    public static func generate(curve: EdDSACurve = .ed25519) throws -> EdDSAKey {
+        switch curve.backing {
         case .ed25519:
             let key = Curve25519.Signing.PrivateKey()
             return try .init(

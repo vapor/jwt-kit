@@ -1,12 +1,12 @@
-import Foundation
 import XCTest
 
 func wycheproof(fileName: String, testFunction: (TestGroup) throws -> Void) throws {
     let testsDirectory: String = URL(fileURLWithPath: "\(#filePath)").pathComponents.dropLast(2).joined(separator: "/")
-    let url = URL(fileURLWithPath: "\(testsDirectory)/TestVectors/\(fileName).json")
-    guard let data = try? Data(contentsOf: url) else {
-        return XCTFail("Failed to load Wycheproof test vectors from file \(fileName).json")
-    }
+    let path = "\(testsDirectory)/TestVectors/\(fileName).json"
+    let fileHandle = try FileHandle(forReadingFrom: URL(fileURLWithPath: path))
+
+    let data = fileHandle.readDataToEndOfFile()
+    fileHandle.closeFile()
 
     let testVectors = try JSONDecoder().decode(TestVectors.self, from: data)
 

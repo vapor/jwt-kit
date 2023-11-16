@@ -1,5 +1,5 @@
 import BigInt
-@testable import JWTKit
+import JWTKit
 import XCTest
 
 final class RSATests: XCTestCase {
@@ -8,17 +8,11 @@ final class RSATests: XCTestCase {
         try wycheproof(fileName: "rsa_oaep_2048_sha224_mgf1sha1_test", testFunction: testPrimeFactor)
         try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testPrimeFactor)
     }
-
-    func testCalculateModularInverses() throws {
-        try wycheproof(fileName: "rsa_oaep_2048_sha1_mgf1sha1_test", testFunction: testModularInverse)
-        try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testModularInverse)
+    
+    func testRSADocs() async throws {
+        await XCTAssertNoThrowAsync(try await JWTKeyCollection().addRS256(key: .public(pem: publicKey)))
     }
-
-    func testRSADocs() throws {
-        let signers = JWTSigners()
-        try signers.use(.rs256(key: .public(pem: publicKey)))
-    }
-
+    
     func testPublicKeyInitialization() throws {
         let rsaKey = try RSAKey(modulus: modulus, exponent: publicExponent)
         XCTAssertNotNil(rsaKey.publicKey)
@@ -31,9 +25,10 @@ final class RSATests: XCTestCase {
         XCTAssertNotNil(rsaKey.privateKey)
     }
 
-    func testSigning() throws {
-        let privateSigner = try JWTSigner.rs256(key: .private(pem: privateKey))
-        let publicSigner = try JWTSigner.rs256(key: .public(pem: publicKey))
+    func testSigning() async throws {
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .private(pem: privateKey), kid: "private")
+            .addRS256(key: .public(pem: publicKey), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -42,13 +37,14 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let privateSigned = try privateSigner.sign(payload)
-        try XCTAssertEqual(publicSigner.verify(privateSigned, as: TestPayload.self), payload)
-        try XCTAssertEqual(privateSigner.verify(privateSigned, as: TestPayload.self), payload)
+        let privateSigned = try await keyCollection.sign(payload, kid: "private")
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
     }
 
-    func testSigningWithPublic() throws {
-        let publicSigner = try JWTSigner.rs256(key: .public(pem: publicKey))
+    func testSigningWithPublic() async throws {
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .public(pem: publicKey), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -56,13 +52,15 @@ final class RSATests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        XCTAssertThrowsError(_ = try publicSigner.sign(payload))
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload))
     }
 
-    func testSigningWithRawBuiltPrivateKey() throws {
-        let privateKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent).privateKey!
-        let privateSigner = try JWTSigner.rs256(key: .private(pem: privateKey.pemRepresentation))
-        let publicSigner = try JWTSigner.rs256(key: .public(pem: privateKey.publicKey.pemRepresentation))
+    func testSigningWithRawBuiltPrivateKey() async throws {
+        let privateKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .private(pem: privateKey.privateKeyPEMRepresentation), kid: "private")
+            .addRS256(key: .public(pem: privateKey.publicKeyPEMRepresentation), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -71,53 +69,85 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let privateSigned = try privateSigner.sign(payload)
-        try XCTAssertEqual(publicSigner.verify(privateSigned, as: TestPayload.self), payload)
-        try XCTAssertEqual(privateSigner.verify(privateSigned, as: TestPayload.self), payload)
+        let privateSigned = try await keyCollection.sign(payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
     }
 
-    func testRSACertificate() throws {
+    func testRSACertificate() async throws {
         let test = TestPayload(
             sub: "vapor",
             name: "foo",
             admin: true,
             exp: .init(value: .distantFuture)
         )
-        let jwt = try JWTSigner.rs256(
-            key: .private(pem: certPrivateKey)
-        ).sign(test)
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .private(pem: certPrivateKey), kid: "private")
+            .addRS256(key: .certificate(pem: cert), kid: "cert")
 
-        let payload = try JWTSigner.rs256(
-            key: .certificate(pem: cert)
-        ).verify(jwt, as: TestPayload.self)
+        let jwt = try await keyCollection.sign(test, kid: "private")
+        let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
         XCTAssertEqual(payload, test)
     }
 
-    func testKeySizeTooSmall() throws {
-        XCTAssertThrowsError(try JWTSigner.rs256(key: .private(pem: _512BytesKey)))
+    func testKeySizeTooSmall() async throws {
+        await XCTAssertThrowsErrorAsync(try await JWTKeyCollection().addRS256(key: .private(pem: _512BytesKey)))
     }
 
-    // MARK: Private functions
+    func testRS256Verification() async throws {
+        let token = """
+        eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsIm5hbWUiOiJmb28iLCJhZG1pbiI6dHJ1ZSwiZXhwIjoyMDAwMDAwMDAwfQ.JZ3uuzojbqbkZBoCKOrjzu4ICNjFt_H4XNqO4I8sM8PRmxzg-_kY2_MhVJkKga30afWp00z5FNoT14CsdKXWKEaWCwXgYTatLQI3yt77aqj7-RC_eBCl6qRDnPH7Aq5KkBNGsoMwUAWKeHB7ZHZulqqqaeRUyEIXmUJiyUy7TjZyVhk1WsXANGxDWvutsVG6dmiFhaSWqj1RsmyWqbuDoyd3uIHzyHy4mx1Y-nwxMofoS0k-SkyZcEPVJ2Am99VZ4rwSJbH2QcmaZr5o1rS8sJiReVYfyEF2YghN9tLj3FF11scgtpjDMzcIkbsIntclaYmU1b7GlIFB6897sdjJpA
+        """
+        let testPayload = TestPayload(
+            sub: "vapor",
+            name: "foo",
+            admin: true,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let keyCollection = try await JWTKeyCollection()
+            .addRS256(key: .private(pem: privateKey2), kid: "private")
+            .addRS256(key: .public(pem: publicKey2), kid: "public")
 
-    private func testModularInverse(_ testGroup: TestGroup) throws {
-        guard let privateKey = testGroup.privateKeyJwk else {
-            return
-        }
-
-        guard
-            let p = privateKey.p.urlDecodedBigUInt,
-            let q = privateKey.q.urlDecodedBigUInt,
-            let qi = privateKey.qi.urlDecodedBigUInt
-        else {
-            return XCTFail("Failed to extract or parse prime factors p, q, or qi")
-        }
-
-        guard let pInverse = q.inverse(p) else {
-            return XCTFail("Failed to calculate the modular inverse of p")
-        }
-        XCTAssertEqual(pInverse, qi, "The modular inverse of p should equal qi; got \(pInverse) != \(qi)")
+        let payload = try await keyCollection.verify(token, as: TestPayload.self)
+        XCTAssertEqual(payload, testPayload)
+    }
+    
+    func testExportPublicKeyAsPEM() async throws {
+        let key = try RSAKey.public(pem: publicKey)
+        let pem = key.publicKeyPEMRepresentation
+        let key2 = try RSAKey.public(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+    
+    func testExportPrivateKeyAsPEM() async throws {
+        let key = try RSAKey.private(pem: privateKey)
+        let pem = try key.privateKeyPEMRepresentation
+        let key2 = try RSAKey.private(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+    
+    func testExportPublicKeyWhenKeyIsPrivate() async throws {
+        let privateKey = try RSAKey.private(pem: privateKey)
+        let pem = privateKey.publicKeyPEMRepresentation
+        let publicKeyFromPrivate = try RSAKey.public(pem: pem)
+        let publicKey = try RSAKey.public(pem: publicKey)
+        XCTAssertEqual(publicKeyFromPrivate, publicKey)
     }
 
+    func testExportPrivateKeyWhenKeyIsPublicThrows() async throws {
+        let key = try RSAKey.public(pem: publicKey)
+        XCTAssertThrowsError(try key.privateKeyPEMRepresentation)
+    }
+    
+    func testExportKeyAsPEMWhenRawBuilt() async throws {
+        let key = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let pem = try key.privateKeyPEMRepresentation
+        let key2 = try RSAKey.private(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+    
+    // MARK: Private Functions
+    
     private func testPrimeFactor(_ testGroup: TestGroup) throws {
         guard
             let n = BigUInt(testGroup.n, radix: 16),
@@ -248,26 +278,45 @@ QkJUDkYq0ZsPjk6/4fYP1abrsDcWua0BrYtzBZqLVWKQWJ0xftGmX2m6
 -----END CERTIFICATE-----
 """
 
-struct GCDTestVector: Codable {
-    let a: String
-    let b: String
-    let lcm: String
-    let gcd: String
-}
+let privateKey2 = """
+-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC7VJTUt9Us8cKj
+MzEfYyjiWA4R4/M2bS1GB4t7NXp98C3SC6dVMvDuictGeurT8jNbvJZHtCSuYEvu
+NMoSfm76oqFvAp8Gy0iz5sxjZmSnXyCdPEovGhLa0VzMaQ8s+CLOyS56YyCFGeJZ
+qgtzJ6GR3eqoYSW9b9UMvkBpZODSctWSNGj3P7jRFDO5VoTwCQAWbFnOjDfH5Ulg
+p2PKSQnSJP3AJLQNFNe7br1XbrhV//eO+t51mIpGSDCUv3E0DDFcWDTH9cXDTTlR
+ZVEiR2BwpZOOkE/Z0/BVnhZYL71oZV34bKfWjQIt6V/isSMahdsAASACp4ZTGtwi
+VuNd9tybAgMBAAECggEBAKTmjaS6tkK8BlPXClTQ2vpz/N6uxDeS35mXpqasqskV
+laAidgg/sWqpjXDbXr93otIMLlWsM+X0CqMDgSXKejLS2jx4GDjI1ZTXg++0AMJ8
+sJ74pWzVDOfmCEQ/7wXs3+cbnXhKriO8Z036q92Qc1+N87SI38nkGa0ABH9CN83H
+mQqt4fB7UdHzuIRe/me2PGhIq5ZBzj6h3BpoPGzEP+x3l9YmK8t/1cN0pqI+dQwY
+dgfGjackLu/2qH80MCF7IyQaseZUOJyKrCLtSD/Iixv/hzDEUPfOCjFDgTpzf3cw
+ta8+oE4wHCo1iI1/4TlPkwmXx4qSXtmw4aQPz7IDQvECgYEA8KNThCO2gsC2I9PQ
+DM/8Cw0O983WCDY+oi+7JPiNAJwv5DYBqEZB1QYdj06YD16XlC/HAZMsMku1na2T
+N0driwenQQWzoev3g2S7gRDoS/FCJSI3jJ+kjgtaA7Qmzlgk1TxODN+G1H91HW7t
+0l7VnL27IWyYo2qRRK3jzxqUiPUCgYEAx0oQs2reBQGMVZnApD1jeq7n4MvNLcPv
+t8b/eU9iUv6Y4Mj0Suo/AU8lYZXm8ubbqAlwz2VSVunD2tOplHyMUrtCtObAfVDU
+AhCndKaA9gApgfb3xw1IKbuQ1u4IF1FJl3VtumfQn//LiH1B3rXhcdyo3/vIttEk
+48RakUKClU8CgYEAzV7W3COOlDDcQd935DdtKBFRAPRPAlspQUnzMi5eSHMD/ISL
+DY5IiQHbIH83D4bvXq0X7qQoSBSNP7Dvv3HYuqMhf0DaegrlBuJllFVVq9qPVRnK
+xt1Il2HgxOBvbhOT+9in1BzA+YJ99UzC85O0Qz06A+CmtHEy4aZ2kj5hHjECgYEA
+mNS4+A8Fkss8Js1RieK2LniBxMgmYml3pfVLKGnzmng7H2+cwPLhPIzIuwytXywh
+2bzbsYEfYx3EoEVgMEpPhoarQnYPukrJO4gwE2o5Te6T5mJSZGlQJQj9q4ZB2Dfz
+et6INsK0oG8XVGXSpQvQh3RUYekCZQkBBFcpqWpbIEsCgYAnM3DQf3FJoSnXaMhr
+VBIovic5l0xFkEHskAjFTevO86Fsz1C2aSeRKSqGFoOQ0tmJzBEs1R6KqnHInicD
+TQrKhArgLXX4v3CddjfTRJkFWDbE/CkvKZNOrcf1nhaGCPspRJj2KUkj1Fhl9Cnc
+dn/RsYEONbwQSjIfMPkvxF+8HQ==
+-----END PRIVATE KEY-----
+"""
 
-extension String {
-    var urlDecoded: String {
-        var result = replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        result.append(String(repeating: "=", count: (4 - (result.count & 3)) & 3))
-        return result
-    }
-
-    var urlDecodedData: Data? {
-        Data(base64Encoded: urlDecoded)
-    }
-
-    var urlDecodedBigUInt: BigUInt? {
-        guard let data = urlDecodedData else { return nil }
-        return BigUInt(data)
-    }
-}
+let publicKey2 = """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
+4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u
++qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyeh
+kd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ
+0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdg
+cKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbc
+mwIDAQAB
+-----END PUBLIC KEY-----
+"""

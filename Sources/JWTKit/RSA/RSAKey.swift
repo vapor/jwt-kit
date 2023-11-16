@@ -1,11 +1,35 @@
-import _CryptoExtras
+@preconcurrency import _CryptoExtras
 import Crypto
 import Foundation
 import SwiftASN1
 import X509
 
-public struct RSAKey {
-    /// Creates ``RSAKey`` from public key PEM file.
+/// A structure that represents an RSA key which can be used for cryptographic operations.
+///
+/// ``RSAKey`` provides functionality to create RSA keys from different sources such as PEM files or specific key components.
+/// It supports both public and private RSA keys.
+public struct RSAKey: Sendable {
+    /// Exports the current public key as a PEM encoded string.
+    ///
+    /// - Returns: A PEM encoded string representation of the key.
+    public var publicKeyPEMRepresentation: String {
+        publicKey.pemRepresentation
+    }
+
+    /// Exports the current private key as a PEM encoded string.
+    ///
+    /// - Throws: If the key is not a private key.
+    /// - Returns: A PEM encoded string representation of the key.
+    public var privateKeyPEMRepresentation: String {
+        get throws {
+            guard let privateKey else {
+                throw RSAError.privateKeyRequired
+            }
+            return privateKey.pemRepresentation
+        }
+    }
+    
+    /// Creates an ``RSAKey`` from public key PEM file.
     ///
     /// Public key PEM files look like:
     ///
@@ -27,7 +51,7 @@ public struct RSAKey {
         }
     }
 
-    /// Creates ``RSAKey`` from public key PEM file.
+    /// Creates an ``RSAKey`` from public key PEM file.
     ///
     /// Public key PEM files look like:
     ///
@@ -46,7 +70,7 @@ public struct RSAKey {
         return try self.public(pem: string)
     }
 
-    /// Creates ``RSAKey`` from public certificate PEM file.
+    /// Creates an ``RSAKey`` from public certificate PEM file.
     ///
     /// Certificate pem files look like:
     ///
@@ -72,7 +96,7 @@ public struct RSAKey {
         }
     }
 
-    /// Creates ``RSAKey`` from public certificate PEM file.
+    /// Creates  an``RSAKey`` from public certificate PEM file.
     ///
     /// Certificate PEM files look like:
     ///
@@ -91,7 +115,7 @@ public struct RSAKey {
         return try certificate(pem: string)
     }
 
-    /// Creates ``RSAKey`` from private key PEM file.
+    /// Creates an``RSAKey`` from private key PEM file.
     ///
     /// Private key PEM files look like:
     ///
@@ -113,7 +137,7 @@ public struct RSAKey {
         }
     }
 
-    /// Creates ``RSAKey`` from private key pem file.
+    /// Creates an ``RSAKey`` from private key pem file.
     ///
     /// Private key pem files look like:
     ///
@@ -134,18 +158,18 @@ public struct RSAKey {
 
     let type: KeyType
 
-    let publicKey: _RSA.Signing.PublicKey?
-    let privateKey: _RSA.Signing.PrivateKey?
+    package let publicKey: _RSA.Signing.PublicKey
+    package let privateKey: _RSA.Signing.PrivateKey?
 
     init(publicKey: _RSA.Signing.PublicKey) {
-        type = .public
+        self.type = .public
         self.publicKey = publicKey
-        privateKey = nil
+        self.privateKey = nil
     }
 
     init(privateKey: _RSA.Signing.PrivateKey) {
-        type = .private
-        publicKey = privateKey.publicKey
+        self.type = .private
+        self.publicKey = privateKey.publicKey
         self.privateKey = privateKey
     }
 
@@ -189,7 +213,8 @@ public struct RSAKey {
         var serializer = DER.Serializer()
 
         // Creating key based on the presence of a private exponent
-        if let d = d, let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d) {
+        if let d, let privateKeyDER = try? RSAKey.calculatePrivateDER(n: n, e: e, d: d)
+        {
             try privateKeyDER.serialize(into: &serializer)
             let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
             self.init(privateKey: privateKey)
@@ -199,6 +224,21 @@ public struct RSAKey {
             self.init(publicKey: publicKey)
         } else {
             throw RSAError.keyInitializationFailure
+        }
+    }
+}
+
+extension RSAKey: Equatable {
+    public static func == (lhs: RSAKey, rhs: RSAKey) -> Bool {
+        switch (lhs.privateKey, rhs.privateKey) {
+        case (nil, nil):
+            return lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation
+        case (let lhsPriv?, let rhsPriv?):
+            assert(lhs.publicKey.derRepresentation == rhs.publicKey.derRepresentation,
+                    "Public keys should match when private keys are present")
+            return lhsPriv.derRepresentation == rhsPriv.derRepresentation
+        default:
+            return false
         }
     }
 }

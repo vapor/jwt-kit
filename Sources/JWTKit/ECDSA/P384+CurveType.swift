@@ -1,7 +1,8 @@
 import Crypto
 import Foundation
 
-extension P384: ECDSACurveType {
+// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+extension P384: ECDSACurveType, @unchecked Sendable {
     public typealias Signature = P384.Signing.ECDSASignature
     public typealias PrivateKey = P384.Signing.PrivateKey
 
@@ -17,7 +18,8 @@ extension P384: ECDSACurveType {
     public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 49, 49 ..< 97)
 }
 
-extension P384.Signing.PublicKey: ECDSAPublicKey {
+// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+extension P384.Signing.PublicKey: ECDSAPublicKey, @unchecked Sendable {
     /// Verifies that the P384 key signature is valid for the given digest.
     ///
     /// - Parameters:
@@ -31,7 +33,9 @@ extension P384.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-extension P384.Signing.ECDSASignature: ECDSASignature {}
-extension P384.Signing.PrivateKey: ECDSAPrivateKey {}
+// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
+// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
 
-public typealias P384Key = ECDSAKey<P384>
+public typealias ES384Key = ECDSAKey<P384>

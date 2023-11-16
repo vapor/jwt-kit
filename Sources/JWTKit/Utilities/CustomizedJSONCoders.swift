@@ -1,10 +1,10 @@
 import Foundation
 
-public protocol JWTJSONDecoder {
+public protocol JWTJSONDecoder: Sendable {
     func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
 }
 
-public protocol JWTJSONEncoder {
+public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 
@@ -31,7 +31,7 @@ public extension JSONEncoder.DateEncodingStrategy {
 }
 
 extension JWTJSONEncoder where Self == JSONEncoder {
-    static var defaultForJWT: any JWTJSONEncoder {
+    package static var defaultForJWT: any JWTJSONEncoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .secondsSince1970
         return encoder
@@ -39,7 +39,7 @@ extension JWTJSONEncoder where Self == JSONEncoder {
 }
 
 extension JWTJSONDecoder where Self == JSONDecoder {
-    static var defaultForJWT: any JWTJSONDecoder {
+    package static var defaultForJWT: any JWTJSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
         return decoder

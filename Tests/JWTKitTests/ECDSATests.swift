@@ -1,28 +1,29 @@
 import BigInt
-@testable import JWTKit
+import JWTKit
 import XCTest
 
 final class ECDSATests: XCTestCase {
-    func testECDSADocs() throws {
-        let signers = JWTSigners()
-        XCTAssertNoThrow(try signers.use(.es256(key: .public(pem: ecdsaPublicKey))))
+    func testECDSADocs() async throws {
+        XCTAssertNoThrow(try ES256Key.public(pem: ecdsaPublicKey))
     }
 
-    func testECDSAGenerate() throws {
+    func testECDSAGenerate() async throws {
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let signer = try JWTSigner.es256(key: .generate())
-        let token = try signer.sign(payload)
-        try XCTAssertEqual(signer.verify(token, as: TestPayload.self), payload)
+        let keyCollection = JWTKeyCollection()
+        try await keyCollection.addES256(key: ES256Key.generate())
+        let token = try await keyCollection.sign(payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
     }
 
-    func testECDSAPublicPrivate() throws {
-        let publicSigner = try JWTSigner.es256(key: .public(pem: ecdsaPublicKey))
-        let privateSigner = try JWTSigner.es256(key: .private(pem: ecdsaPrivateKey))
+    func testECDSAPublicPrivate() async throws {
+        let keys = try await JWTKeyCollection()
+            .addES256(key: ES256Key.public(pem: ecdsaPublicKey), kid: "public")
+            .addES256(key: ES256Key.private(pem: ecdsaPrivateKey), kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -31,60 +32,18 @@ final class ECDSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         for _ in 0 ..< 1000 {
-            let token = try privateSigner.sign(payload)
+            let token = try await keys.sign(payload, kid: "private")
             // test private signer decoding
-            try XCTAssertEqual(privateSigner.verify(token, as: TestPayload.self), payload)
+            try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
             // test public signer decoding
-            try XCTAssertEqual(publicSigner.verify(token, as: TestPayload.self), payload)
+            try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
         }
     }
 
-    func testGetECParametersP256() throws {
-        let message = "test".bytes
-
-        let ec = try P256Key.generate()
-        let ecSigner = JWTSigner.es256(key: ec)
-
-        let signature = try ecSigner.algorithm.sign(message)
-
-        let params = ec.parameters!
-        let ecVerifier = try JWTSigner.es256(key: P256Key(parameters: params))
-        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
-        XCTAssertEqual(ec.curve, .p256)
-    }
-
-    func testGetECParametersP384() throws {
-        let message = "test".bytes
-
-        let ec = try P384Key.generate()
-        let ecSigner = JWTSigner.es384(key: ec)
-
-        let signature = try ecSigner.algorithm.sign(message)
-
-        let params = ec.parameters!
-        let ecVerifier = try JWTSigner.es384(key: .init(parameters: params))
-        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
-        XCTAssertEqual(ec.curve, .p384)
-    }
-
-    func testGetECParametersP521() throws {
-        let message = "test".bytes
-
-        let ec = try P521Key.generate()
-        let ecSigner = JWTSigner.es512(key: ec)
-
-        let signature = try ecSigner.algorithm.sign(message)
-
-        let params = ec.parameters!
-        let ecVerifier = try JWTSigner.es512(key: P521Key(parameters: params))
-        XCTAssertTrue(try ecVerifier.algorithm.verify(signature, signs: message))
-        XCTAssertEqual(ec.curve, .p521)
-    }
-
-    func testVerifyingECDSAKeyUsingJWK() throws {
+    func testVerifyingECDSAKeyUsingJWK() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTSigner) throws {}
+            func verify(using _: JWTAlgorithm) throws {}
         }
 
         // ecdsa key
@@ -94,9 +53,10 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
         // sign jwt
-        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: (x, y), privateKey: privateKey))
+        let key = try ES384Key(parameters: (x, y), privateKey: privateKey)
+        let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -113,16 +73,15 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        let signers = JWTSigners()
-        try signers.use(jwksJSON: jwksString)
-        let foo = try signers.verify(jwt, as: Foo.self)
+        try await keys.use(jwksJSON: jwksString)
+        let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
 
-    func testVerifyingECDSAKeyUsingJWKBase64URL() throws {
+    func testVerifyingECDSAKeyUsingJWKBase64URL() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTSigner) throws {}
+            func verify(using _: JWTAlgorithm) throws {}
         }
 
         // ecdsa key in base64url format
@@ -133,9 +92,10 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k-1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0-539FSHmJxg"
 
         // sign jwt
-        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: (x, y), privateKey: privateKey))
+        let key = try ES384Key(parameters: (x, y), privateKey: privateKey)
+        let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -152,16 +112,15 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        let signers = JWTSigners()
-        try signers.use(jwksJSON: jwksString)
-        let foo = try signers.verify(jwt, as: Foo.self)
+        try await keys.use(jwksJSON: jwksString)
+        let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
 
-    func testVerifyingECDSAKeyUsingJWKWithMixedBase64Formats() throws {
+    func testVerifyingECDSAKeyUsingJWKWithMixedBase64Formats() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTSigner) throws {}
+            func verify(using _: JWTAlgorithm) throws {}
         }
 
         // ecdsa key in base64url format
@@ -172,9 +131,10 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
         // sign jwt
-        let privateSigner = try JWTSigner.es384(key: ECDSAKey(parameters: (x, y), privateKey: privateKey))
+        let key = try ES384Key(parameters: (x, y), privateKey: privateKey)
+        let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try privateSigner.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -191,37 +151,107 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        let signers = JWTSigners()
-        try signers.use(jwksJSON: jwksString)
-        let foo = try signers.verify(jwt, as: Foo.self)
+        try await keys.use(jwksJSON: jwksString)
+        let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
 
-    func testJWTPayloadVerification() throws {
+    func testJWTPayloadVerification() async throws {
         struct NotBar: Error {
             let foo: String
         }
         struct Payload: JWTPayload {
             let foo: String
-            func verify(using _: JWTSigner) throws {
+            func verify(using _: JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }
             }
         }
 
-        let signer = try JWTSigner.es256(key: .generate())
+        let keys = try await JWTKeyCollection().addES256(key: ES256Key.generate(), kid: "vapor")
+
         do {
-            let token = try signer.sign(Payload(foo: "qux"))
-            _ = try signer.verify(token, as: Payload.self)
+            let token = try await keys.sign(Payload(foo: "qux"))
+            _ = try await keys.verify(token, as: Payload.self)
         } catch let error as NotBar {
             XCTAssertEqual(error.foo, "qux")
         }
         do {
-            let token = try signer.sign(Payload(foo: "bar"))
-            let payload = try signer.verify(token, as: Payload.self)
+            let token = try await keys.sign(Payload(foo: "bar"))
+            let payload = try await keys.verify(token, as: Payload.self)
             XCTAssertEqual(payload.foo, "bar")
         }
+    }
+    
+    func testGetECParametersES256() async throws {
+        let message = "test".bytes
+
+        let ec = try ES256Key.generate()
+        let keys = await JWTKeyCollection().addES256(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES256(key: ES256Key(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p256)
+    }
+
+    func testGetECParametersES384() async throws {
+        let message = "test".bytes
+
+        let ec = try ES384Key.generate()
+        let keys = await JWTKeyCollection().addES384(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES384(key: ES384Key(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p384)
+    }
+
+    func testGetECParametersES512() async throws {
+        let message = "test".bytes
+
+        let ec = try ES512Key.generate()
+        let keys = await JWTKeyCollection().addES512(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES512(key: ES512Key(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p521)
+    }
+
+
+    func testExportPublicKeyAsPEM() async throws {
+        let key = try ES256Key.public(pem: ecdsaPublicKey)
+        let pem = key.publicKeyPEMRepresentation
+        let key2 = try ES256Key.public(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+
+    func testExportPrivateKeyAsPEM() async throws {
+        let key = try ES256Key.private(pem: ecdsaPrivateKey)
+        let pem = try key.privateKeyPEMRepresentation
+        let key2 = try ES256Key.private(pem: pem)
+        XCTAssertEqual(key, key2)
+    }
+
+    func testExportPublicKeyWhenKeyIsPrivate() async throws {
+        let privateKey = try ES256Key.private(pem: ecdsaPrivateKey)
+        let pem = privateKey.publicKeyPEMRepresentation
+        let publicKeyFromPrivate = try ES256Key.public(pem: pem)
+        let publicKey = try ES256Key.public(pem: ecdsaPublicKey)
+        XCTAssertEqual(publicKeyFromPrivate, publicKey)
+    }
+
+    func testExportPrivateKeyWhenKeyIsPublicThrows() async throws {
+        let key = try ES256Key.public(pem: ecdsaPublicKey)
+        XCTAssertThrowsError(try key.privateKeyPEMRepresentation)
     }
 }
 
