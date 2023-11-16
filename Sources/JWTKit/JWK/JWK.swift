@@ -5,22 +5,106 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable, Sendable {
-    public enum Curve: String, Codable, Sendable {
-        case p256 = "P-256"
-        case p384 = "P-384"
-        case p521 = "P-521"
-        case ed25519 = "Ed25519"
-        case ed448 = "Ed448"
+    public struct Curve: Codable, RawRepresentable, Sendable {
+        let backing: Backing
+
+        public var rawValue: String {
+            switch backing {
+            case let .ecdsa(ecdsaCurve):
+                ecdsaCurve.rawValue
+            case let .eddsa(eddsaCurve):
+                eddsaCurve.rawValue
+            }
+        }
+
+        /// Represents an ECDSA curve.
+        public static func ecdsa(_ curve: ECDSACurve) -> Self { .init(.ecdsa(curve)) }
+
+        /// Represents an EdDSA curve.
+        public static func eddsa(_ curve: EdDSACurve) -> Self { .init(.eddsa(curve)) }
+
+        enum Backing: Codable {
+            case ecdsa(ECDSACurve)
+            case eddsa(EdDSACurve)
+        }
+
+        init(_ backing: Backing) {
+            self.backing = backing
+        }
+
+        public init?(rawValue: String) {
+            if let ecdsaCurve = ECDSACurve(rawValue: rawValue) {
+                self.init(.ecdsa(ecdsaCurve))
+            } else if let eddsaCurve = EdDSACurve(rawValue: rawValue) {
+                self.init(.eddsa(eddsaCurve))
+            } else {
+                return nil
+            }
+        }
+
+        public init(from decoder: any Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            if let ecdsaCurve = try? container.decode(ECDSACurve.self) {
+                self = .ecdsa(ecdsaCurve)
+            } else if let eddsaCurve = try? container.decode(EdDSACurve.self) {
+                self = .eddsa(eddsaCurve)
+            } else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Curve type not supported")
+            }
+        }
+
+        public func encode(to encoder: any Encoder) throws {
+            switch backing {
+            case let .ecdsa(ecdsaCurve):
+                try ecdsaCurve.encode(to: encoder)
+            case let .eddsa(eddsaCurve):
+                try eddsaCurve.encode(to: encoder)
+            }
+        }
     }
 
     /// Supported `kty` key types.
-    public enum KeyType: String, Codable, Sendable {
+    public struct KeyType: Codable, RawRepresentable, Equatable, Sendable {
+        public typealias RawValue = String
+
+        let backing: Backing
+
+        public var rawValue: String {
+            backing.rawValue
+        }
+
         /// RSA
-        case rsa = "RSA"
+        public static let rsa = Self(backing: .rsa)
         /// ECDSA
-        case ecdsa = "EC"
+        public static let ecdsa = Self(backing: .ecdsa)
         /// Octet Key Pair
-        case octetKeyPair = "OKP"
+        public static let octetKeyPair = Self(backing: .octetKeyPair)
+
+        enum Backing: String, Codable {
+            case rsa = "RSA"
+            case ecdsa = "EC"
+            case octetKeyPair = "OKP"
+        }
+
+        init(backing: Backing) {
+            self.backing = backing
+        }
+
+        public init?(rawValue: String) {
+            guard let backing = Backing(rawValue: rawValue) else {
+                return nil
+            }
+            self.init(backing: backing)
+        }
+
+        public init(from decoder: any Decoder) throws {
+            try self.init(backing: decoder.singleValueContainer().decode(Backing.self))
+        }
+
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.backing)
+        }
     }
 
     /// The `kty` (key type) parameter identifies the cryptographic algorithm
@@ -29,21 +113,59 @@ public struct JWK: Codable, Sendable {
     public var keyType: KeyType
 
     /// Supported `alg` algorithms
-    public enum Algorithm: String, Codable, Sendable {
+    public struct Algorithm: Codable, RawRepresentable, Equatable, Sendable {
+        public typealias RawValue = String
+
+        let backing: Backing
+
+        public var rawValue: String {
+            backing.rawValue
+        }
+
         /// RSA with SHA256
-        case rs256 = "RS256"
+        public static let rs256 = Self(backing: .rs256)
         /// RSA with SHA384
-        case rs384 = "RS384"
+        public static let rs384 = Self(backing: .rs384)
         /// RSA with SHA512
-        case rs512 = "RS512"
+        public static let rs512 = Self(backing: .rs512)
         /// EC with SHA256
-        case es256 = "ES256"
+        public static let es256 = Self(backing: .es256)
         /// EC with SHA384
-        case es384 = "ES384"
+        public static let es384 = Self(backing: .es384)
         /// EC with SHA512
-        case es512 = "ES512"
+        public static let es512 = Self(backing: .es512)
         /// EdDSA
-        case eddsa = "EdDSA"
+        public static let eddsa = Self(backing: .eddsa)
+
+        enum Backing: String, Codable {
+            case rs256 = "RS256"
+            case rs384 = "RS384"
+            case rs512 = "RS512"
+            case es256 = "ES256"
+            case es384 = "ES384"
+            case es512 = "ES512"
+            case eddsa = "EdDSA"
+        }
+
+        init(backing: Backing) {
+            self.backing = backing
+        }
+
+        public init?(rawValue: String) {
+            guard let backing = Backing(rawValue: rawValue) else {
+                return nil
+            }
+            self.init(backing: backing)
+        }
+
+        public init(from decoder: any Decoder) throws {
+            try self.init(backing: decoder.singleValueContainer().decode(Backing.self))
+        }
+
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.backing)
+        }
     }
 
     /// The `alg` (algorithm) parameter identifies the algorithm intended for
@@ -99,16 +221,58 @@ public struct JWK: Codable, Sendable {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
 
-    public static func rsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, modulus: String?, exponent: String?, privateExponent: String? = nil) -> JWK {
-        JWK(keyType: .rsa, algorithm: algorithm, keyIdentifier: identifier, modulus: modulus, exponent: exponent, privateExponent: privateExponent)
+    public static func rsa(
+        _ algorithm: Algorithm?,
+        identifier: JWKIdentifier?,
+        modulus: String?,
+        exponent: String?,
+        privateExponent: String? = nil
+    ) -> JWK {
+        .init(
+            keyType: .rsa,
+            algorithm: algorithm,
+            keyIdentifier: identifier,
+            modulus: modulus,
+            exponent: exponent,
+            privateExponent: privateExponent
+        )
     }
 
-    public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSACurve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.description) })
+    public static func ecdsa(
+        _ algorithm: Algorithm?,
+        identifier: JWKIdentifier?,
+        x: String?,
+        y: String?,
+        curve: ECDSACurve?,
+        privateKey: String? = nil
+    ) -> JWK {
+        .init(
+            keyType: .ecdsa,
+            algorithm: algorithm,
+            keyIdentifier: identifier,
+            privateExponent: privateKey,
+            x: x,
+            y: y,
+            curve: curve.flatMap { Curve(rawValue: $0.rawValue) }
+        )
     }
 
-    public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y _: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
+    public static func octetKeyPair(
+        _ algorithm: Algorithm?,
+        identifier: JWKIdentifier?,
+        x: String?,
+        y _: String?,
+        curve: EdDSACurve?,
+        privateKey: String? = nil
+    ) -> JWK {
+        .init(
+            keyType: .octetKeyPair,
+            algorithm: algorithm,
+            keyIdentifier: identifier,
+            privateExponent: privateKey,
+            x: x,
+            curve: curve.flatMap { Curve(rawValue: $0.rawValue) }
+        )
     }
 
     private init(

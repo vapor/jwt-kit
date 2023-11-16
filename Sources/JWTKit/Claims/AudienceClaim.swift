@@ -28,7 +28,7 @@ public struct AudienceClaim: JWTMultiValueClaim, Equatable, ExpressibleByStringL
     /// intended audiences by simple string comparison.
     public func verifyIntendedAudience(includes audience: String) throws {
         guard self.value.contains(audience) else {
-            throw JWTError.claimVerificationFailure(name: "aud", reason: "not intended for \(audience)")
+            throw JWTError.claimVerificationFailure(failedClaim: self, reason: "not intended for \(audience)")
         }
     }
 }

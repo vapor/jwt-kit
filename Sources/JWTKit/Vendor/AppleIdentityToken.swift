@@ -56,7 +56,7 @@ public struct AppleIdentityToken: JWTPayload {
 
     public func verify(using _: JWTAlgorithm) throws {
         guard self.issuer.value == "https://appleid.apple.com" else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Apple")
+            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Apple")
         }
 
         try self.expires.verifyNotExpired()

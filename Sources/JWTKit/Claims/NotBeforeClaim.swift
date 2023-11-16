@@ -20,7 +20,7 @@ public struct NotBeforeClaim: JWTUnixEpochClaim, Equatable {
     public func verifyNotBefore(currentDate: Date = .init()) throws {
         switch value.compare(currentDate) {
         case .orderedDescending:
-            throw JWTError.claimVerificationFailure(name: "nbf", reason: "too soon")
+            throw JWTError.claimVerificationFailure(failedClaim: self, reason: "too soon")
         case .orderedAscending, .orderedSame:
             break
         }
