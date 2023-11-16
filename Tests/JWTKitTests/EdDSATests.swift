@@ -62,7 +62,7 @@ final class EdDSATests: XCTestCase {
                     "kid": "vapor",
                     "x": "\(x)",
                     "d": "\(d)"
-                 }
+                }
             ]
         }
         """
@@ -93,13 +93,13 @@ final class EdDSATests: XCTestCase {
         {
             "keys": [
                 {
-                 "kty": "OKP",
-                 "crv": "Ed25519",
-                 "use": "sig",
-                 "kid": "vapor",
-                 "x": "\(x)",
-                 "d": "\(d)"
-                 }
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "d": "\(d)"
+                }
             ]
         }
         """
@@ -130,13 +130,13 @@ final class EdDSATests: XCTestCase {
         {
             "keys": [
                 {
-                  "kty": "OKP",
-                  "crv": "Ed25519",
-                  "use": "sig",
-                  "kid": "vapor",
-                  "x": "\(x)",
-                  "d": "\(d)"
-                 }
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "d": "\(d)"
+                }
             ]
         }
         """

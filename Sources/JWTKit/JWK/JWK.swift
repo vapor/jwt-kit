@@ -6,46 +6,60 @@ import class Foundation.JSONDecoder
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable, Sendable {
     public struct Curve: Codable, RawRepresentable, Sendable {
-        public typealias RawValue = String
-        
         let backing: Backing
-
+        
         public var rawValue: String {
-            backing.rawValue
+            switch backing {
+            case .ecdsa(let ecdsaCurve):
+                ecdsaCurve.rawValue
+            case .eddsa(let eddsaCurve):
+                eddsaCurve.rawValue
+            }
         }
+        
+        /// Represents an ECDSA curve.
+        public static func ecdsa(_ curve: ECDSACurve) -> Self { .init(.ecdsa(curve)) }
 
-        public static let p256 = Self(backing: .p256)
-        public static let p384 = Self(backing: .p384)
-        public static let p521 = Self(backing: .p521)
-        public static let ed25519 = Self(backing: .ed25519)
-        public static let ed448 = Self(backing: .ed448)
-
-        enum Backing: String, Codable {
-            case p256 = "P-256"
-            case p384 = "P-384"
-            case p521 = "P-521"
-            case ed25519 = "Ed25519"
-            case ed448 = "Ed448"
+        /// Represents an EdDSA curve.
+        public static func eddsa(_ curve: EdDSACurve) -> Self { .init(.eddsa(curve)) }
+        
+        enum Backing: Codable {
+            case ecdsa(ECDSACurve)
+            case eddsa(EdDSACurve)
         }
-
-        init(backing: Backing) {
+        
+        init(_ backing: Backing) {
             self.backing = backing
         }
-
+        
         public init?(rawValue: String) {
-            guard let backing = Backing(rawValue: rawValue) else {
+            if let ecdsaCurve = ECDSACurve(rawValue: rawValue) {
+                self.init(.ecdsa(ecdsaCurve))
+            } else if let eddsaCurve = EdDSACurve(rawValue: rawValue) {
+                self.init(.eddsa(eddsaCurve))
+            } else {
                 return nil
             }
-            self.init(backing: backing)
         }
         
         public init(from decoder: any Decoder) throws {
-            self.init(backing: try decoder.singleValueContainer().decode(Backing.self))
+            let container = try decoder.singleValueContainer()
+            if let ecdsaCurve = try? container.decode(ECDSACurve.self) {
+                self = .ecdsa(ecdsaCurve)
+            } else if let eddsaCurve = try? container.decode(EdDSACurve.self) {
+                self = .eddsa(eddsaCurve)
+            } else {
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Curve type not supported")
+            }
         }
         
         public func encode(to encoder: any Encoder) throws {
-            var container = encoder.singleValueContainer()
-            try container.encode(self.backing)
+            switch backing {
+            case .ecdsa(let ecdsaCurve):
+                try ecdsaCurve.encode(to: encoder)
+            case .eddsa(let eddsaCurve):
+                try eddsaCurve.encode(to: encoder)
+            }
         }
     }
 

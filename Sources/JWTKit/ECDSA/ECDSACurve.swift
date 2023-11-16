@@ -9,7 +9,7 @@
 ///
 /// The use of ``ECDSACurve`` in cryptographic operations allows for easy specification and interchange of
 /// the elliptic curves based on security requirements and application needs.
-public struct ECDSACurve: RawRepresentable, Sendable {
+public struct ECDSACurve: Codable, RawRepresentable, Sendable {
     let backing: Backing
     
     /// Textual representation of the elliptic curve.
@@ -18,21 +18,21 @@ public struct ECDSACurve: RawRepresentable, Sendable {
     }
 
     /// Represents the P-256 elliptic curve.
-    public static let p256 = Self(backing: .p256)
+    public static let p256 = Self(.p256)
 
     /// Represents the P-384 elliptic curve.
-    public static let p384 = Self(backing: .p384)
+    public static let p384 = Self(.p384)
 
     /// Represents the P-521 elliptic curve.
-    public static let p521 = Self(backing: .p521)
+    public static let p521 = Self(.p521)
     
-    enum Backing: String {
+    enum Backing: String, Codable {
         case p256 = "P-256"
         case p384 = "P-384"
         case p521 = "P-521"
     }
     
-    init(backing: Backing) {
+    init(_ backing: Backing) {
         self.backing = backing
     }
     
@@ -40,7 +40,16 @@ public struct ECDSACurve: RawRepresentable, Sendable {
         guard let backing = Backing(rawValue: rawValue) else {
             return nil
         }
-        self.init(backing: backing)
+        self.init(backing)
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        self.init(try decoder.singleValueContainer().decode(Backing.self))
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.backing)
     }
 }
 
