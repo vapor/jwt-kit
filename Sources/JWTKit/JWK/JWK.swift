@@ -5,10 +5,12 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable, Sendable {
-    public struct Curve: Codable, LosslessStringConvertible, Sendable {
+    public struct Curve: Codable, RawRepresentable, Sendable {
+        public typealias RawValue = String
+        
         let backing: Backing
 
-        public var description: String {
+        public var rawValue: String {
             backing.rawValue
         }
 
@@ -30,41 +32,43 @@ public struct JWK: Codable, Sendable {
             self.backing = backing
         }
 
-        public init?(_ description: String) {
-            guard let backing = Backing(rawValue: description) else {
+        public init?(rawValue: String) {
+            guard let backing = Backing(rawValue: rawValue) else {
                 return nil
             }
             self.init(backing: backing)
         }
         
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let rawValue = try container.decode(String.self)
-            guard let backingValue = Backing(rawValue: rawValue) else {
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize JWK.Curve.Backing with raw value: \(rawValue)")
-            }
-            self.backing = backingValue
+        public init(from decoder: any Decoder) throws {
+            self.init(backing: try decoder.singleValueContainer().decode(Backing.self))
+        }
+        
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.backing)
         }
     }
 
     /// Supported `kty` key types.
-    public struct KeyType: Codable, LosslessStringConvertible, Equatable, Sendable {
+    public struct KeyType: Codable, RawRepresentable, Equatable, Sendable {
+        public typealias RawValue = String
+        
         let backing: Backing
 
-        public var description: String {
+        public var rawValue: String {
             backing.rawValue
         }
 
+        /// RSA
         public static let rsa = Self(backing: .rsa)
+        /// ECDSA
         public static let ecdsa = Self(backing: .ecdsa)
+        /// Octet Key Pair
         public static let octetKeyPair = Self(backing: .octetKeyPair)
 
         enum Backing: String, Codable {
-            /// RSA
             case rsa = "RSA"
-            /// ECDSA
             case ecdsa = "EC"
-            /// Octet Key Pair
             case octetKeyPair = "OKP"
         }
 
@@ -72,20 +76,20 @@ public struct JWK: Codable, Sendable {
             self.backing = backing
         }
 
-        public init?(_ description: String) {
-            guard let backing = Backing(rawValue: description) else {
+        public init?(rawValue: String) {
+            guard let backing = Backing(rawValue: rawValue) else {
                 return nil
             }
             self.init(backing: backing)
         }
         
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let rawValue = try container.decode(String.self)
-            guard let backingValue = Backing(rawValue: rawValue) else {
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize JWK.KeyType.Backing with raw value: \(rawValue)")
-            }
-            self.backing = backingValue
+        public init(from decoder: any Decoder) throws {
+            self.init(backing: try decoder.singleValueContainer().decode(Backing.self))
+        }
+        
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.backing)
         }
     }
 
@@ -95,35 +99,37 @@ public struct JWK: Codable, Sendable {
     public var keyType: KeyType
 
     /// Supported `alg` algorithms
-    public struct Algorithm: Codable, LosslessStringConvertible, Equatable, Sendable {
+    public struct Algorithm: Codable, RawRepresentable, Equatable, Sendable {
+        public typealias RawValue = String
+        
         let backing: Backing
 
-        public var description: String {
+        public var rawValue: String {
             backing.rawValue
         }
 
+        /// RSA with SHA256
         public static let rs256 = Self(backing: .rs256)
+        /// RSA with SHA384
         public static let rs384 = Self(backing: .rs384)
+        /// RSA with SHA512
         public static let rs512 = Self(backing: .rs512)
+        /// EC with SHA256
         public static let es256 = Self(backing: .es256)
+        /// EC with SHA384
         public static let es384 = Self(backing: .es384)
+        /// EC with SHA512
         public static let es512 = Self(backing: .es512)
+        /// EdDSA
         public static let eddsa = Self(backing: .eddsa)
 
         enum Backing: String, Codable {
-            /// RSA with SHA256
             case rs256 = "RS256"
-            /// RSA with SHA384
             case rs384 = "RS384"
-            /// RSA with SHA512
             case rs512 = "RS512"
-            /// EC with SHA256
             case es256 = "ES256"
-            /// EC with SHA384
             case es384 = "ES384"
-            /// EC with SHA512
             case es512 = "ES512"
-            /// EdDSA
             case eddsa = "EdDSA"
         }
 
@@ -131,20 +137,20 @@ public struct JWK: Codable, Sendable {
             self.backing = backing
         }
 
-        public init?(_ description: String) {
-            guard let backing = Backing(rawValue: description) else {
+        public init?(rawValue: String) {
+            guard let backing = Backing(rawValue: rawValue) else {
                 return nil
             }
             self.init(backing: backing)
         }
         
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            let rawValue = try container.decode(String.self)
-            guard let backingValue = Backing(rawValue: rawValue) else {
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot initialize JWK.Algorithm.Backing with raw value: \(rawValue)")
-            }
-            self.backing = backingValue
+        public init(from decoder: any Decoder) throws {
+            self.init(backing: try decoder.singleValueContainer().decode(Backing.self))
+        }
+        
+        public func encode(to encoder: any Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(self.backing)
         }
     }
 
@@ -206,11 +212,11 @@ public struct JWK: Codable, Sendable {
     }
 
     public static func ecdsa(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y: String?, curve: ECDSACurve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve($0.description) })
+        JWK(keyType: .ecdsa, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, y: y, curve: curve.flatMap { Curve(rawValue: $0.description) })
     }
 
     public static func octetKeyPair(_ algorithm: Algorithm?, identifier: JWKIdentifier?, x: String?, y _: String?, curve: EdDSAKey.Curve?, privateKey: String? = nil) -> JWK {
-        JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve($0.description) })
+        JWK(keyType: .octetKeyPair, algorithm: algorithm, keyIdentifier: identifier, privateExponent: privateKey, x: x, curve: curve.flatMap { Curve(rawValue: $0.rawValue) })
     }
 
     private init(

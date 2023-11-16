@@ -10,10 +10,12 @@ import Foundation
 /// It supports the `Ed25519` curve, widely recognized for its strength and efficiency.
 public struct EdDSAKey: Sendable {
     /// An enum defining supported curves for EdDSA keys.
-    public struct Curve: Codable, Equatable, LosslessStringConvertible, Sendable {
+    public struct Curve: Codable, Equatable, RawRepresentable, Sendable {
+        public typealias RawValue = String
+        
         let backing: Backing
         
-        public var description: String {
+        public var rawValue: String {
             backing.rawValue
         }
         
@@ -27,8 +29,8 @@ public struct EdDSAKey: Sendable {
             self.backing = backing
         }
         
-        public init?(_ description: String) {
-            guard let backing = Backing(rawValue: description) else {
+        public init?(rawValue: String) {
+            guard let backing = Backing(rawValue: rawValue) else {
                 return nil
             }
             self.init(backing: backing)

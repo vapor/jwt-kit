@@ -205,11 +205,11 @@ eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsIng1YyI6WyJNSUlCanpDQ0FUVUNGSDhFWFBJbDBRbDQw
 ///        "cool" : true
 ///     }
 private struct TokenPayload: JWTPayload {
-    var cool: Bool
+    var cool: BoolClaim
 
     func verify(using _: JWTAlgorithm) throws {
-        if !cool {
-            throw JWTError.claimVerificationFailure(name: "cool", reason: "not cool")
+        if !cool.value {
+            throw JWTError.claimVerificationFailure(failedClaim: cool, reason: "not cool")
         }
     }
 }
