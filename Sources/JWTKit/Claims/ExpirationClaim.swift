@@ -20,7 +20,7 @@ public struct ExpirationClaim: JWTUnixEpochClaim, Equatable {
     public func verifyNotExpired(currentDate: Date = .init()) throws {
         switch self.value.compare(currentDate) {
         case .orderedAscending, .orderedSame:
-            throw JWTError.claimVerificationFailure(name: "exp", reason: "expired")
+            throw JWTError.claimVerificationFailure(failedClaim: self, reason: "expired")
         case .orderedDescending:
             break
         }

@@ -100,11 +100,11 @@ public struct GoogleIdentityToken: JWTPayload {
 
     public func verify(using _: JWTAlgorithm) throws {
         guard ["accounts.google.com", "https://accounts.google.com"].contains(self.issuer.value) else {
-            throw JWTError.claimVerificationFailure(name: "iss", reason: "Token not provided by Google")
+            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Google")
         }
 
         guard self.subject.value.count <= 255 else {
-            throw JWTError.claimVerificationFailure(name: "sub", reason: "Subject claim beyond 255 ASCII characters long.")
+            throw JWTError.claimVerificationFailure(failedClaim: subject, reason: "Subject claim beyond 255 ASCII characters long.")
         }
 
         try self.expires.verifyNotExpired()

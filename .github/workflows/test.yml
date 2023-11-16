@@ -21,6 +21,7 @@ jobs:
         with:
           repository: vapor/jwt
           path: jwt
+          ref: v5
       - name: Use local JWTKit
         run: swift package --package-path jwt edit jwt-kit --path ./jwt-kit
       - name: Run tests with Thread Sanitizer

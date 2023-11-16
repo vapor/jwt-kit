@@ -87,12 +87,9 @@ class JWTKitTests: XCTestCase {
             _ = try await JWTKeyCollection().addHS256(key: "secret".bytes)
                 .verify(data, as: TestPayload.self)
         } catch let error as JWTError {
-            switch error {
-            case let .claimVerificationFailure(name, _):
-                XCTAssertEqual(name, "exp")
-            default:
-                XCTFail("wrong error")
-            }
+            XCTAssertEqual(error.errorType, .claimVerificationFailure)
+            XCTAssert(error.failedClaim is ExpirationClaim)
+            XCTAssertEqual((error.failedClaim as? ExpirationClaim)?.value, Date(timeIntervalSince1970: 1))
         }
     }
 
@@ -182,13 +179,7 @@ class JWTKitTests: XCTestCase {
         do {
             _ = try await keyCollection.verify(corruptedToken, as: JWTioPayload.self)
         } catch let error as JWTError {
-            switch error {
-            case .signatureVerifictionFailed:
-                // pass
-                XCTAssert(true)
-            default:
-                XCTFail("unexpected error: \(error)")
-            }
+            XCTAssert(error.errorType == .signatureVerificationFailed)
         }
     }
 

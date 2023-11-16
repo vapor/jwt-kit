@@ -10,7 +10,7 @@ struct EdDSASigner: JWTAlgorithm, Sendable {
             throw JWTError.signingAlgorithmFailure(EdDSAError.privateKeyMissing)
         }
 
-        switch key.curve {
+        switch key.curve.backing {
         case .ed25519:
             return try Curve25519.Signing.PrivateKey(
                 rawRepresentation: privateKey
@@ -21,7 +21,7 @@ struct EdDSASigner: JWTAlgorithm, Sendable {
     }
 
     func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
-        switch key.curve {
+        switch key.curve.backing {
         case .ed25519:
             return try Curve25519.Signing.PublicKey(
                 rawRepresentation: key.publicKey

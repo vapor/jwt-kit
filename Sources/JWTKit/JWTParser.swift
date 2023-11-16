@@ -30,7 +30,7 @@ package struct JWTParser: Sendable {
 
     package func verify(using algorithm: JWTAlgorithm) throws {
         guard try algorithm.verify(signature, signs: message) else {
-            throw JWTError.signatureVerifictionFailed
+            throw JWTError.signatureVerificationFailed
         }
     }
 
