@@ -54,21 +54,6 @@ class JWTKitTests: XCTestCase {
         }
     }
 
-    func testJWKsApple() async throws {
-        // Download the JWKS.
-        // This could be done asynchronously if needed.
-        let url = URL(string: "https://appleid.apple.com/auth/keys")!
-
-        let (jwksData, _) = try await URLSession.shared.data(from: url)
-
-        // Decode the downloaded JSON.
-        let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
-
-        // Create signers and add JWKS.
-        let keyCollection = JWTKeyCollection()
-        try await keyCollection.add(jwks: jwks)
-    }
-
     func testParse() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
 
