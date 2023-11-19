@@ -7,7 +7,7 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
     let name: String
     let padding: _RSA.Signing.Padding
 
-    init(key: RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding = .PSS) {
+    init(key: RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding) {
         self.key = key
         self.algorithm = algorithm
         self.name = name
@@ -25,7 +25,7 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         let digest = try self.digest(plaintext)
 
         do {
-            let signature = try privateKey.signature(for: digest)
+            let signature = try privateKey.signature(for: digest, padding: padding)
             return [UInt8](signature.rawRepresentation)
         } catch {
             throw JWTError.signingAlgorithmFailure(RSAError.signFailure(error))
