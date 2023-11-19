@@ -120,12 +120,16 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: A ``JWTSigner`` if one is found; otherwise, `nil`.
     func getSigner(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTSigner {
         let signer: Signer
-        if let kid = kid, let stored = self.storage[kid] {
-            signer = stored
+        if let kid {
+            if let stored = self.storage[kid] {
+                signer = stored
+            } else {
+                throw JWTError.unknownKID(kid)
+            }
         } else if let d = self.default {
             signer = d
         } else {
-            throw JWTError.generic(identifier: "Key", reason: "Either a default key or a key identifier must be provided.")
+            throw JWTError.noKeyProvided
         }
 
         switch signer {

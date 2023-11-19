@@ -349,6 +349,26 @@ class JWTKitTests: XCTestCase {
         try await XCTAssertEqualAsync(await keyCollection.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
     }
+
+    func testInvalidKeys() async throws {
+        let keyCollection = JWTKeyCollection()
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload)) {
+            guard let error = $0 as? JWTError else { return }
+            XCTAssertEqual(error.errorType, .noKeyProvided)
+        }
+
+        await keyCollection.addHS256(key: "secret".bytes, kid: "foo")
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload, kid: "bar")) {
+            guard let error = $0 as? JWTError else { return }
+            XCTAssertEqual(error.errorType, .unknownKID)
+        }
+    }
 }
 
 struct AudiencePayload: Codable {

@@ -38,6 +38,12 @@ struct JWKSigner: Sendable {
                 return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha384, name: "RS384", padding: .insecurePKCS1v1_5))
             case .rs512:
                 return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha512, name: "RS512", padding: .insecurePKCS1v1_5))
+            case .ps256:
+                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha256, name: "PS256", padding: .PSS))
+            case .ps384:
+                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha384, name: "PS384", padding: .PSS))
+            case .ps512:
+                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha512, name: "PS512", padding: .PSS))
             default:
                 return nil
             }
