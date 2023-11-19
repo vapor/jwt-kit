@@ -128,6 +128,12 @@ public struct JWK: Codable, Sendable {
         public static let rs384 = Self(backing: .rs384)
         /// RSA with SHA512
         public static let rs512 = Self(backing: .rs512)
+        /// RSA-PSS with SHA256
+        public static let ps256 = Self(backing: .ps256)
+        /// RSA-PSS with SHA384
+        public static let ps384 = Self(backing: .ps384)
+        /// RSA-PSS with SHA512
+        public static let ps512 = Self(backing: .ps512)
         /// EC with SHA256
         public static let es256 = Self(backing: .es256)
         /// EC with SHA384
@@ -141,6 +147,9 @@ public struct JWK: Codable, Sendable {
             case rs256 = "RS256"
             case rs384 = "RS384"
             case rs512 = "RS512"
+            case ps256 = "PS256"
+            case ps384 = "PS384"
+            case ps512 = "PS512"
             case es256 = "ES256"
             case es384 = "ES384"
             case es512 = "ES512"

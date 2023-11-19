@@ -125,7 +125,7 @@ public actor JWTKeyCollection: Sendable {
         } else if let d = self.default {
             signer = d
         } else {
-            throw JWTError.generic(identifier: "Key", reason: "Either a default key or a key identifier must be provided.")
+            throw JWTError.noKeyProvided
         }
 
         switch signer {

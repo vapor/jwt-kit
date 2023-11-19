@@ -54,21 +54,6 @@ class JWTKitTests: XCTestCase {
         }
     }
 
-    func testJWKsApple() async throws {
-        // Download the JWKS.
-        // This could be done asynchronously if needed.
-        let jwksData = try Data(
-            contentsOf: URL(string: "https://appleid.apple.com/auth/keys")!
-        )
-
-        // Decode the downloaded JSON.
-        let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
-
-        // Create signers and add JWKS.
-        let keyCollection = JWTKeyCollection()
-        try await keyCollection.add(jwks: jwks)
-    }
-
     func testParse() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
 
@@ -293,7 +278,7 @@ class JWTKitTests: XCTestCase {
             modulus: modulus,
             exponent: exponent,
             privateExponent: privateExponent
-        ))
+        ), kid: "vapor")
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: JWTAlgorithm) throws {}
@@ -325,7 +310,8 @@ class JWTKitTests: XCTestCase {
     }
 
     func testFirebaseJWTAndCertificate() async throws {
-        let payload = try await JWTKeyCollection().addRS256(key: .certificate(pem: firebaseCert), padding: .insecurePKCS1v1_5)
+        let payload = try await JWTKeyCollection()
+            .addRS256(key: .certificate(pem: firebaseCert))
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
@@ -348,6 +334,20 @@ class JWTKitTests: XCTestCase {
         try await XCTAssertEqualAsync(await keyCollection.verify(token.bytes, as: TestPayload.self), payload)
         try await XCTAssertEqualAsync(await keyCollection.verify(data.bytes, as: TestPayload.self), payload)
         XCTAssertTrue(token.hasSuffix("."))
+    }
+
+    func testNoKeyProvided() async throws {
+        let keyCollection = JWTKeyCollection()
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload)) {
+            guard let error = $0 as? JWTError else { return }
+            XCTAssertEqual(error.errorType, .noKeyProvided)
+        }
     }
 }
 
