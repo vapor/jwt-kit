@@ -310,7 +310,8 @@ class JWTKitTests: XCTestCase {
     }
 
     func testFirebaseJWTAndCertificate() async throws {
-        let payload = try await JWTKeyCollection().addRS256(key: .certificate(pem: firebaseCert))
+        let payload = try await JWTKeyCollection()
+            .addRS256(key: .certificate(pem: firebaseCert))
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
