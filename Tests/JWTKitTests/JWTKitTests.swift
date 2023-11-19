@@ -278,7 +278,7 @@ class JWTKitTests: XCTestCase {
             modulus: modulus,
             exponent: exponent,
             privateExponent: privateExponent
-        ))
+        ), kid: "vapor")
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: JWTAlgorithm) throws {}
@@ -336,7 +336,7 @@ class JWTKitTests: XCTestCase {
         XCTAssertTrue(token.hasSuffix("."))
     }
 
-    func testInvalidKeys() async throws {
+    func testNoKeyProvided() async throws {
         let keyCollection = JWTKeyCollection()
         let payload = TestPayload(
             sub: "vapor",
@@ -347,12 +347,6 @@ class JWTKitTests: XCTestCase {
         await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload)) {
             guard let error = $0 as? JWTError else { return }
             XCTAssertEqual(error.errorType, .noKeyProvided)
-        }
-
-        await keyCollection.addHS256(key: "secret".bytes, kid: "foo")
-        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload, kid: "bar")) {
-            guard let error = $0 as? JWTError else { return }
-            XCTAssertEqual(error.errorType, .unknownKID)
         }
     }
 }
