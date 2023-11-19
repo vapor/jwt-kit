@@ -57,9 +57,9 @@ class JWTKitTests: XCTestCase {
     func testJWKsApple() async throws {
         // Download the JWKS.
         // This could be done asynchronously if needed.
-        let jwksData = try Data(
-            contentsOf: URL(string: "https://appleid.apple.com/auth/keys")!
-        )
+        let url = URL(string: "https://appleid.apple.com/auth/keys")!
+
+        let (jwksData, _) = try await URLSession.shared.data(from: url)
 
         // Decode the downloaded JSON.
         let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
