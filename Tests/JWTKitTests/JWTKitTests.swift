@@ -349,6 +349,40 @@ class JWTKitTests: XCTestCase {
             XCTAssertEqual(error.errorType, .noKeyProvided)
         }
     }
+
+    func testSignJWTWithFalseB64Header() async throws {
+        let payload = TestPayload(
+            sub: "1234567890",
+            name: "John Doe",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let keyCollection = await JWTKeyCollection()
+            .addHS256(key: "secret")
+
+        let token = try await keyCollection.sign(payload, b64: false)
+
+        let verifiedPayload = try await keyCollection.verify(token, as: TestPayload.self)
+
+        XCTAssertEqual(verifiedPayload, payload)
+    }
+
+    func testVerifyJWTWithFalseB64Header() async throws {
+        let token = #"eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCIsICJiNjQiOiBmYWxzZX0.{"sub": "1234567890", "name": "John Doe", "exp": 2000000000, "admin": false}.yJJq_i6viqL58wCIEISz1rmzm--MOHfpohgEoFHANmw"#
+        let payload = TestPayload(
+            sub: "1234567890",
+            name: "John Doe",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let verifiedPayload = try await JWTKeyCollection()
+            .addHS256(key: "secret")
+            .verify(token, as: TestPayload.self)
+
+        XCTAssertEqual(verifiedPayload, payload)
+    }
 }
 
 struct AudiencePayload: Codable {

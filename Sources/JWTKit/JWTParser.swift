@@ -24,8 +24,9 @@ package struct JWTParser: Sendable {
     package func payload<Payload>(as _: Payload.Type, jsonDecoder: any JWTJSONDecoder = .defaultForJWT) throws -> Payload
         where Payload: JWTPayload
     {
-        try jsonDecoder
-            .decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+        let b64 = (try? self.header())?.b64 ?? true
+        let data: Data = b64 ? .init(encodedPayload.base64URLDecodedBytes()) : .init(encodedPayload)
+        return try jsonDecoder.decode(Payload.self, from: data)
     }
 
     package func verify(using algorithm: JWTAlgorithm) throws {

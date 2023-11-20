@@ -21,9 +21,10 @@ final class JWTSigner: Sendable {
         _ payload: some JWTPayload,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
-        cty: String? = nil
+        cty: String? = nil,
+        b64: Bool = true
     ) throws -> String {
-        try JWTSerializer().sign(payload, using: self, typ: typ, kid: kid, cty: cty, jsonEncoder: self.jsonEncoder ?? .defaultForJWT)
+        try JWTSerializer().sign(payload, using: self, typ: typ, kid: kid, cty: cty, b64: b64, jsonEncoder: self.jsonEncoder ?? .defaultForJWT)
     }
 
     func unverified<Payload>(

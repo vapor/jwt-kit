@@ -17,4 +17,8 @@ package struct JWTHeader: Codable, Sendable {
 
     /// The x5c certificate chain.
     package var x5c: [String]?
+
+    /// True if the payload is base64 encoded.
+    /// https://www.rfc-editor.org/rfc/rfc7797#section-3
+    package var b64: Bool?
 }
