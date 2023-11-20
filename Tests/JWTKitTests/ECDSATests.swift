@@ -183,7 +183,7 @@ final class ECDSATests: XCTestCase {
             XCTAssertEqual(payload.foo, "bar")
         }
     }
-    
+
     func testGetECParametersES256() async throws {
         let message = "test".bytes
 
@@ -225,7 +225,6 @@ final class ECDSATests: XCTestCase {
         try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p521)
     }
-
 
     func testExportPublicKeyAsPEM() async throws {
         let key = try ES256Key.public(pem: ecdsaPublicKey)

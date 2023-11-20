@@ -23,16 +23,16 @@ public struct JWTError: Error, @unchecked Sendable {
             self.base = base
         }
 
-        public static let claimVerificationFailure = Self(.claimVerificationFailure)
-        public static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
-        public static let malformedToken = Self(.malformedToken)
-        public static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
-        public static let missingKIDHeader = Self(.missingKIDHeader)
-        public static let unknownKID = Self(.unknownKID)
-        public static let invalidJWK = Self(.invalidJWK)
-        public static let invalidBool = Self(.invalidBool)
-        public static let noKeyProvided = Self(.noKeyProvided)
-        public static let generic = Self(.generic)
+        static let claimVerificationFailure = Self(.claimVerificationFailure)
+        static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
+        static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
+        static let missingKIDHeader = Self(.missingKIDHeader)
+        static let malformedToken = Self(.malformedToken)
+        static let unknownKID = Self(.unknownKID)
+        static let invalidJWK = Self(.invalidJWK)
+        static let invalidBool = Self(.invalidBool)
+        static let noKeyProvided = Self(.noKeyProvided)
+        static let generic = Self(.generic)
 
         public var description: String {
             switch self.base {
@@ -76,37 +76,37 @@ public struct JWTError: Error, @unchecked Sendable {
 
     private var backing: Backing
 
-    public internal(set) var errorType: ErrorType {
+    var errorType: ErrorType {
         get { self.backing.errorType }
         set { self.backing.errorType = newValue }
     }
 
-    public internal(set) var name: String? {
+    var name: String? {
         get { self.backing.name }
         set { self.backing.name = newValue }
     }
 
-    public internal(set) var reason: String? {
+    var reason: String? {
         get { self.backing.reason }
         set { self.backing.reason = newValue }
     }
 
-    public internal(set) var underlying: Error? {
+    var underlying: Error? {
         get { self.backing.underlying }
         set { self.backing.underlying = newValue }
     }
 
-    public internal(set) var kid: JWKIdentifier? {
+    var kid: JWKIdentifier? {
         get { self.backing.kid }
         set { self.backing.kid = newValue }
     }
 
-    public internal(set) var identifier: String? {
+    var identifier: String? {
         get { self.backing.identifier }
         set { self.backing.identifier = newValue }
     }
 
-    public internal(set) var failedClaim: (any JWTClaim)? {
+    var failedClaim: (any JWTClaim)? {
         get { self.backing.failedClaim }
         set { self.backing.failedClaim = newValue }
     }
@@ -115,42 +115,42 @@ public struct JWTError: Error, @unchecked Sendable {
         self.backing = .init(errorType: errorType)
     }
 
-    package static func claimVerificationFailure(failedClaim: any JWTClaim, reason: String) -> Self {
+    public static func claimVerificationFailure(failedClaim: (any JWTClaim)?, reason: String) -> Self {
         var new = Self(errorType: .claimVerificationFailure)
         new.failedClaim = failedClaim
         new.reason = reason
         return new
     }
 
-    package static func signingAlgorithmFailure(_ error: Error) -> Self {
+    public static func signingAlgorithmFailure(_ error: Error) -> Self {
         var new = Self(errorType: .signingAlgorithmFailure)
         new.underlying = error
         return new
     }
 
-    package static let malformedToken = Self(errorType: .malformedToken)
+    public static let malformedToken = Self(errorType: .malformedToken)
 
-    package static let signatureVerificationFailed = Self(errorType: .signatureVerificationFailed)
+    public static let signatureVerificationFailed = Self(errorType: .signatureVerificationFailed)
 
-    package static let missingKIDHeader = Self(errorType: .missingKIDHeader)
+    public static let missingKIDHeader = Self(errorType: .missingKIDHeader)
 
-    package static func unknownKID(_ kid: JWKIdentifier) -> Self {
+    public static func unknownKID(_ kid: JWKIdentifier) -> Self {
         var new = Self(errorType: .unknownKID)
         new.kid = kid
         return new
     }
 
-    package static let invalidJWK = Self(errorType: .invalidJWK)
+    public static let invalidJWK = Self(errorType: .invalidJWK)
 
-    package static func invalidBool(_ name: String) -> Self {
+    public static func invalidBool(_ name: String) -> Self {
         var new = Self(errorType: .invalidBool)
         new.name = name
         return new
     }
 
-    package static let noKeyProvided = Self(errorType: .noKeyProvided)
+    public static let noKeyProvided = Self(errorType: .noKeyProvided)
 
-    package static func generic(identifier: String, reason: String) -> Self {
+    public static func generic(identifier: String, reason: String) -> Self {
         var new = Self(errorType: .generic)
         new.identifier = identifier
         new.reason = reason
