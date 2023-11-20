@@ -23,16 +23,16 @@ public struct JWTError: Error, @unchecked Sendable {
             self.base = base
         }
 
-        static let claimVerificationFailure = Self(.claimVerificationFailure)
-        static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
-        static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
-        static let missingKIDHeader = Self(.missingKIDHeader)
-        static let malformedToken = Self(.malformedToken)
-        static let unknownKID = Self(.unknownKID)
-        static let invalidJWK = Self(.invalidJWK)
-        static let invalidBool = Self(.invalidBool)
-        static let noKeyProvided = Self(.noKeyProvided)
-        static let generic = Self(.generic)
+        package static let claimVerificationFailure = Self(.claimVerificationFailure)
+        package static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
+        package static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
+        package static let missingKIDHeader = Self(.missingKIDHeader)
+        package static let malformedToken = Self(.malformedToken)
+        package static let unknownKID = Self(.unknownKID)
+        package static let invalidJWK = Self(.invalidJWK)
+        package static let invalidBool = Self(.invalidBool)
+        package static let noKeyProvided = Self(.noKeyProvided)
+        package static let generic = Self(.generic)
 
         public var description: String {
             switch self.base {
@@ -76,37 +76,37 @@ public struct JWTError: Error, @unchecked Sendable {
 
     private var backing: Backing
 
-    var errorType: ErrorType {
+    public internal(set) var errorType: ErrorType {
         get { self.backing.errorType }
         set { self.backing.errorType = newValue }
     }
 
-    var name: String? {
+    public internal(set) var name: String? {
         get { self.backing.name }
         set { self.backing.name = newValue }
     }
 
-    var reason: String? {
+    public internal(set) var reason: String? {
         get { self.backing.reason }
         set { self.backing.reason = newValue }
     }
 
-    var underlying: Error? {
+    public internal(set) var underlying: Error? {
         get { self.backing.underlying }
         set { self.backing.underlying = newValue }
     }
 
-    var kid: JWKIdentifier? {
+    public internal(set) var kid: JWKIdentifier? {
         get { self.backing.kid }
         set { self.backing.kid = newValue }
     }
 
-    var identifier: String? {
+    public internal(set) var identifier: String? {
         get { self.backing.identifier }
         set { self.backing.identifier = newValue }
     }
 
-    var failedClaim: (any JWTClaim)? {
+    public internal(set) var failedClaim: (any JWTClaim)? {
         get { self.backing.failedClaim }
         set { self.backing.failedClaim = newValue }
     }
