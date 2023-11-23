@@ -14,6 +14,7 @@ public struct JWTError: Error, @unchecked Sendable {
             case invalidJWK
             case invalidBool
             case noKeyProvided
+            case invalidX5CChain
             case generic
         }
 
@@ -32,6 +33,7 @@ public struct JWTError: Error, @unchecked Sendable {
         package static let invalidJWK = Self(.invalidJWK)
         package static let invalidBool = Self(.invalidBool)
         package static let noKeyProvided = Self(.noKeyProvided)
+        package static let invalidX5CChain = Self(.invalidX5CChain)
         package static let generic = Self(.generic)
 
         public var description: String {
@@ -54,6 +56,8 @@ public struct JWTError: Error, @unchecked Sendable {
                 "invalidBool"
             case .noKeyProvided:
                 "noKeyProvided"
+            case .invalidX5CChain:
+                "invalidX5CChain"
             case .generic:
                 "generic"
             }
@@ -149,6 +153,12 @@ public struct JWTError: Error, @unchecked Sendable {
     }
 
     public static let noKeyProvided = Self(errorType: .noKeyProvided)
+
+    public static func invalidX5CChain(reason: String) -> Self {
+        var new = Self(errorType: .invalidX5CChain)
+        new.reason = reason
+        return new
+    }
 
     public static func generic(identifier: String, reason: String) -> Self {
         var new = Self(errorType: .generic)
