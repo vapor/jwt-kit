@@ -9,7 +9,8 @@ struct JWTSerializer {
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
         x5c: [String]? = nil,
-        jsonEncoder: any JWTJSONEncoder
+        jsonEncoder: any JWTJSONEncoder,
+        skipVerification: Bool = false
     ) async throws -> String {
         // encode header, copying header struct to mutate alg
         var header = JWTHeader()
@@ -19,8 +20,10 @@ struct JWTSerializer {
         header.alg = signer.algorithm.name
 
         if let x5c, !x5c.isEmpty {
-            let verifier = try X5CVerifier(rootCertificates: [x5c[0]])
-            try await verifier.verifyChain(certificates: x5c)
+            if !skipVerification {
+                let verifier = try X5CVerifier(rootCertificates: [x5c[0]])
+                try await verifier.verifyChain(certificates: x5c)
+            }
             header.x5c = try x5c.map {
                 let certificate = try Certificate(pemEncoded: $0)
                 return try Data(certificate.serializeAsPEM().derBytes).base64EncodedString()

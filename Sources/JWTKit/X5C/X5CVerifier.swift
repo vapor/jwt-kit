@@ -42,7 +42,7 @@ public struct X5CVerifier: Sendable {
     ///
     /// - Parameter certificates: The certificates to verify.
     /// - Throws: A `JWTError` if the chain is invalid.
-    package func verifyChain(certificates: [String]) async throws {
+    func verifyChain(certificates: [String]) async throws {
         let certificates = try certificates.map {
             try Certificate(pemEncoded: $0)
         }
@@ -143,8 +143,8 @@ public struct X5CVerifier: Sendable {
             try Certificate(derEncoded: [UInt8]($0))
         }
 
-        // Setup an untrusted chain using all the certificates in the x5c
-        let untrustedChain = CertificateStore(certificates)
+        // Setup an untrusted chain using the intermediate certificates
+        let untrustedChain = CertificateStore(certificates.dropFirst().dropLast())
 
         let payload = try parser.payload(as: Payload.self, jsonDecoder: jsonDecoder)
 
@@ -171,8 +171,8 @@ public struct X5CVerifier: Sendable {
 
         // Assuming the chain is valid, verify the token was signed by the valid certificate
         let ecdsaKey = try ES256Key.certificate(pem: certificates[0].serializeAsPEM().pemString)
-
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
+        
         return try await signer.verify(parser: parser)
     }
 }
