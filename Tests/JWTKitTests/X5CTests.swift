@@ -1,5 +1,6 @@
-import XCTest
 import JWTKit
+import X509
+import XCTest
 
 /// Test the x5c verification abilities of JWTSigners.
 ///
@@ -165,6 +166,72 @@ final class X5CTests: XCTestCase {
         XCTAssertEqual(data.appAppleId, 1234)
         XCTAssertEqual(data.environment, "Sandbox")
     }
+
+    func testSigningWithX5CChain() async throws {
+        let keyCollection = try await JWTKeyCollection().addES256(key: .private(pem: x5cLeafCertKey))
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let token = try await keyCollection.sign(payload, x5c: x5cCerts)
+        let parser = try JWTParser(token: token.bytes)
+        try XCTAssertEqual(parser.header().typ, "JWT")
+        try XCTAssertEqual(parser.header().alg, "ES256")
+        try XCTAssertEqual(parser.payload(as: TestPayload.self), payload)
+        try await parser.verify(using: keyCollection.getKey())
+
+        let x5c = try XCTUnwrap(parser.header().x5c)
+        let pemCerts = try x5c.map(getPEMString)
+        XCTAssertEqual(pemCerts, x5cCerts)
+        let verifier = try X5CVerifier(rootCertificates: [x5cCerts.last!])
+        await XCTAssertNoThrowAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
+    }
+
+    func testSigningWithInvalidX5CChain() async throws {
+        let keyCollection = try await JWTKeyCollection().addES256(key: .private(pem: x5cLeafCertKey))
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        // Remove the intermediate cert from the chain
+        let certs = x5cCerts.enumerated().filter { $0.offset != 1 }.map { $0.element }
+
+        let token = try await keyCollection.sign(payload, x5c: certs)
+        let parser = try JWTParser(token: token.bytes)
+        try await parser.verify(using: keyCollection.getKey())
+
+        let x5c = try XCTUnwrap(parser.header().x5c)
+        let pemCerts = try x5c.map(getPEMString)
+        XCTAssertEqual(pemCerts, certs)
+        let verifier = try X5CVerifier(rootCertificates: [certs.last!])
+        await XCTAssertThrowsErrorAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
+    }
+
+    private func getPEMString(from der: String) throws -> String {
+        var encoded = der[...]
+        let pemLineCount = (encoded.utf8.count + 64) / 64
+        var pemLines = [Substring]()
+        pemLines.reserveCapacity(pemLineCount + 2)
+
+        pemLines.append("-----BEGIN CERTIFICATE-----")
+
+        while encoded.count > 0 {
+            let prefixIndex = encoded.index(encoded.startIndex, offsetBy: 64, limitedBy: encoded.endIndex) ?? encoded.endIndex
+            pemLines.append(encoded[..<prefixIndex])
+            encoded = encoded[prefixIndex...]
+        }
+
+        pemLines.append("-----END CERTIFICATE-----")
+
+        return pemLines.joined(separator: "\n")
+    }
 }
 
 let validToken = """
@@ -197,6 +264,60 @@ eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsIng1YyI6WyJNSUlCbHpDQ0FUMENGQmdtUFlSaE1nY0VQ
 
 let validButNotCoolToken = """
 eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsIng1YyI6WyJNSUlCanpDQ0FUVUNGSDhFWFBJbDBRbDQwYzdKOEhkK2R6QWgwY3dVTUFvR0NDcUdTTTQ5QkFNQ01FNHhDekFKQmdOVkJBWVRBbFZUTVJNd0VRWURWUVFJREFwVGIyMWxMVk4wWVhSbE1RNHdEQVlEVlFRS0RBVldZWEJ2Y2pFYU1CZ0dBMVVFQXd3UmFXNTBaWEp0WldScFlYUmxMV05sY25Rd0hoY05Nak14TURJME1UTTBNalU1V2hjTk1qUXhNREl6TVRNME1qVTVXakJHTVFzd0NRWURWUVFHRXdKVlV6RVRNQkVHQTFVRUNBd0tVMjl0WlMxVGRHRjBaVEVPTUF3R0ExVUVDZ3dGVm1Gd2IzSXhFakFRQmdOVkJBTU1DV3hsWVdZdFkyVnlkREJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRU85VjZLQWhSR0l4QWx2Ukl6U3BtSVRmVVZiWHl5ZGMvZWdlbHpLLzZ3NDEySmc4RDJlSVRkOHVDRmxnVmh4WUlkR1pNN1hYUWhaNmhOZnE2S3JyUG93Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUxJaXhudE93V3o4NlFHa0g0SGNnT09malBiczlBUVpXYm1HYkpKRjRWRWZBaUI4ZUVLRi9WQllvWVhRREQzVHpLNUlEMkdzbXplMzhpNk56ek9ndHRMam9nPT0iLCJNSUlCNXpDQ0FZeWdBd0lCQWdJVUw2ZnJzdHdldjdZTWtPWVNuUHVlSlQyR3g1UXdDZ1lJS29aSXpqMEVBd0l3UmpFTE1Ba0dBMVVFQmhNQ1ZWTXhFekFSQmdOVkJBZ01DbE52YldVdFUzUmhkR1V4RGpBTUJnTlZCQW9NQlZaaGNHOXlNUkl3RUFZRFZRUUREQWx5YjI5MExXTmxjblF3SGhjTk1qTXhNREkwTVRNME1qTTFXaGNOTWpneE1ESXlNVE0wTWpNMVdqQk9NUXN3Q1FZRFZRUUdFd0pWVXpFVE1CRUdBMVVFQ0F3S1UyOXRaUzFUZEdGMFpURU9NQXdHQTFVRUNnd0ZWbUZ3YjNJeEdqQVlCZ05WQkFNTUVXbHVkR1Z5YldWa2FXRjBaUzFqWlhKME1Ga3dFd1lIS29aSXpqMENBUVlJS29aSXpqMERBUWNEUWdBRWt6WGFFQTlDSVpyUkVmQ0Mra05tM0pxZDdmR0ZFT05Ia2p5TFJ4NS83SUFYeHB4TGZ0WWNoOTU1K1VRNVhHOHdUZ2tNQ0NaNG9LRjhNMXg3Zkw3cXU2TlFNRTR3REFZRFZSMFRCQVV3QXdFQi96QWRCZ05WSFE0RUZnUVVyRU53VW02VDBSbmUxTW9MY3lWQ2NhVTVvTTB3SHdZRFZSMGpCQmd3Rm9BVVkxM3oxRVhHbjlVQmZwZ3BmVTl0UWJ2TVJRZ3dDZ1lJS29aSXpqMEVBd0lEU1FBd1JnSWhBSW04bStLb0RFbktBdUgrZUZROGJWSDJkc3p2NlcveCtwNE9zZERzd0VrNUFpRUF5bWd1SmdxQUpZU3NDdzdYM0pDVVBNY29LdGFRRzZNamhRdThrWlpCQUNJPSIsIk1JSUI0VENDQVllZ0F3SUJBZ0lVRG9PZWZlZkNOcS9UR1dyaUlzWUh2ejBMcE5Jd0NnWUlLb1pJemowRUF3SXdSakVMTUFrR0ExVUVCaE1DVlZNeEV6QVJCZ05WQkFnTUNsTnZiV1V0VTNSaGRHVXhEakFNQmdOVkJBb01CVlpoY0c5eU1SSXdFQVlEVlFRRERBbHliMjkwTFdObGNuUXdIaGNOTWpNeE1ESTBNVEl3T0RJM1doY05Nek14TURJeE1USXdPREkzV2pCR01Rc3dDUVlEVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFT01Bd0dBMVVFQ2d3RlZtRndiM0l4RWpBUUJnTlZCQU1NQ1hKdmIzUXRZMlZ5ZERCWk1CTUdCeXFHU000OUFnRUdDQ3FHU000OUF3RUhBMElBQk5wditIRzUyak9UMVcrcjFrMTNiSm8yazlEeVJ5RmJ5Y0JwUHNXUUtmdDlueHdFSHZ6RGoxaXZvTWZhanhsTCtuL0ZMQm5Pblk2M21GV216YW9adkgralV6QlJNQjBHQTFVZERnUVdCQlJqWGZQVVJjYWYxUUYrbUNsOVQyMUJ1OHhGQ0RBZkJnTlZIU01FR0RBV2dCUmpYZlBVUmNhZjFRRittQ2w5VDIxQnU4eEZDREFQQmdOVkhSTUJBZjhFQlRBREFRSC9NQW9HQ0NxR1NNNDlCQU1DQTBnQU1FVUNJR0lwWDlsbGlVMTM1VjgrTFk2L2NqQm1HcktLTmxZV0xMb1o2RGlhdXpkSkFpRUE5R1NBSUdoZk05a2JXbGtjak1zNmxBNHB3ZjRSZlVFRmVnaFlwWkticUZvPSJdfQ.eyJjb29sIjpmYWxzZX0.JtNl3uCSJ7rycwW__0o1xARr0y5XYsXUc2Ltx1W2IKmBmn66vAOEY2Eur9Xy40eX8qMr8GrxsGmzia5YEN3ugQ
+"""
+
+let x5cCerts = [
+    """
+    -----BEGIN CERTIFICATE-----
+    MIIBpDCCAUkCFHVcsASQJGJi6BI+7apcSVrcWaAAMAoGCCqGSM49BAMCMFMxCzAJ
+    BgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5l
+    dCBXaWRnaXRzIFB0eSBMdGQxDDAKBgNVBAMMA1llczAeFw0yMzExMjMyMTQwNDha
+    Fw0yNDExMjIyMTQwNDhaMFUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0
+    YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQxDjAMBgNVBAMM
+    BU1heWJlMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEORJB5yvqxuG7+EgBDUK/
+    BjjE1SFU2w+EZkhhLDUmnXdujwuVvNuoEAhXXpKXJA0lMXUL3VpYkjfPokElxKow
+    yjAKBggqhkjOPQQDAgNJADBGAiEAs11xN77nyLwfnLupy957CdUQZwEj5kfGD/UA
+    deOvPx8CIQDD0BAEP10e3SdkQYBLtvmIfR8LEtf1FN9LpeRFjMsd0Q==
+    -----END CERTIFICATE-----
+    """,
+    """
+    -----BEGIN CERTIFICATE-----
+    MIIB9zCCAZ2gAwIBAgIURyU7Zx4xpWe/qgQ/o5WWDKO1QAkwCgYIKoZIzj0EAwIw
+    UjELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGElu
+    dGVybmV0IFdpZGdpdHMgUHR5IEx0ZDELMAkGA1UEAwwCTm8wHhcNMjMxMTIzMjE0
+    MDM4WhcNMjgxMTIxMjE0MDM4WjBTMQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29t
+    ZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMQwwCgYD
+    VQQDDANZZXMwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQtXAr2JmHbVbVcCOsE
+    C2HVYbZjj9jNJHSDRRJPo/pRjx6INrcO6ff2SLh+Y0pTy9ztSP0JkK8sOmx1MGDU
+    VS8uo1AwTjAMBgNVHRMEBTADAQH/MB0GA1UdDgQWBBR91V3hyIdfdXR/k49UAauW
+    M7MsuzAfBgNVHSMEGDAWgBQKOxtgWctssvjCMrI3s5ifF6rpojAKBggqhkjOPQQD
+    AgNIADBFAiEAphZb4dN19p+UBVMe1UgMVORQ6I14Z96/F+17umwDgfACIF9lGumM
+    Fr8KVqiSUvfHyaaqXGrrP9dExVLSqcAaPyPr
+    -----END CERTIFICATE-----
+    """,
+    """
+    -----BEGIN CERTIFICATE-----
+    MIIB+jCCAZ+gAwIBAgIUDSttzLVHb8h1sQTQTSN6hrR2oSUwCgYIKoZIzj0EAwIw
+    UjELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGElu
+    dGVybmV0IFdpZGdpdHMgUHR5IEx0ZDELMAkGA1UEAwwCTm8wHhcNMjMxMTIzMjE0
+    MDM0WhcNMzMxMTIwMjE0MDM0WjBSMQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29t
+    ZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMQswCQYD
+    VQQDDAJObzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABBdNKGGwi8EOZL+yEuBM
+    n0+L0cHiUxBvUW6BkXkLwP0YgkSQ5S3rPplsGp+U7SotTHl9pqsPW2ErnA7V12zU
+    E1WjUzBRMB0GA1UdDgQWBBQKOxtgWctssvjCMrI3s5ifF6rpojAfBgNVHSMEGDAW
+    gBQKOxtgWctssvjCMrI3s5ifF6rpojAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49
+    BAMCA0kAMEYCIQCf4tM5SmcWmN6/7zNfjfLV1N3IBTO68cub3PpYurQUKAIhALwO
+    oqoVTtJyc2qmFL/EYTcXZU8VwpBJOtQVxjxPI+8s
+    -----END CERTIFICATE-----
+    """,
+]
+
+let x5cLeafCertKey = """
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEICqzgINLJICNbFxXI9rYvKGL3g1bCJTjQGIIz9AvfRjBoAoGCCqGSM49
+AwEHoUQDQgAEORJB5yvqxuG7+EgBDUK/BjjE1SFU2w+EZkhhLDUmnXdujwuVvNuo
+EAhXXpKXJA0lMXUL3VpYkjfPokElxKowyg==
+-----END EC PRIVATE KEY-----
 """
 
 /// Each token has the following payload:
