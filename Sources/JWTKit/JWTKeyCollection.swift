@@ -228,9 +228,10 @@ public actor JWTKeyCollection: Sendable {
     public func sign(
         _ payload: some JWTPayload,
         typ: String = "JWT",
-        kid: JWKIdentifier? = nil
-    ) throws -> String {
+        kid: JWKIdentifier? = nil,
+        x5c: [String]? = nil
+    ) async throws -> String {
         let signer = try self.getSigner(for: kid)
-        return try signer.sign(payload, typ: typ, kid: kid)
+        return try await signer.sign(payload, typ: typ, kid: kid, x5c: x5c)
     }
 }

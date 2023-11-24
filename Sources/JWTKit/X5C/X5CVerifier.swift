@@ -22,7 +22,7 @@ public struct X5CVerifier: Sendable {
     /// - Parameter rootCertificates: The root certificates to be trusted.
     public init(rootCertificates: [String]) throws {
         guard !rootCertificates.isEmpty else {
-            throw JWTError.generic(identifier: "JWS", reason: "No root certs provided")
+            throw JWTError.invalidX5CChain(reason: "No root certificates provided")
         }
         trustedStore = try X509.CertificateStore(rootCertificates.map {
             try X509.Certificate(pemEncoded: $0)
@@ -36,6 +36,24 @@ public struct X5CVerifier: Sendable {
         try self.init(rootCertificates: rootCertificates.map {
             String(decoding: $0, as: UTF8.self)
         })
+    }
+
+    /// Verify a chain of certificates against the trusted root certificates.
+    ///
+    /// - Parameter certificates: The certificates to verify.
+    /// - Throws: A `JWTError` if the chain is invalid.
+    func verifyChain(certificates: [String]) async throws {
+        let certificates = try certificates.map {
+            try Certificate(pemEncoded: $0)
+        }
+        let untrustedChain = CertificateStore(certificates)
+        var verifier = Verifier(rootCertificates: trustedStore) {
+            RFC5280Policy(validationTime: Date())
+        }
+        let result = await verifier.validate(leafCertificate: certificates[0], intermediates: untrustedChain)
+        if case let .couldNotValidate(failures) = result {
+            throw JWTError.invalidX5CChain(reason: "\(failures)")
+        }
     }
 
     /// Verify a JWS with the `x5c` header parameter against the trusted root
@@ -105,26 +123,28 @@ public struct X5CVerifier: Sendable {
 
         // Ensure the algorithm used is ES256, as it's the only supported one (for now)
         guard let headerAlg = header.alg, headerAlg == "ES256" else {
-            throw JWTError.generic(identifier: "JWS", reason: "Only ES256 is currently supported")
+            throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(header.alg ?? "nil")")
         }
 
         // Ensure the x5c header parameter is present and not empty
         guard let x5c = header.x5c, !x5c.isEmpty else {
-            throw JWTError.generic(identifier: "JWS", reason: "No x5c certificates provided")
+            throw JWTError.invalidX5CChain(reason: "Missing or empty x5c header parameter")
         }
 
         // Decode the x5c certificates
         let certificateData = try x5c.map {
             guard let data = Data(base64Encoded: $0) else {
-                throw JWTError.generic(identifier: "JWS", reason: "Invalid x5c certificate")
+                throw JWTError.invalidX5CChain(reason: "Invalid x5c certificate: \($0)")
             }
             return data
         }
 
-        // Setup an untrusted chain using all the certificates in the x5c
-        let untrustedChain = try CertificateStore(certificateData.map {
+        let certificates = try certificateData.map {
             try Certificate(derEncoded: [UInt8]($0))
-        })
+        }
+
+        // Setup an untrusted chain using the intermediate certificates
+        let untrustedChain = CertificateStore(certificates.dropFirst().dropLast())
 
         let payload = try parser.payload(as: Payload.self, jsonDecoder: jsonDecoder)
 
@@ -142,20 +162,17 @@ public struct X5CVerifier: Sendable {
             RFC5280Policy(validationTime: date)
         }
 
-        // Extract the leaf certificate (first certificate in x5c)
-        let leafCertificate = try Certificate(derEncoded: [UInt8](certificateData[0]))
-
         // Validate the leaf certificate against the trusted store
-        let result = await verifier.validate(leafCertificate: leafCertificate, intermediates: untrustedChain)
+        let result = await verifier.validate(leafCertificate: certificates[0], intermediates: untrustedChain)
 
         if case let .couldNotValidate(failures) = result {
-            throw JWTError.generic(identifier: "JWS", reason: "Invalid x5c chain: \(failures)")
+            throw JWTError.invalidX5CChain(reason: "\(failures)")
         }
 
         // Assuming the chain is valid, verify the token was signed by the valid certificate
-        let ecdsaKey = try ES256Key.certificate(pem: leafCertificate.serializeAsPEM().pemString)
-
+        let ecdsaKey = try ES256Key.certificate(pem: certificates[0].serializeAsPEM().pemString)
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
+        
         return try await signer.verify(parser: parser)
     }
 }
