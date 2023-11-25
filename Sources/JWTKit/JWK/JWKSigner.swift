@@ -18,11 +18,14 @@ struct JWKSigner: Sendable {
             else {
                 return nil
             }
-
+            
             let rsaKey: RSAKey
-
             do {
-                rsaKey = try RSAKey(modulus: modulus, exponent: exponent, privateExponent: self.jwk.privateExponent)
+                if let privateExponent = jwk.privateExponent {
+                    rsaKey = try RSA.PrivateKey(modulus: modulus, exponent: exponent, privateExponent: privateExponent)
+                } else {
+                    rsaKey = try RSA.PublicKey(modulus: modulus, exponent: exponent)
+                }
             } catch {
                 return nil
             }

@@ -10,25 +10,24 @@ final class RSATests: XCTestCase {
     }
 
     func testRSADocs() async throws {
-        await XCTAssertNoThrowAsync(try await JWTKeyCollection().addRS256(key: .public(pem: publicKey)))
+        await XCTAssertNoThrowAsync(try await JWTKeyCollection().addRS256(key: RSA.PublicKey(pem: publicKey)))
     }
 
     func testPublicKeyInitialization() throws {
-        let rsaKey = try RSAKey(modulus: modulus, exponent: publicExponent)
-        XCTAssertNotNil(rsaKey.publicKey)
-        XCTAssertNil(rsaKey.privateKey)
+        let rsaKey = try RSA.PublicKey(modulus: modulus, exponent: publicExponent)
+        XCTAssertNotNil(rsaKey.backing)
     }
 
     func testPrivateKeyInitialization() throws {
-        let rsaKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let rsaKey = try RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
         XCTAssertNotNil(rsaKey.publicKey)
-        XCTAssertNotNil(rsaKey.privateKey)
+        XCTAssertNotNil(rsaKey.backing)
     }
 
     func testSigning() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .addRS256(key: .private(pem: privateKey), kid: "private")
-            .addRS256(key: .public(pem: publicKey), kid: "public")
+            .addRS256(key: RSA.PrivateKey(pem: privateKey), kid: "private")
+            .addRS256(key: RSA.PublicKey(pem: publicKey), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -43,7 +42,7 @@ final class RSATests: XCTestCase {
 
     func testSigningWithPublic() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .addRS256(key: .public(pem: publicKey), kid: "public")
+            .addRS256(key: RSA.PublicKey(pem: publicKey), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -55,11 +54,11 @@ final class RSATests: XCTestCase {
     }
 
     func testSigningWithRawBuiltPrivateKey() async throws {
-        let privateKey = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let privateKey = try RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
 
         let keyCollection = try await JWTKeyCollection()
-            .addRS256(key: .private(pem: privateKey.privateKeyPEMRepresentation), kid: "private")
-            .addRS256(key: .public(pem: privateKey.publicKeyPEMRepresentation), kid: "public")
+            .addRS256(key: RSA.PrivateKey(pem: privateKey.pemRepresentation), kid: "private")
+            .addRS256(key: RSA.PublicKey(pem: privateKey.publicKey.pemRepresentation), kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -81,8 +80,8 @@ final class RSATests: XCTestCase {
             exp: .init(value: .distantFuture)
         )
         let keyCollection = try await JWTKeyCollection()
-            .addRS256(key: .private(pem: certPrivateKey), kid: "private")
-            .addRS256(key: .certificate(pem: cert), kid: "cert")
+            .addRS256(key: RSA.PrivateKey(pem: certPrivateKey), kid: "private")
+            .addRS256(key: RSA.PublicKey(certificatePEM: cert), kid: "cert")
 
         let jwt = try await keyCollection.sign(test, kid: "private")
         let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
@@ -90,7 +89,7 @@ final class RSATests: XCTestCase {
     }
 
     func testKeySizeTooSmall() async throws {
-        await XCTAssertThrowsErrorAsync(try await JWTKeyCollection().addRS256(key: .private(pem: _512BytesKey)))
+        await XCTAssertThrowsErrorAsync(try await JWTKeyCollection().addRS256(key: RSA.PrivateKey(pem: _512BytesKey)))
     }
 
     func testRS256Verification() async throws {
@@ -104,44 +103,35 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         let keyCollection = try await JWTKeyCollection()
-            .addRS256(key: .private(pem: privateKey2), kid: "private")
-            .addRS256(key: .public(pem: publicKey2), kid: "public")
+            .addRS256(key: RSA.PrivateKey(pem: privateKey2), kid: "private")
+            .addRS256(key: RSA.PublicKey(pem: publicKey2), kid: "public")
 
         let payload = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(payload, testPayload)
     }
 
     func testExportPublicKeyAsPEM() async throws {
-        let key = try RSAKey.public(pem: publicKey)
-        let pem = key.publicKeyPEMRepresentation
-        let key2 = try RSAKey.public(pem: pem)
+        let key = try RSA.PublicKey(pem: publicKey)
+        let key2 = try RSA.PublicKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
 
     func testExportPrivateKeyAsPEM() async throws {
-        let key = try RSAKey.private(pem: privateKey)
-        let pem = try key.privateKeyPEMRepresentation
-        let key2 = try RSAKey.private(pem: pem)
+        let key = try RSA.PrivateKey(pem: privateKey)
+        let key2 = try RSA.PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
 
     func testExportPublicKeyWhenKeyIsPrivate() async throws {
-        let privateKey = try RSAKey.private(pem: privateKey)
-        let pem = privateKey.publicKeyPEMRepresentation
-        let publicKeyFromPrivate = try RSAKey.public(pem: pem)
-        let publicKey = try RSAKey.public(pem: publicKey)
+        let privateKey = try RSA.PrivateKey(pem: privateKey)
+        let publicKeyFromPrivate = try RSA.PublicKey(pem: privateKey.publicKey.pemRepresentation)
+        let publicKey = try RSA.PublicKey(pem: publicKey)
         XCTAssertEqual(publicKeyFromPrivate, publicKey)
     }
 
-    func testExportPrivateKeyWhenKeyIsPublicThrows() async throws {
-        let key = try RSAKey.public(pem: publicKey)
-        XCTAssertThrowsError(try key.privateKeyPEMRepresentation)
-    }
-
     func testExportKeyAsPEMWhenRawBuilt() async throws {
-        let key = try RSAKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
-        let pem = try key.privateKeyPEMRepresentation
-        let key2 = try RSAKey.private(pem: pem)
+        let key = try RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let key2 = try RSA.PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
 

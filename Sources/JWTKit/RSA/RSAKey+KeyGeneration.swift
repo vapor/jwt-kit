@@ -2,7 +2,7 @@ import BigInt
 import Foundation
 import SwiftASN1
 
-extension RSAKey {
+extension RSA {
     /// Creates a new private key using modulus, exponent and private exponent.
     static func calculatePrivateDER(n: Data, e: Data, d: Data) throws -> DERSerializable? {
         let n = BigUInt(n)
@@ -22,7 +22,7 @@ extension RSAKey {
             return nil
         }
 
-        let key = RSAPrivateKeyASN1(
+        let key = RSA.PrivateKey.ASN1(
             modulus: ArraySlice(n.byteArray),
             publicExponent: ArraySlice(e.byteArray),
             privateExponent: ArraySlice(d.byteArray),
@@ -40,7 +40,7 @@ extension RSAKey {
         let n = BigUInt(n)
         let e = BigUInt(e)
 
-        let key = RSAPublicKeyASN1(
+        let key = RSA.PublicKey.ASN1(
             modulus: ArraySlice(n.byteArray),
             publicExponent: ArraySlice(e.byteArray)
         )
@@ -49,14 +49,14 @@ extension RSAKey {
     }
 }
 
-extension RSAKey {
+extension RSA.PublicKey {
     /// From [RFC 8017 § A.1.2](https://www.rfc-editor.org/rfc/rfc8017#appendix-A.1.1):
     ///
     ///    RSAPublicKey ::= SEQUENCE {
     ///        modulus           INTEGER,  -- n
     ///        publicExponent    INTEGER   -- e
     ///    }
-    struct RSAPublicKeyASN1: DERSerializable {
+    struct ASN1: DERSerializable {
         let modulus: ArraySlice<UInt8>
         let publicExponent: ArraySlice<UInt8>
 
@@ -69,7 +69,7 @@ extension RSAKey {
     }
 }
 
-extension RSAKey {
+extension RSA.PrivateKey {
     /// From [RFC 8017 § A.1.2](https://www.rfc-editor.org/rfc/rfc8017#appendix-A.1.2):
     ///
     ///    RSAPrivateKey ::= SEQUENCE {
@@ -84,7 +84,7 @@ extension RSAKey {
     ///        coefficient       INTEGER,  -- (inverse of q) mod p
     ///        otherPrimeInfos   OtherPrimeInfos OPTIONAL
     ///    }
-    struct RSAPrivateKeyASN1: DERSerializable {
+    struct ASN1: DERSerializable {
         let version: UInt8 = 0
         let modulus: ArraySlice<UInt8>
         let publicExponent: ArraySlice<UInt8>
