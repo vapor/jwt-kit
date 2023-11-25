@@ -99,7 +99,7 @@ final class RSATests: XCTestCase {
         let publicKey = try RSAKey(modulus: modulus, exponent: publicExponent)
         XCTAssertThrowsError(try publicKey.getPrivateKeyPrimitives())
     }
-    
+
     func testGetPrivateKeyPrimitivesFromNonRawBuiltKey() async throws {
         let privateKey = try RSAKey.private(pem: """
         -----BEGIN RSA PRIVATE KEY-----

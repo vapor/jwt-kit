@@ -100,7 +100,7 @@ extension RFC5480AlgorithmIdentifier {
         algorithm: .AlgorithmIdentifier.sha384WithRSAEncryption
     )
 
-    static let rsa521 = RFC5480AlgorithmIdentifier(
+    static let rsa512 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha512WithRSAEncryption
     )
 }

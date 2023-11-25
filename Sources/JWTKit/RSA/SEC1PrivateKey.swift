@@ -64,7 +64,7 @@ struct SEC1PrivateKey: DERImplicitlyTaggable, PEMRepresentable {
             case ASN1ObjectIdentifier.AlgorithmIdentifier.sha384WithRSAEncryption:
                 .rsa384
             case ASN1ObjectIdentifier.AlgorithmIdentifier.sha512WithRSAEncryption:
-                .rsa521
+                .rsa512
             default:
                 throw ASN1Error.invalidASN1Object(reason: "Invalid algorithm ID")
             }
@@ -89,7 +89,7 @@ struct SEC1PrivateKey: DERImplicitlyTaggable, PEMRepresentable {
                     oid = ASN1ObjectIdentifier.AlgorithmIdentifier.sha256WithRSAEncryption
                 case .rsa384:
                     oid = ASN1ObjectIdentifier.AlgorithmIdentifier.sha384WithRSAEncryption
-                case .rsa521:
+                case .rsa512:
                     oid = ASN1ObjectIdentifier.AlgorithmIdentifier.sha512WithRSAEncryption
                 default:
                     throw ASN1Error.invalidASN1Object(reason: "Unsupported algorithm")
