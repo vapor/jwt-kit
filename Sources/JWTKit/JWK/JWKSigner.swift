@@ -68,7 +68,7 @@ struct JWKSigner: Sendable {
                 case .es256:
                     if let privateExponent = self.jwk.privateExponent {
                         return try .init(algorithm: ECDSASigner(
-                            key: ES256PrivateKey(parameters: (x, y), privateKey: privateExponent),
+                            key: ES256PrivateKey(key: privateExponent),
                             algorithm: .sha256,
                             name: "ES256"
                         ))
@@ -83,7 +83,7 @@ struct JWKSigner: Sendable {
                 case .es384:
                     if let privateExponent = self.jwk.privateExponent {
                         return try .init(algorithm: ECDSASigner(
-                            key: ES384PrivateKey(parameters: (x, y), privateKey: privateExponent),
+                            key: ES384PrivateKey(key: privateExponent),
                             algorithm: .sha384,
                             name: "ES384"
                         ))
@@ -97,7 +97,7 @@ struct JWKSigner: Sendable {
                 case .es512:
                     if let privateExponent = self.jwk.privateExponent {
                         return try .init(algorithm: ECDSASigner(
-                            key: ES512PrivateKey(parameters: (x, y), privateKey: privateExponent),
+                            key: ES512PrivateKey(key: privateExponent),
                             algorithm: .sha512,
                             name: "ES512"
                         ))

@@ -5,8 +5,12 @@ import X509
 
 public enum ECDSA: Sendable {}
 
+public protocol ECDSAKey: Sendable {
+    associatedtype Curve: ECDSACurveType
+}
+
 public extension ECDSA {
-    struct PublicKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
+    struct PublicKey<Curve>: ECDSAKey where Curve: ECDSACurveType {
         typealias Signature = Curve.Signature
         typealias PublicKey = Curve.PrivateKey.PublicKey
 
@@ -100,7 +104,7 @@ public extension ECDSA {
 }
 
 public extension ECDSA {
-    struct PrivateKey<Curve>: ECDSAKeyType where Curve: ECDSACurveType {
+    struct PrivateKey<Curve>: ECDSAKey where Curve: ECDSACurveType {
         typealias PrivateKey = Curve.PrivateKey
         typealias Signature = PrivateKey.Signature
 
@@ -153,19 +157,12 @@ public extension ECDSA {
         ///
         /// - Note:
         ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
-        public init(parameters: ECDSAParameters, privateKey: String) throws {
-            guard
-                let x = parameters.x.base64URLDecodedData(),
-                let y = parameters.y.base64URLDecodedData()
-            else {
-                throw JWTError.generic(identifier: "ECDSAKey Creation", reason: "Unable to interpret x or y as base64 encoded data")
-            }
-            
-            guard let privateKeyData = privateKey.base64URLDecodedData() else {
+        public init(key: String) throws {
+            guard let keyData = key.base64URLDecodedData() else {
                 throw JWTError.generic(identifier: "ECDSAKey Creation", reason: "Unable to interpret private key data as base64URL")
             }
             
-            backing = try PrivateKey(rawRepresentation: [UInt8](privateKeyData))
+            backing = try PrivateKey(rawRepresentation: [UInt8](keyData))
         }
 
         /// Generates a new ECDSA key.

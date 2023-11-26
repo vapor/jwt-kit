@@ -21,20 +21,19 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES256<Key>(
+    func addES256<Key: ECDSAKey>(
         key: Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
     ) -> Self
-        where Key: ECDSAKeyType, Key.Curve == P256
+        where Key.Curve == P256
     {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha256, name: "ES256"),
             jsonEncoder: jsonEncoder,
             jsonDecoder: jsonDecoder
-        ),
-        for: kid)
+        ), for: kid)
     }
 
     /// Adds an ES384 key to the collection.
@@ -57,13 +56,13 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES384<Key>(
+    func addES384<Key: ECDSAKey>(
         key: Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
     ) -> Self
-        where Key: ECDSAKeyType, Key.Curve == P384
+        where Key.Curve == P384
     {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha384, name: "ES384"),
@@ -92,13 +91,13 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES512<Key>(
+    func addES512<Key: ECDSAKey>(
         key: Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
     ) -> Self
-        where Key: ECDSAKeyType, Key.Curve == P521
+        where Key.Curve == P521
     {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha512, name: "ES512"),

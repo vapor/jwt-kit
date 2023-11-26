@@ -53,7 +53,7 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
         // sign jwt
-        let key = try ES384PrivateKey(parameters: (x, y), privateKey: privateKey)
+        let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
         let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
@@ -92,7 +92,7 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k-1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0-539FSHmJxg"
 
         // sign jwt
-        let key = try ES384PrivateKey(parameters: (x, y), privateKey: privateKey)
+        let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
         let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
@@ -131,7 +131,7 @@ final class ECDSATests: XCTestCase {
         let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
 
         // sign jwt
-        let key = try ES384PrivateKey(parameters: (x, y), privateKey: privateKey)
+        let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
         let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")

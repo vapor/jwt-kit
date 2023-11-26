@@ -1,6 +1,6 @@
 import Foundation
 
-struct ECDSASigner<Key: ECDSAKeyType>: JWTAlgorithm, CryptoSigner {
+struct ECDSASigner<Key: ECDSAKey>: JWTAlgorithm, CryptoSigner {
     let privateKey: ECDSA.PrivateKey<Key.Curve>?
     let publicKey: ECDSA.PublicKey<Key.Curve>
     let algorithm: DigestAlgorithm
