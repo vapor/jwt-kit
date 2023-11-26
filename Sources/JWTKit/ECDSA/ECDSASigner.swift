@@ -27,12 +27,12 @@ struct ECDSASigner<Key: ECDSAKey>: JWTAlgorithm, CryptoSigner {
         guard let privateKey else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.noPrivateKey)
         }
-        let signature = try privateKey.signature(for: digest)
+        let signature = try privateKey.backing.signature(for: digest)
         return [UInt8](signature.rawRepresentation)
     }
 
     public func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         let digest = try self.digest(plaintext)
-        return try publicKey.isValidSignature(signature, for: digest)
+        return try publicKey.backing.isValidSignature(signature, for: digest)
     }
 }

@@ -18,7 +18,7 @@ struct JWKSigner: Sendable {
             else {
                 return nil
             }
-            
+
             let rsaKey: RSAKey
             do {
                 if let privateExponent = jwk.privateExponent {
@@ -62,7 +62,7 @@ struct JWKSigner: Sendable {
             guard let algorithm = algorithm ?? self.jwk.algorithm else {
                 return nil
             }
-            
+
             do {
                 switch algorithm {
                 case .es256:
@@ -79,7 +79,7 @@ struct JWKSigner: Sendable {
                             name: "ES256"
                         ))
                     }
-                    
+
                 case .es384:
                     if let privateExponent = self.jwk.privateExponent {
                         return try .init(algorithm: ECDSASigner(

@@ -96,10 +96,6 @@ public extension ECDSA {
         init(backing: PublicKey) {
             self.backing = backing
         }
-
-        func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool {
-            try backing.isValidSignature(signature, for: data)
-        }
     }
 }
 
@@ -170,10 +166,6 @@ public extension ECDSA {
         /// - Returns: A new ``ECDSA.PrivateKey`` instance with the generated key.
         public init() {
             backing = PrivateKey()
-        }
-
-        func signature(for data: some Digest) throws -> Signature {
-            try backing.signature(for: data)
         }
     }
 }
