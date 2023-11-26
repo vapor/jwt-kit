@@ -12,16 +12,13 @@ final class RSATests: XCTestCase {
     func testRSADocs() async throws {
         await XCTAssertNoThrowAsync(try await JWTKeyCollection().addRS256(key: RSA.PublicKey(pem: publicKey)))
     }
-
-    func testPublicKeyInitialization() throws {
-        let rsaKey = try RSA.PublicKey(modulus: modulus, exponent: publicExponent)
-        XCTAssertNotNil(rsaKey.backing)
+    
+    func testPrivateKeyInitialization() throws {
+        XCTAssertNoThrow(try RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent))
     }
 
-    func testPrivateKeyInitialization() throws {
-        let rsaKey = try RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
-        XCTAssertNotNil(rsaKey.publicKey)
-        XCTAssertNotNil(rsaKey.backing)
+    func testPublicKeyInitialization() throws {
+        XCTAssertNoThrow(try RSA.PublicKey(modulus: modulus, exponent: publicExponent))
     }
 
     func testSigning() async throws {

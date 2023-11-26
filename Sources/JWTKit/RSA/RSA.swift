@@ -4,10 +4,19 @@ import Foundation
 import SwiftASN1
 import X509
 
+/// Namespace encompassing functionality related to the RSA (Rivest–Shamir–Adleman) cryptographic algorithm.
+/// Relatively to other algorithms such as ECDSA and EdDSA, RSA is considered slow and should be avoided when possible.
 public enum RSA: Sendable {}
+
+/// The `RSAKey` protocol defines the common interface for both public and private RSA keys.
+/// Implementers of this protocol can represent keys used for cryptographic operations in the RSA algorithm.
 public protocol RSAKey: Sendable {}
 
 public extension RSA {
+    /// A structure representing a public RSA key.
+    ///
+    /// In JWT, RSA public keys are used to verify JWTs.
+    /// They consist of a modulus and an exponent.
     struct PublicKey: RSAKey {
         // Exports the current public key as a PEM encoded string.
         ///
@@ -16,7 +25,14 @@ public extension RSA {
             backing.pemRepresentation
         }
 
-        package let backing: _RSA.Signing.PublicKey
+        /// Exports the current public key as a DER encoded data.
+        ///
+        /// - Returns: A DER encoded data representation of the key.
+        public var derRepresentation: Data {
+            backing.derRepresentation
+        }
+
+        private let backing: _RSA.Signing.PublicKey
 
         /// Creates an ``RSA.PublicKey`` from public key PEM file.
         ///
@@ -30,8 +46,9 @@ public extension RSA {
         ///
         /// This key can only be used to verify JWTs.
         ///
-        /// - parameters:
-        ///     - pem: Contents of PEM file.
+        /// - Parameters:
+        ///   - pem: Contents of PEM file.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
         public init(pem: String) throws {
             do {
                 try self.init(backing: .init(pemRepresentation: pem))
@@ -52,8 +69,9 @@ public extension RSA {
         ///
         /// This key can only be used to verify JWTs.
         ///
-        /// - parameters:
-        ///     - pem: Contents of PEM file.
+        /// - Parameters:
+        ///   - pem: Contents of PEM file.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
         public init(pem data: some DataProtocol) throws {
             let string = String(decoding: data, as: UTF8.self)
             try self.init(pem: string)
@@ -71,8 +89,9 @@ public extension RSA {
         ///
         /// This key can only be used to verify JWTs.
         ///
-        /// - parameters:
-        ///     - pem: Contents of pem file.
+        /// - Parameters:
+        ///   - pem: Contents of pem file.
+        /// - Throws: ``RSAError/keyInitializationFailure`` if the key cannot be initialized.
         public init(certificatePEM: String) throws {
             let cert = try X509.Certificate(pemEncoded: certificatePEM)
             guard let publicKey = _RSA.Signing.PublicKey(cert.publicKey) else {
@@ -93,8 +112,9 @@ public extension RSA {
         ///
         /// This key can only be used to verify JWTs.
         ///
-        /// - parameters:
-        ///     - pem: Contents of PEM file.
+        /// - Parameters:
+        ///   - pem: Contents of PEM file.
+        /// - Throws: ``RSAError/keyInitializationFailure`` if the key cannot be initialized.
         public init(certificatePEM: some DataProtocol) throws {
             let string = String(decoding: certificatePEM, as: UTF8.self)
             try self.init(certificatePEM: string)
@@ -119,8 +139,13 @@ public extension RSA {
             modulus: String,
             exponent: String
         ) throws {
-            let n = try decode(modulus)
-            let e = try decode(exponent)
+            guard let n = modulus.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
+            }
+
+            guard let e = exponent.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
+            }
 
             var serializer = DER.Serializer()
 
@@ -135,12 +160,16 @@ public extension RSA {
         }
 
         func isValidSignature<D: Digest>(_ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding) -> Bool {
-            return self.backing.isValidSignature(signature, for: digest, padding: padding)
+            self.backing.isValidSignature(signature, for: digest, padding: padding)
         }
     }
 }
 
 public extension RSA {
+    /// A structure representing a private RSA key.
+    ///
+    /// In JWT, RSA private keys are used to sign JWTs.
+    /// They consist of a modulus, an exponent, and a private exponent.
     struct PrivateKey: RSAKey {
         /// Exports the current private key as a PEM encoded string.
         ///
@@ -150,8 +179,18 @@ public extension RSA {
             backing.pemRepresentation
         }
 
-        package let backing: _RSA.Signing.PrivateKey
-        package let publicKey: PublicKey
+        /// Exports the current private key as a DER encoded data.
+        ///
+        /// - Returns: A DER encoded data representation of the key.
+        public var derRepresentation: Data {
+            backing.derRepresentation
+        }
+
+        private let backing: _RSA.Signing.PrivateKey
+
+        public var publicKey: PublicKey {
+            .init(backing: self.backing.publicKey)
+        }
 
         /// Creates an``RSA.PrivateKey`` from private key PEM file in String format.
         ///
@@ -165,8 +204,9 @@ public extension RSA {
         ///
         /// This key can be used to verify and sign JWTs.
         ///
-        /// - parameters:
-        ///     - pem: Contents of PEM file.
+        /// - Parameters:
+        ///   - pem: Contents of PEM file.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
         public init(pem: String) throws {
             do {
                 try self.init(backing: .init(pemRepresentation: pem))
@@ -187,8 +227,9 @@ public extension RSA {
         ///
         /// This key can be used to verify and sign JWTs.
         ///
-        /// - parameters:
-        ///     - pem: Contents of PEM file.
+        /// - Parameters:
+        ///   - pem: Contents of PEM file.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
         public init(pem data: some DataProtocol) throws {
             let string = String(decoding: data, as: UTF8.self)
             try self.init(pem: string)
@@ -215,9 +256,17 @@ public extension RSA {
             exponent: String,
             privateExponent: String
         ) throws {
-            let n = try decode(modulus)
-            let e = try decode(exponent)
-            let d = try decode(privateExponent)
+            guard let n = modulus.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
+            }
+
+            guard let e = exponent.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
+            }
+
+            guard let d = privateExponent.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
+            }
 
             var serializer = DER.Serializer()
 
@@ -229,35 +278,12 @@ public extension RSA {
             self.init(backing: privateKey)
         }
 
-        init(backing: _RSA.Signing.PrivateKey) {
+        private init(backing: _RSA.Signing.PrivateKey) {
             self.backing = backing
-            self.publicKey = .init(backing: backing.publicKey)
         }
 
         func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {
             try self.backing.signature(for: digest, padding: padding)
         }
-    }
-}
-
-extension RSA {
-    // Helper function to decode base64URL strings
-    private static func decode(_ string: String) throws -> Data {
-        guard let data = string.base64URLDecodedData() else {
-            throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url string: \(string)")
-        }
-        return data
-    }
-}
-
-extension RSA.PrivateKey: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.backing.derRepresentation == rhs.backing.derRepresentation
-    }
-}
-
-extension RSA.PublicKey: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.backing.derRepresentation == rhs.backing.derRepresentation
     }
 }

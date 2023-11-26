@@ -13,7 +13,6 @@ public extension JWTKeyCollection {
     ///
     /// - Parameters:
     ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - padding: The padding scheme to use for RSA signing. Defaults to `.PSS`.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
     ///          in the JWT `kid` header field.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
@@ -48,7 +47,6 @@ public extension JWTKeyCollection {
     ///
     /// - Parameters:
     ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - padding: The padding scheme to use for RSA signing. Defaults to `.PSS`.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
     ///          in the JWT `kid` header field.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
@@ -83,7 +81,6 @@ public extension JWTKeyCollection {
     ///
     /// - Parameters:
     ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - padding: The padding scheme to use for RSA signing. Defaults to `.PSS`.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
     ///          in the JWT `kid` header field.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.

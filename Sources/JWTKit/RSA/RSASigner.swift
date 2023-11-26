@@ -2,12 +2,8 @@ import _CryptoExtras
 import Foundation
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
-    enum Key {
-        case `public`(RSA.PublicKey)
-        case `private`(RSA.PrivateKey)
-    }
-
-    let key: Key
+    let publicKey: RSA.PublicKey
+    let privateKey: RSA.PrivateKey?
     var algorithm: DigestAlgorithm
     let name: String
     let padding: _RSA.Signing.Padding
@@ -15,10 +11,13 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
     init(key: some RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding) {
         switch key {
         case let key as RSA.PrivateKey:
-            self.key = .private(key)
+            self.privateKey = key
+            self.publicKey = key.publicKey
         case let key as RSA.PublicKey:
-            self.key = .public(key)
+            self.publicKey = key
+            self.privateKey = nil
         default:
+            // This should never happen
             fatalError("Unexpected key type: \(type(of: key))")
         }
         self.algorithm = algorithm
@@ -27,7 +26,7 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
     }
 
     func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
-        guard case let .private(privateKey) = key else {
+        guard let privateKey else {
            throw JWTError.signingAlgorithmFailure(RSAError.privateKeyRequired)
        }
 
@@ -44,13 +43,8 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
     func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         let digest = try self.digest(plaintext)
         let signature = _RSA.Signing.RSASignature(rawRepresentation: signature)
-
-        switch key {
-        case let .private(privateKey):
-            return privateKey.publicKey.isValidSignature(signature, for: digest, padding: padding)
-        case let .public(publicKey):
-            return publicKey.isValidSignature(signature, for: digest, padding: padding)
-        }
+        
+        return publicKey.isValidSignature(signature, for: digest, padding: padding)
     }
 }
 
