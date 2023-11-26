@@ -161,7 +161,7 @@ public extension ECDSA {
             guard let keyData = key.base64URLDecodedData() else {
                 throw JWTError.generic(identifier: "ECDSAKey Creation", reason: "Unable to interpret private key data as base64URL")
             }
-            
+
             backing = try PrivateKey(rawRepresentation: [UInt8](keyData))
         }
 
