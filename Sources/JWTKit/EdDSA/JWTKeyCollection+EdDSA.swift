@@ -24,11 +24,15 @@ public extension JWTKeyCollection {
     /// - Returns: The same instance of the collection (`Self`), useful for chaining multiple configuration calls.
     @discardableResult
     func addEdDSA(
-        key: EdDSAKey,
+        key: some EdDSAKey,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
     ) -> Self {
-        add(.init(algorithm: EdDSASigner(key: key), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+        add(.init(
+            algorithm: EdDSASigner(key: key),
+            jsonEncoder: jsonEncoder,
+            jsonDecoder: jsonDecoder
+        ), for: kid)
     }
 }

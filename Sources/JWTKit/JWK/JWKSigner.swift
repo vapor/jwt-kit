@@ -125,11 +125,11 @@ struct JWKSigner: Sendable {
 
             switch (algorithm, self.jwk.x, self.jwk.privateExponent) {
             case let (.eddsa, .some(x), .some(d)):
-                let key = try? EdDSAKey.private(x: x, d: d, curve: curve)
+                let key = try? EdDSA.PrivateKey(x: x, d: d, curve: curve)
                 return key.map { .init(algorithm: EdDSASigner(key: $0)) }
 
             case let (.eddsa, .some(x), .none):
-                let key = try? EdDSAKey.public(x: x, curve: curve)
+                let key = try? EdDSA.PublicKey(x: x, curve: curve)
                 return key.map { .init(algorithm: EdDSASigner(key: $0)) }
 
             default:
