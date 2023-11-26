@@ -170,7 +170,7 @@ public struct X5CVerifier: Sendable {
         }
 
         // Assuming the chain is valid, verify the token was signed by the valid certificate
-        let ecdsaKey = try ES256Key.certificate(pem: certificates[0].serializeAsPEM().pemString)
+        let ecdsaKey = try ES256PublicKey(certificate: certificates[0].serializeAsPEM().pemString)
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
 
         return try await signer.verify(parser: parser)

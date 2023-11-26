@@ -38,4 +38,5 @@ extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
 
-public typealias ES384Key = ECDSAKey<P384>
+public typealias ES384PublicKey = ECDSA.PublicKey<P384>
+public typealias ES384PrivateKey = ECDSA.PrivateKey<P384>

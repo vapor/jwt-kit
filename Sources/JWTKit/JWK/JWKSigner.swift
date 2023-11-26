@@ -62,26 +62,52 @@ struct JWKSigner: Sendable {
             guard let algorithm = algorithm ?? self.jwk.algorithm else {
                 return nil
             }
+            
             do {
                 switch algorithm {
                 case .es256:
-                    return try .init(algorithm: ECDSASigner(
-                        key: ES256Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
-                        algorithm: .sha256,
-                        name: "ES256"
-                    ))
+                    if let privateExponent = self.jwk.privateExponent {
+                        return try .init(algorithm: ECDSASigner(
+                            key: ES256PrivateKey(parameters: (x, y), privateKey: privateExponent),
+                            algorithm: .sha256,
+                            name: "ES256"
+                        ))
+                    } else {
+                        return try .init(algorithm: ECDSASigner(
+                            key: ES256PublicKey(parameters: (x, y)),
+                            algorithm: .sha256,
+                            name: "ES256"
+                        ))
+                    }
+                    
                 case .es384:
-                    return try .init(algorithm: ECDSASigner(
-                        key: ES384Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
-                        algorithm: .sha384,
-                        name: "ES384"
-                    ))
+                    if let privateExponent = self.jwk.privateExponent {
+                        return try .init(algorithm: ECDSASigner(
+                            key: ES384PrivateKey(parameters: (x, y), privateKey: privateExponent),
+                            algorithm: .sha384,
+                            name: "ES384"
+                        ))
+                    } else {
+                        return try .init(algorithm: ECDSASigner(
+                            key: ES384PublicKey(parameters: (x, y)),
+                            algorithm: .sha384,
+                            name: "ES384"
+                        ))
+                    }
                 case .es512:
-                    return try .init(algorithm: ECDSASigner(
-                        key: ES512Key(parameters: (x, y), privateKey: self.jwk.privateExponent),
-                        algorithm: .sha512,
-                        name: "ES512"
-                    ))
+                    if let privateExponent = self.jwk.privateExponent {
+                        return try .init(algorithm: ECDSASigner(
+                            key: ES512PrivateKey(parameters: (x, y), privateKey: privateExponent),
+                            algorithm: .sha512,
+                            name: "ES512"
+                        ))
+                    } else {
+                        return try .init(algorithm: ECDSASigner(
+                            key: ES512PublicKey(parameters: (x, y)),
+                            algorithm: .sha512,
+                            name: "ES512"
+                        ))
+                    }
                 default:
                     return nil
                 }

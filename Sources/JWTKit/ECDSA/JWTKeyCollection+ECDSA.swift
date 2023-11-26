@@ -1,3 +1,5 @@
+import Crypto
+
 public extension JWTKeyCollection {
     /// Adds an ES256 key to the collection.
     ///
@@ -19,13 +21,20 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES256(
-        key: ES256Key,
+    func addES256<Key>(
+        key: Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
-    ) -> Self {
-        add(.init(algorithm: ECDSASigner(key: key, algorithm: .sha256, name: "ES256"), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+    ) -> Self
+        where Key: ECDSAKeyType, Key.Curve == P256
+    {
+        add(.init(
+            algorithm: ECDSASigner(key: key, algorithm: .sha256, name: "ES256"),
+            jsonEncoder: jsonEncoder,
+            jsonDecoder: jsonDecoder
+        ),
+        for: kid)
     }
 
     /// Adds an ES384 key to the collection.
@@ -48,13 +57,19 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES384(
-        key: ES384Key,
+    func addES384<Key>(
+        key: Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
-    ) -> Self {
-        add(.init(algorithm: ECDSASigner(key: key, algorithm: .sha384, name: "ES384"), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+    ) -> Self
+        where Key: ECDSAKeyType, Key.Curve == P384
+    {
+        add(.init(
+            algorithm: ECDSASigner(key: key, algorithm: .sha384, name: "ES384"),
+            jsonEncoder: jsonEncoder,
+            jsonDecoder: jsonDecoder
+        ), for: kid)
     }
 
     /// Adds an ES512 key to the collection.
@@ -77,12 +92,18 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES512(
-        key: ES512Key,
+    func addES512<Key>(
+        key: Key,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
-    ) -> Self {
-        add(.init(algorithm: ECDSASigner(key: key, algorithm: .sha512, name: "ES512"), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+    ) -> Self
+        where Key: ECDSAKeyType, Key.Curve == P521
+    {
+        add(.init(
+            algorithm: ECDSASigner(key: key, algorithm: .sha512, name: "ES512"),
+            jsonEncoder: jsonEncoder,
+            jsonDecoder: jsonDecoder
+        ), for: kid)
     }
 }

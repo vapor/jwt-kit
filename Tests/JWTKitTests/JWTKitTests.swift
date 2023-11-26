@@ -150,7 +150,7 @@ class JWTKitTests: XCTestCase {
         }
 
         // create public key signer (verifier)
-        let keyCollection = try await JWTKeyCollection().addES256(key: .public(pem: publicKey.bytes))
+        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PublicKey(pem: publicKey.bytes))
 
         // decode jwt and test payload contents
         let jwt = try await keyCollection.verify(token, as: JWTioPayload.self)
@@ -253,7 +253,7 @@ class JWTKitTests: XCTestCase {
             }
         }
 
-        let keyCollection = try await JWTKeyCollection().addES256(key: .generate())
+        let keyCollection = await JWTKeyCollection().addES256(key: ES256PrivateKey())
         do {
             let token = try await keyCollection.sign(Payload(foo: "qux"))
             _ = try await keyCollection.verify(token, as: Payload.self)

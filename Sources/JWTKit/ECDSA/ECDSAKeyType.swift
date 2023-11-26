@@ -60,20 +60,6 @@ extension ECDSAPrivateKey {
     }
 }
 
-protocol ECDSAKeyType: Sendable {
-    associatedtype PrivateKey: ECDSAPrivateKey
-    associatedtype PublicKey: ECDSAPublicKey
-
-    var curve: ECDSACurve { get }
-    var privateKey: PrivateKey? { get }
-    var publicKey: PublicKey { get }
-    var parameters: ECDSAParameters? { get }
-
-    static func generate() throws -> Self
-    static func certificate(pem string: String) throws -> Self
-    static func certificate(pem data: some DataProtocol) throws -> Self
-    static func `private`(pem string: String) throws -> Self
-    static func `private`(pem data: some DataProtocol) throws -> Self
-    static func `public`(pem string: String) throws -> Self
-    static func `public`(pem data: some DataProtocol) throws -> Self
+public protocol ECDSAKeyType: Sendable {
+    associatedtype Curve: ECDSACurveType
 }
