@@ -22,9 +22,9 @@ struct JWKSigner: Sendable {
             let rsaKey: RSAKey
             do {
                 if let privateExponent = jwk.privateExponent {
-                    rsaKey = try RSA.PrivateKey(modulus: modulus, exponent: exponent, privateExponent: privateExponent)
+                    rsaKey = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: exponent, privateExponent: privateExponent)
                 } else {
-                    rsaKey = try RSA.PublicKey(modulus: modulus, exponent: exponent)
+                    rsaKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
                 }
             } catch {
                 return nil

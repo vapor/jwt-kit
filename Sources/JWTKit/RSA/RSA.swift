@@ -4,15 +4,17 @@ import Foundation
 import SwiftASN1
 import X509
 
-/// Namespace encompassing functionality related to the RSA (Rivest–Shamir–Adleman) cryptographic algorithm.
-/// Relatively to other algorithms such as ECDSA and EdDSA, RSA is considered slow and should be avoided when possible.
-public enum RSA: Sendable {}
+public extension Insecure {
+    /// Namespace encompassing functionality related to the RSA (Rivest–Shamir–Adleman) cryptographic algorithm.
+    /// Relatively to other algorithms such as ECDSA and EdDSA, RSA is considered slow and should be avoided when possible.
+    enum RSA: Sendable {}
+}
 
 /// The `RSAKey` protocol defines the common interface for both public and private RSA keys.
 /// Implementers of this protocol can represent keys used for cryptographic operations in the RSA algorithm.
 public protocol RSAKey: Sendable {}
 
-public extension RSA {
+public extension Insecure.RSA {
     /// A structure representing a public RSA key.
     ///
     /// In JWT, RSA public keys are used to verify JWTs.
@@ -149,7 +151,7 @@ public extension RSA {
 
             var serializer = DER.Serializer()
 
-            let publicKeyDER = try RSA.calculateDER(n: n, e: e)
+            let publicKeyDER = try Insecure.RSA.calculateDER(n: n, e: e)
             try publicKeyDER.serialize(into: &serializer)
             let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)
             self.init(backing: publicKey)
@@ -165,7 +167,7 @@ public extension RSA {
     }
 }
 
-public extension RSA {
+public extension Insecure.RSA {
     /// A structure representing a private RSA key.
     ///
     /// In JWT, RSA private keys are used to sign JWTs.
@@ -270,7 +272,7 @@ public extension RSA {
 
             var serializer = DER.Serializer()
 
-            guard let privateKeyDER = try RSA.calculatePrivateDER(n: n, e: e, d: d) else {
+            guard let privateKeyDER = try Insecure.RSA.calculatePrivateDER(n: n, e: e, d: d) else {
                 throw RSAError.keyInitializationFailure
             }
             try privateKeyDER.serialize(into: &serializer)

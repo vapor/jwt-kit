@@ -1,7 +1,7 @@
 import Foundation
 import SwiftASN1
 
-extension RSA.PublicKey {
+extension Insecure.RSA.PublicKey {
     /// From [RFC 8017 § A.1.2](https://www.rfc-editor.org/rfc/rfc8017#appendix-A.1.1):
     ///
     /// ```
@@ -39,7 +39,7 @@ extension RSA.PublicKey {
     }
 }
 
-extension RSA.PublicKey.ASN1: DERImplicitlyTaggable {
+extension Insecure.RSA.PublicKey.ASN1: DERImplicitlyTaggable {
     static var defaultIdentifier: SwiftASN1.ASN1Identifier {
         .sequence
     }

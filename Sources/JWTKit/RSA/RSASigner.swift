@@ -2,18 +2,18 @@ import _CryptoExtras
 import Foundation
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
-    let publicKey: RSA.PublicKey
-    let privateKey: RSA.PrivateKey?
+    let publicKey: Insecure.RSA.PublicKey
+    let privateKey: Insecure.RSA.PrivateKey?
     var algorithm: DigestAlgorithm
     let name: String
     let padding: _RSA.Signing.Padding
 
     init(key: some RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding) {
         switch key {
-        case let key as RSA.PrivateKey:
+        case let key as Insecure.RSA.PrivateKey:
             self.privateKey = key
             self.publicKey = key.publicKey
-        case let key as RSA.PublicKey:
+        case let key as Insecure.RSA.PublicKey:
             self.publicKey = key
             self.privateKey = nil
         default:
