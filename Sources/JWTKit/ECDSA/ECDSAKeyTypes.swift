@@ -17,6 +17,10 @@ import X509
 ///   - y: A `String` representing the y-coordinate on the elliptic curve.
 public typealias ECDSAParameters = (x: String, y: String)
 
+public protocol ECDSASignature: Sendable {
+    var rawRepresentation: Data { get set }
+}
+
 public protocol ECDSAPrivateKey: Sendable {
     associatedtype PublicKey: ECDSAPublicKey
     associatedtype Signature: ECDSASignature
@@ -50,30 +54,8 @@ public protocol ECDSAPublicKey: Sendable {
     func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool
 }
 
-public protocol ECDSASignature: Sendable {
-    var rawRepresentation: Data { get set }
-}
-
 extension ECDSAPrivateKey {
     init(compactRepresentable: Bool = true) {
         self.init(compactRepresentable: compactRepresentable)
     }
-}
-
-protocol ECDSAKeyType: Sendable {
-    associatedtype PrivateKey: ECDSAPrivateKey
-    associatedtype PublicKey: ECDSAPublicKey
-
-    var curve: ECDSACurve { get }
-    var privateKey: PrivateKey? { get }
-    var publicKey: PublicKey { get }
-    var parameters: ECDSAParameters? { get }
-
-    static func generate() throws -> Self
-    static func certificate(pem string: String) throws -> Self
-    static func certificate(pem data: some DataProtocol) throws -> Self
-    static func `private`(pem string: String) throws -> Self
-    static func `private`(pem data: some DataProtocol) throws -> Self
-    static func `public`(pem string: String) throws -> Self
-    static func `public`(pem data: some DataProtocol) throws -> Self
 }

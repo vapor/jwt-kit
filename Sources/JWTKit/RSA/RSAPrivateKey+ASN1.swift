@@ -1,7 +1,7 @@
 import Foundation
 import SwiftASN1
 
-extension RSAKey {
+extension Insecure.RSA.PrivateKey {
     /// From [RFC 8017 § A.1.2](https://www.rfc-editor.org/rfc/rfc8017#appendix-A.1.2):
     ///
     /// ```
@@ -18,7 +18,7 @@ extension RSAKey {
     ///     otherPrimeInfos   OtherPrimeInfos OPTIONAL
     /// }
     /// ```
-    struct RSAPrivateKeyASN1: DERSerializable {
+    struct ASN1: DERSerializable {
         let version: UInt8
         let modulus: ArraySlice<UInt8>
         let publicExponent: ArraySlice<UInt8>
@@ -58,13 +58,9 @@ extension RSAKey {
     ///
     /// - Returns: A tuple containing the modulus, public exponent, and private exponent as Base64 URL-encoded strings.
     /// - Throws: ``JWTError`` if the key is not a private RSA key or if there is an issue parsing the key.
-    public func getPrivateKeyPrimitives() throws -> (modulus: String, exponent: String, privateExponent: String) {
-        guard self.type == .private, let privateKey = self.privateKey else {
-            throw JWTError.generic(identifier: "rsaPrivateKey", reason: "Key is not a private RSA key")
-        }
-
-        let parsed = try DER.parse(Array(privateKey.derRepresentation))
-        let rsaPrivateKey = try RSAPrivateKeyASN1(derEncoded: parsed)
+    public func getKeyPrimitives() throws -> (modulus: String, exponent: String, privateExponent: String) {
+        let parsed = try DER.parse(Array(self.derRepresentation))
+        let rsaPrivateKey = try ASN1(derEncoded: parsed)
 
         let modulus = String(decoding: Data(rsaPrivateKey.modulus).base64URLEncodedBytes(), as: UTF8.self)
         let publicExponent = String(decoding: Data(rsaPrivateKey.publicExponent).base64URLEncodedBytes(), as: UTF8.self)
@@ -74,7 +70,7 @@ extension RSAKey {
     }
 }
 
-extension RSAKey.RSAPrivateKeyASN1: DERImplicitlyTaggable {
+extension Insecure.RSA.PrivateKey.ASN1: DERImplicitlyTaggable {
     static var defaultIdentifier: ASN1Identifier {
         .sequence
     }

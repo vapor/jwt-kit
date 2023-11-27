@@ -11,7 +11,7 @@ final class EdDSATests: XCTestCase {
         )
 
         let keyCollection = try await JWTKeyCollection()
-            .addEdDSA(key: EdDSAKey.generate(curve: .ed25519))
+            .addEdDSA(key: EdDSA.PrivateKey(curve: .ed25519))
 
         let token = try await keyCollection.sign(payload)
         try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
@@ -19,8 +19,8 @@ final class EdDSATests: XCTestCase {
 
     func testEdDSAPublicPrivate() async throws {
         let keys = try await JWTKeyCollection()
-            .addEdDSA(key: EdDSAKey.public(x: eddsaPublicKeyBase64, curve: .ed25519), kid: "public")
-            .addEdDSA(key: EdDSAKey.private(x: eddsaPublicKeyBase64, d: eddsaPrivateKeyBase64, curve: .ed25519), kid: "private")
+            .addEdDSA(key: EdDSA.PublicKey(x: eddsaPublicKeyBase64, curve: .ed25519), kid: "public")
+            .addEdDSA(key: EdDSA.PrivateKey(x: eddsaPublicKeyBase64, d: eddsaPrivateKeyBase64, curve: .ed25519), kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -47,7 +47,7 @@ final class EdDSATests: XCTestCase {
 
         // sign jwt
         let keyCollection = try await JWTKeyCollection()
-            .addEdDSA(key: EdDSAKey.private(x: x, d: d, curve: .ed25519), kid: "vapor")
+            .addEdDSA(key: EdDSA.PrivateKey(x: x, d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
@@ -84,7 +84,7 @@ final class EdDSATests: XCTestCase {
 
         // sign jwt
         let keyCollection = try await JWTKeyCollection()
-            .addEdDSA(key: EdDSAKey.private(x: x, d: d, curve: .ed25519), kid: "vapor")
+            .addEdDSA(key: EdDSA.PrivateKey(x: x, d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
@@ -121,7 +121,7 @@ final class EdDSATests: XCTestCase {
 
         // sign jwt
         let keyCollection = try await JWTKeyCollection()
-            .addEdDSA(key: EdDSAKey.private(x: x, d: d, curve: .ed25519), kid: "vapor")
+            .addEdDSA(key: EdDSA.PrivateKey(x: x, d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 

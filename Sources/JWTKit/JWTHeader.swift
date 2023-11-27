@@ -7,13 +7,13 @@ package struct JWTHeader: Codable, Sendable {
     package var typ: String?
 
     /// The Payload's Content Type.
-    package var cty: String?
+    var cty: String?
 
     /// Critical fields.
-    package var crit: [String]?
+    var crit: [String]?
 
     /// The JWT key identifier.
-    package var kid: JWKIdentifier?
+    var kid: JWKIdentifier?
 
     /// The x5c certificate chain.
     package var x5c: [String]?
