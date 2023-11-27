@@ -17,7 +17,7 @@
 /// Types conforming to this protocol can be used to abstract ECDSA cryptographic operations across various elliptic curves,
 /// allowing for flexible and modular cryptographic code.
 public protocol ECDSACurveType: Sendable {
-    associatedtype Signature
+    associatedtype Signature: ECDSASignature
     associatedtype PrivateKey: ECDSAPrivateKey
     static var curve: ECDSACurve { get }
     static var byteRanges: (x: Range<Int>, y: Range<Int>) { get }

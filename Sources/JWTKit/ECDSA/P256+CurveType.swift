@@ -38,4 +38,5 @@ extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
 
-public typealias ES256Key = ECDSAKey<P256>
+public typealias ES256PublicKey = ECDSA.PublicKey<P256>
+public typealias ES256PrivateKey = ECDSA.PrivateKey<P256>

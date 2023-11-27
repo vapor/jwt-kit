@@ -2,23 +2,31 @@ import _CryptoExtras
 import Foundation
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
-    let key: RSAKey
+    let publicKey: Insecure.RSA.PublicKey
+    let privateKey: Insecure.RSA.PrivateKey?
     var algorithm: DigestAlgorithm
     let name: String
     let padding: _RSA.Signing.Padding
 
-    init(key: RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding) {
-        self.key = key
+    init(key: some RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding) {
+        switch key {
+        case let key as Insecure.RSA.PrivateKey:
+            self.privateKey = key
+            self.publicKey = key.publicKey
+        case let key as Insecure.RSA.PublicKey:
+            self.publicKey = key
+            self.privateKey = nil
+        default:
+            // This should never happen
+            fatalError("Unexpected key type: \(type(of: key))")
+        }
         self.algorithm = algorithm
         self.name = name
         self.padding = padding
     }
 
     func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
-        guard
-            case .private = key.type,
-            let privateKey = key.privateKey
-        else {
+        guard let privateKey else {
             throw JWTError.signingAlgorithmFailure(RSAError.privateKeyRequired)
         }
 
@@ -36,7 +44,7 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         let digest = try self.digest(plaintext)
         let signature = _RSA.Signing.RSASignature(rawRepresentation: signature)
 
-        return key.publicKey.isValidSignature(signature, for: digest, padding: padding)
+        return publicKey.isValidSignature(signature, for: digest, padding: padding)
     }
 }
 

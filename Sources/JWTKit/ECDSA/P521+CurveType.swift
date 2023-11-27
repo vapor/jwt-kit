@@ -39,4 +39,5 @@ extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
 
-public typealias ES512Key = ECDSAKey<P521>
+public typealias ES512PublicKey = ECDSA.PublicKey<P521>
+public typealias ES512PrivateKey = ECDSA.PrivateKey<P521>

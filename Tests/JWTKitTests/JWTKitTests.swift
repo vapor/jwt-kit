@@ -150,7 +150,7 @@ class JWTKitTests: XCTestCase {
         }
 
         // create public key signer (verifier)
-        let keyCollection = try await JWTKeyCollection().addES256(key: .public(pem: publicKey.bytes))
+        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PublicKey(pem: publicKey.bytes))
 
         // decode jwt and test payload contents
         let jwt = try await keyCollection.verify(token, as: JWTioPayload.self)
@@ -253,7 +253,7 @@ class JWTKitTests: XCTestCase {
             }
         }
 
-        let keyCollection = try await JWTKeyCollection().addES256(key: .generate())
+        let keyCollection = await JWTKeyCollection().addES256(key: ES256PrivateKey())
         do {
             let token = try await keyCollection.sign(Payload(foo: "qux"))
             _ = try await keyCollection.verify(token, as: Payload.self)
@@ -274,7 +274,7 @@ class JWTKitTests: XCTestCase {
         let privateExponent = "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
 
         // sign jwt
-        let keyCollection = try await JWTKeyCollection().addRS256(key: RSAKey(
+        let keyCollection = try await JWTKeyCollection().addRS256(key: Insecure.RSA.PrivateKey(
             modulus: modulus,
             exponent: exponent,
             privateExponent: privateExponent
@@ -311,7 +311,7 @@ class JWTKitTests: XCTestCase {
 
     func testFirebaseJWTAndCertificate() async throws {
         let payload = try await JWTKeyCollection()
-            .addRS256(key: .certificate(pem: firebaseCert))
+            .addRS256(key: Insecure.RSA.PublicKey(certificatePEM: firebaseCert))
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }

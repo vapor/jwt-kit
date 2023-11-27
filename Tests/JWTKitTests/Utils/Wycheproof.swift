@@ -1,3 +1,5 @@
+@testable import JWTKit
+import BigInt
 import XCTest
 
 func wycheproof(fileName: String, testFunction: (TestGroup) throws -> Void) throws {
@@ -14,6 +16,20 @@ func wycheproof(fileName: String, testFunction: (TestGroup) throws -> Void) thro
         try testFunction(testGroup)
     }
 }
+
+func testPrimeFactors(_ testGroup: TestGroup) throws {
+    guard
+        let n = BigUInt(testGroup.n, radix: 16),
+        let e = BigUInt(testGroup.e, radix: 16),
+        let d = BigUInt(testGroup.d, radix: 16)
+    else {
+        return XCTFail("Failed to extract or parse modulus 'n', public exponent 'e', or private exponent 'd'")
+    }
+
+    let (p, q) = try PrimeGenerator.calculatePrimeFactors(n: n, e: e, d: d)
+    XCTAssertEqual(p * q, n, "The product of p and q should equal n; got \(p) * \(q) != \(n)")
+}
+
 
 struct TestGroup: Codable {
     let n: String

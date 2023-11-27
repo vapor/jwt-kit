@@ -13,7 +13,6 @@ public extension JWTKeyCollection {
     ///
     /// - Parameters:
     ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - padding: The padding scheme to use for RSA signing. Defaults to `.PSS`.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
     ///          in the JWT `kid` header field.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
@@ -23,7 +22,7 @@ public extension JWTKeyCollection {
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
     func addRS256(
-        key: RSAKey,
+        key: some RSAKey,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
@@ -48,7 +47,6 @@ public extension JWTKeyCollection {
     ///
     /// - Parameters:
     ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - padding: The padding scheme to use for RSA signing. Defaults to `.PSS`.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
     ///          in the JWT `kid` header field.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
@@ -58,7 +56,7 @@ public extension JWTKeyCollection {
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
     func addRS384(
-        key: RSAKey,
+        key: some RSAKey,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
@@ -83,7 +81,6 @@ public extension JWTKeyCollection {
     ///
     /// - Parameters:
     ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - padding: The padding scheme to use for RSA signing. Defaults to `.PSS`.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
     ///          in the JWT `kid` header field.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
@@ -93,7 +90,7 @@ public extension JWTKeyCollection {
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
     func addRS512(
-        key: RSAKey,
+        key: some RSAKey,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
@@ -105,9 +102,9 @@ public extension JWTKeyCollection {
         ),
         for: kid)
     }
-    
+
     // MARK: PSS
-    
+
     /// Adds a PS256 key to the collection.
     ///
     /// This method configures and adds a PS256 (RSA PSS Signature with SHA-256) key to the collection. PS256
@@ -131,7 +128,7 @@ public extension JWTKeyCollection {
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
     func addPS256(
-        key: RSAKey,
+        key: some RSAKey,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
@@ -167,7 +164,7 @@ public extension JWTKeyCollection {
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
     func addPS384(
-        key: RSAKey,
+        key: some RSAKey,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil
@@ -203,7 +200,7 @@ public extension JWTKeyCollection {
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
     func addPS512(
-        key: RSAKey,
+        key: some RSAKey,
         kid: JWKIdentifier? = nil,
         jsonEncoder: (any JWTJSONEncoder)? = nil,
         jsonDecoder: (any JWTJSONDecoder)? = nil

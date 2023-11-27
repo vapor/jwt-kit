@@ -24,17 +24,17 @@ public struct JWTError: Error, @unchecked Sendable {
             self.base = base
         }
 
-        package static let claimVerificationFailure = Self(.claimVerificationFailure)
-        package static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
-        package static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
-        package static let missingKIDHeader = Self(.missingKIDHeader)
-        package static let malformedToken = Self(.malformedToken)
-        package static let unknownKID = Self(.unknownKID)
-        package static let invalidJWK = Self(.invalidJWK)
-        package static let invalidBool = Self(.invalidBool)
-        package static let noKeyProvided = Self(.noKeyProvided)
-        package static let invalidX5CChain = Self(.invalidX5CChain)
-        package static let generic = Self(.generic)
+        public static let claimVerificationFailure = Self(.claimVerificationFailure)
+        public static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
+        public static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
+        public static let missingKIDHeader = Self(.missingKIDHeader)
+        public static let malformedToken = Self(.malformedToken)
+        public static let unknownKID = Self(.unknownKID)
+        public static let invalidJWK = Self(.invalidJWK)
+        public static let invalidBool = Self(.invalidBool)
+        public static let noKeyProvided = Self(.noKeyProvided)
+        public static let invalidX5CChain = Self(.invalidX5CChain)
+        public static let generic = Self(.generic)
 
         public var description: String {
             switch self.base {
