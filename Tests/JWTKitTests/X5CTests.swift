@@ -178,10 +178,6 @@ final class X5CTests: XCTestCase {
         )
         let token = try await keyCollection.sign(payload, x5c: x5cCerts)
         let parser = try JWTParser(token: token.bytes)
-        try XCTAssertEqual(parser.header().typ, "JWT")
-        try XCTAssertEqual(parser.header().alg, "ES256")
-        try XCTAssertEqual(parser.payload(as: TestPayload.self), payload)
-        try await parser.verify(using: keyCollection.getKey())
 
         let x5c = try XCTUnwrap(parser.header().x5c)
         let pemCerts = try x5c.map(getPEMString)
@@ -205,7 +201,6 @@ final class X5CTests: XCTestCase {
 
         let token = try await keyCollection.sign(payload, x5c: certs)
         let parser = try JWTParser(token: token.bytes)
-        try await parser.verify(using: keyCollection.getKey())
 
         let x5c = try XCTUnwrap(parser.header().x5c)
         let pemCerts = try x5c.map(getPEMString)

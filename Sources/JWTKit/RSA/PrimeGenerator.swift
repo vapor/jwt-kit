@@ -1,9 +1,9 @@
 import BigInt
 
-package struct PrimeGenerator {
+struct PrimeGenerator {
     /// The following algorithm recovers the prime factors of a modulus, given the public and private exponents.
     /// The algorithm is based on Fact 1 in [Boneh 1999].
-    package static func calculatePrimeFactors(
+    static func calculatePrimeFactors(
         n: BigUInt, e: BigUInt, d: BigUInt
     ) throws -> (p: BigUInt, q: BigUInt) {
         let k = (d * e) - 1

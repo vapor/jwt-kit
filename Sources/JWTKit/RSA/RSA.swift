@@ -155,7 +155,7 @@ public extension RSA {
             self.init(backing: publicKey)
         }
 
-        package init(backing: _RSA.Signing.PublicKey) {
+        init(backing: _RSA.Signing.PublicKey) {
             self.backing = backing
         }
 

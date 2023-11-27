@@ -14,7 +14,7 @@ public extension ECDSA {
         typealias Signature = Curve.Signature
         typealias PublicKey = Curve.PrivateKey.PublicKey
 
-        package var curve: ECDSACurve = Curve.curve
+        var curve: ECDSACurve = Curve.curve
 
         package var parameters: ECDSAParameters? {
             // 0x04 || x || y

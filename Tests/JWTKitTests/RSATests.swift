@@ -4,9 +4,9 @@ import XCTest
 
 final class RSATests: XCTestCase {
     func testCalculatePrimeFactors() throws {
-        try wycheproof(fileName: "rsa_oaep_2048_sha1_mgf1sha1_test", testFunction: testPrimeFactor)
-        try wycheproof(fileName: "rsa_oaep_2048_sha224_mgf1sha1_test", testFunction: testPrimeFactor)
-        try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testPrimeFactor)
+        try wycheproof(fileName: "rsa_oaep_2048_sha1_mgf1sha1_test", testFunction: testPrimeFactors)
+        try wycheproof(fileName: "rsa_oaep_2048_sha224_mgf1sha1_test", testFunction: testPrimeFactors)
+        try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testPrimeFactors)
     }
 
     func testRSADocs() async throws {
@@ -169,21 +169,6 @@ final class RSATests: XCTestCase {
         let key = try RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
         let key2 = try RSA.PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
-    }
-
-    // MARK: Private Functions
-
-    private func testPrimeFactor(_ testGroup: TestGroup) throws {
-        guard
-            let n = BigUInt(testGroup.n, radix: 16),
-            let e = BigUInt(testGroup.e, radix: 16),
-            let d = BigUInt(testGroup.d, radix: 16)
-        else {
-            return XCTFail("Failed to extract or parse modulus 'n', public exponent 'e', or private exponent 'd'")
-        }
-
-        let (p, q) = try PrimeGenerator.calculatePrimeFactors(n: n, e: e, d: d)
-        XCTAssertEqual(p * q, n, "The product of p and q should equal n; got \(p) * \(q) != \(n)")
     }
 
     let modulus = """
