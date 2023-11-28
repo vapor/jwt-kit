@@ -9,9 +9,6 @@ public struct JWTHeader: Codable, Sendable {
     /// The Payload's Content Type.
     var cty: String?
 
-    /// Critical fields.
-    var crit: [String]?
-
     /// The JWT key identifier.
     package var kid: JWKIdentifier?
 
