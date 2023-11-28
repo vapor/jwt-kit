@@ -223,15 +223,18 @@ public actor JWTKeyCollection: Sendable {
     ///   - payload: The payload to sign.
     ///   - typ: The JWT type header parameter. Defaults to "JWT".
     ///   - kid: An optional key identifier to specify the signer. If not provided, the default signer is used.
+    ///   - x5c: An optional certificate chain to include in the header.
+    ///   - customFields: An optional dictionary of custom fields to include in the header.
     /// - Throws: An error if the payload cannot be signed.
     /// - Returns: A signed JWT token string.
     public func sign(
         _ payload: some JWTPayload,
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
-        x5c: [String]? = nil
+        x5c: [String]? = nil,
+        customFields: [String: JWTHeaderField]? = nil
     ) async throws -> String {
         let signer = try self.getSigner(for: kid)
-        return try await signer.sign(payload, typ: typ, kid: kid, x5c: x5c)
+        return try await signer.sign(payload, typ: typ, kid: kid, x5c: x5c, customFields: customFields)
     }
 }
