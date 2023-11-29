@@ -56,14 +56,14 @@ extension JWTHeader: Codable {
         self.kid = try container.decodeIfPresent(JWKIdentifier.self, forKey: .kid)
         self.x5c = try container.decodeIfPresent([String].self, forKey: .x5c)
 
-        self.customFields = try container.allKeys
-            .filter { !CodingKeys.allKeys.contains($0) }
+        self.customFields = try Set(container.allKeys)
+            .subtracting(CodingKeys.allKeys)
             .reduce(into: [String: JWTHeaderField]()) { result, key in
                 result[key.stringValue] = try container.decode(JWTHeaderField.self, forKey: key)
             }
     }
 
-    private enum CodingKeys: CodingKey, Equatable {
+    private enum CodingKeys: CodingKey, Equatable, Hashable {
         case alg
         case typ
         case cty
@@ -71,7 +71,7 @@ extension JWTHeader: Codable {
         case x5c
         case custom(name: String)
 
-        static var allKeys: [CodingKeys] {
+        static var allKeys: Set<CodingKeys> {
             [.alg, .typ, .cty, .kid, .x5c]
         }
 
