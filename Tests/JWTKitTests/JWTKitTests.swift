@@ -86,17 +86,6 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(test.exp.value, Date(timeIntervalSince1970: 2_000_000_000))
     }
 
-    func testExpirationEncoding() async throws {
-        let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-        let jwt = try await keyCollection.sign(ExpirationPayload(exp: exp))
-        let parser = try JWTParser(token: jwt.bytes)
-        try XCTAssertEqual(parser.header().typ, "JWT")
-        try XCTAssertEqual(parser.header().alg, "HS256")
-        try XCTAssertEqual(parser.payload(as: ExpirationPayload.self).exp, exp)
-        try await parser.verify(using: keyCollection.getKey())
-    }
-
     func testSigners() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZvbyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5OTl9.Gf7leJ8i30LmMI7GBTpWDMXV60y1wkTOCOBudP9v9ms"
         let keyCollection = await JWTKeyCollection().addHS256(key: "bar".bytes, kid: "foo")

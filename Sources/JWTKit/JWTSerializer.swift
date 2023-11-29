@@ -9,6 +9,7 @@ struct JWTSerializer {
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
         x5c: [String]? = nil,
+        customFields: [String: JWTHeaderField] = [:],
         jsonEncoder: any JWTJSONEncoder,
         skipVerification: Bool = false
     ) async throws -> String {
@@ -18,6 +19,7 @@ struct JWTSerializer {
         header.typ = typ
         header.cty = cty
         header.alg = signer.algorithm.name
+        header.customFields = customFields
 
         if let x5c, !x5c.isEmpty {
             if !skipVerification {

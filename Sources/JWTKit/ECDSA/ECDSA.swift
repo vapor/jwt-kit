@@ -16,7 +16,7 @@ public extension ECDSA {
 
         var curve: ECDSACurve = Curve.curve
 
-        package var parameters: ECDSAParameters? {
+        var parameters: ECDSAParameters? {
             // 0x04 || x || y
             let x = backing.x963Representation[Curve.byteRanges.x].base64EncodedString()
             let y = backing.x963Representation[Curve.byteRanges.y].base64EncodedString()
@@ -104,9 +104,9 @@ public extension ECDSA {
         typealias PrivateKey = Curve.PrivateKey
         typealias Signature = PrivateKey.Signature
 
-        package var curve: ECDSACurve = Curve.curve
+        var curve: ECDSACurve = Curve.curve
 
-        package var parameters: ECDSAParameters? {
+        var parameters: ECDSAParameters? {
             publicKey.parameters
         }
 

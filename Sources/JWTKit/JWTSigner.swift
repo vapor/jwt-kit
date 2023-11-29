@@ -22,9 +22,19 @@ final class JWTSigner: Sendable {
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
-        x5c: [String]? = nil
+        x5c: [String]? = nil,
+        customFields: [String: JWTHeaderField] = [:]
     ) async throws -> String {
-        try await JWTSerializer().sign(payload, using: self, typ: typ, kid: kid, cty: cty, x5c: x5c, jsonEncoder: self.jsonEncoder ?? .defaultForJWT)
+        try await JWTSerializer().sign(
+            payload,
+            using: self,
+            typ: typ,
+            kid: kid,
+            cty: cty,
+            x5c: x5c,
+            customFields: customFields,
+            jsonEncoder: self.jsonEncoder ?? .defaultForJWT
+        )
     }
 
     func unverified<Payload>(
