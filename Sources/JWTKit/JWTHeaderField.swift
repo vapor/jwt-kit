@@ -2,21 +2,22 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
     case null
     case bool(Bool)
     case int(Int)
+    case float(Double)
     case string(String)
     case array([JWTHeaderField])
     case object([String: JWTHeaderField])
 
     public init(from decoder: any Decoder) throws {
         let container: any SingleValueDecodingContainer
-        
+
         do {
             container = try decoder.singleValueContainer()
         } catch DecodingError.typeMismatch {
             self = .null
             return
         }
-        
-        if container.decodeNil() { 
+
+        if container.decodeNil() {
             self = .null
             return
         }
@@ -32,11 +33,16 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
         } catch DecodingError.typeMismatch {}
 
         do {
+            self = try .float(container.decode(Double.self))
+            return
+        } catch DecodingError.typeMismatch {}
+
+        do {
             self = try .string(container.decode(String.self))
             return
         } catch DecodingError.typeMismatch {}
 
-        do { 
+        do {
             self = try .array(container.decode([Self].self))
             return
         } catch DecodingError.typeMismatch {}
@@ -55,6 +61,7 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
         case .null: break
         case let .bool(value): try container.encode(value)
         case let .int(value): try container.encode(value)
+        case let .float(value): try container.encode(value)
         case let .string(value): try container.encode(value)
         case let .array(value): try container.encode(value)
         case let .object(value): try container.encode(value)
