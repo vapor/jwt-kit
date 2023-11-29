@@ -57,13 +57,24 @@ extension JWTHeader: Codable {
         self.x5c = try container.decodeIfPresent([String].self, forKey: .x5c)
 
         self.customFields = try container.allKeys
-            .filter { CodingKeys.allCases.contains($0) }
+            .filter { !CodingKeys.allCases.contains($0) }
             .reduce(into: [String: JWTHeaderField]()) { result, key in
                 result[key.stringValue] = try container.decode(JWTHeaderField.self, forKey: key)
             }
     }
 
     private enum CodingKeys: CodingKey, CaseIterable, Equatable {
+        case alg
+        case typ
+        case cty
+        case kid
+        case x5c
+        case custom(name: String)
+
+        static var allCases: [CodingKeys] {
+            [.alg, .typ, .cty, .kid, .x5c]
+        }
+
         var stringValue: String {
             switch self {
             case .alg: "alg"
@@ -75,22 +86,19 @@ extension JWTHeader: Codable {
             }
         }
 
-        init?(stringValue: String) {
-            self = .custom(name: stringValue)
-        }
-
         var intValue: Int? { nil }
-        init?(intValue _: Int) { nil }
 
-        case alg
-        case typ
-        case cty
-        case kid
-        case x5c
-        case custom(name: String)
-
-        static var allCases: [CodingKeys] {
-            [.alg, .typ, .cty, .kid, .x5c]
+        init?(stringValue: String) {
+            switch stringValue {
+            case "alg": self = .alg
+            case "typ": self = .typ
+            case "cty": self = .cty
+            case "kid": self = .kid
+            case "x5c": self = .x5c
+            default: self = .custom(name: stringValue)
+            }
         }
+
+        init?(intValue _: Int) { nil }
     }
 }

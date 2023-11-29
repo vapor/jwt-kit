@@ -118,7 +118,10 @@ final class InternalTests: XCTestCase {
         let token = try await keyCollection.sign(payload, customFields: customFields)
 
         let parser = try JWTParser(token: token.bytes)
-        let fields = try parser.header().customFields
+        let header = try parser.header()
+        XCTAssertEqual(header.customFields, customFields)
+
+        let encodedHeader = try JSONEncoder().encode(header)
         let jsonFields = """
         {
           "alg": "HS256",
@@ -127,12 +130,9 @@ final class InternalTests: XCTestCase {
           "baz": 42
         }
         """
-        let jsonDecoder = JSONDecoder()
-        let encodedHeader = try JSONEncoder().encode(parser.header())
-        XCTAssertEqual(fields, customFields)
         XCTAssertEqual(
-            try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
-            try jsonDecoder.decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
+            try JSONDecoder().decode([String: JWTHeaderField].self, from: encodedHeader),
+            try JSONDecoder().decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
         )
     }
 
