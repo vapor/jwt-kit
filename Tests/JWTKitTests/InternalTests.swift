@@ -130,9 +130,11 @@ final class InternalTests: XCTestCase {
           "baz": 42
         }
         """
+
+        let jsonDecoder = JSONDecoder()
         XCTAssertEqual(
-            try JSONDecoder().decode([String: JWTHeaderField].self, from: encodedHeader),
-            try JSONDecoder().decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
+            try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
+            try jsonDecoder.decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
         )
     }
 
