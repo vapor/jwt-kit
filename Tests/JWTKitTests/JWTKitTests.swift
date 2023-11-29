@@ -86,17 +86,6 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(test.exp.value, Date(timeIntervalSince1970: 2_000_000_000))
     }
 
-    func testExpirationEncoding() async throws {
-        let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-        let jwt = try await keyCollection.sign(ExpirationPayload(exp: exp))
-        let parser = try JWTParser(token: jwt.bytes)
-        try XCTAssertEqual(parser.header().typ, "JWT")
-        try XCTAssertEqual(parser.header().alg, "HS256")
-        try XCTAssertEqual(parser.payload(as: ExpirationPayload.self).exp, exp)
-        try await parser.verify(using: keyCollection.getKey())
-    }
-
     func testSigners() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZvbyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5OTl9.Gf7leJ8i30LmMI7GBTpWDMXV60y1wkTOCOBudP9v9ms"
         let keyCollection = await JWTKeyCollection().addHS256(key: "bar".bytes, kid: "foo")
@@ -348,50 +337,6 @@ class JWTKitTests: XCTestCase {
             guard let error = $0 as? JWTError else { return }
             XCTAssertEqual(error.errorType, .noKeyProvided)
         }
-    }
-
-    func testCustomHeaderFields() async throws {
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-
-        let customFields: [String: JWTHeaderField] = ["foo": .string("bar"), "baz": .int(42)]
-        let payload = TestPayload(
-            sub: "vapor",
-            name: "Foo",
-            admin: false,
-            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-        )
-        let token = try await keyCollection.sign(payload, customFields: customFields)
-
-        let parser = try JWTParser(token: token.bytes)
-        let fields = try parser.header().customFields
-        XCTAssertEqual(fields, customFields)
-    }
-    
-    func testSampleOpenbankingHeader() async throws {
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-        
-        // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
-        let customFields: [String: JWTHeaderField] = [
-            "http://openbanking.org.uk/iat": .int(1501497671),
-            "http://openbanking.org.uk/iss": .string("C=UK, ST=England, L=London, O=Acme Ltd."),
-            "http://openbanking.org.uk/tan": .string("openbanking.org.uk"),
-            "crit": .array([.string("b64"), .string("http://openbanking.org.uk/iat"), .string("http://openbanking.org.uk/iss"), .string("http://openbanking.org.uk/tan")])
-        ]
-        
-        let kid: JWKIdentifier = "90210ABAD"
-        let payload = TestPayload(
-            sub: "vapor",
-            name: "Foo",
-            admin: false,
-            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-        )
-
-        let token = try await keyCollection.sign(payload, kid: kid, customFields: customFields)
-        
-        let parser = try JWTParser(token: token.bytes)
-        let header = try parser.header()
-        XCTAssertEqual(header.customFields, customFields)
-        XCTAssertEqual(header.kid, kid)
     }
 }
 

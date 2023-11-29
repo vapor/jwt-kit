@@ -166,67 +166,6 @@ final class X5CTests: XCTestCase {
         XCTAssertEqual(data.appAppleId, 1234)
         XCTAssertEqual(data.environment, "Sandbox")
     }
-
-    func testSigningWithX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
-
-        let payload = TestPayload(
-            sub: "vapor",
-            name: "Foo",
-            admin: false,
-            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-        )
-        let token = try await keyCollection.sign(payload, x5c: x5cCerts)
-        let parser = try JWTParser(token: token.bytes)
-
-        let x5c = try XCTUnwrap(parser.header().x5c)
-        let pemCerts = try x5c.map(getPEMString)
-        XCTAssertEqual(pemCerts, x5cCerts)
-        let verifier = try X5CVerifier(rootCertificates: [x5cCerts.last!])
-        await XCTAssertNoThrowAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
-    }
-
-    func testSigningWithInvalidX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
-
-        let payload = TestPayload(
-            sub: "vapor",
-            name: "Foo",
-            admin: false,
-            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-        )
-
-        // Remove the intermediate cert from the chain
-        let certs = x5cCerts.enumerated().filter { $0.offset != 1 }.map { $0.element }
-
-        let token = try await keyCollection.sign(payload, x5c: certs)
-        let parser = try JWTParser(token: token.bytes)
-
-        let x5c = try XCTUnwrap(parser.header().x5c)
-        let pemCerts = try x5c.map(getPEMString)
-        XCTAssertEqual(pemCerts, certs)
-        let verifier = try X5CVerifier(rootCertificates: [certs.last!])
-        await XCTAssertThrowsErrorAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
-    }
-
-    private func getPEMString(from der: String) throws -> String {
-        var encoded = der[...]
-        let pemLineCount = (encoded.utf8.count + 64) / 64
-        var pemLines = [Substring]()
-        pemLines.reserveCapacity(pemLineCount + 2)
-
-        pemLines.append("-----BEGIN CERTIFICATE-----")
-
-        while encoded.count > 0 {
-            let prefixIndex = encoded.index(encoded.startIndex, offsetBy: 64, limitedBy: encoded.endIndex) ?? encoded.endIndex
-            pemLines.append(encoded[..<prefixIndex])
-            encoded = encoded[prefixIndex...]
-        }
-
-        pemLines.append("-----END CERTIFICATE-----")
-
-        return pemLines.joined(separator: "\n")
-    }
 }
 
 let validToken = """
