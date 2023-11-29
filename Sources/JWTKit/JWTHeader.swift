@@ -16,9 +16,23 @@ public struct JWTHeader: Sendable {
     public var x5c: [String]?
 
     /// Custom fields.
-    public var customFields: [String: JWTHeaderField] = [:]
+    public var customFields: [String: JWTHeaderField]
 
-    init() {}
+    init(
+        alg: String? = nil,
+        typ: String? = nil,
+        cty: String? = nil,
+        kid: JWKIdentifier? = nil,
+        x5c: [String]? = nil,
+        customFields: [String: JWTHeaderField] = [:]
+    ) {
+        self.alg = alg
+        self.typ = typ
+        self.cty = cty
+        self.kid = kid
+        self.x5c = x5c
+        self.customFields = customFields
+    }
 }
 
 extension JWTHeader: Codable {
@@ -74,7 +88,7 @@ extension JWTHeader: Codable {
         case kid
         case x5c
         case custom(name: String)
-        
+
         static var allCases: [CodingKeys] {
             [.alg, .typ, .cty, .kid, .x5c]
         }
