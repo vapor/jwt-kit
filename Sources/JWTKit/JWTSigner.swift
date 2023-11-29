@@ -23,7 +23,7 @@ final class JWTSigner: Sendable {
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
         x5c: [String]? = nil,
-        customFields: [String: JWTHeaderField]? = nil
+        customFields: [String: JWTHeaderField] = [:]
     ) async throws -> String {
         try await JWTSerializer().sign(
             payload,

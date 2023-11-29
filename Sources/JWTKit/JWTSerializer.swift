@@ -9,7 +9,7 @@ struct JWTSerializer {
         kid: JWKIdentifier? = nil,
         cty: String? = nil,
         x5c: [String]? = nil,
-        customFields: [String: JWTHeaderField]? = nil,
+        customFields: [String: JWTHeaderField] = [:],
         jsonEncoder: any JWTJSONEncoder,
         skipVerification: Bool = false
     ) async throws -> String {

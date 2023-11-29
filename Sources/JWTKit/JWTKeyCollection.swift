@@ -232,7 +232,7 @@ public actor JWTKeyCollection: Sendable {
         typ: String = "JWT",
         kid: JWKIdentifier? = nil,
         x5c: [String]? = nil,
-        customFields: [String: JWTHeaderField]? = nil
+        customFields: [String: JWTHeaderField] = [:]
     ) async throws -> String {
         let signer = try self.getSigner(for: kid)
         return try await signer.sign(payload, typ: typ, kid: kid, x5c: x5c, customFields: customFields)
