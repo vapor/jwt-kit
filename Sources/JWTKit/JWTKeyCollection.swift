@@ -213,7 +213,9 @@ public actor JWTKeyCollection: Sendable {
     {
         let parser = try JWTParser(token: token)
         let header = try parser.header(jsonDecoder: self.defaultJSONDecoder)
-        let signer = try self.getSigner(for: header.kid, alg: header.alg)
+        let kid: JWKIdentifier? = if case let .string(kidString)? = header.kid { JWKIdentifier(string: kidString) } else { nil }
+        let alg: String? = if case let .string(algString)? = header.alg { algString } else { nil }
+        let signer = try self.getSigner(for: kid, alg: alg)
         return try await signer.verify(parser: parser)
     }
 
@@ -229,12 +231,10 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: A signed JWT token string.
     public func sign(
         _ payload: some JWTPayload,
-        typ: String = "JWT",
-        kid: JWKIdentifier? = nil,
-        x5c: [String]? = nil,
-        customFields: [String: JWTHeaderField] = [:]
+        with header: JWTHeader = JWTHeader()
     ) async throws -> String {
+        let kid: JWKIdentifier? = if let kid = try header.kid?.asString { .init(string: kid) } else { nil }
         let signer = try self.getSigner(for: kid)
-        return try await signer.sign(payload, typ: typ, kid: kid, x5c: x5c, customFields: customFields)
+        return try await signer.sign(payload, with: header)
     }
 }

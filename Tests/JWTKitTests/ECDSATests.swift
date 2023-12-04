@@ -32,7 +32,7 @@ final class ECDSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         for _ in 0 ..< 1000 {
-            let token = try await keys.sign(payload, kid: "private")
+            let token = try await keys.sign(payload, with: .init(fields: ["kid": .string("private")]))
             // test private signer decoding
             try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
             // test public signer decoding
@@ -56,7 +56,7 @@ final class ECDSATests: XCTestCase {
         let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keys.sign(Foo(bar: 42), with: .init(fields: ["kid": "vapor"]))
 
         // verify using jwks without alg
         let jwksString = """
@@ -95,7 +95,7 @@ final class ECDSATests: XCTestCase {
         let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keys.sign(Foo(bar: 42), with: .init(fields: ["kid": "vapor"]))
 
         // verify using jwks without alg
         let jwksString = """
@@ -134,7 +134,7 @@ final class ECDSATests: XCTestCase {
         let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keys.sign(Foo(bar: 42), with: .init(fields: ["kid": "vapor"]))
 
         // verify using jwks without alg
         let jwksString = """

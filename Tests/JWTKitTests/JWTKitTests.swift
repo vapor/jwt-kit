@@ -191,7 +191,7 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let data = try await keyCollection.sign(payload, kid: "1234")
+        let data = try await keyCollection.sign(payload, with: .init(fields: ["kid": "1234"]))
         // test private signer decoding
         try await XCTAssertEqualAsync(await keyCollection.verify(data, as: TestPayload.self), payload)
         // test public signer decoding
@@ -272,7 +272,7 @@ class JWTKitTests: XCTestCase {
             var bar: Int
             func verify(using _: JWTAlgorithm) throws {}
         }
-        let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
+        let jwt = try await keyCollection.sign(Foo(bar: 42), with: .init(fields: ["kid": "vapor"]))
 
         // verify using jwks without alg
         let jwksString = """
