@@ -30,48 +30,11 @@ final class JWTSigner: Sendable {
         )
     }
 
-    func unverified<Payload>(
-        _ token: String,
-        as _: Payload.Type = Payload.self
-    ) throws -> Payload
-        where Payload: JWTPayload
-    {
-        try self.unverified([UInt8](token.utf8))
-    }
-
-    func unverified<Payload>(
-        _ token: some DataProtocol,
-        as _: Payload.Type = Payload.self
-    ) throws -> Payload
-        where Payload: JWTPayload
-    {
-        try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
-    }
-
-    func verify<Payload>(
-        _ token: String,
-        as _: Payload.Type = Payload.self
-    ) async throws -> Payload
-        where Payload: JWTPayload
-    {
-        try await self.verify([UInt8](token.utf8), as: Payload.self)
-    }
-
-    func verify<Payload>(
-        _ token: some DataProtocol,
-        as _: Payload.Type = Payload.self
-    ) async throws -> Payload
-        where Payload: JWTPayload
-    {
-        let parser = try JWTParser(token: token)
-        return try await self.verify(parser: parser)
-    }
-
-    func verify<Payload>(parser: JWTParser) async throws -> Payload
+    func verify<Payload>(parser: some JWTParser) async throws -> Payload
         where Payload: JWTPayload
     {
         try parser.verify(using: algorithm)
-        let payload = try parser.payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
+        let payload = try parser.parsePayload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
         try await payload.verify(using: algorithm)
         return payload
     }

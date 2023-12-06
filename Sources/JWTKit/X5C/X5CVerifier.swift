@@ -118,8 +118,8 @@ public struct X5CVerifier: Sendable {
         where Payload: JWTPayload
     {
         // Parse the JWS header to get the header
-        let parser = try JWTParser(token: token)
-        let header = try parser.header(jsonDecoder: jsonDecoder)
+        let parser = try DefaultJWTParser(token: token)
+        let header = try parser.parseHeader(jsonDecoder: jsonDecoder)
 
         // Ensure the algorithm used is ES256, as it's the only supported one (for now)
         guard let headerAlg = try header.alg?.asString, headerAlg == "ES256" else {
@@ -146,7 +146,7 @@ public struct X5CVerifier: Sendable {
         // Setup an untrusted chain using the intermediate certificates
         let untrustedChain = CertificateStore(certificates.dropFirst().dropLast())
 
-        let payload = try parser.payload(as: Payload.self, jsonDecoder: jsonDecoder)
+        let payload = try parser.parsePayload(as: Payload.self, jsonDecoder: jsonDecoder)
 
         let date: Date
         // Some JWT implementations have the sign date in the payload.

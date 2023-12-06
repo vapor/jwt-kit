@@ -7,7 +7,7 @@ public struct JWTHeader: Sendable {
         self.fields = fields
     }
 
-    subscript(dynamicMember member: String) -> JWTHeaderField? {
+    public subscript(dynamicMember member: String) -> JWTHeaderField? {
         get { fields[member] }
         set { fields[member] = newValue }
     }

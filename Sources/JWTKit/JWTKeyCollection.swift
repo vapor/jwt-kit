@@ -160,11 +160,12 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The decoded payload of the specified type.
     public func unverified<Payload>(
         _ token: String,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        using parser: (some JWTParser).Type = DefaultJWTParser.self
     ) throws -> Payload
         where Payload: JWTPayload
     {
-        try self.unverified([UInt8](token.utf8))
+        try self.unverified([UInt8](token.utf8), using: parser)
     }
 
     /// Decodes an unverified JWT payload.
@@ -177,11 +178,12 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The decoded payload of the specified type.
     public func unverified<Payload>(
         _ token: some DataProtocol,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        using parser: (some JWTParser).Type = DefaultJWTParser.self
     ) throws -> Payload
         where Payload: JWTPayload
     {
-        try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: self.defaultJSONDecoder)
+        try parser.init(token: token).parsePayload(as: Payload.self, jsonDecoder: self.defaultJSONDecoder)
     }
 
     /// Verifies and decodes a JWT token to extract the payload.
@@ -192,11 +194,12 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: String,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        using parser: (some JWTParser).Type = DefaultJWTParser.self
     ) async throws -> Payload
         where Payload: JWTPayload
     {
-        try await self.verify([UInt8](token.utf8), as: Payload.self)
+        try await self.verify([UInt8](token.utf8), as: Payload.self, using: parser)
     }
 
     /// Verifies and decodes a JWT token to extract the payload.
@@ -207,14 +210,15 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: some DataProtocol,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        using parser: (some JWTParser).Type = DefaultJWTParser.self
     ) async throws -> Payload
         where Payload: JWTPayload
     {
-        let parser = try JWTParser(token: token)
-        let header = try parser.header(jsonDecoder: self.defaultJSONDecoder)
-        let kid: JWKIdentifier? = if case let .string(kidString)? = header.kid { JWKIdentifier(string: kidString) } else { nil }
-        let alg: String? = if case let .string(algString)? = header.alg { algString } else { nil }
+        let parser = try parser.init(token: token)
+        let header = try parser.parseHeader(jsonDecoder: self.defaultJSONDecoder)
+        let kid: JWKIdentifier? = if let kidString = try header.kid?.asString { JWKIdentifier(string: kidString) } else { nil }
+        let alg: String? = if let algString = try header.alg?.asString { algString } else { nil }
         let signer = try self.getSigner(for: kid, alg: alg)
         return try await signer.verify(parser: parser)
     }
@@ -231,10 +235,11 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: A signed JWT token string.
     public func sign(
         _ payload: some JWTPayload,
-        with header: JWTHeader = JWTHeader()
+        with header: JWTHeader = JWTHeader(),
+        using serializer: some JWTSerializer = DefaultJWTSerializer()
     ) async throws -> String {
         let kid: JWKIdentifier? = if let kid = try header.kid?.asString { .init(string: kid) } else { nil }
         let signer = try self.getSigner(for: kid)
-        return try await signer.sign(payload, with: header)
+        return try await signer.sign(payload, with: header, using: serializer)
     }
 }

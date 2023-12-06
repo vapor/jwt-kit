@@ -59,9 +59,9 @@ final class InternalTests: XCTestCase {
         )
         let header: JWTHeader = .init(fields: ["x5c": .array(x5cCerts.map(JWTHeaderField.string))])
         let token = try await keyCollection.sign(payload, with: header)
-        let parser = try JWTParser(token: token.bytes)
+        let parser = try DefaultJWTParser(token: token.bytes)
 
-        let x5c = try XCTUnwrap(parser.header().x5c?.asArray(of: String.self))
+        let x5c = try XCTUnwrap(parser.parseHeader().x5c?.asArray(of: String.self))
         let pemCerts = try x5c.map(getPEMString)
         XCTAssertEqual(pemCerts, x5cCerts)
         let verifier = try X5CVerifier(rootCertificates: [x5cCerts.last!])
@@ -83,9 +83,9 @@ final class InternalTests: XCTestCase {
 
         let header: JWTHeader = .init(fields: ["x5c": .array(certs.map(JWTHeaderField.string))])
         let token = try await keyCollection.sign(payload, with: header)
-        let parser = try JWTParser(token: token.bytes)
+        let parser = try DefaultJWTParser(token: token.bytes)
 
-        let x5c = try XCTUnwrap(parser.header().x5c?.asArray(of: String.self))
+        let x5c = try XCTUnwrap(parser.parseHeader().x5c?.asArray(of: String.self))
         let pemCerts = try x5c.map(getPEMString)
         XCTAssertEqual(pemCerts, certs)
         let verifier = try X5CVerifier(rootCertificates: [certs.last!])
@@ -98,12 +98,13 @@ final class InternalTests: XCTestCase {
         let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
         let jwt = try await keyCollection.sign(ExpirationPayload(exp: exp))
-        let parser = try JWTParser(token: jwt.bytes)
-        let typ = try XCTUnwrap(parser.header().typ?.asString)
+        let parser = try DefaultJWTParser(token: jwt.bytes)
+        let header = try parser.parseHeader()
+        let typ = try XCTUnwrap(header.typ?.asString)
         XCTAssertEqual(typ, "JWT")
-        let alg = try XCTUnwrap(parser.header().alg?.asString)
+        let alg = try XCTUnwrap(header.alg?.asString)
         XCTAssertEqual(alg, "HS256")
-        try XCTAssertEqual(parser.payload(as: ExpirationPayload.self).exp, exp)
+        try XCTAssertEqual(parser.parsePayload(as: ExpirationPayload.self).exp, exp)
         try await parser.verify(using: keyCollection.getKey())
     }
 
@@ -121,8 +122,8 @@ final class InternalTests: XCTestCase {
         let customFields: [String: JWTHeaderField] = ["foo": .string("bar"), "baz": .int(42)]
         let token = try await keyCollection.sign(payload, with: .init(fields: customFields))
 
-        let parser = try JWTParser(token: token.bytes)
-        let header = try parser.header()
+        let parser = try DefaultJWTParser(token: token.bytes)
+        let header = try parser.parseHeader()
         let foo = try XCTUnwrap(header.foo?.asString)
         let baz = try XCTUnwrap(header.baz?.asInt)
         XCTAssertEqual(foo, "bar")
@@ -171,8 +172,8 @@ final class InternalTests: XCTestCase {
 
         let token = try await keyCollection.sign(payload, with: .init(fields: customFields))
 
-        let parser = try JWTParser(token: token.bytes)
-        let header = try parser.header()
+        let parser = try DefaultJWTParser(token: token.bytes)
+        let header = try parser.parseHeader()
         let iat = try header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
         XCTAssertEqual(iat, 1_501_497_671)
         let iss = try header[dynamicMember: "http://openbanking.org.uk/iss"]?.asString
@@ -181,7 +182,7 @@ final class InternalTests: XCTestCase {
         XCTAssertEqual(tan, "openbanking.org.uk")
         let crit = try header.crit?.asArray(of: String.self)
         XCTAssertEqual(crit, ["b64", "http://openbanking.org.uk/iat", "http://openbanking.org.uk/iss", "http://openbanking.org.uk/tan"])
-        XCTAssertEqual(try parser.header().kid?.asString, "90210ABAD")
+        XCTAssertEqual(try header.kid?.asString, "90210ABAD")
     }
 
     func testCustomObjectHeader() async throws {
@@ -201,8 +202,8 @@ final class InternalTests: XCTestCase {
 
         let token = try await keyCollection.sign(payload, with: .init(fields: customFields))
 
-        let parser = try JWTParser(token: token.bytes)
-        let header = try parser.header()
+        let parser = try DefaultJWTParser(token: token.bytes)
+        let header = try parser.parseHeader()
         let foo = try header.foo?.asObject(of: String.self)
         XCTAssertEqual(foo, ["bar": "baz"])
     }

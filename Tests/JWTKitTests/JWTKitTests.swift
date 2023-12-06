@@ -338,6 +338,96 @@ class JWTKitTests: XCTestCase {
             XCTAssertEqual(error.errorType, .noKeyProvided)
         }
     }
+
+    func testCustomSerialisingWithB64Header() async throws {
+        let keyCollection = await JWTKeyCollection()
+            .addHS256(key: "secret")
+
+        let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
+
+        struct CustomSerializer: JWTSerializer {
+            func makePayload(from payload: some JWTPayload, with header: JWTHeader, using jsonEncoder: JWTJSONEncoder = .defaultForJWT) throws -> Data {
+                if try header.b64?.asBool == true {
+                    Data(try jsonEncoder.encode(payload).copyBytes())
+                } else {
+                    try jsonEncoder.encode(payload)
+                }
+            }
+
+            func makeHeader(from header: JWTHeader, key: JWTAlgorithm) async throws -> JWTHeader {
+                try await DefaultJWTSerializer().makeHeader(from: header, key: key)
+            }
+        }
+        
+        struct CustomParser: JWTParser {
+            var encodedHeader: ArraySlice<UInt8>
+            var encodedPayload: ArraySlice<UInt8>
+            var encodedSignature: ArraySlice<UInt8>
+            
+            func parseHeader(jsonDecoder: JWTJSONDecoder = .defaultForJWT) throws -> JWTHeader {
+                try DefaultJWTParser(encodedHeader: encodedHeader, encodedPayload: encodedPayload, encodedSignature: encodedSignature)
+                    .parseHeader(jsonDecoder: jsonDecoder)
+            }
+            
+            func parsePayload<Payload>(as _: Payload.Type, jsonDecoder: JWTJSONDecoder = .defaultForJWT) throws -> Payload where Payload : JWTPayload {
+                if try parseHeader(jsonDecoder: jsonDecoder).b64?.asBool ?? true {
+                    try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+                } else {
+                    try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
+                }
+            }
+        }
+
+        let token = try await keyCollection.sign(payload, with: .init(fields: ["b64": true]), using: CustomSerializer())
+        let verified = try await keyCollection.verify(token, as: TestPayload.self)
+        XCTAssertEqual(verified, payload)
+    }
+
+    func testCusomSerialisingWithCompression() async throws {
+        let keyCollection = await JWTKeyCollection().addHS256(key: "secret")
+
+        let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
+
+        struct CustomSerializer: JWTSerializer {
+            func makePayload(from payload: some JWTPayload, with header: JWTHeader, using jsonEncoder: any JWTJSONEncoder) throws -> Data {
+                if try header.zip?.asString == "DEF" {
+                    try jsonEncoder.encode(payload).deflate()
+                } else {
+                    try jsonEncoder.encode(payload)
+                }
+            }
+
+            func makeHeader(from header: JWTHeader, key: JWTAlgorithm) async throws -> JWTHeader {
+                try await DefaultJWTSerializer().makeHeader(from: header, key: key)
+            }
+        }
+
+        struct CustomParser: JWTParser {
+            var encodedHeader: ArraySlice<UInt8>
+            var encodedPayload: ArraySlice<UInt8>
+            var encodedSignature: ArraySlice<UInt8>
+
+            func parseHeader(jsonDecoder: JWTJSONDecoder) throws -> JWTHeader {
+                try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+            }
+
+            func parsePayload<T>(as _: T.Type, jsonDecoder: JWTJSONDecoder) throws -> T where T: Decodable {
+                let decodedPayload = switch try parseHeader(jsonDecoder: jsonDecoder).zip?.asString {
+                case "DEF":
+                    Data(encodedPayload.base64URLDecodedBytes()).inflate()
+                default:
+                    Data(encodedPayload.base64URLDecodedBytes())
+                }
+                return try jsonDecoder.decode(T.self, from: decodedPayload)
+            }
+        }
+
+        let token = try await keyCollection.sign(payload, with: .init(fields: ["zip": "DEF"]), using: CustomSerializer())
+
+        let verified = try await keyCollection.verify(token, as: TestPayload.self, using: CustomParser.self)
+
+        XCTAssertEqual(verified, payload)
+    }
 }
 
 struct AudiencePayload: Codable {

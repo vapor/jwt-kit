@@ -52,14 +52,14 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
     }
 }
 
-extension JWTHeaderField {
-    var isNull: Bool { if case .null = self { true } else { false } }
+public extension JWTHeaderField {
+    internal var isNull: Bool { if case .null = self { true } else { false } }
     var asBool: Bool? { get throws { if case let .bool(b) = self { b } else { throw JWTError.invalidHeaderField(reason: "Element is not a bool") } } }
     var asInt: Int? { get throws { if case let .int(i) = self { i } else { throw JWTError.invalidHeaderField(reason: "Element is not an int") } } }
     var asDecimal: Double? { get throws { if case let .decimal(d) = self { d } else { throw JWTError.invalidHeaderField(reason: "Element is not a decimal") } } }
     var asString: String? { get throws { if case let .string(s) = self { s } else { throw JWTError.invalidHeaderField(reason: "Element is not a string") } } }
-    var asArray: [Self]? { if case let .array(a) = self { a } else { nil } }
-    var asObject: [String: Self]? { if case let .object(o) = self { o } else { nil } }
+    internal var asArray: [Self]? { get throws { if case let .array(a) = self { a } else { throw JWTError.invalidHeaderField(reason: "Element is not an array") } } }
+    internal var asObject: [String: Self]? { get throws { if case let .object(o) = self { o } else { throw JWTError.invalidHeaderField(reason: "Element is not a JSON object") } } }
 }
 
 extension JWTHeaderField {
@@ -71,7 +71,7 @@ extension JWTHeaderField {
 
 public extension JWTHeaderField {
     func asObject<T>(of _: T.Type) throws -> [String: T] {
-        guard let object = self.asObject else {
+        guard let object = try self.asObject else {
             throw JWTError.invalidHeaderField(reason: "Element is not an object")
         }
         let values: [String: T]? = switch T.self {
@@ -88,7 +88,7 @@ public extension JWTHeaderField {
     }
 
     func asArray<T>(of _: T.Type) throws -> [T] {
-        guard let array = self.asArray else {
+        guard let array = try self.asArray else {
             throw JWTError.invalidHeaderField(reason: "Element is not an array")
         }
         let values: [T]? = switch T.self {
