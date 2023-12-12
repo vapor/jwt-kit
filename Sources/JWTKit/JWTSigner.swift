@@ -20,7 +20,7 @@ final class JWTSigner: Sendable {
     func sign(
         _ payload: some JWTPayload,
         with header: JWTHeader = JWTHeader(),
-        using serializer: some JWTSerializer = DefaultJWTSerializer()
+        using serializer: some JWTSerializer
     ) async throws -> String {
         try await serializer.sign(
             payload,

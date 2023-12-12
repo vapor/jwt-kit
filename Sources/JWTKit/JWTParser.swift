@@ -26,10 +26,6 @@ extension JWTParser {
         }
     }
 
-    public var `default`: some JWTParser {
-        DefaultJWTParser(encodedHeader: encodedHeader, encodedPayload: encodedPayload, encodedSignature: encodedSignature)
-    }
-
     private var signature: [UInt8] {
         encodedSignature.base64URLDecodedBytes()
     }

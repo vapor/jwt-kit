@@ -54,31 +54,24 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
 
 public extension JWTHeaderField {
     internal var isNull: Bool { if case .null = self { true } else { false } }
-    var asBool: Bool? { get throws { if case let .bool(b) = self { b } else { throw JWTError.invalidHeaderField(reason: "Element is not a bool") } } }
-    var asInt: Int? { get throws { if case let .int(i) = self { i } else { throw JWTError.invalidHeaderField(reason: "Element is not an int") } } }
-    var asDecimal: Double? { get throws { if case let .decimal(d) = self { d } else { throw JWTError.invalidHeaderField(reason: "Element is not a decimal") } } }
-    var asString: String? { get throws { if case let .string(s) = self { s } else { throw JWTError.invalidHeaderField(reason: "Element is not a string") } } }
-    internal var asArray: [Self]? { get throws { if case let .array(a) = self { a } else { throw JWTError.invalidHeaderField(reason: "Element is not an array") } } }
-    internal var asObject: [String: Self]? { get throws { if case let .object(o) = self { o } else { throw JWTError.invalidHeaderField(reason: "Element is not a JSON object") } } }
-}
-
-extension JWTHeaderField {
-    var isBool: Bool { get throws { try self.asBool != nil } }
-    var isInteger: Bool { get throws { try self.asInt != nil } }
-    var isDecimal: Bool { get throws { try self.asDecimal != nil } }
-    var isString: Bool { get throws { try self.asString != nil } }
+    var asBool: Bool? { if case let .bool(b) = self { b } else { nil } }
+    var asInt: Int? { if case let .int(i) = self { i } else { nil } }
+    var asDecimal: Double? { if case let .decimal(d) = self { d } else { nil } }
+    var asString: String? { if case let .string(s) = self { s } else { nil } }
+    internal var asArray: [Self]? { if case let .array(a) = self { a } else { nil } }
+    internal var asObject: [String: Self]? { if case let .object(o) = self { o } else { nil } }
 }
 
 public extension JWTHeaderField {
     func asObject<T>(of _: T.Type) throws -> [String: T] {
-        guard let object = try self.asObject else {
+        guard let object = self.asObject else {
             throw JWTError.invalidHeaderField(reason: "Element is not an object")
         }
         let values: [String: T]? = switch T.self {
-        case is Bool.Type: try object.compactMapValues { try $0.asBool } as? [String: T]
-        case is Int.Type: try object.compactMapValues { try $0.asInt } as? [String: T]
-        case is Double.Type: try object.compactMapValues { try $0.asDecimal } as? [String: T]
-        case is String.Type: try object.compactMapValues { try $0.asString } as? [String: T]
+        case is Bool.Type: object.compactMapValues { $0.asBool } as? [String: T]
+        case is Int.Type: object.compactMapValues { $0.asInt } as? [String: T]
+        case is Double.Type: object.compactMapValues { $0.asDecimal } as? [String: T]
+        case is String.Type: object.compactMapValues { $0.asString } as? [String: T]
         default: nil
         }
         guard let values, object.count == values.count else {
@@ -88,20 +81,26 @@ public extension JWTHeaderField {
     }
 
     func asArray<T>(of _: T.Type) throws -> [T] {
-        guard let array = try self.asArray else {
+        guard let array = self.asArray else {
             throw JWTError.invalidHeaderField(reason: "Element is not an array")
         }
         let values: [T]? = switch T.self {
-        case is Bool.Type: try array.compactMap { try $0.asBool } as? [T]
-        case is Int.Type: try array.compactMap { try $0.asInt } as? [T]
-        case is Double.Type: try array.compactMap { try $0.asDecimal } as? [T]
-        case is String.Type: try array.compactMap { try $0.asString } as? [T]
+        case is Bool.Type: array.compactMap { $0.asBool } as? [T]
+        case is Int.Type: array.compactMap { $0.asInt } as? [T]
+        case is Double.Type: array.compactMap { $0.asDecimal } as? [T]
+        case is String.Type: array.compactMap { $0.asString } as? [T]
         default: nil
         }
         guard let values, array.count == values.count else {
             throw JWTError.invalidHeaderField(reason: "Array is not homogeneous")
         }
         return values
+    }
+}
+
+extension JWTHeaderField: ExpressibleByNilLiteral {
+    public init(nilLiteral _: ()) {
+        self = .null
     }
 }
 

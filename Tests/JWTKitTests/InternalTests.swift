@@ -174,15 +174,15 @@ final class InternalTests: XCTestCase {
 
         let parser = try DefaultJWTParser(token: token.bytes)
         let header = try parser.parseHeader()
-        let iat = try header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
+        let iat = header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
         XCTAssertEqual(iat, 1_501_497_671)
-        let iss = try header[dynamicMember: "http://openbanking.org.uk/iss"]?.asString
+        let iss = header[dynamicMember: "http://openbanking.org.uk/iss"]?.asString
         XCTAssertEqual(iss, "C=UK, ST=England, L=London, O=Acme Ltd.")
-        let tan = try header[dynamicMember: "http://openbanking.org.uk/tan"]?.asString
+        let tan = header[dynamicMember: "http://openbanking.org.uk/tan"]?.asString
         XCTAssertEqual(tan, "openbanking.org.uk")
         let crit = try header.crit?.asArray(of: String.self)
         XCTAssertEqual(crit, ["b64", "http://openbanking.org.uk/iat", "http://openbanking.org.uk/iss", "http://openbanking.org.uk/tan"])
-        XCTAssertEqual(try header.kid?.asString, "90210ABAD")
+        XCTAssertEqual(header.kid?.asString, "90210ABAD")
     }
 
     func testCustomObjectHeader() async throws {
