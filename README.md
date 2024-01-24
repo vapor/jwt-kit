@@ -151,9 +151,9 @@ We can also _generate_ JWTs, also known as signing. To demonstrate this, let's u
 ```swift
 // Create a new instance of our JWTPayload
 let payload = ExamplePayload(
-    subject: "vapor",
-    expiration: .init(value: .distantFuture),
-    isAdmin: true
+    sub: "vapor",
+    exp: .init(value: .distantFuture),
+    admin: true
 )
 ```
 
