@@ -13,6 +13,12 @@ public struct JWTHeader: Sendable {
     }
 }
 
+extension JWTHeader: ExpressibleByDictionaryLiteral {
+     public init(dictionaryLiteral elements: (String, JWTHeaderField)...) {
+         self.init(fields: Dictionary(uniqueKeysWithValues: elements))
+     }
+ }
+
 extension JWTHeader: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)

@@ -53,13 +53,13 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
 }
 
 public extension JWTHeaderField {
-    internal var isNull: Bool { if case .null = self { true } else { false } }
+    var isNull: Bool { if case .null = self { true } else { false } }
     var asBool: Bool? { if case let .bool(b) = self { b } else { nil } }
     var asInt: Int? { if case let .int(i) = self { i } else { nil } }
     var asDecimal: Double? { if case let .decimal(d) = self { d } else { nil } }
     var asString: String? { if case let .string(s) = self { s } else { nil } }
-    internal var asArray: [Self]? { if case let .array(a) = self { a } else { nil } }
-    internal var asObject: [String: Self]? { if case let .object(o) = self { o } else { nil } }
+    var asArray: [Self]? { if case let .array(a) = self { a } else { nil } }
+    var asObject: [String: Self]? { if case let .object(o) = self { o } else { nil } }
 }
 
 public extension JWTHeaderField {

@@ -1,12 +1,13 @@
 struct JWKSigner: Sendable {
     let jwk: JWK
-    let jsonEncoder: any JWTJSONEncoder
-    let jsonDecoder: any JWTJSONDecoder
+    
+    let parser: any JWTParser
+    let serializer: any JWTSerializer
 
-    init(jwk: JWK, jsonEncoder: any JWTJSONEncoder, jsonDecoder: any JWTJSONDecoder) {
+    init(jwk: JWK, parser: some JWTParser, serializer: some JWTSerializer) {
         self.jwk = jwk
-        self.jsonEncoder = jsonEncoder
-        self.jsonDecoder = jsonDecoder
+        self.parser = parser
+        self.serializer = serializer
     }
 
     func signer(for algorithm: JWK.Algorithm? = nil) -> JWTSigner? {

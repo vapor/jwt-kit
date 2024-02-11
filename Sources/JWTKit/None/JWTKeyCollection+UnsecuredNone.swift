@@ -30,9 +30,9 @@ public extension JWTKeyCollection {
     @discardableResult
     func addUnsecuredNone(
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(algorithm: UnsecuredNoneSigner(), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+        add(.init(algorithm: UnsecuredNoneSigner(), parser: parser, serializer: serializer), for: kid)
     }
 }

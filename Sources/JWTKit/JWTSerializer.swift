@@ -2,62 +2,58 @@ import Foundation
 import X509
 
 public protocol JWTSerializer: Sendable {
-    func makePayload(from payload: some JWTPayload, with header: JWTHeader, using jsonEncoder: any JWTJSONEncoder) throws -> Data
-    func makeHeader(from header: JWTHeader, key: JWTAlgorithm) async throws -> JWTHeader
+    var jsonEncoder: any JWTJSONEncoder { get }
+    func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data
 }
 
 extension JWTSerializer {
-    func sign(
-        _ payload: some JWTPayload,
-        with header: JWTHeader = JWTHeader(),
-        using key: JWTAlgorithm,
-        jsonEncoder: any JWTJSONEncoder
-    ) async throws -> String {
+    public func makeHeader(from header: JWTHeader, key: JWTAlgorithm) async throws -> JWTHeader {
+        var newHeader = header
+
+        newHeader.alg = newHeader.alg ?? key.name
+        newHeader.typ = newHeader.typ ?? "JWT"
+
+        if let x5c = newHeader.x5c, !x5c.isEmpty {
+            let verifier = try X5CVerifier(rootCertificates: [x5c[0]])
+            try await verifier.verifyChain(certificates: x5c)
+
+            newHeader.x5c = try x5c.map { cert in
+                let certificate = try Certificate(pemEncoded: cert)
+                let derBytes = try Data(certificate.serializeAsPEM().derBytes)
+                return derBytes.base64EncodedString()
+            }
+        }
+
+        return newHeader
+    }
+    
+    func makeSigningInput(payload: some JWTPayload, header: JWTHeader, key: some JWTAlgorithm) async throws -> Data {
         let header = try await self.makeHeader(from: header, key: key)
         let encodedHeader = try jsonEncoder.encode(header).base64URLEncodedBytes()
 
-        let encodedPayload = try self.makePayload(
-            from: payload, with: header, using: jsonEncoder
-        ).base64URLEncodedBytes()
+        let encodedPayload = try self.serialize(payload, header: header)
+        
+        return encodedHeader + [.period] + encodedPayload
+    }
+    
+    func sign(_ payload: some JWTPayload, with header: JWTHeader = JWTHeader(), using key: some JWTAlgorithm) async throws -> String {
+        let signingInput = try await makeSigningInput(payload: payload, header: header, key: key)
 
-        let signatureData = try key.sign(encodedHeader + [.period] + encodedPayload)
+        let signatureData = try key.sign(signingInput)
 
-        let bytes = encodedHeader
-            + [.period]
-            + encodedPayload
-            + [.period]
-            + signatureData.base64URLEncodedBytes()
+        let bytes = signingInput + [.period] + signatureData.base64URLEncodedBytes()
         return String(decoding: bytes, as: UTF8.self)
     }
 }
 
 public struct DefaultJWTSerializer: JWTSerializer {
-    public init() {}
-
-    public func makePayload(
-        from payload: some JWTPayload,
-        with _: JWTHeader = JWTHeader(),
-        using jsonEncoder: any JWTJSONEncoder = .defaultForJWT
-    ) throws -> Data {
-        try jsonEncoder.encode(payload)
+    public var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+    
+    public init(jsonEncoder: JWTJSONEncoder = .defaultForJWT) {
+        self.jsonEncoder = jsonEncoder
     }
 
-    public func makeHeader(
-        from header: JWTHeader,
-        key: JWTAlgorithm
-    ) async throws -> JWTHeader {
-        var newHeader = header
-        if newHeader.alg?.isNull ?? true { newHeader.alg = .string(key.name) }
-        if newHeader.typ?.isNull ?? true { newHeader.typ = .string("JWT") }
-
-        if let x5c = try header.x5c?.asArray(of: String.self), !x5c.isEmpty {
-            let verifier = try X5CVerifier(rootCertificates: [x5c[0]])
-            try await verifier.verifyChain(certificates: x5c)
-            newHeader.x5c = try .array(x5c.map {
-                let certificate = try Certificate(pemEncoded: $0)
-                return try JWTHeaderField.string(Data(certificate.serializeAsPEM().derBytes).base64EncodedString())
-            })
-        }
-        return newHeader
+    public func serialize(_ payload: some JWTPayload, header: JWTHeader = JWTHeader()) throws -> Data {
+        Data(try jsonEncoder.encode(payload).base64URLEncodedBytes())
     }
 }

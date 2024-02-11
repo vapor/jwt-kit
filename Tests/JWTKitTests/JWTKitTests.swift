@@ -191,7 +191,7 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let data = try await keyCollection.sign(payload, with: .init(fields: ["kid": "1234"]))
+        let data = try await keyCollection.sign(payload, header: ["kid": "1234"])
         // test private signer decoding
         try await XCTAssertEqualAsync(await keyCollection.verify(data, as: TestPayload.self), payload)
         // test public signer decoding
@@ -272,7 +272,7 @@ class JWTKitTests: XCTestCase {
             var bar: Int
             func verify(using _: JWTAlgorithm) throws {}
         }
-        let jwt = try await keyCollection.sign(Foo(bar: 42), with: .init(fields: ["kid": "vapor"]))
+        let jwt = try await keyCollection.sign(Foo(bar: 42), header: ["kid": "vapor"])
 
         // verify using jwks without alg
         let jwksString = """
@@ -317,7 +317,7 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let keyCollection = await JWTKeyCollection().addUnsecuredNone(jsonEncoder: encoder, jsonDecoder: decoder)
+        let keyCollection = await JWTKeyCollection().addUnsecuredNone(parser: DefaultJWTParser(jsonDecoder: decoder), serializer: DefaultJWTSerializer(jsonEncoder: encoder))
         let token = try await keyCollection.sign(payload)
         XCTAssert((token.split(separator: ".").dropFirst(1).first.map { String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self) } ?? "").contains(#""exp":""#))
         try await XCTAssertEqualAsync(await keyCollection.verify(token.bytes, as: TestPayload.self), payload)
@@ -340,92 +340,86 @@ class JWTKitTests: XCTestCase {
     }
 
     func testCustomSerialisingWithB64Header() async throws {
-        let keyCollection = await JWTKeyCollection()
-            .addHS256(key: "secret")
-
-        let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
-
         struct CustomSerializer: JWTSerializer {
-            func makePayload(from payload: some JWTPayload, with header: JWTHeader, using jsonEncoder: JWTJSONEncoder = .defaultForJWT) throws -> Data {
-                if try header.b64?.asBool == true {
-                    Data(try jsonEncoder.encode(payload).copyBytes())
+            var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+            
+            func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
+                if header.b64?.asBool == true {
+                    Data(try jsonEncoder.encode(payload).base64URLEncodedBytes())
                 } else {
                     try jsonEncoder.encode(payload)
                 }
             }
-
-            func makeHeader(from header: JWTHeader, key: JWTAlgorithm) async throws -> JWTHeader {
-                try await DefaultJWTSerializer().makeHeader(from: header, key: key)
-            }
         }
         
         struct CustomParser: JWTParser {
-            var encodedHeader: ArraySlice<UInt8>
-            var encodedPayload: ArraySlice<UInt8>
-            var encodedSignature: ArraySlice<UInt8>
+            var jsonDecoder: JWTJSONDecoder = .defaultForJWT
             
-            func parseHeader(jsonDecoder: JWTJSONDecoder = .defaultForJWT) throws -> JWTHeader {
-                try DefaultJWTParser(encodedHeader: encodedHeader, encodedPayload: encodedPayload, encodedSignature: encodedSignature)
-                    .parseHeader(jsonDecoder: jsonDecoder)
-            }
-            
-            func parsePayload<Payload>(as _: Payload.Type, jsonDecoder: JWTJSONDecoder = .defaultForJWT) throws -> Payload where Payload : JWTPayload {
-                if try parseHeader(jsonDecoder: jsonDecoder).b64?.asBool ?? true {
+            func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload : JWTPayload {
+                let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
+                
+                let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+                
+                let payload = if header.b64?.asBool ?? true {
                     try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
                 } else {
                     try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
                 }
+                
+                let signature = Data(encodedSignature.base64URLDecodedBytes())
+                
+                return (header: header, payload: payload, signature: signature)
             }
         }
+        
+        let keyCollection = await JWTKeyCollection()
+            .addHS256(key: "secret", parser: CustomParser(), serializer: CustomSerializer())
 
-        let token = try await keyCollection.sign(payload, with: .init(fields: ["b64": true]), using: CustomSerializer())
+        let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
+
+        let token = try await keyCollection.sign(payload, header: ["b64": true])
         let verified = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(verified, payload)
     }
 
     func testCusomSerialisingWithCompression() async throws {
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret")
-
-        let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
-
         struct CustomSerializer: JWTSerializer {
-            func makePayload(from payload: some JWTPayload, with header: JWTHeader, using jsonEncoder: any JWTJSONEncoder) throws -> Data {
-                if try header.zip?.asString == "DEF" {
-                    try jsonEncoder.encode(payload).deflate()
+            var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+            
+            func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
+                if header.zip?.asString == "DEF" {
+                    Data(try jsonEncoder.encode(payload).deflate().base64URLEncodedBytes())
                 } else {
-                    try jsonEncoder.encode(payload)
+                    Data(try jsonEncoder.encode(payload).base64URLEncodedBytes())
                 }
-            }
-
-            func makeHeader(from header: JWTHeader, key: JWTAlgorithm) async throws -> JWTHeader {
-                try await DefaultJWTSerializer().makeHeader(from: header, key: key)
             }
         }
 
         struct CustomParser: JWTParser {
-            var encodedHeader: ArraySlice<UInt8>
-            var encodedPayload: ArraySlice<UInt8>
-            var encodedSignature: ArraySlice<UInt8>
-
-            func parseHeader(jsonDecoder: JWTJSONDecoder) throws -> JWTHeader {
-                try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
-            }
-
-            func parsePayload<T>(as _: T.Type, jsonDecoder: JWTJSONDecoder) throws -> T where T: Decodable {
-                let decodedPayload = switch try parseHeader(jsonDecoder: jsonDecoder).zip?.asString {
+            var jsonDecoder: JWTJSONDecoder = .defaultForJWT
+            
+            func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload : JWTPayload {
+                let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
+                
+                let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+                
+                let decodedPayload = switch header.zip?.asString {
                 case "DEF":
                     Data(encodedPayload.base64URLDecodedBytes()).inflate()
                 default:
                     Data(encodedPayload.base64URLDecodedBytes())
                 }
-                return try jsonDecoder.decode(T.self, from: decodedPayload)
+                
+                return try (header, jsonDecoder.decode(Payload.self, from: decodedPayload), Data(encodedSignature.base64URLDecodedBytes()))
             }
         }
+        
+        let keyCollection = await JWTKeyCollection()
+            .addHS256(key: "secret", parser: CustomParser(), serializer: CustomSerializer())
+        let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
 
-        let token = try await keyCollection.sign(payload, with: .init(fields: ["zip": "DEF"]), using: CustomSerializer())
-
-        let verified = try await keyCollection.verify(token, as: TestPayload.self, using: CustomParser.self)
-
+        let token = try await keyCollection.sign(payload, header: ["zip": "DEF"])
+        let verified = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(verified, payload)
     }
 }

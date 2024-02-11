@@ -118,16 +118,16 @@ public struct X5CVerifier: Sendable {
         where Payload: JWTPayload
     {
         // Parse the JWS header to get the header
-        let parser = try DefaultJWTParser(token: token)
-        let header = try parser.parseHeader(jsonDecoder: jsonDecoder)
+        let parser = DefaultJWTParser(jsonDecoder: jsonDecoder)
+        let (header, payload, _) = try parser.parse(token, as: Payload.self)
 
         // Ensure the algorithm used is ES256, as it's the only supported one (for now)
-        guard let headerAlg = header.alg?.asString, headerAlg == "ES256" else {
+        guard let headerAlg = header.alg, headerAlg == "ES256" else {
             throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: header.alg))")
         }
 
         // Ensure the x5c header parameter is present and not empty
-        guard let x5c = try header.x5c?.asArray(of: String.self), !x5c.isEmpty else {
+        guard let x5c = header.x5c, !x5c.isEmpty else {
             throw JWTError.invalidX5CChain(reason: "Missing or empty x5c header parameter")
         }
 
@@ -145,8 +145,6 @@ public struct X5CVerifier: Sendable {
 
         // Setup an untrusted chain using the intermediate certificates
         let untrustedChain = CertificateStore(certificates.dropFirst().dropLast())
-
-        let payload = try parser.parsePayload(as: Payload.self, jsonDecoder: jsonDecoder)
 
         let date: Date
         // Some JWT implementations have the sign date in the payload.
@@ -171,8 +169,8 @@ public struct X5CVerifier: Sendable {
 
         // Assuming the chain is valid, verify the token was signed by the valid certificate
         let ecdsaKey = try ES256PublicKey(certificate: certificates[0].serializeAsPEM().pemString)
-        let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg))
-
-        return try await signer.verify(parser: parser)
+        let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg), parser: parser)
+        
+        return try await signer.verify(token)
     }
 }
