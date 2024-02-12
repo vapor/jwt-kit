@@ -1,32 +1,39 @@
-import Compression
 import Foundation
+import NIO
+import NIOFoundationCompat
 
 extension Data {
-    private func compression(isEncode: Bool, algorithm: compression_algorithm) -> Data {
-        withUnsafeBytes { (rawBuffer: UnsafeRawBufferPointer) in
-            let buffer: UnsafeBufferPointer<UInt8> = rawBuffer.bindMemory(to: UInt8.self)
-            let pointer: UnsafePointer<UInt8> = buffer.baseAddress!
-            let destCapacity = 1_000_000
-            let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: destCapacity)
-            defer { destinationBuffer.deallocate() }
-            let destinationBytes: Int
-            if isEncode {
-                destinationBytes = compression_encode_buffer(destinationBuffer, destCapacity, pointer, count, nil, algorithm)
-            } else {
-                destinationBytes = compression_decode_buffer(destinationBuffer, destCapacity, pointer, count, nil, algorithm)
-            }
-            guard destinationBytes != 0 else {
-                fatalError("Compression failed")
-            }
-            return Data(bytes: destinationBuffer, count: destinationBytes)
+    func compressed(using algorithm: NIOCompression.Algorithm) throws -> Data {
+        let allocator = ByteBufferAllocator()
+        var buffer = allocator.buffer(capacity: self.count)
+        buffer.writeBytes(self)
+
+        var compressor = NIOCompression.Compressor()
+        compressor.initialize(encoding: algorithm)
+
+        let compressedBuffer = compressor.compress(inputBuffer: &buffer, allocator: allocator, finalise: true)
+        compressor.shutdown()
+
+        return Data(buffer: compressedBuffer)
+    }
+    
+    func decompressed(using algorithm: NIOHTTPDecompression.CompressionAlgorithm, limit: NIOHTTPDecompression.DecompressionLimit = .none) throws -> Data? {
+        var decompressor = NIOHTTPDecompression.Decompressor(limit: limit)
+        try decompressor.initializeDecoder(encoding: algorithm)
+
+        let bufferAllocator = ByteBufferAllocator()
+        var inputBuffer = bufferAllocator.buffer(capacity: self.count)
+        inputBuffer.writeBytes(self)
+
+        var outputBuffer = bufferAllocator.buffer(capacity: inputBuffer.readableBytes * 2)
+        let result = try decompressor.decompress(part: &inputBuffer, buffer: &outputBuffer, compressedLength: self.count)
+
+        decompressor.deinitializeDecoder()
+
+        guard result.complete else {
+            return nil
         }
-    }
 
-    func deflate() -> Data {
-        compression(isEncode: true, algorithm: COMPRESSION_ZLIB)
-    }
-
-    func inflate() -> Data {
-        compression(isEncode: false, algorithm: COMPRESSION_ZLIB)
+        return Data(buffer: outputBuffer)
     }
 }
