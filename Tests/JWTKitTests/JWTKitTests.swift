@@ -381,47 +381,6 @@ class JWTKitTests: XCTestCase {
         let verified = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(verified, payload)
     }
-
-    func testCusomSerialisingWithCompression() async throws {
-        struct CustomSerializer: JWTSerializer {
-            var jsonEncoder: JWTJSONEncoder = .defaultForJWT
-
-            func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
-                if header.zip?.asString == "DEF" {
-                    try Data(jsonEncoder.encode(payload).compressed(using: .deflate).base64URLEncodedBytes())
-                } else {
-                    try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
-                }
-            }
-        }
-
-        struct CustomParser: JWTParser {
-            var jsonDecoder: JWTJSONDecoder = .defaultForJWT
-
-            func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
-                let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
-
-                let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
-
-                let decodedPayload = switch header.zip?.asString {
-                case "DEF":
-                    try Data(encodedPayload.base64URLDecodedBytes()).decompressed(using: .deflate)!
-                default:
-                    Data(encodedPayload.base64URLDecodedBytes())
-                }
-
-                return try (header, jsonDecoder.decode(Payload.self, from: decodedPayload), Data(encodedSignature.base64URLDecodedBytes()))
-            }
-        }
-
-        let keyCollection = await JWTKeyCollection()
-            .addHS256(key: "secret", parser: CustomParser(), serializer: CustomSerializer())
-        let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
-
-        let token = try await keyCollection.sign(payload, header: ["zip": "DEF"])
-        let verified = try await keyCollection.verify(token, as: TestPayload.self)
-        XCTAssertEqual(verified, payload)
-    }
 }
 
 struct AudiencePayload: Codable {

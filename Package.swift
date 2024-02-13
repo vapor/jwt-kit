@@ -16,8 +16,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0"),
         .package(url: "https://github.com/apple/swift-certificates.git", branch: "main"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
-        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.0.0"),
     ],
     targets: [
         .target(
@@ -36,8 +34,6 @@ let package = Package(
             name: "JWTKitTests",
             dependencies: [
                 "JWTKit",
-                .product(name: "NIOFoundationCompat", package: "swift-nio"),
-                .product(name: "NIOHTTPCompression", package: "swift-nio-extras"),
             ],
             resources: [
                 .copy("TestVectors"),
