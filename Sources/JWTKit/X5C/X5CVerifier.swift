@@ -151,7 +151,7 @@ public struct X5CVerifier: Sendable {
 
         // Ensure the x5c header parameter is present and not empty
         guard let x5c = header.x5c, !x5c.isEmpty else {
-            throw JWTError.invalidX5CChain(reason: "Missing or empty x5c header parameter")
+            throw JWTError.missingX5CHeader
         }
 
         // Decode the x5c certificates
