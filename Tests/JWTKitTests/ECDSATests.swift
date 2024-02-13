@@ -1,10 +1,25 @@
 import BigInt
+import Crypto
 import JWTKit
 import XCTest
 
 final class ECDSATests: XCTestCase {
     func testECDSADocs() async throws {
         XCTAssertNoThrow(try ES256PublicKey(pem: ecdsaPublicKey))
+    }
+
+    func testECDSAFromCryptoKey() async throws {
+        let key = try P256.Signing.PublicKey(pemRepresentation: ecdsaPublicKey)
+        let cryptoKey = try ES256PublicKey(backing: key)
+        let otherKey = try ES256PublicKey(pem: ecdsaPublicKey)
+        XCTAssertEqual(cryptoKey, otherKey)
+    }
+
+    func testECDSAPrivateFromCryptoKey() async throws {
+        let key = try P256.Signing.PrivateKey(pemRepresentation: ecdsaPrivateKey)
+        let cryptoKey = try ES256PrivateKey(backing: key)
+        let otherKey = try ES256PrivateKey(pem: ecdsaPrivateKey)
+        XCTAssertEqual(cryptoKey, otherKey)
     }
 
     func testECDSAGenerate() async throws {

@@ -36,6 +36,13 @@ public extension Insecure.RSA {
 
         private let backing: _RSA.Signing.PublicKey
 
+        /// Creates an ``RSA.PublicKey`` from a SwiftCrypto public key.
+        ///
+        /// - Parameter backing: The SwiftCrypto public key.
+        public init(backing: _RSA.Signing.PublicKey) {
+            self.backing = backing
+        }
+
         /// Creates an ``RSA.PublicKey`` from public key PEM file.
         ///
         /// Public key PEM files look like:
@@ -157,10 +164,6 @@ public extension Insecure.RSA {
             self.init(backing: publicKey)
         }
 
-        init(backing: _RSA.Signing.PublicKey) {
-            self.backing = backing
-        }
-
         func isValidSignature<D: Digest>(_ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding) -> Bool {
             self.backing.isValidSignature(signature, for: digest, padding: padding)
         }
@@ -192,6 +195,13 @@ public extension Insecure.RSA {
 
         public var publicKey: PublicKey {
             .init(backing: self.backing.publicKey)
+        }
+
+        /// Creates an ``RSA.PrivateKey`` from a SwiftCrypto private key.
+        ///
+        /// - Parameter backing: The SwiftCrypto private key.
+        public init(backing: _RSA.Signing.PrivateKey) {
+            self.backing = backing
         }
 
         /// Creates an``RSA.PrivateKey`` from private key PEM file in String format.
@@ -278,10 +288,6 @@ public extension Insecure.RSA {
             try privateKeyDER.serialize(into: &serializer)
             let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
             self.init(backing: privateKey)
-        }
-
-        private init(backing: _RSA.Signing.PrivateKey) {
-            self.backing = backing
         }
 
         func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {

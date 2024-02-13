@@ -1,3 +1,4 @@
+import _CryptoExtras
 import BigInt
 import JWTKit
 import XCTest
@@ -19,6 +20,20 @@ final class RSATests: XCTestCase {
 
     func testPublicKeyInitialization() throws {
         XCTAssertNoThrow(try Insecure.RSA.PublicKey(modulus: modulus, exponent: publicExponent))
+    }
+
+    func testPublicKeyInitializationFromCryptoKey() throws {
+        let cryptoKey = try _RSA.Signing.PublicKey(pemRepresentation: publicKey)
+        let jwtKey = Insecure.RSA.PublicKey(backing: cryptoKey)
+        let otherKey = try Insecure.RSA.PublicKey(pem: publicKey)
+        XCTAssertEqual(jwtKey, otherKey)
+    }
+
+    func testPrivateKeyInitializationFromCryptoKey() throws {
+        let cryptoKey = try _RSA.Signing.PrivateKey(pemRepresentation: privateKey)
+        let jwtKey = Insecure.RSA.PrivateKey(backing: cryptoKey)
+        let otherKey = try Insecure.RSA.PrivateKey(pem: privateKey)
+        XCTAssertEqual(jwtKey, otherKey)
     }
 
     func testSigning() async throws {

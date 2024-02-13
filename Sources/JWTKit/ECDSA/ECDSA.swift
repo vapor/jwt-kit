@@ -32,6 +32,14 @@ public extension ECDSA {
             backing.pemRepresentation
         }
 
+        /// Creates an ``ECDSA.PublicKey`` instance from SwiftCrypto PublicKey.
+        ///
+        /// - Parameter backing: The SwiftCrypto PublicKey.
+        /// - Throws: If there is a problem parsing the public key.
+        public init(backing: some ECDSAPublicKey) throws {
+            self.backing = try PublicKey(rawRepresentation: backing.rawRepresentation)
+        }
+
         /// Creates an ``ECDSA.PublicKey`` instance from a PEM encoded certificate string.
         ///
         /// - Parameter pem: The PEM encoded certificate string.
@@ -121,6 +129,14 @@ public extension ECDSA {
         /// - Returns: A PEM encoded string representation of the key.
         public var pemRepresentation: String {
             backing.pemRepresentation
+        }
+
+        /// Creates an ``ECDSA.PrivateKey`` instance from SwiftCrypto PrivateKey.
+        ///
+        /// - Parameter backing: The SwiftCrypto PrivateKey.
+        /// - Throws: If there is a problem parsing the private key.
+        public init(backing: some ECDSAPrivateKey) throws {
+            self.backing = try PrivateKey(rawRepresentation: backing.rawRepresentation)
         }
 
         /// Creates an ``ECDSA.PrivateKey`` instance from a PEM encoded private key string.
