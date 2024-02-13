@@ -3,7 +3,7 @@ import Foundation
 /// A JWT signer.
 final class JWTSigner: Sendable {
     let algorithm: JWTAlgorithm
-    
+
     let parser: any JWTParser
     let serializer: any JWTSerializer
 
@@ -23,13 +23,13 @@ final class JWTSigner: Sendable {
         let (encodedHeader, encodedPayload, encodedSignature) = try parser.getTokenParts(token)
         let data = encodedHeader + [.period] + encodedPayload
         let signature = encodedSignature.base64URLDecodedBytes()
-        
+
         guard try algorithm.verify(signature, signs: data) else {
             throw JWTError.signatureVerificationFailed
         }
-        
+
         let (_, payload, _) = try parser.parse(token, as: Payload.self)
-        
+
         try await payload.verify(using: algorithm)
         return payload
     }
