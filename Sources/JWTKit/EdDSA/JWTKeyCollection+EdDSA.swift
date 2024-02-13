@@ -26,13 +26,13 @@ public extension JWTKeyCollection {
     func addEdDSA(
         key: some EdDSAKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
             algorithm: EdDSASigner(key: key),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ), for: kid)
     }
 }

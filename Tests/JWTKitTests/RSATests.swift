@@ -12,7 +12,7 @@ final class RSATests: XCTestCase {
     func testRSADocs() async throws {
         await XCTAssertNoThrowAsync(try await JWTKeyCollection().addRS256(key: Insecure.RSA.PublicKey(pem: publicKey)))
     }
-    
+
     func testPrivateKeyInitialization() throws {
         XCTAssertNoThrow(try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent))
     }
@@ -33,7 +33,7 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let privateSigned = try await keyCollection.sign(payload, kid: "private")
+        let privateSigned = try await keyCollection.sign(payload, header: ["kid": "private"])
         try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
     }
 
@@ -119,7 +119,7 @@ final class RSATests: XCTestCase {
             .addRS256(key: Insecure.RSA.PrivateKey(pem: certPrivateKey), kid: "private")
             .addRS256(key: Insecure.RSA.PublicKey(certificatePEM: cert), kid: "cert")
 
-        let jwt = try await keyCollection.sign(test, kid: "private")
+        let jwt = try await keyCollection.sign(test, header: ["kid": "private"])
         let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
         XCTAssertEqual(payload, test)
     }

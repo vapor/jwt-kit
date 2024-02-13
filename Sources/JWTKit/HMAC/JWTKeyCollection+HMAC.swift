@@ -28,10 +28,10 @@ public extension JWTKeyCollection {
     func addHS256(
         key: String,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        addHS256(key: [UInt8](key.utf8), kid: kid, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+        addHS256(key: [UInt8](key.utf8), kid: kid, parser: parser, serializer: serializer)
     }
 
     /// Adds an HS256 key to the collection.
@@ -58,11 +58,11 @@ public extension JWTKeyCollection {
     func addHS256(
         key: some DataProtocol,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         let symmetricKey = SymmetricKey(data: key.copyBytes())
-        return addHS256(key: symmetricKey, kid: kid, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+        return addHS256(key: symmetricKey, kid: kid, parser: parser, serializer: serializer)
     }
     
     /// Adds an HS256 key to the collection.
@@ -89,10 +89,10 @@ public extension JWTKeyCollection {
     func addHS256(
         key: SymmetricKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(algorithm: HMACSigner<SHA256>(key: key, name: "HS256"), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+        add(.init(algorithm: HMACSigner<SHA256>(key: key, name: "HS256"), parser: parser, serializer: serializer), for: kid)
     }
 }
 
@@ -123,10 +123,10 @@ public extension JWTKeyCollection {
     func addHS384(
         key: String,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        addHS384(key: [UInt8](key.utf8), kid: kid, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+        addHS384(key: [UInt8](key.utf8), kid: kid, parser: parser, serializer: serializer)
     }
 
     /// Adds an HS384 key to the collection.
@@ -153,11 +153,11 @@ public extension JWTKeyCollection {
     func addHS384(
         key: some DataProtocol,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         let symmetricKey = SymmetricKey(data: key.copyBytes())
-        return addHS384(key: symmetricKey, kid: kid, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+        return addHS384(key: symmetricKey, kid: kid, parser: parser, serializer: serializer)
     }
 
     /// Adds an HS384 key to the collection.
@@ -184,10 +184,10 @@ public extension JWTKeyCollection {
     func addHS384(
         key: SymmetricKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(algorithm: HMACSigner<SHA384>(key: key, name: "HS384"), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+        add(.init(algorithm: HMACSigner<SHA384>(key: key, name: "HS384"), parser: parser, serializer: serializer), for: kid)
     }
 }
 
@@ -218,10 +218,10 @@ public extension JWTKeyCollection {
     func addHS512(
         key: String,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        addHS512(key: [UInt8](key.utf8), kid: kid, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+        addHS512(key: [UInt8](key.utf8), kid: kid, parser: parser, serializer: serializer)
     }
 
     /// Adds an HS512 key to the collection.
@@ -247,11 +247,11 @@ public extension JWTKeyCollection {
     func addHS512(
         key: some DataProtocol,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         let symmetricKey = SymmetricKey(data: key.copyBytes())
-        return addHS512(key: symmetricKey, kid: kid, jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder)
+        return addHS512(key: symmetricKey, kid: kid, parser: parser, serializer: serializer)
     }
 
     /// Adds an HS512 key to the collection.
@@ -277,9 +277,9 @@ public extension JWTKeyCollection {
     func addHS512(
         key: SymmetricKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(algorithm: HMACSigner<SHA512>(key: key, name: "HS512"), jsonEncoder: jsonEncoder, jsonDecoder: jsonDecoder), for: kid)
+        add(.init(algorithm: HMACSigner<SHA512>(key: key, name: "HS512"), parser: parser, serializer: serializer), for: kid)
     }
 }

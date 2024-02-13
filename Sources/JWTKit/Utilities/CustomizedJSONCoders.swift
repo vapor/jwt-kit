@@ -30,7 +30,7 @@ public extension JSONEncoder.DateEncodingStrategy {
     }
 }
 
-extension JWTJSONEncoder where Self == JSONEncoder {
+public extension JWTJSONEncoder where Self == JSONEncoder {
     static var defaultForJWT: any JWTJSONEncoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .secondsSince1970
@@ -38,7 +38,7 @@ extension JWTJSONEncoder where Self == JSONEncoder {
     }
 }
 
-extension JWTJSONDecoder where Self == JSONDecoder {
+public extension JWTJSONDecoder where Self == JSONDecoder {
     static var defaultForJWT: any JWTJSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
