@@ -136,6 +136,12 @@ public struct JWTError: Error, @unchecked Sendable {
         return new
     }
 
+    public static func malformedToken(reason: String) -> Self {
+        var new = Self(errorType: .malformedToken)
+        new.reason = reason
+        return new
+    }
+
     public static let malformedToken = Self(errorType: .malformedToken)
 
     public static let signatureVerificationFailed = Self(errorType: .signatureVerificationFailed)
@@ -163,7 +169,7 @@ public struct JWTError: Error, @unchecked Sendable {
         new.reason = reason
         return new
     }
-    
+
     public static func invalidHeaderField(reason: String) -> Self {
         var new = Self(errorType: .invalidHeaderField)
         new.reason = reason

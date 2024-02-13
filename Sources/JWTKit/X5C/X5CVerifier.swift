@@ -1,5 +1,4 @@
 import Foundation
-import SwiftASN1
 import X509
 
 /// An object for verifying JWS tokens that contain the `x5c` header parameter
@@ -20,40 +19,62 @@ public struct X5CVerifier: Sendable {
     /// Create a new X5CVerifier trusting `rootCertificates`.
     ///
     /// - Parameter rootCertificates: The root certificates to be trusted.
-    public init(rootCertificates: [String]) throws {
+    /// - Throws: ``JWTError/invalidX5CChain(reason:)`` if no root certificates are provided.
+    public init(rootCertificates: [Certificate]) throws {
         guard !rootCertificates.isEmpty else {
             throw JWTError.invalidX5CChain(reason: "No root certificates provided")
         }
-        trustedStore = try X509.CertificateStore(rootCertificates.map {
-            try X509.Certificate(pemEncoded: $0)
-        })
+        trustedStore = X509.CertificateStore(rootCertificates)
     }
 
     /// Create a new X5CVerifier trusting `rootCertificates`.
     ///
     /// - Parameter rootCertificates: The root certificates to be trusted.
-    public init<Message: DataProtocol>(rootCertificates: [Message]) throws {
-        try self.init(rootCertificates: rootCertificates.map {
-            String(decoding: $0, as: UTF8.self)
-        })
+    /// - Throws: ``JWTError/invalidX5CChain(reason:)`` if no root certificates are provided.
+    public init(rootCertificates: [String]) throws {
+        guard !rootCertificates.isEmpty else {
+            throw JWTError.invalidX5CChain(reason: "No root certificates provided")
+        }
+        try self.init(rootCertificates: rootCertificates.map { try X509.Certificate(pemEncoded: $0) })
+    }
+
+    /// Create a new X5CVerifier trusting `rootCertificates`.
+    ///
+    /// - Parameter rootCertificates: The root certificates to be trusted.
+    /// - Throws: ``JWTError/invalidX5CChain(reason:)`` if no root certificates are provided.
+    public init(rootCertificates: [Data]) throws {
+        guard !rootCertificates.isEmpty else {
+            throw JWTError.invalidX5CChain(reason: "No root certificates provided")
+        }
+        try self.init(rootCertificates: rootCertificates.map { try X509.Certificate(derEncoded: [UInt8]($0)) })
     }
 
     /// Verify a chain of certificates against the trusted root certificates.
     ///
     /// - Parameter certificates: The certificates to verify.
-    /// - Throws: A `JWTError` if the chain is invalid.
-    func verifyChain(certificates: [String]) async throws {
-        let certificates = try certificates.map {
-            try Certificate(pemEncoded: $0)
-        }
+    /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
+    public func verifyChain(
+        certificates: [String],
+        policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+    ) async throws -> X509.VerificationResult {
+        let certificates = try certificates.map { try Certificate(pemEncoded: $0) }
+        return try await verifyChain(certificates: certificates, policy: policy)
+    }
+
+    /// Verify a chain of certificates against the trusted root certificates.
+    ///
+    /// - Parameters:
+    ///  - certificates: The certificates to verify.
+    ///  - policy: The policy to use for verification.
+    /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
+    public func verifyChain(
+        certificates: [Certificate],
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+    ) async throws -> X509.VerificationResult {
         let untrustedChain = CertificateStore(certificates)
-        var verifier = Verifier(rootCertificates: trustedStore) {
-            RFC5280Policy(validationTime: Date())
-        }
+        var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
         let result = await verifier.validate(leafCertificate: certificates[0], intermediates: untrustedChain)
-        if case let .couldNotValidate(failures) = result {
-            throw JWTError.invalidX5CChain(reason: "\(failures)")
-        }
+        return result
     }
 
     /// Verify a JWS with the `x5c` header parameter against the trusted root
@@ -109,11 +130,13 @@ public struct X5CVerifier: Sendable {
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
     ///   - jsonDecoder: The JSON decoder to use for dcoding the token.
+    ///   - policy: The policy to use for verification.
     /// - Returns: The decoded payload, if verified.
     public func verifyJWS<Payload>(
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
-        jsonDecoder: any JWTJSONDecoder
+        jsonDecoder: any JWTJSONDecoder,
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
     ) async throws -> Payload
         where Payload: JWTPayload
     {
@@ -156,9 +179,10 @@ public struct X5CVerifier: Sendable {
         }
 
         // Setup the verifier using the predefined trusted store
-        var verifier = Verifier(rootCertificates: trustedStore) {
+        var verifier = try Verifier(rootCertificates: trustedStore, policy: {
+            try policy()
             RFC5280Policy(validationTime: date)
-        }
+        })
 
         // Validate the leaf certificate against the trusted store
         let result = await verifier.validate(leafCertificate: certificates[0], intermediates: untrustedChain)
@@ -170,7 +194,7 @@ public struct X5CVerifier: Sendable {
         // Assuming the chain is valid, verify the token was signed by the valid certificate
         let ecdsaKey = try ES256PublicKey(certificate: certificates[0].serializeAsPEM().pemString)
         let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey, algorithm: .sha256, name: headerAlg), parser: parser)
-        
+
         return try await signer.verify(token)
     }
 }

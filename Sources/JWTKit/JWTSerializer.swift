@@ -15,7 +15,8 @@ extension JWTSerializer {
 
         if let x5c = newHeader.x5c, !x5c.isEmpty {
             let verifier = try X5CVerifier(rootCertificates: [x5c[0]])
-            try await verifier.verifyChain(certificates: x5c)
+            let certs = try x5c.map { try Certificate(pemEncoded: $0) }
+            _ = try await verifier.verifyChain(certificates: certs)
 
             newHeader.x5c = try x5c.map { cert in
                 let certificate = try Certificate(pemEncoded: cert)
@@ -26,16 +27,16 @@ extension JWTSerializer {
 
         return newHeader
     }
-    
+
     func makeSigningInput(payload: some JWTPayload, header: JWTHeader, key: some JWTAlgorithm) async throws -> Data {
         let header = try await self.makeHeader(from: header, key: key)
         let encodedHeader = try jsonEncoder.encode(header).base64URLEncodedBytes()
 
         let encodedPayload = try self.serialize(payload, header: header)
-        
+
         return encodedHeader + [.period] + encodedPayload
     }
-    
+
     func sign(_ payload: some JWTPayload, with header: JWTHeader = JWTHeader(), using key: some JWTAlgorithm) async throws -> String {
         let signingInput = try await makeSigningInput(payload: payload, header: header, key: key)
 
@@ -48,12 +49,12 @@ extension JWTSerializer {
 
 public struct DefaultJWTSerializer: JWTSerializer {
     public var jsonEncoder: JWTJSONEncoder = .defaultForJWT
-    
+
     public init(jsonEncoder: JWTJSONEncoder = .defaultForJWT) {
         self.jsonEncoder = jsonEncoder
     }
 
     public func serialize(_ payload: some JWTPayload, header: JWTHeader = JWTHeader()) throws -> Data {
-        Data(try jsonEncoder.encode(payload).base64URLEncodedBytes())
+        try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
     }
 }

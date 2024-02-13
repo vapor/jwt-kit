@@ -166,6 +166,45 @@ final class X5CTests: XCTestCase {
         XCTAssertEqual(data.appAppleId, 1234)
         XCTAssertEqual(data.environment, "Sandbox")
     }
+
+    func testDERInit() async throws {
+        let testsDirectory: String = URL(fileURLWithPath: "\(#filePath)").pathComponents.dropLast(1).joined(separator: "/")
+        let path = "\(testsDirectory)/TestCertificates/testCA.der"
+        let fileHandle = try FileHandle(forReadingFrom: URL(fileURLWithPath: path))
+        let data = fileHandle.readDataToEndOfFile()
+        fileHandle.closeFile()
+        XCTAssertNoThrow(try! X5CVerifier(rootCertificates: [data]))
+    }
+
+    func testValidCerts() async throws {
+        let verifier = try X5CVerifier(rootCertificates: [rootCA])
+
+        let result = try await verifier.verifyChain(certificates: [leaf, intermediate], policy: {
+            RFC5280Policy(validationTime: Date(timeIntervalSince1970: TimeInterval(1_681_312_846)))
+        })
+
+        switch result {
+        case let .couldNotValidate(failures):
+            XCTFail("Failed to validate: \(failures)")
+        case .validCertificate:
+            break
+        }
+    }
+
+    func testValidCertsWithExpiredValidationTime() async throws {
+        let verifier = try X5CVerifier(rootCertificates: [rootCA])
+
+        let result = try await verifier.verifyChain(certificates: [leaf, intermediate], policy: {
+            RFC5280Policy(validationTime: Date(timeIntervalSince1970: TimeInterval(2_280_946_846)))
+        })
+
+        switch result {
+        case .couldNotValidate:
+            break
+        case .validCertificate:
+            XCTFail("Should not have validated")
+        }
+    }
 }
 
 let validToken = """
@@ -253,6 +292,10 @@ AwEHoUQDQgAEORJB5yvqxuG7+EgBDUK/BjjE1SFU2w+EZkhhLDUmnXdujwuVvNuo
 EAhXXpKXJA0lMXUL3VpYkjfPokElxKowyg==
 -----END EC PRIVATE KEY-----
 """
+
+let rootCA = try! Certificate(derEncoded: Array(Data(base64Encoded: "MIIBgjCCASmgAwIBAgIJALUc5ALiH5pbMAoGCCqGSM49BAMDMDYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQHDAlDdXBlcnRpbm8wHhcNMjMwMTA1MjEzMDIyWhcNMzMwMTAyMjEzMDIyWjA2MQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTESMBAGA1UEBwwJQ3VwZXJ0aW5vMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEc+/Bl+gospo6tf9Z7io5tdKdrlN1YdVnqEhEDXDShzdAJPQijamXIMHf8xWWTa1zgoYTxOKpbuJtDplz1XriTaMgMB4wDAYDVR0TBAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwCgYIKoZIzj0EAwMDRwAwRAIgemWQXnMAdTad2JDJWng9U4uBBL5mA7WI05H7oH7c6iQCIHiRqMjNfzUAyiu9h6rOU/K+iTR0I/3Y/NSWsXHX+acc")!))
+let leaf = try! Certificate(derEncoded: Array(Data(base64Encoded: "MIIBoDCCAUagAwIBAgIBDDAKBggqhkjOPQQDAzBFMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExEjAQBgNVBAcMCUN1cGVydGlubzEVMBMGA1UECgwMSW50ZXJtZWRpYXRlMB4XDTIzMDEwNTIxMzEzNFoXDTMzMDEwMTIxMzEzNFowPTELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMRIwEAYDVQQHDAlDdXBlcnRpbm8xDTALBgNVBAoMBExlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATitYHEaYVuc8g9AjTOwErMvGyPykPa+puvTI8hJTHZZDLGas2qX1+ErxgQTJgVXv76nmLhhRJH+j25AiAI8iGsoy8wLTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIHgDAQBgoqhkiG92NkBgsBBAIFADAKBggqhkjOPQQDAwNIADBFAiBX4c+T0Fp5nJ5QRClRfu5PSByRvNPtuaTsk0vPB3WAIAIhANgaauAj/YP9s0AkEhyJhxQO/6Q2zouZ+H1CIOehnMzQ")!))
+let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: "MIIBnzCCAUWgAwIBAgIBCzAKBggqhkjOPQQDAzA2MQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTESMBAGA1UEBwwJQ3VwZXJ0aW5vMB4XDTIzMDEwNTIxMzEwNVoXDTMzMDEwMTIxMzEwNVowRTELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMRIwEAYDVQQHDAlDdXBlcnRpbm8xFTATBgNVBAoMDEludGVybWVkaWF0ZTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABBUN5V9rKjfRiMAIojEA0Av5Mp0oF+O0cL4gzrTF178inUHugj7Et46NrkQ7hKgMVnjogq45Q1rMs+cMHVNILWqjNTAzMA8GA1UdEwQIMAYBAf8CAQAwDgYDVR0PAQH/BAQDAgEGMBAGCiqGSIb3Y2QGAgEEAgUAMAoGCCqGSM49BAMDA0gAMEUCIQCmsIKYs41ullssHX4rVveUT0Z7Is5/hLK1lFPTtun3hAIgc2+2RG5+gNcFVcs+XJeEl4GZ+ojl3ROOmll+ye7dynQ=")!))
 
 /// Each token has the following payload:
 ///
