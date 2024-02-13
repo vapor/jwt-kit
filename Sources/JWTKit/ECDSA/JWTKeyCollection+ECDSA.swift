@@ -24,15 +24,15 @@ public extension JWTKeyCollection {
     func addES256<Key: ECDSAKey>(
         key: Key,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self
         where Key.Curve == P256
     {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha256, name: "ES256"),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ), for: kid)
     }
 
@@ -59,15 +59,15 @@ public extension JWTKeyCollection {
     func addES384<Key: ECDSAKey>(
         key: Key,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self
         where Key.Curve == P384
     {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha384, name: "ES384"),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ), for: kid)
     }
 
@@ -94,15 +94,15 @@ public extension JWTKeyCollection {
     func addES512<Key: ECDSAKey>(
         key: Key,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self
         where Key.Curve == P521
     {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha512, name: "ES512"),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ), for: kid)
     }
 }

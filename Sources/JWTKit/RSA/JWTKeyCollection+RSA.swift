@@ -24,13 +24,13 @@ public extension JWTKeyCollection {
     func addRS256(
         key: some RSAKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
             algorithm: RSASigner(key: key, algorithm: .sha256, name: "RS256", padding: .insecurePKCS1v1_5),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ),
         for: kid)
     }
@@ -58,13 +58,13 @@ public extension JWTKeyCollection {
     func addRS384(
         key: some RSAKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
             algorithm: RSASigner(key: key, algorithm: .sha384, name: "RS384", padding: .insecurePKCS1v1_5),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ),
         for: kid)
     }
@@ -92,13 +92,13 @@ public extension JWTKeyCollection {
     func addRS512(
         key: some RSAKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
             algorithm: RSASigner(key: key, algorithm: .sha512, name: "RS512", padding: .insecurePKCS1v1_5),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ),
         for: kid)
     }
@@ -130,13 +130,13 @@ public extension JWTKeyCollection {
     func addPS256(
         key: some RSAKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
             algorithm: RSASigner(key: key, algorithm: .sha256, name: "PS256", padding: .PSS),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ),
         for: kid)
     }
@@ -166,13 +166,13 @@ public extension JWTKeyCollection {
     func addPS384(
         key: some RSAKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
             algorithm: RSASigner(key: key, algorithm: .sha384, name: "PS384", padding: .PSS),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ),
         for: kid)
     }
@@ -202,13 +202,13 @@ public extension JWTKeyCollection {
     func addPS512(
         key: some RSAKey,
         kid: JWKIdentifier? = nil,
-        jsonEncoder: (any JWTJSONEncoder)? = nil,
-        jsonDecoder: (any JWTJSONDecoder)? = nil
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
             algorithm: RSASigner(key: key, algorithm: .sha512, name: "PS512", padding: .PSS),
-            jsonEncoder: jsonEncoder,
-            jsonDecoder: jsonDecoder
+            parser: parser,
+            serializer: serializer
         ),
         for: kid)
     }

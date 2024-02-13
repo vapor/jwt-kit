@@ -20,7 +20,7 @@ final class PSSTests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let token = try await keyCollection.sign(payload, kid: "private")
+        let token = try await keyCollection.sign(payload, header: ["kid": "private"])
         try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
     }
 
@@ -35,7 +35,7 @@ final class PSSTests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload, kid: "public"))
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload, header: ["kid": "private"]))
     }
 
     func testJWTPayloadVerification() async throws {
@@ -56,7 +56,7 @@ final class PSSTests: XCTestCase {
             .addPS256(key: Insecure.RSA.PublicKey(pem: publicKey), kid: "public")
 
         do {
-            let token = try await keyCollection.sign(Payload(foo: "qux"), kid: "private")
+            let token = try await keyCollection.sign(Payload(foo: "qux"), header: ["kid": "private"])
             _ = try await keyCollection.verify(token, as: Payload.self)
         } catch let error as NotBar {
             XCTAssertEqual(error.foo, "qux")
@@ -138,7 +138,7 @@ final class PSSTests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let token = try await keyCollection.sign(payload, kid: "private")
+        let token = try await keyCollection.sign(payload, header: ["kid": "private"])
         try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
     }
 

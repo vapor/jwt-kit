@@ -15,6 +15,7 @@ public struct JWTError: Error, @unchecked Sendable {
             case invalidBool
             case noKeyProvided
             case invalidX5CChain
+            case invalidHeaderField
             case generic
         }
 
@@ -34,6 +35,7 @@ public struct JWTError: Error, @unchecked Sendable {
         public static let invalidBool = Self(.invalidBool)
         public static let noKeyProvided = Self(.noKeyProvided)
         public static let invalidX5CChain = Self(.invalidX5CChain)
+        public static let invalidHeaderField = Self(.invalidHeaderField)
         public static let generic = Self(.generic)
 
         public var description: String {
@@ -58,6 +60,8 @@ public struct JWTError: Error, @unchecked Sendable {
                 "noKeyProvided"
             case .invalidX5CChain:
                 "invalidX5CChain"
+            case .invalidHeaderField:
+                "invalidHeaderField"
             case .generic:
                 "generic"
             }
@@ -156,6 +160,12 @@ public struct JWTError: Error, @unchecked Sendable {
 
     public static func invalidX5CChain(reason: String) -> Self {
         var new = Self(errorType: .invalidX5CChain)
+        new.reason = reason
+        return new
+    }
+    
+    public static func invalidHeaderField(reason: String) -> Self {
+        var new = Self(errorType: .invalidHeaderField)
         new.reason = reason
         return new
     }

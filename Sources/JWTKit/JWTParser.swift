@@ -1,44 +1,50 @@
 import Foundation
 
-struct JWTParser: Sendable {
-    let encodedHeader: ArraySlice<UInt8>
-    let encodedPayload: ArraySlice<UInt8>
-    let encodedSignature: ArraySlice<UInt8>
+public protocol JWTParser: Sendable {
+    var jsonDecoder: JWTJSONDecoder { get set }
+    func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload
+}
 
-    init(token: some DataProtocol) throws {
-        let tokenParts = token.copyBytes()
-            .split(separator: .period, omittingEmptySubsequences: false)
+extension JWTParser {
+    public func getTokenParts(_ token: some DataProtocol) throws -> (header: ArraySlice<UInt8>, payload: ArraySlice<UInt8>, signature: ArraySlice<UInt8>) {
+        let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
+        
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken
         }
-        encodedHeader = tokenParts[0]
-        encodedPayload = tokenParts[1]
-        encodedSignature = tokenParts[2]
+        
+        return (tokenParts[0], tokenParts[1], tokenParts[2])
     }
+}
 
-    func header(jsonDecoder: any JWTJSONDecoder = .defaultForJWT) throws -> JWTHeader {
-        try jsonDecoder
-            .decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+extension JWTParser {
+    func parseHeader(_ token: some DataProtocol) throws -> JWTHeader {
+        let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
+        
+        guard tokenParts.count == 3 else {
+            throw JWTError.malformedToken
+        }
+        
+        return try jsonDecoder.decode(JWTHeader.self, from: .init(tokenParts[0].base64URLDecodedBytes()))
     }
+}
 
-    func payload<Payload>(as _: Payload.Type, jsonDecoder: any JWTJSONDecoder = .defaultForJWT) throws -> Payload
+public struct DefaultJWTParser: JWTParser {
+    public var jsonDecoder: JWTJSONDecoder = .defaultForJWT
+    
+    public init(jsonDecoder: JWTJSONDecoder = .defaultForJWT) {
+        self.jsonDecoder = jsonDecoder
+    }
+    
+    public func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data)
         where Payload: JWTPayload
     {
-        try jsonDecoder
-            .decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
-    }
-
-    func verify(using algorithm: JWTAlgorithm) throws {
-        guard try algorithm.verify(signature, signs: message) else {
-            throw JWTError.signatureVerificationFailed
-        }
-    }
-
-    private var signature: [UInt8] {
-        encodedSignature.base64URLDecodedBytes()
-    }
-
-    private var message: ArraySlice<UInt8> {
-        encodedHeader + [.period] + encodedPayload
+        let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
+        
+        let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+        let payload = try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+        let signature = Data(encodedSignature.base64URLDecodedBytes())
+        
+        return (header: header, payload: payload, signature: signature)
     }
 }

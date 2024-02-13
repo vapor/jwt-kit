@@ -12,28 +12,18 @@ public actor JWTKeyCollection: Sendable {
 
     private var storage: [JWKIdentifier: Signer]
     private var `default`: Signer?
-
-    /// The default JSON encoder. Used for:
-    ///
-    /// - Encoding the JSON form of a JWKS.
-    /// - Encoding unverified payloads without a signer.
-    public let defaultJSONEncoder: any JWTJSONEncoder
-
-    /// The default JSON decoder. Used for:
-    ///
-    /// - Parsing the JSON form of a JWKS.
-    /// - Decoding unverified payloads without a signer.
-    /// - Decoding token headers to determine a key type.
-    public let defaultJSONDecoder: any JWTJSONDecoder
+    
+    public let defaultJWTParser: any JWTParser
+    public let defaultJWTSerializer: any JWTSerializer
 
     /// Creates a new empty Signers collection.
     /// - parameters:
     ///    - jsonEncoder: The default JSON encoder.
     ///    - jsonDecoder: The default JSON decoder.
-    public init(jsonEncoder: (any JWTJSONEncoder)? = nil, jsonDecoder: (any JWTJSONDecoder)? = nil) {
+    public init(defaultJWTParser: some JWTParser = DefaultJWTParser(), defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer()) {
         self.storage = [:]
-        self.defaultJSONEncoder = jsonEncoder ?? .defaultForJWT
-        self.defaultJSONDecoder = jsonDecoder ?? .defaultForJWT
+        self.defaultJWTParser = defaultJWTParser
+        self.defaultJWTSerializer = defaultJWTSerializer
     }
 
     /// Adds a ``JWTSigner`` to the collection, optionally associating it with a specific key identifier (KID).
@@ -46,7 +36,7 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: Self for chaining.
     @discardableResult
     func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
-        let signer = JWTSigner(algorithm: signer.algorithm, jsonEncoder: signer.jsonEncoder, jsonDecoder: signer.jsonDecoder)
+        let signer = JWTSigner(algorithm: signer.algorithm, parser: signer.parser, serializer: signer.serializer)
 
         if let kid = kid {
             if self.storage[kid] != nil {
@@ -72,7 +62,7 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: Self for chaining.
     @discardableResult
     public func use(jwksJSON json: String) throws -> Self {
-        let jwks = try self.defaultJSONDecoder.decode(JWKS.self, from: Data(json.utf8))
+        let jwks = try self.defaultJWTParser.jsonDecoder.decode(JWKS.self, from: Data(json.utf8))
         return try self.add(jwks: jwks)
     }
 
@@ -102,7 +92,7 @@ public actor JWTKeyCollection: Sendable {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK
         }
-        let signer = JWKSigner(jwk: jwk, jsonEncoder: self.defaultJSONEncoder, jsonDecoder: self.defaultJSONDecoder)
+        let signer = JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
         self.storage[kid] = .jwk(signer)
         switch (self.default, isDefault) {
         case (.none, .none), (_, .some(true)):
@@ -160,11 +150,12 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The decoded payload of the specified type.
     public func unverified<Payload>(
         _ token: String,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        parser: (some JWTParser)? = nil
     ) throws -> Payload
         where Payload: JWTPayload
     {
-        try self.unverified([UInt8](token.utf8))
+        try self.unverified([UInt8](token.utf8), parser: parser)
     }
 
     /// Decodes an unverified JWT payload.
@@ -177,11 +168,12 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The decoded payload of the specified type.
     public func unverified<Payload>(
         _ token: some DataProtocol,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        parser: (some JWTParser)? = nil
     ) throws -> Payload
         where Payload: JWTPayload
     {
-        try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: self.defaultJSONDecoder)
+        try (parser ?? defaultJWTParser).parse(token, as: Payload.self).payload
     }
 
     /// Verifies and decodes a JWT token to extract the payload.
@@ -206,15 +198,15 @@ public actor JWTKeyCollection: Sendable {
     /// - Throws: An error if the token cannot be verified or decoded.
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
-        _ token: some DataProtocol,
+        _ token: some DataProtocol & Sendable,
         as _: Payload.Type = Payload.self
     ) async throws -> Payload
         where Payload: JWTPayload
     {
-        let parser = try JWTParser(token: token)
-        let header = try parser.header(jsonDecoder: self.defaultJSONDecoder)
-        let signer = try self.getSigner(for: header.kid, alg: header.alg)
-        return try await signer.verify(parser: parser)
+        let header = try defaultJWTParser.parseHeader(token)
+        let kid = header.kid.flatMap { JWKIdentifier(string: $0) }
+        let signer = try self.getSigner(for: kid, alg: header.alg)
+        return try await signer.verify(token)
     }
 
     /// Signs a JWT payload and returns the JWT string.
@@ -229,12 +221,10 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: A signed JWT token string.
     public func sign(
         _ payload: some JWTPayload,
-        typ: String = "JWT",
-        kid: JWKIdentifier? = nil,
-        x5c: [String]? = nil,
-        customFields: [String: JWTHeaderField] = [:]
+        header: JWTHeader = JWTHeader()
     ) async throws -> String {
-        let signer = try self.getSigner(for: kid)
-        return try await signer.sign(payload, typ: typ, kid: kid, x5c: x5c, customFields: customFields)
+        let kid = header.kid.flatMap { JWKIdentifier(string: $0) }
+        let signer = try self.getSigner(for: kid, alg: header.alg)
+        return try await signer.sign(payload, with: header)
     }
 }
