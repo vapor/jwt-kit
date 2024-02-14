@@ -8,7 +8,7 @@ import PackageDescription
 // Sources/CCryptoBoringSSL directory. The source repository is at
 // https://boringssl.googlesource.com/boringssl.
 //
-// BoringSSL Commit: 7a813621dac6878ab53b6ed7392939a8982226e8
+// BoringSSL Commit: 58a318edc892a595a5b043359a5d441869158699
 
 let package = Package(
     name: "jwt-kit",

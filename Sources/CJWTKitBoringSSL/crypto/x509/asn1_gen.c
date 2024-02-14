@@ -65,11 +65,9 @@
 #include <CJWTKitBoringSSL_bytestring.h>
 #include <CJWTKitBoringSSL_err.h>
 #include <CJWTKitBoringSSL_obj.h>
-#include <CJWTKitBoringSSL_x509v3.h>
 
 #include "../conf/internal.h"
 #include "../internal.h"
-#include "../x509v3/internal.h"
 #include "internal.h"
 
 

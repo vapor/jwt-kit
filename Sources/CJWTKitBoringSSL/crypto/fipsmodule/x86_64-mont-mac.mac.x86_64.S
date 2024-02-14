@@ -3,43 +3,21 @@
 // This file is generated from a similarly-named Perl script in the BoringSSL
 // source tree. Do not edit by hand.
 
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer) && !defined(OPENSSL_NO_ASM)
-#define OPENSSL_NO_ASM
-#endif
-#endif
+#include <CJWTKitBoringSSL_asm_base.h>
 
-#if defined(__x86_64__) && !defined(OPENSSL_NO_ASM) && defined(__APPLE__)
-#if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
-#endif
+#if !defined(OPENSSL_NO_ASM) && defined(OPENSSL_X86_64) && defined(__APPLE__)
 .text	
 
-
-
-.globl	_bn_mul_mont
-.private_extern _bn_mul_mont
+.globl	_bn_mul_mont_nohw
+.private_extern _bn_mul_mont_nohw
 
 .p2align	4
-_bn_mul_mont:
+_bn_mul_mont_nohw:
 
+_CET_ENDBR
 	movl	%r9d,%r9d
 	movq	%rsp,%rax
 
-	testl	$3,%r9d
-	jnz	L$mul_enter
-	cmpl	$8,%r9d
-	jb	L$mul_enter
-	leaq	_OPENSSL_ia32cap_P(%rip),%r11
-	movl	8(%r11),%r11d
-	cmpq	%rsi,%rdx
-	jne	L$mul4x_enter
-	testl	$7,%r9d
-	jz	L$sqr8x_enter
-	jmp	L$mul4x_enter
-
-.p2align	4
-L$mul_enter:
 	pushq	%rbx
 
 	pushq	%rbp
@@ -269,20 +247,19 @@ L$copy:
 	leaq	(%rsi),%rsp
 
 L$mul_epilogue:
-	.byte	0xf3,0xc3
+	ret
 
 
+.globl	_bn_mul4x_mont
+.private_extern _bn_mul4x_mont
 
 .p2align	4
-bn_mul4x_mont:
+_bn_mul4x_mont:
 
+_CET_ENDBR
 	movl	%r9d,%r9d
 	movq	%rsp,%rax
 
-L$mul4x_enter:
-	andl	$0x80100,%r11d
-	cmpl	$0x80100,%r11d
-	je	L$mulx4x_enter
 	pushq	%rbx
 
 	pushq	%rbp
@@ -703,19 +680,22 @@ L$copy4x:
 	leaq	(%rsi),%rsp
 
 L$mul4x_epilogue:
-	.byte	0xf3,0xc3
+	ret
 
 
 
 
 
+.globl	_bn_sqr8x_mont
+.private_extern _bn_sqr8x_mont
 
 .p2align	5
-bn_sqr8x_mont:
+_bn_sqr8x_mont:
 
+_CET_ENDBR
+	movl	%r9d,%r9d
 	movq	%rsp,%rax
 
-L$sqr8x_enter:
 	pushq	%rbx
 
 	pushq	%rbp
@@ -790,11 +770,8 @@ L$sqr8x_body:
 	pxor	%xmm0,%xmm0
 .byte	102,72,15,110,207
 .byte	102,73,15,110,218
-	leaq	_OPENSSL_ia32cap_P(%rip),%rax
-	movl	8(%rax),%eax
-	andl	$0x80100,%eax
-	cmpl	$0x80100,%eax
-	jne	L$sqr8x_nox
+	testq	%rdx,%rdx
+	jz	L$sqr8x_nox
 
 	call	_bn_sqrx8x_internal
 
@@ -894,16 +871,18 @@ L$sqr8x_cond_copy:
 	leaq	(%rsi),%rsp
 
 L$sqr8x_epilogue:
-	.byte	0xf3,0xc3
+	ret
 
 
+.globl	_bn_mulx4x_mont
+.private_extern _bn_mulx4x_mont
 
 .p2align	5
-bn_mulx4x_mont:
+_bn_mulx4x_mont:
 
+_CET_ENDBR
 	movq	%rsp,%rax
 
-L$mulx4x_enter:
 	pushq	%rbx
 
 	pushq	%rbp
@@ -1250,15 +1229,11 @@ L$mulx4x_cond_copy:
 	leaq	(%rsi),%rsp
 
 L$mulx4x_epilogue:
-	.byte	0xf3,0xc3
+	ret
 
 
 .byte	77,111,110,116,103,111,109,101,114,121,32,77,117,108,116,105,112,108,105,99,97,116,105,111,110,32,102,111,114,32,120,56,54,95,54,52,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
 .p2align	4
-#endif
-#if defined(__ELF__)
-// See https://www.airs.com/blog/archives/518.
-.section .note.GNU-stack,"",%progbits
 #endif
 #endif  // defined(__x86_64__) && defined(__APPLE__)
 #if defined(__linux__) && defined(__ELF__)

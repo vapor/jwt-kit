@@ -92,7 +92,7 @@ DEFINE_STATIC_MUTEX(thread_states_list_lock);
 
 static void rand_thread_state_clear_all(void) __attribute__((destructor));
 static void rand_thread_state_clear_all(void) {
-  CRYPTO_STATIC_MUTEX_lock_write(thread_states_list_lock_bss_get());
+  CRYPTO_MUTEX_lock_write(thread_states_list_lock_bss_get());
   for (struct rand_thread_state *cur = *thread_states_list_bss_get();
        cur != NULL; cur = cur->next) {
     CRYPTO_MUTEX_lock_write(&cur->clear_drbg_lock);
@@ -115,11 +115,14 @@ static void rand_thread_state_free(void *state_in) {
   }
 
 #if defined(BORINGSSL_FIPS)
-  CRYPTO_STATIC_MUTEX_lock_write(thread_states_list_lock_bss_get());
+  CRYPTO_MUTEX_lock_write(thread_states_list_lock_bss_get());
 
   if (state->prev != NULL) {
     state->prev->next = state->next;
-  } else {
+  } else if (*thread_states_list_bss_get() == state) {
+    // |state->prev| may be NULL either if it is the head of the list,
+    // or if |state| is freed before it was added to the list at all.
+    // Compare against the head of the list to distinguish these cases.
     *thread_states_list_bss_get() = state->next;
   }
 
@@ -127,7 +130,7 @@ static void rand_thread_state_free(void *state_in) {
     state->next->prev = state->prev;
   }
 
-  CRYPTO_STATIC_MUTEX_unlock_write(thread_states_list_lock_bss_get());
+  CRYPTO_MUTEX_unlock_write(thread_states_list_lock_bss_get());
 
   CTR_DRBG_clear(&state->drbg);
 #endif
@@ -203,7 +206,7 @@ void RAND_load_entropy(const uint8_t *entropy, size_t entropy_len,
                        int want_additional_input) {
   struct entropy_buffer *const buffer = entropy_buffer_bss_get();
 
-  CRYPTO_STATIC_MUTEX_lock_write(entropy_buffer_lock_bss_get());
+  CRYPTO_MUTEX_lock_write(entropy_buffer_lock_bss_get());
   const size_t space = sizeof(buffer->bytes) - buffer->bytes_valid;
   if (entropy_len > space) {
     entropy_len = space;
@@ -213,7 +216,7 @@ void RAND_load_entropy(const uint8_t *entropy, size_t entropy_len,
   buffer->bytes_valid += entropy_len;
   buffer->want_additional_input |=
       want_additional_input && (entropy_len != 0);
-  CRYPTO_STATIC_MUTEX_unlock_write(entropy_buffer_lock_bss_get());
+  CRYPTO_MUTEX_unlock_write(entropy_buffer_lock_bss_get());
 }
 
 // get_seed_entropy fills |out_entropy_len| bytes of |out_entropy| from the
@@ -225,11 +228,11 @@ static void get_seed_entropy(uint8_t *out_entropy, size_t out_entropy_len,
     abort();
   }
 
-  CRYPTO_STATIC_MUTEX_lock_write(entropy_buffer_lock_bss_get());
+  CRYPTO_MUTEX_lock_write(entropy_buffer_lock_bss_get());
   while (buffer->bytes_valid < out_entropy_len) {
-    CRYPTO_STATIC_MUTEX_unlock_write(entropy_buffer_lock_bss_get());
+    CRYPTO_MUTEX_unlock_write(entropy_buffer_lock_bss_get());
     RAND_need_entropy(out_entropy_len - buffer->bytes_valid);
-    CRYPTO_STATIC_MUTEX_lock_write(entropy_buffer_lock_bss_get());
+    CRYPTO_MUTEX_lock_write(entropy_buffer_lock_bss_get());
   }
 
   *out_want_additional_input = buffer->want_additional_input;
@@ -241,7 +244,7 @@ static void get_seed_entropy(uint8_t *out_entropy, size_t out_entropy_len,
     buffer->want_additional_input = 0;
   }
 
-  CRYPTO_STATIC_MUTEX_unlock_write(entropy_buffer_lock_bss_get());
+  CRYPTO_MUTEX_unlock_write(entropy_buffer_lock_bss_get());
 }
 
 // rand_get_seed fills |seed| with entropy. In some cases, it will additionally
@@ -371,7 +374,7 @@ void RAND_bytes_with_additional_data(uint8_t *out, size_t out_len,
       CRYPTO_get_thread_local(OPENSSL_THREAD_LOCAL_RAND);
 
   if (state == NULL) {
-    state = OPENSSL_malloc(sizeof(struct rand_thread_state));
+    state = OPENSSL_zalloc(sizeof(struct rand_thread_state));
     if (state == NULL ||
         !CRYPTO_set_thread_local(OPENSSL_THREAD_LOCAL_RAND, state,
                                  rand_thread_state_free)) {
@@ -397,7 +400,7 @@ void RAND_bytes_with_additional_data(uint8_t *out, size_t out_len,
 #if defined(BORINGSSL_FIPS)
     CRYPTO_MUTEX_init(&state->clear_drbg_lock);
     if (state != &stack_state) {
-      CRYPTO_STATIC_MUTEX_lock_write(thread_states_list_lock_bss_get());
+      CRYPTO_MUTEX_lock_write(thread_states_list_lock_bss_get());
       struct rand_thread_state **states_list = thread_states_list_bss_get();
       state->next = *states_list;
       if (state->next != NULL) {
@@ -405,7 +408,7 @@ void RAND_bytes_with_additional_data(uint8_t *out, size_t out_len,
       }
       state->prev = NULL;
       *states_list = state;
-      CRYPTO_STATIC_MUTEX_unlock_write(thread_states_list_lock_bss_get());
+      CRYPTO_MUTEX_unlock_write(thread_states_list_lock_bss_get());
     }
 #endif
   }
