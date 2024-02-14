@@ -1,6 +1,15 @@
 // swift-tools-version:5.6
 import PackageDescription
 
+// This package contains a vendored copy of BoringSSL. For ease of tracking
+// down problems with the copy of BoringSSL in use, we include a copy of the
+// commit hash of the revision of BoringSSL included in the given release.
+// This is also reproduced in a file called hash.txt in the
+// Sources/CCryptoBoringSSL directory. The source repository is at
+// https://boringssl.googlesource.com/boringssl.
+//
+// BoringSSL Commit: 7a813621dac6878ab53b6ed7392939a8982226e8
+
 let package = Package(
     name: "jwt-kit",
     platforms: [
