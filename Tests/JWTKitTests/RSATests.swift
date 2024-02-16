@@ -24,14 +24,14 @@ final class RSATests: XCTestCase {
 
     func testPublicKeyInitializationFromCryptoKey() throws {
         let cryptoKey = try _RSA.Signing.PublicKey(pemRepresentation: publicKey)
-        let jwtKey = Insecure.RSA.PublicKey(backing: cryptoKey)
+        let jwtKey = try Insecure.RSA.PublicKey(backing: cryptoKey)
         let otherKey = try Insecure.RSA.PublicKey(pem: publicKey)
         XCTAssertEqual(jwtKey, otherKey)
     }
 
     func testPrivateKeyInitializationFromCryptoKey() throws {
         let cryptoKey = try _RSA.Signing.PrivateKey(pemRepresentation: privateKey)
-        let jwtKey = Insecure.RSA.PrivateKey(backing: cryptoKey)
+        let jwtKey = try Insecure.RSA.PrivateKey(backing: cryptoKey)
         let otherKey = try Insecure.RSA.PrivateKey(pem: privateKey)
         XCTAssertEqual(jwtKey, otherKey)
     }

@@ -39,7 +39,11 @@ public extension Insecure.RSA {
         /// Creates an ``RSA.PublicKey`` from a SwiftCrypto public key.
         ///
         /// - Parameter backing: The SwiftCrypto public key.
-        public init(backing: _RSA.Signing.PublicKey) {
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 2048 bits.
+        public init(backing: _RSA.Signing.PublicKey) throws {
+            guard backing.keySizeInBits >= 2048 else {
+                throw RSAError.keySizeTooSmall
+            }
             self.backing = backing
         }
 
@@ -57,13 +61,9 @@ public extension Insecure.RSA {
         ///
         /// - Parameters:
         ///   - pem: Contents of PEM file.
-        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 2048 bits.
         public init(pem: String) throws {
-            do {
-                try self.init(backing: .init(pemRepresentation: pem))
-            } catch CryptoKitError.incorrectParameterSize {
-                throw RSAError.keySizeTooSmall
-            }
+            try self.init(backing: .init(pemRepresentation: pem))
         }
 
         /// Creates an ``RSA.PublicKey`` from public key PEM file.
@@ -80,7 +80,7 @@ public extension Insecure.RSA {
         ///
         /// - Parameters:
         ///   - pem: Contents of PEM file.
-        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 2048 bits.
         public init(pem data: some DataProtocol) throws {
             let string = String(decoding: data, as: UTF8.self)
             try self.init(pem: string)
@@ -161,7 +161,7 @@ public extension Insecure.RSA {
             let publicKeyDER = try Insecure.RSA.calculateDER(n: n, e: e)
             try publicKeyDER.serialize(into: &serializer)
             let publicKey = try _RSA.Signing.PublicKey(derRepresentation: serializer.serializedBytes)
-            self.init(backing: publicKey)
+            try self.init(backing: publicKey)
         }
 
         func isValidSignature<D: Digest>(_ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding) -> Bool {
@@ -194,13 +194,19 @@ public extension Insecure.RSA {
         private let backing: _RSA.Signing.PrivateKey
 
         public var publicKey: PublicKey {
-            .init(backing: self.backing.publicKey)
+            // This should never fail since we are creating the public key from the private key
+            // which got validated already
+            try! .init(backing: self.backing.publicKey)
         }
 
         /// Creates an ``RSA.PrivateKey`` from a SwiftCrypto private key.
         ///
         /// - Parameter backing: The SwiftCrypto private key.
-        public init(backing: _RSA.Signing.PrivateKey) {
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 2048 bits.
+        public init(backing: _RSA.Signing.PrivateKey) throws {
+            guard backing.keySizeInBits >= 2048 else {
+                throw RSAError.keySizeTooSmall
+            }
             self.backing = backing
         }
 
@@ -218,13 +224,9 @@ public extension Insecure.RSA {
         ///
         /// - Parameters:
         ///   - pem: Contents of PEM file.
-        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 2048 bits.
         public init(pem: String) throws {
-            do {
-                try self.init(backing: .init(pemRepresentation: pem))
-            } catch CryptoKitError.incorrectParameterSize {
-                throw RSAError.keySizeTooSmall
-            }
+            try self.init(backing: .init(pemRepresentation: pem))
         }
 
         /// Creates an``RSA.PrivateKey`` from private key PEM file in Data format.
@@ -241,7 +243,7 @@ public extension Insecure.RSA {
         ///
         /// - Parameters:
         ///   - pem: Contents of PEM file.
-        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 1024 bits.
+        /// - Throws: ``RSAError/keySizeTooSmall`` if the key size is less than 2048 bits.
         public init(pem data: some DataProtocol) throws {
             let string = String(decoding: data, as: UTF8.self)
             try self.init(pem: string)
@@ -259,6 +261,7 @@ public extension Insecure.RSA {
         /// - Throws:
         ///   - ``JWTError/generic`` with the identifier `RSAKey` if either the modulus or exponent cannot be decoded from their base64 URL encoded strings.
         ///   - ``RSAError/keyInitializationFailure`` if there is a failure in initializing the RSA key, especially when the private key components are involved.
+        ///   - ``RSAError/keySizeTooSmall`` if the key size is less than 2048 bits.
         ///
         /// - Note:
         ///   - The provided modulus and exponent are key components for creating RSA public keys.
@@ -287,7 +290,7 @@ public extension Insecure.RSA {
             }
             try privateKeyDER.serialize(into: &serializer)
             let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: serializer.serializedBytes)
-            self.init(backing: privateKey)
+            try self.init(backing: privateKey)
         }
 
         func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {
