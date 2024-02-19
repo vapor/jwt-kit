@@ -21,8 +21,8 @@ let package = Package(
     products: [
         .library(name: "JWTKit", targets: ["JWTKit"]),
         /* This target is used only for symbol mangling. It's added and removed automatically because it emits build warnings. MANGLE_START
-            .library(name: "CJWTKitBoringSSL", type: .static, targets: ["CJWTKitBoringSSL"]),
-            MANGLE_END */
+        .library(name: "CJWTKitBoringSSL", type: .static, targets: ["CJWTKitBoringSSL"]),
+        MANGLE_END */
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-crypto.git", "2.0.0" ..< "4.0.0"),
