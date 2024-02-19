@@ -1,23 +1,19 @@
 <p align="center">
-    <img 
-        src="https://user-images.githubusercontent.com/1342803/59471117-1c77b300-8e08-11e9-838e-441b280855b3.png" 
-        height="64" 
-        alt="JWTKit">
-    <a href="https://docs.vapor.codes/4.0/">
-        <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
-    </a>
-    <a href="https://discord.gg/vapor">
-        <img src="https://img.shields.io/discord/431917998102675485.svg" alt="Team Chat">
-    </a>
-    <a href="LICENSE">
-        <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
-    </a>
-    <a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml">
-        <img src="https://github.com/vapor/jwt-kit/actions/workflows/test.yml/badge.svg?event=push" alt="CI">
-    </a>
-    <a href="https://swift.org">
-        <img src="http://img.shields.io/badge/swift-5.6-brightgreen.svg" alt="Swift 5.6">
-    </a>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/06939767-8779-42ea-9bb6-9d3e7a07d20c">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394">
+  <img src="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394" height="96" alt="JWTKit">
+</picture> 
+<br>
+<br>
+<a href="https://docs.vapor.codes/4.0/"><img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation"></a>
+<a href="https://discord.gg/vapor"><img src="https://design.vapor.codes/images/discordchat.svg" alt="Team Chat"></a>
+<a href="LICENSE"><img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License"></a>
+<a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/vapor/jwt-kit/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration"></a>
+<a href="https://codecov.io/github/vapor/jwt-kit"><img src="https://img.shields.io/codecov/c/github/vapor/jwt-kit?style=plastic&logo=codecov&label=codecov"></a>
+</p>
+
+<br>
 </p>
 
 <br>
