@@ -16,16 +16,16 @@ let package = Package(
         .macOS(.v10_15),
         .iOS(.v13),
         .tvOS(.v13),
-        .watchOS(.v6)
+        .watchOS(.v6),
     ],
     products: [
         .library(name: "JWTKit", targets: ["JWTKit"]),
         /* This target is used only for symbol mangling. It's added and removed automatically because it emits build warnings. MANGLE_START
-        .library(name: "CJWTKitBoringSSL", type: .static, targets: ["CJWTKitBoringSSL"]),
-        MANGLE_END */
+            .library(name: "CJWTKitBoringSSL", type: .static, targets: ["CJWTKitBoringSSL"]),
+            MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", "2.0.0" ..< "4.0.0")
+        .package(url: "https://github.com/apple/swift-crypto.git", "2.0.0" ..< "4.0.0"),
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
@@ -37,5 +37,5 @@ let package = Package(
             .target(name: "JWTKit"),
         ]),
     ],
-     cxxLanguageStandard: .cxx11
+    cxxLanguageStandard: .cxx11
 )
