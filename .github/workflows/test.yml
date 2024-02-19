@@ -25,7 +25,7 @@ jobs:
       - name: Use local JWTKit
         run: swift package --package-path jwt edit jwt-kit --path ./jwt-kit
       - name: Run tests with Thread Sanitizer
-        run: swift test --package-path jwt --sanitize=thread
+        run: swift test --package-path jwt --sanitize=thread -Xswiftc -warnings-as-errors
 
   unit-tests:
      uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
