@@ -201,22 +201,18 @@ To add an HMAC key to the key collection, use the `addHS256`, `addHS384`, or `ad
 await keys.addHS256(key: "secret")
 ```
 
+> Important:
+> Cryptography is a complex topic, and the decision of algorithm can directly impact the integrity, security, and privacy of your data. This README does not attempt to offer a meaningful discussion of these concerns; the package authors recommend doing your own research before making a final decision.
+
 ## ECDSA
 
-ECDSA is a more modern algorithm that is similar to RSA. It is considered to be more secure for a given key length than RSA. [Infosec Insights' June 2020 blog post "ECDSA vs RSA: Everything You Need to Know"](https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/) provides a detailed discussion on the differences between the two.
-
-> Important: 
-> Cryptography is a complex topic, and the decision of algorithm can directly impact the integrity, security, and privacy of your data. This README does not attempt to offer a meaningful discussion of these concerns; the package authors recommend doing your own research before making a final decision.
+ECDSA is a modern asymmetric algorithm based on elliptic curve cryptography.
+It uses a public key to verify tokens and a private key to sign them.
 
 You can load ECDSA keys using PEM files: 
 
 ```swift
-let ecdsaPublicKey = """
------BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2adMrdG7aUfZH57aeKFFM01dPnkx
-C18ScRb4Z6poMBgJtYlVtd9ly63URv57ZW0Ncs1LiZB7WATb3svu+1c7HQ==
------END PUBLIC KEY-----
-"""
+let ecdsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
 
 // Initialize an ECDSA key with public pem.
 let key = try ES256PublicKey(pem: ecdsaPublicKey)
@@ -258,7 +254,8 @@ await keys.addEdDSA(key: privateKey)
 RSA is an asymmetric algorithm. It uses a public key to verify tokens and a private key to sign them.
 
 > Warning:
-> RSA is no longer recommended for new applications. If possible, use EdDSA or ECDSA instead.
+> RSA is no longer recommended for new applications. If possible, use EdDSA or ECDSA instead. [Infosec Insights' June 2020 blog post "ECDSA vs RSA: Everything You Need to Know"](https://sectigostore.com/blog/ecdsa-vs-rsa-everything-you-need-to-know/) provides a detailed discussion on the differences between the two.
+
 
 To create an RSA signer, first initialize an `RSAKey`. This can be done by passing in the components:
 
@@ -276,31 +273,13 @@ The same initializer can be used for public keys without the `privateExponent` p
 You can also choose to load a PEM file:
 
 ```swift
-let rsaPublicKey = """
------BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC0cOtPjzABybjzm3fCg1aCYwnx
-PmjXpbCkecAWLj/CcDWEcuTZkYDiSG0zgglbbbhcV0vJQDWSv60tnlA3cjSYutAv
-7FPo5Cq8FkvrdDzeacwRSxYuIq1LtYnd6I30qNaNthntjvbqyMmBulJ1mzLI+Xg/
-aX4rbSL49Z3dAQn8vQIDAQAB
------END PUBLIC KEY-----
-"""
+let rsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
 
 // Initialize an RSA key with public PEM
 let key = try Insecure.RSA.PublicKey(pem: rsaPublicKey)
 ```
 
-Use `Insecure.RSA.PrivateKey(pem:)` for loading private RSA pem keys. These start with:
-
-```
------BEGIN RSA PRIVATE KEY-----
-```
-
-Use `Insecure.RSA.PublicKey(certificatePEM:)` for loading X.509 certificates. These start with:
-
-```
------BEGIN CERTIFICATE-----
-```
-
+Use `Insecure.RSA.PrivateKey(pem:)` for loading private RSA pem keys and `Insecure.RSA.PublicKey(certificatePEM:)` for loading X.509 certificates.
 Once you have an RSA key, you can add to the key collection using the following methods depending on the digest and the padding:
 
 - `addRS256`: RSA with SHA-256 and PKCS1.5 padding
@@ -410,4 +389,3 @@ let keyCollection = await JWTKeyCollection()
 ---
 
 _This package was originally authored by the wonderful [@siemensikkema](https://github.com/siemensikkema)._
-
