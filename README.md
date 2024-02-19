@@ -2,7 +2,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/06939767-8779-42ea-9bb6-9d3e7a07d20c">
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394">
-  <img src="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394" height="96" alt="SQLKit">
+  <img src="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394" height="96" alt="JWTKit">
 </picture> 
 <br>
 <br>
