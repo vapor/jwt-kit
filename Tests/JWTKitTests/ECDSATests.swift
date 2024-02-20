@@ -22,6 +22,26 @@ final class ECDSATests: XCTestCase {
         XCTAssertEqual(cryptoKey, otherKey)
     }
 
+    func testSigningWithPublicKey() async throws {
+        let key = try ES256PrivateKey(pem: ecdsaPrivateKey)
+        let publicKey = try ES256PublicKey(pem: ecdsaPublicKey)
+        let keys = await JWTKeyCollection().addES256(key: key, kid: "private").addES256(key: publicKey, kid: "public")
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        await XCTAssertThrowsErrorAsync(try await keys.sign(payload, header: ["kid": "public"])) { error in
+            guard let error = error as? JWTError else {
+                XCTFail("Unexpected error: \(error)")
+                return
+            }
+            XCTAssertEqual(error.errorType, .signingAlgorithmFailure)
+        }
+    }
+
     func testECDSAGenerate() async throws {
         let payload = TestPayload(
             sub: "vapor",

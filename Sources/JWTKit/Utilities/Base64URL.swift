@@ -9,21 +9,14 @@ extension String {
 
         return Data(base64Encoded: base64URL)
     }
-
-    func base64URLDecoded() -> String? {
-        guard let data = base64URLDecodedData() else {
-            return nil
-        }
-        return String(data: data, encoding: .utf8)
-    }
 }
 
-extension DataProtocol {
-    package func base64URLDecodedBytes() -> [UInt8] {
+package extension DataProtocol {
+    func base64URLDecodedBytes() -> [UInt8] {
         Data(base64Encoded: Data(copyBytes()).base64URLUnescaped())?.copyBytes() ?? []
     }
 
-    package func base64URLEncodedBytes() -> [UInt8] {
+    func base64URLEncodedBytes() -> [UInt8] {
         Data(copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
     }
 }
