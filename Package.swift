@@ -37,6 +37,7 @@ let package = Package(
             ],
             resources: [
                 .copy("TestVectors"),
+                .copy("TestCertificates"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),

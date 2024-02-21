@@ -381,6 +381,38 @@ class JWTKitTests: XCTestCase {
         let verified = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(verified, payload)
     }
+
+    func testJWKEncoding() async throws {
+        let jwkIdentifier = JWKIdentifier(string: "vapor")
+        let data = try JSONEncoder().encode(jwkIdentifier)
+        let string = String(data: data, encoding: .utf8)!
+        XCTAssertEqual(string, "\"vapor\"")
+    }
+
+    func testParserWithWrongToken() async throws {
+        let keyCollection = await JWTKeyCollection().addUnsecuredNone()
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let token = try await keyCollection.sign(payload)
+        let parser = DefaultJWTParser()
+        XCTAssertNoThrow(try parser.parse(token.bytes, as: TestPayload.self))
+
+        // remove last "." from token
+        let corruptedToken = String(token.dropLast())
+        XCTAssertThrowsError(try parser.parse(corruptedToken.bytes, as: TestPayload.self)) { error in
+            guard let error = error as? JWTError else {
+                XCTFail("Unexpected error: \(error)")
+                return
+            }
+            XCTAssertEqual(error.errorType, .malformedToken)
+        }
+    }
 }
 
 struct AudiencePayload: Codable {

@@ -159,7 +159,7 @@ final class InternalTests: XCTestCase {
                 "b64",
                 "http://openbanking.org.uk/iat",
                 "http://openbanking.org.uk/iss",
-                "http://openbanking.org.uk/tan"
+                "http://openbanking.org.uk/tan",
             ],
         ]
 
@@ -225,6 +225,18 @@ final class InternalTests: XCTestCase {
 
         return pemLines.joined(separator: "\n")
     }
+
+    let publicKey = """
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy/FtQ/cOcx6ZgyaqU54C
+    ESfkpttXuNnEZ07nYXXo8ylIiUFpB0r0Fecgv/tIhF1LFCWBHUsqyoSRQz0/iBRn
+    YyIsG+yF/q1K3ll5Q/2GAS9/28jBuJGKDuKIj6dgPlr33si6bjeePTl4ZO6OZFxG
+    Yyn4x035pwGwjKGFuQRKYh0AtxwHiWeRIsAJ/B2Z+VGOpcSXH+x/YUfN8Q9FuyGU
+    zcsVLuGizbooRSMSSoD/y/8veWOnXWbMsh0KKTON/+yTmAcLn2tOzFmsYgHQXatW
+    0f2XjrdmmWl4VfiekFKFDvGenxum9nEJrzIJOMm6qHnIiyCNA3xbMqmr7oqeIUa+
+    fQIDAQAB
+    -----END PUBLIC KEY-----
+    """
 }
 
 extension ECDSA.PublicKey: Equatable {

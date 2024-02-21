@@ -62,7 +62,12 @@ final class RSATests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload))
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload)) { error in
+            guard let jwtError = error as? JWTError else {
+                return XCTFail("Unexpected error: \(error)")
+            }
+            XCTAssertEqual(jwtError.errorType, .signingAlgorithmFailure)
+        }
     }
 
     func testSigningWithRawBuiltPrivateKey() async throws {
