@@ -1,53 +1,51 @@
-@_implementationOnly import CJWTKitBoringSSL
+import _CryptoExtras
 import Foundation
 
-internal struct RSASigner: JWTAlgorithm, OpenSSLSigner {
-    let key: RSAKey
-    let algorithm: OpaquePointer
+struct RSASigner: JWTAlgorithm, CryptoSigner {
+    let publicKey: Insecure.RSA.PublicKey
+    let privateKey: Insecure.RSA.PrivateKey?
+    var algorithm: DigestAlgorithm
     let name: String
+    let padding: _RSA.Signing.Padding
 
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
-        where Plaintext: DataProtocol
-    {
-        guard case .private = self.key.type else {
+    init(key: some RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding) {
+        switch key {
+        case let key as Insecure.RSA.PrivateKey:
+            self.privateKey = key
+            self.publicKey = key.publicKey
+        case let key as Insecure.RSA.PublicKey:
+            self.publicKey = key
+            self.privateKey = nil
+        default:
+            // This should never happen
+            fatalError("Unexpected key type: \(type(of: key))")
+        }
+        self.algorithm = algorithm
+        self.name = name
+        self.padding = padding
+    }
+
+    func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
+        guard let privateKey else {
             throw JWTError.signingAlgorithmFailure(RSAError.privateKeyRequired)
         }
-        var signatureLength: UInt32 = 0
-        var signature = [UInt8](
-            repeating: 0,
-            count: Int(CJWTKitBoringSSL_RSA_size(key.c))
-        )
 
         let digest = try self.digest(plaintext)
-        guard CJWTKitBoringSSL_RSA_sign(
-            CJWTKitBoringSSL_EVP_MD_type(self.algorithm),
-            digest,
-            numericCast(digest.count),
-            &signature,
-            &signatureLength,
-            self.key.c
-        ) == 1 else {
-            throw JWTError.signingAlgorithmFailure(RSAError.signFailure)
-        }
 
-        return .init(signature[0..<numericCast(signatureLength)])
+        do {
+            let signature = try privateKey.signature(for: digest, padding: padding)
+            return [UInt8](signature.rawRepresentation)
+        } catch {
+            throw JWTError.signingAlgorithmFailure(RSAError.signFailure(error))
+        }
     }
 
-    func verify<Signature, Plaintext>(
-        _ signature: Signature,
-        signs plaintext: Plaintext
-    ) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
-    {
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         let digest = try self.digest(plaintext)
-        let signature = signature.copyBytes()
-        return CJWTKitBoringSSL_RSA_verify(
-            CJWTKitBoringSSL_EVP_MD_type(self.algorithm),
-            digest,
-            numericCast(digest.count),
-            signature,
-            numericCast(signature.count),
-            self.key.c
-        ) == 1
+        let signature = _RSA.Signing.RSASignature(rawRepresentation: signature)
+
+        return publicKey.isValidSignature(signature, for: digest, padding: padding)
     }
 }
+
+extension _RSA.Signing.Padding: @unchecked Sendable {}

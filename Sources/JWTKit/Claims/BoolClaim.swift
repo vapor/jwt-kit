@@ -2,10 +2,10 @@
 ///
 /// If a string is provided, and the string doesn't represent a bool, then `false` will be used.
 public struct BoolClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, ExpressibleByBooleanLiteral {
-    /// See `JWTClaim
+    /// See ``JWTClaim``.
     public var value: Bool
 
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public init(value: Bool) {
         self.value = value
     }

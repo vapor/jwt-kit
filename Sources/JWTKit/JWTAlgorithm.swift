@@ -1,7 +1,8 @@
 import Foundation
 
-/// Algorithm powering a `JWTSigner`.
-public protocol JWTAlgorithm {
+/// A protocol defining the necessary functionality for a JWT (JSON Web Token) algorithm.
+/// All algorithms conform to ``JWTAlgorithm`` to provide custom signing and verification logic for JWT tokens.
+public protocol JWTAlgorithm: Sendable {
     /// Unique JWT-standard name for this algorithm.
     var name: String { get }
 
@@ -12,8 +13,7 @@ public protocol JWTAlgorithm {
     /// - parameters:
     ///     - plaintext: Plaintext data to sign.
     /// - returns: Signature unique to the supplied data.
-    func sign<Plaintext>(_ plaintext: Plaintext) throws -> [UInt8]
-        where Plaintext: DataProtocol
+    func sign(_ plaintext: some DataProtocol) throws -> [UInt8]
 
     /// Returns `true` if the signature was creating by signing the plaintext.
     ///
@@ -31,17 +31,14 @@ public protocol JWTAlgorithm {
     ///     - signature: Signature data resulting from a previous call to `sign(:_)`.
     ///     - plaintext: Plaintext data to check signature against.
     /// - returns: Returns `true` if the signature was created by the supplied plaintext data.
-    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool
 }
 
 extension JWTAlgorithm {
-    /// See `JWTAlgorithm`.
-    func verify<Signature, Plaintext>(_ signature: Signature, signs plaintext: Plaintext) throws -> Bool
-        where Signature: DataProtocol, Plaintext: DataProtocol
-    {
+    /// See ``JWTAlgorithm``.
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
         // create test signature
-        let check = try self.sign(plaintext)
+        let check = try sign(plaintext)
 
         // byte-by-byte comparison to avoid timing attacks
         var match = true

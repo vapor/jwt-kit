@@ -11,4 +11,4 @@ jobs:
      with:
        package_name: jwt-kit
        modules: JWTKit
-       pathsToInvalidate: /jwt-kit/*
+       pathsToInvalidate: /jwtkit/*

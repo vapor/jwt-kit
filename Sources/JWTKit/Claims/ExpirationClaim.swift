@@ -8,10 +8,10 @@ import Foundation
 /// a few minutes, to account for clock skew.  Its value MUST be a number
 /// containing a NumericDate value.  Use of this claim is OPTIONAL.
 public struct ExpirationClaim: JWTUnixEpochClaim, Equatable {
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public var value: Date
 
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public init(value: Date) {
         self.value = value
     }
@@ -20,7 +20,7 @@ public struct ExpirationClaim: JWTUnixEpochClaim, Equatable {
     public func verifyNotExpired(currentDate: Date = .init()) throws {
         switch self.value.compare(currentDate) {
         case .orderedAscending, .orderedSame:
-            throw JWTError.claimVerificationFailure(name: "exp", reason: "expired")
+            throw JWTError.claimVerificationFailure(failedClaim: self, reason: "expired")
         case .orderedDescending:
             break
         }
