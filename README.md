@@ -347,9 +347,12 @@ For example you might need to set the `b64` header to false, which does not base
 
 ```swift
 struct CustomSerializer: JWTSerializer {
+    // Here you can set a custom encoder or just leave this as default
     var jsonEncoder: JWTJSONEncoder = .defaultForJWT
 
+    // This method should return the payload in the way you want/need it
     func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
+        // Check if the b64 header is set. If it is, base64URL encode the payload, don't otherwise
         if header.b64?.asBool == true {
             try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
         } else {
@@ -359,19 +362,25 @@ struct CustomSerializer: JWTSerializer {
 }
 
 struct CustomParser: JWTParser {
+    // Here you can set a custom decoder or just leave this as default
     var jsonDecoder: JWTJSONDecoder = .defaultForJWT
 
+    // This method parses the token into a tuple containing the various token's elements
     func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
+        // A helper method is provided to split the token correctly
         let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
+        // The header is usually always encoded the same way
         let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
 
+        // If the b64 header field is non present or true, base64URL decode the payload, don't otherwise
         let payload = if header.b64?.asBool ?? true {
             try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
         } else {
             try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
         }
 
+        // The signature is usually also always encoded the same way
         let signature = Data(encodedSignature.base64URLDecodedBytes())
 
         return (header: header, payload: payload, signature: signature)
