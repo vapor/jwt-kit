@@ -3,17 +3,9 @@
 // This file is generated from a similarly-named Perl script in the BoringSSL
 // source tree. Do not edit by hand.
 
-#if !defined(__has_feature)
-#define __has_feature(x) 0
-#endif
-#if __has_feature(memory_sanitizer) && !defined(OPENSSL_NO_ASM)
-#define OPENSSL_NO_ASM
-#endif
+#include <CJWTKitBoringSSL_asm_base.h>
 
-#if !defined(OPENSSL_NO_ASM) && defined(__ARMEL__) && defined(__ELF__)
-#if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
-#endif
+#if !defined(OPENSSL_NO_ASM) && defined(OPENSSL_ARM) && defined(__ELF__)
 #include <CJWTKitBoringSSL_arm_arch.h>
 
 @ Silence ARMv8 deprecated IT instruction warnings. This file is used by both
@@ -39,47 +31,17 @@
 .long	0x61707865,0x3320646e,0x79622d32,0x6b206574	@ endian-neutral
 .Lone:
 .long	1,0,0,0
-#if __ARM_MAX_ARCH__>=7
-.LOPENSSL_armcap:
-.word	OPENSSL_armcap_P-.LChaCha20_ctr32
-#else
-.word	-1
-#endif
 
-.globl	ChaCha20_ctr32
-.hidden	ChaCha20_ctr32
-.type	ChaCha20_ctr32,%function
+.globl	ChaCha20_ctr32_nohw
+.hidden	ChaCha20_ctr32_nohw
+.type	ChaCha20_ctr32_nohw,%function
 .align	5
-ChaCha20_ctr32:
-.LChaCha20_ctr32:
+ChaCha20_ctr32_nohw:
 	ldr	r12,[sp,#0]		@ pull pointer to counter and nonce
 	stmdb	sp!,{r0,r1,r2,r4-r11,lr}
-#if __ARM_ARCH__<7 && !defined(__thumb2__)
-	sub	r14,pc,#16		@ ChaCha20_ctr32
-#else
-	adr	r14,.LChaCha20_ctr32
-#endif
-	cmp	r2,#0			@ len==0?
-#ifdef	__thumb2__
-	itt	eq
-#endif
-	addeq	sp,sp,#4*3
-	beq	.Lno_data
-#if __ARM_MAX_ARCH__>=7
-	cmp	r2,#192			@ test len
-	bls	.Lshort
-	ldr	r4,[r14,#-32]
-	ldr	r4,[r14,r4]
-# ifdef	__APPLE__
-	ldr	r4,[r4]
-# endif
-	tst	r4,#ARMV7_NEON
-	bne	.LChaCha20_neon
-.Lshort:
-#endif
+	adr	r14,.Lsigma
 	ldmia	r12,{r4,r5,r6,r7}		@ load counter and nonce
 	sub	sp,sp,#4*(16)		@ off-load area
-	sub	r14,r14,#64		@ .Lsigma
 	stmdb	sp!,{r4,r5,r6,r7}		@ copy counter and nonce
 	ldmia	r3,{r4,r5,r6,r7,r8,r9,r10,r11}		@ load key
 	ldmia	r14,{r0,r1,r2,r3}		@ load sigma
@@ -240,8 +202,8 @@ ChaCha20_ctr32:
 	ldr	r8,[sp,#4*(0)]	@ load key material
 	ldr	r9,[sp,#4*(1)]
 
-#if __ARM_ARCH__>=6 || !defined(__ARMEB__)
-# if __ARM_ARCH__<7
+#if __ARM_ARCH>=6 || !defined(__ARMEB__)
+# if __ARM_ARCH<7
 	orr	r10,r12,r14
 	tst	r10,#3		@ are input and output aligned?
 	ldr	r10,[sp,#4*(2)]
@@ -267,7 +229,7 @@ ChaCha20_ctr32:
 # endif
 	ldrhs	r10,[r12,#-8]
 	ldrhs	r11,[r12,#-4]
-# if __ARM_ARCH__>=6 && defined(__ARMEB__)
+# if __ARM_ARCH>=6 && defined(__ARMEB__)
 	rev	r0,r0
 	rev	r1,r1
 	rev	r2,r2
@@ -304,7 +266,7 @@ ChaCha20_ctr32:
 # endif
 	ldrhs	r10,[r12,#-8]
 	ldrhs	r11,[r12,#-4]
-# if __ARM_ARCH__>=6 && defined(__ARMEB__)
+# if __ARM_ARCH>=6 && defined(__ARMEB__)
 	rev	r4,r4
 	rev	r5,r5
 	rev	r6,r6
@@ -349,7 +311,7 @@ ChaCha20_ctr32:
 # endif
 	ldrhs	r10,[r12,#-8]
 	ldrhs	r11,[r12,#-4]
-# if __ARM_ARCH__>=6 && defined(__ARMEB__)
+# if __ARM_ARCH>=6 && defined(__ARMEB__)
 	rev	r0,r0
 	rev	r1,r1
 	rev	r2,r2
@@ -391,7 +353,7 @@ ChaCha20_ctr32:
 # endif
 	ldrhs	r10,[r12,#-8]
 	ldrhs	r11,[r12,#-4]
-# if __ARM_ARCH__>=6 && defined(__ARMEB__)
+# if __ARM_ARCH>=6 && defined(__ARMEB__)
 	rev	r4,r4
 	rev	r5,r5
 	rev	r6,r6
@@ -422,7 +384,7 @@ ChaCha20_ctr32:
 	bhi	.Loop_outer
 
 	beq	.Ldone
-# if __ARM_ARCH__<7
+# if __ARM_ARCH<7
 	b	.Ltail
 
 .align	4
@@ -430,7 +392,7 @@ ChaCha20_ctr32:
 	cmp	r11,#64		@ restore flags
 # endif
 #endif
-#if __ARM_ARCH__<7
+#if __ARM_ARCH<7
 	ldr	r11,[sp,#4*(3)]
 	add	r0,r0,r8		@ accumulate key material
 	add	r1,r1,r9
@@ -806,19 +768,19 @@ ChaCha20_ctr32:
 
 .Ldone:
 	add	sp,sp,#4*(32+3)
-.Lno_data:
 	ldmia	sp!,{r4,r5,r6,r7,r8,r9,r10,r11,pc}
-.size	ChaCha20_ctr32,.-ChaCha20_ctr32
+.size	ChaCha20_ctr32_nohw,.-ChaCha20_ctr32_nohw
 #if __ARM_MAX_ARCH__>=7
 .arch	armv7-a
 .fpu	neon
 
-.type	ChaCha20_neon,%function
+.globl	ChaCha20_ctr32_neon
+.hidden	ChaCha20_ctr32_neon
+.type	ChaCha20_ctr32_neon,%function
 .align	5
-ChaCha20_neon:
+ChaCha20_ctr32_neon:
 	ldr	r12,[sp,#0]		@ pull pointer to counter and nonce
 	stmdb	sp!,{r0,r1,r2,r4-r11,lr}
-.LChaCha20_neon:
 	adr	r14,.Lsigma
 	vstmdb	sp!,{d8,d9,d10,d11,d12,d13,d14,d15}		@ ABI spec says so
 	stmdb	sp!,{r0,r1,r2,r3}
@@ -1486,14 +1448,9 @@ ChaCha20_neon:
 	vldmia	sp,{d8,d9,d10,d11,d12,d13,d14,d15}
 	add	sp,sp,#4*(16+3)
 	ldmia	sp!,{r4,r5,r6,r7,r8,r9,r10,r11,pc}
-.size	ChaCha20_neon,.-ChaCha20_neon
-.comm	OPENSSL_armcap_P,4,4
+.size	ChaCha20_ctr32_neon,.-ChaCha20_ctr32_neon
 #endif
-#endif  // !OPENSSL_NO_ASM && defined(__ARMEL__) && defined(__ELF__)
-#if defined(__ELF__)
-// See https://www.airs.com/blog/archives/518.
-.section .note.GNU-stack,"",%progbits
-#endif
+#endif  // !OPENSSL_NO_ASM && defined(OPENSSL_ARM) && defined(__ELF__)
 #endif  // defined(__arm__) && defined(__linux__)
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits

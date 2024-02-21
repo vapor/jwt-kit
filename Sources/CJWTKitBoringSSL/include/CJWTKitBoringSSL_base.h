@@ -66,6 +66,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <sys/types.h>
 
 #if defined(__MINGW32__)
@@ -82,6 +83,7 @@
 // opensslconf.h.
 #include "CJWTKitBoringSSL_is_boringssl.h"
 #include "CJWTKitBoringSSL_opensslconf.h"
+#include "CJWTKitBoringSSL_target.h"  // IWYU pragma: export
 
 #if defined(BORINGSSL_PREFIX)
 #include "CJWTKitBoringSSL_boringssl_prefix_symbols.h"
@@ -92,48 +94,7 @@ extern "C" {
 #endif
 
 
-#if defined(__x86_64) || defined(_M_AMD64) || defined(_M_X64)
-#define OPENSSL_64_BIT
-#define OPENSSL_X86_64
-#elif defined(__x86) || defined(__i386) || defined(__i386__) || defined(_M_IX86)
-#define OPENSSL_32_BIT
-#define OPENSSL_X86
-#elif defined(__AARCH64EL__) || defined(_M_ARM64)
-#define OPENSSL_64_BIT
-#define OPENSSL_AARCH64
-#elif defined(__ARMEL__) || defined(_M_ARM)
-#define OPENSSL_32_BIT
-#define OPENSSL_ARM
-#elif defined(__MIPSEL__) && !defined(__LP64__)
-#define OPENSSL_32_BIT
-#define OPENSSL_MIPS
-#elif defined(__MIPSEL__) && defined(__LP64__)
-#define OPENSSL_64_BIT
-#define OPENSSL_MIPS64
-#elif defined(__riscv) && __SIZEOF_POINTER__ == 8
-#define OPENSSL_64_BIT
-#define OPENSSL_RISCV64
-#elif defined(__riscv) && __SIZEOF_POINTER__ == 4
-#define OPENSSL_32_BIT
-#elif defined(__pnacl__)
-#define OPENSSL_32_BIT
-#define OPENSSL_PNACL
-#elif defined(__wasm__)
-#define OPENSSL_32_BIT
-#elif defined(__asmjs__)
-#define OPENSSL_32_BIT
-#elif defined(__myriad2__)
-#define OPENSSL_32_BIT
-#else
-// Note BoringSSL only supports standard 32-bit and 64-bit two's-complement,
-// little-endian architectures. Functions will not produce the correct answer
-// on other systems. Run the crypto_test binary, notably
-// crypto/compiler_test.cc, before adding a new architecture.
-#error "Unknown target CPU"
-#endif
-
 #if defined(__APPLE__)
-#define OPENSSL_APPLE
 // Note |TARGET_OS_MAC| is set for all Apple OS variants. |TARGET_OS_OSX|
 // targets macOS specifically.
 #if defined(TARGET_OS_OSX) && TARGET_OS_OSX
@@ -142,55 +103,6 @@ extern "C" {
 #if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
 #define OPENSSL_IOS
 #endif
-#endif
-
-#if defined(_WIN32)
-#define OPENSSL_WINDOWS
-#endif
-
-// Trusty isn't Linux but currently defines __linux__. As a workaround, we
-// exclude it here.
-// TODO(b/169780122): Remove this workaround once Trusty no longer defines it.
-#if defined(__linux__) && !defined(__TRUSTY__)
-#define OPENSSL_LINUX
-#endif
-
-#if defined(__Fuchsia__)
-#define OPENSSL_FUCHSIA
-#endif
-
-#if defined(__TRUSTY__)
-#define OPENSSL_TRUSTY
-#define OPENSSL_NO_THREADS_CORRUPT_MEMORY_AND_LEAK_SECRETS_IF_THREADED
-#endif
-
-#if defined(__ANDROID_API__)
-#define OPENSSL_ANDROID
-#endif
-
-#if defined(__FreeBSD__)
-#define OPENSSL_FREEBSD
-#endif
-
-#if defined(__OpenBSD__)
-#define OPENSSL_OPENBSD
-#endif
-
-// BoringSSL requires platform's locking APIs to make internal global state
-// thread-safe, including the PRNG. On some single-threaded embedded platforms,
-// locking APIs may not exist, so this dependency may be disabled with the
-// following build flag.
-//
-// IMPORTANT: Doing so means the consumer promises the library will never be
-// used in any multi-threaded context. It causes BoringSSL to be globally
-// thread-unsafe. Setting it inappropriately will subtly and unpredictably
-// corrupt memory and leak secret keys.
-//
-// Do not set this flag on any platform where threads are possible. BoringSSL
-// maintainers will not provide support for any consumers that do so. Changes
-// which break such unsupported configurations will not be reverted.
-#if !defined(OPENSSL_NO_THREADS_CORRUPT_MEMORY_AND_LEAK_SECRETS_IF_THREADED)
-#define OPENSSL_THREADS
 #endif
 
 #define OPENSSL_IS_BORINGSSL
@@ -205,7 +117,7 @@ extern "C" {
 // A consumer may use this symbol in the preprocessor to temporarily build
 // against multiple revisions of BoringSSL at the same time. It is not
 // recommended to do so for longer than is necessary.
-#define BORINGSSL_API_VERSION 22
+#define BORINGSSL_API_VERSION 29
 
 #if defined(BORINGSSL_SHARED_LIBRARY)
 
@@ -319,31 +231,6 @@ extern "C" {
 #define OPENSSL_INLINE static inline OPENSSL_UNUSED
 #endif
 
-#if defined(BORINGSSL_UNSAFE_FUZZER_MODE) && \
-    !defined(BORINGSSL_UNSAFE_DETERMINISTIC_MODE)
-#define BORINGSSL_UNSAFE_DETERMINISTIC_MODE
-#endif
-
-#if defined(__has_feature)
-#if __has_feature(address_sanitizer)
-#define OPENSSL_ASAN
-#endif
-#if __has_feature(thread_sanitizer)
-#define OPENSSL_TSAN
-#endif
-#if __has_feature(memory_sanitizer)
-#define OPENSSL_MSAN
-#define OPENSSL_ASM_INCOMPATIBLE
-#endif
-#endif
-
-#if defined(OPENSSL_ASM_INCOMPATIBLE)
-#undef OPENSSL_ASM_INCOMPATIBLE
-#if !defined(OPENSSL_NO_ASM)
-#define OPENSSL_NO_ASM
-#endif
-#endif  // OPENSSL_ASM_INCOMPATIBLE
-
 #if defined(__cplusplus)
 // enums can be predeclared, but only in C++ and only if given an explicit type.
 // C doesn't support setting an explicit type for enums thus a #define is used
@@ -407,6 +294,7 @@ typedef struct AUTHORITY_KEYID_st AUTHORITY_KEYID;
 typedef struct BASIC_CONSTRAINTS_st BASIC_CONSTRAINTS;
 typedef struct DIST_POINT_st DIST_POINT;
 typedef struct DSA_SIG_st DSA_SIG;
+typedef struct GENERAL_NAME_st GENERAL_NAME;
 typedef struct ISSUING_DIST_POINT_st ISSUING_DIST_POINT;
 typedef struct NAME_CONSTRAINTS_st NAME_CONSTRAINTS;
 typedef struct Netscape_spkac_st NETSCAPE_SPKAC;
@@ -493,6 +381,7 @@ typedef struct trust_token_client_st TRUST_TOKEN_CLIENT;
 typedef struct trust_token_issuer_st TRUST_TOKEN_ISSUER;
 typedef struct trust_token_method_st TRUST_TOKEN_METHOD;
 typedef struct v3_ext_ctx X509V3_CTX;
+typedef struct v3_ext_method X509V3_EXT_METHOD;
 typedef struct x509_attributes_st X509_ATTRIBUTE;
 typedef struct x509_lookup_st X509_LOOKUP;
 typedef struct x509_lookup_method_st X509_LOOKUP_METHOD;
@@ -505,6 +394,13 @@ typedef struct x509_trust_st X509_TRUST;
 
 typedef void *OPENSSL_BLOCK;
 
+// BSSL_CHECK aborts if |condition| is not true.
+#define BSSL_CHECK(condition) \
+  do {                        \
+    if (!(condition)) {       \
+      abort();                \
+    }                         \
+  } while (0);
 
 #if defined(__cplusplus)
 }  // extern C

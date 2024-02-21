@@ -1,13 +1,22 @@
 // swift-tools-version:5.6
 import PackageDescription
 
+// This package contains a vendored copy of BoringSSL. For ease of tracking
+// down problems with the copy of BoringSSL in use, we include a copy of the
+// commit hash of the revision of BoringSSL included in the given release.
+// This is also reproduced in a file called hash.txt in the
+// Sources/CCryptoBoringSSL directory. The source repository is at
+// https://boringssl.googlesource.com/boringssl.
+//
+// BoringSSL Commit: 58a318edc892a595a5b043359a5d441869158699
+
 let package = Package(
     name: "jwt-kit",
     platforms: [
         .macOS(.v10_15),
         .iOS(.v13),
         .tvOS(.v13),
-        .watchOS(.v6)
+        .watchOS(.v6),
     ],
     products: [
         .library(name: "JWTKit", targets: ["JWTKit"]),
@@ -16,7 +25,7 @@ let package = Package(
         MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", "2.0.0" ..< "4.0.0")
+        .package(url: "https://github.com/apple/swift-crypto.git", "2.0.0" ..< "4.0.0"),
     ],
     targets: [
         .target(name: "CJWTKitBoringSSL"),
@@ -28,5 +37,5 @@ let package = Package(
             .target(name: "JWTKit"),
         ]),
     ],
-     cxxLanguageStandard: .cxx11
+    cxxLanguageStandard: .cxx11
 )

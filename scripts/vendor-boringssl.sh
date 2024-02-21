@@ -53,8 +53,6 @@ HERE=$(pwd)
 DSTROOT=Sources/CJWTKitBoringSSL
 TMPDIR=$(mktemp -d /tmp/.workingXXXXXX)
 SRCROOT="${TMPDIR}/src/boringssl.googlesource.com/boringssl"
-#CROSS_COMPILE_TARGET_LOCATION="/Library/Developer/Destinations"
-CROSS_COMPILE_VERSION="5.8-jammy"
 
 # This function namespaces the awkward inline functions declared in OpenSSL
 # and BoringSSL.
@@ -93,8 +91,8 @@ function mangle_symbols {
 
         # Begin by building for macOS. We build for two target triples, Intel
         # and Apple Silicon.
-        swift build --triple "x86_64-apple-macosx" --product CJWTKitBoringSSL
-        swift build --triple "arm64-apple-macosx" --product CJWTKitBoringSSL
+        swift build --triple "x86_64-apple-macosx" --product CJWTKitBoringSSL --enable-test-discovery
+        swift build --triple "arm64-apple-macosx" --product CJWTKitBoringSSL --enable-test-discovery
         (
             cd "${SRCROOT}"
             go mod tidy -modcacherw
@@ -112,31 +110,9 @@ function mangle_symbols {
         )
 
         # Now cross compile for our targets.
-        # If you have trouble with the script around this point, consider
-        # https://github.com/CSCIX65G/SwiftCrossCompilers to obtain cross
-        # compilers for the architectures we care about.
-        #
-#         for cc_target in "${CROSS_COMPILE_TARGET_LOCATION}"/*"${CROSS_COMPILE_VERSION}"*.json; do
-#             echo "Cross compiling for ${cc_target}"
-#             swift build --product CJWTKitBoringSSL --destination "${cc_target}"
-#         done;
-
-        # N.B.: The cross-compilation "support" used by the original version of
-        # this script (see above) is very painful and unreliable, so we're using a
-        # couple of quick-and-dirty Docker commands instead (which means we can't
-        # generate symbols for 32-bit architectures). Fortunately, true cross-compilation
-        # support was said to be imminent at the time of this writing.
-        # 
-        # Requirements for this approach:
-        # - Docker Desktop for Mac version 4.19.0 or higher
-        # - File sharing for the directory containing this repository must be allowed
-        # - "Use Virtualization framework" must be enabled
-        # - "Use Rosetta for x86/amd64 emulation on Apple Silicon" must be enabled
-        docker run -t -i --rm --privileged -v$(pwd):/src -w/src --platform linux/arm64 \
-            "swift:${CROSS_COMPILE_VERSION}" \
+        docker run -t -i --rm --privileged -v$(pwd):/src -w/src --platform linux/arm64 swift:5.8-jammy \
             swift build --product CJWTKitBoringSSL
-        docker run -t -i --rm --privileged -v$(pwd):/src -w/src --platform linux/amd64 \
-            "swift:${CROSS_COMPILE_VERSION}" \
+        docker run -t -i --rm --privileged -v$(pwd):/src -w/src --platform linux/amd64 swift:5.8-jammy \
             swift build --product CJWTKitBoringSSL
 
         # Now we need to generate symbol mangles for Linux. We can do this in
@@ -232,6 +208,7 @@ PATTERNS=(
 'crypto/*/*/*.S'
 'crypto/*/*/*/*.c'
 'third_party/fiat/*.h'
+'third_party/fiat/asm/*.S'
 #'third_party/fiat/*.c'
 )
 
@@ -273,7 +250,7 @@ rm -f $DSTROOT/crypto/fipsmodule/bcm.c
 echo "REMOVING libssl"
 (
     cd "$DSTROOT"
-    rm "include/openssl/ssl.h" "include/openssl/srtp.h" "include/openssl/ssl3.h" "include/openssl/tls1.h"
+    rm "include/openssl/dtls1.h" "include/openssl/ssl.h" "include/openssl/srtp.h" "include/openssl/ssl3.h" "include/openssl/tls1.h"
     rm -rf "ssl"
 )
 
@@ -325,8 +302,21 @@ git apply "${HERE}/scripts/patch-2-more-inttypes.patch"
 # We need BoringSSL to be modularised
 echo "MODULARISING BoringSSL"
 cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
-#ifndef C_JWT_KIT_BORINGSSL_H
-#define C_JWT_KIT_BORINGSSL_H
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the SwiftCrypto open source project
+//
+// Copyright (c) 2019 Apple Inc. and the SwiftCrypto project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.md for the list of SwiftCrypto project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+#ifndef C_CRYPTO_BORINGSSL_H
+#define C_CRYPTO_BORINGSSL_H
 
 #include "CJWTKitBoringSSL_aes.h"
 #include "CJWTKitBoringSSL_arm_arch.h"
@@ -345,7 +335,6 @@ cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 #include "CJWTKitBoringSSL_cpu.h"
 #include "CJWTKitBoringSSL_curve25519.h"
 #include "CJWTKitBoringSSL_des.h"
-#include "CJWTKitBoringSSL_dtls1.h"
 #include "CJWTKitBoringSSL_e_os2.h"
 #include "CJWTKitBoringSSL_ec.h"
 #include "CJWTKitBoringSSL_ec_key.h"
@@ -374,7 +363,7 @@ cat << EOF > "$DSTROOT/include/CJWTKitBoringSSL.h"
 #include "CJWTKitBoringSSL_trust_token.h"
 #include "CJWTKitBoringSSL_x509v3.h"
 
-#endif  // C_JWT_KIT_BORINGSSL_H
+#endif  // C_CRYPTO_BORINGSSL_H
 EOF
 
 # modulemap is required by the cmake build
@@ -392,4 +381,3 @@ echo "This directory is derived from BoringSSL cloned from https://boringssl.goo
 
 echo "CLEANING temporary directory"
 rm -rf "${TMPDIR}"
-

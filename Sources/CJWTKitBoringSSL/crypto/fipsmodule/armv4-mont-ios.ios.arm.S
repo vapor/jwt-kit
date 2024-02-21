@@ -3,17 +3,9 @@
 // This file is generated from a similarly-named Perl script in the BoringSSL
 // source tree. Do not edit by hand.
 
-#if !defined(__has_feature)
-#define __has_feature(x) 0
-#endif
-#if __has_feature(memory_sanitizer) && !defined(OPENSSL_NO_ASM)
-#define OPENSSL_NO_ASM
-#endif
+#include <CJWTKitBoringSSL_asm_base.h>
 
-#if !defined(OPENSSL_NO_ASM) && defined(__ARMEL__) && defined(__APPLE__)
-#if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
-#endif
+#if !defined(OPENSSL_NO_ASM) && defined(OPENSSL_ARM) && defined(__APPLE__)
 #include <CJWTKitBoringSSL_arm_arch.h>
 
 @ Silence ARMv8 deprecated IT instruction warnings. This file is used by both
@@ -28,40 +20,16 @@
 .code	32
 #endif
 
-#if __ARM_MAX_ARCH__>=7
-.align	5
-LOPENSSL_armcap:
-.word	OPENSSL_armcap_P-Lbn_mul_mont
-#endif
-
-.globl	_bn_mul_mont
-.private_extern	_bn_mul_mont
+.globl	_bn_mul_mont_nohw
+.private_extern	_bn_mul_mont_nohw
 #ifdef __thumb2__
-.thumb_func	_bn_mul_mont
+.thumb_func	_bn_mul_mont_nohw
 #endif
 
 .align	5
-_bn_mul_mont:
-Lbn_mul_mont:
+_bn_mul_mont_nohw:
 	ldr	ip,[sp,#4]		@ load num
 	stmdb	sp!,{r0,r2}		@ sp points at argument block
-#if __ARM_MAX_ARCH__>=7
-	tst	ip,#7
-	bne	Lialu
-	adr	r0,Lbn_mul_mont
-	ldr	r2,LOPENSSL_armcap
-	ldr	r0,[r0,r2]
-#ifdef	__APPLE__
-	ldr	r0,[r0]
-#endif
-	tst	r0,#ARMV7_NEON		@ NEON available?
-	ldmia	sp, {r0,r2}
-	beq	Lialu
-	add	sp,sp,#8
-	b	bn_mul8x_mont_neon
-.align	4
-Lialu:
-#endif
 	cmp	ip,#2
 	mov	r0,ip			@ load num
 #ifdef	__thumb2__
@@ -205,7 +173,7 @@ Lcopy:	ldr	r7,[r4]		@ conditional copy
 	add	sp,sp,#2*4		@ skip over {r0,r2}
 	mov	r0,#1
 Labrt:
-#if __ARM_ARCH__>=5
+#if __ARM_ARCH>=5
 	bx	lr				@ bx lr
 #else
 	tst	lr,#1
@@ -217,11 +185,13 @@ Labrt:
 
 
 
+.globl	_bn_mul8x_mont_neon
+.private_extern	_bn_mul8x_mont_neon
 #ifdef __thumb2__
-.thumb_func	bn_mul8x_mont_neon
+.thumb_func	_bn_mul8x_mont_neon
 #endif
 .align	5
-bn_mul8x_mont_neon:
+_bn_mul8x_mont_neon:
 	mov	ip,sp
 	stmdb	sp!,{r4,r5,r6,r7,r8,r9,r10,r11}
 	vstmdb	sp!,{d8,d9,d10,d11,d12,d13,d14,d15}		@ ABI specification says so
@@ -972,20 +942,7 @@ LNEON_copy_n_zap:
 #endif
 .byte	77,111,110,116,103,111,109,101,114,121,32,109,117,108,116,105,112,108,105,99,97,116,105,111,110,32,102,111,114,32,65,82,77,118,52,47,78,69,79,78,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
 .align	2
-.align	2
-#if __ARM_MAX_ARCH__>=7
-.comm	_OPENSSL_armcap_P,4
-.non_lazy_symbol_pointer
-OPENSSL_armcap_P:
-.indirect_symbol	_OPENSSL_armcap_P
-.long	0
-.private_extern	_OPENSSL_armcap_P
-#endif
-#endif  // !OPENSSL_NO_ASM && defined(__ARMEL__) && defined(__APPLE__)
-#if defined(__ELF__)
-// See https://www.airs.com/blog/archives/518.
-.section .note.GNU-stack,"",%progbits
-#endif
+#endif  // !OPENSSL_NO_ASM && defined(OPENSSL_ARM) && defined(__APPLE__)
 #endif  // defined(__arm__) && defined(__APPLE__)
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits

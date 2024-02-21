@@ -3,18 +3,10 @@
 // This file is generated from a similarly-named Perl script in the BoringSSL
 // source tree. Do not edit by hand.
 
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer) && !defined(OPENSSL_NO_ASM)
-#define OPENSSL_NO_ASM
-#endif
-#endif
+#include <CJWTKitBoringSSL_asm_base.h>
 
-#if defined(__x86_64__) && !defined(OPENSSL_NO_ASM) && defined(__APPLE__)
-#if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
-#endif
+#if !defined(OPENSSL_NO_ASM) && defined(OPENSSL_X86_64) && defined(__APPLE__)
 .text	
-
 .globl	_gcm_init_clmul
 .private_extern _gcm_init_clmul
 
@@ -22,6 +14,7 @@
 _gcm_init_clmul:
 
 
+_CET_ENDBR
 L$_init_clmul:
 	movdqu	(%rsi),%xmm2
 	pshufd	$78,%xmm2,%xmm2
@@ -172,7 +165,7 @@ L$_init_clmul:
 	movdqu	%xmm0,64(%rdi)
 .byte	102,15,58,15,227,8
 	movdqu	%xmm4,80(%rdi)
-	.byte	0xf3,0xc3
+	ret
 
 
 
@@ -182,6 +175,7 @@ L$_init_clmul:
 .p2align	4
 _gcm_gmult_clmul:
 
+_CET_ENDBR
 L$_gmult_clmul:
 	movdqu	(%rdi),%xmm0
 	movdqa	L$bswap_mask(%rip),%xmm5
@@ -227,7 +221,7 @@ L$_gmult_clmul:
 	pxor	%xmm1,%xmm0
 .byte	102,15,56,0,197
 	movdqu	%xmm0,(%rdi)
-	.byte	0xf3,0xc3
+	ret
 
 
 .globl	_gcm_ghash_clmul
@@ -237,6 +231,7 @@ L$_gmult_clmul:
 _gcm_ghash_clmul:
 
 
+_CET_ENDBR
 L$_ghash_clmul:
 	movdqa	L$bswap_mask(%rip),%xmm10
 
@@ -249,14 +244,8 @@ L$_ghash_clmul:
 	jz	L$odd_tail
 
 	movdqu	16(%rsi),%xmm6
-	leaq	_OPENSSL_ia32cap_P(%rip),%rax
-	movl	4(%rax),%eax
 	cmpq	$0x30,%rcx
 	jb	L$skip4x
-
-	andl	$71303168,%eax
-	cmpl	$4194304,%eax
-	je	L$skip4x
 
 	subq	$0x30,%rcx
 	movq	$0xA040608020C0E000,%rax
@@ -615,7 +604,7 @@ L$odd_tail:
 L$done:
 .byte	102,65,15,56,0,194
 	movdqu	%xmm0,(%rdi)
-	.byte	0xf3,0xc3
+	ret
 
 
 
@@ -625,6 +614,7 @@ L$done:
 .p2align	5
 _gcm_init_avx:
 
+_CET_ENDBR
 	vzeroupper
 
 	vmovdqu	(%rsi),%xmm2
@@ -726,7 +716,7 @@ L$init_start_avx:
 	vmovdqu	%xmm5,-16(%rdi)
 
 	vzeroupper
-	.byte	0xf3,0xc3
+	ret
 
 
 
@@ -736,6 +726,7 @@ L$init_start_avx:
 .p2align	5
 _gcm_gmult_avx:
 
+_CET_ENDBR
 	jmp	L$_gmult_clmul
 
 
@@ -745,6 +736,7 @@ _gcm_gmult_avx:
 .p2align	5
 _gcm_ghash_avx:
 
+_CET_ENDBR
 	vzeroupper
 
 	vmovdqu	(%rdi),%xmm10
@@ -1115,7 +1107,7 @@ L$tail_no_xor_avx:
 	vpshufb	%xmm13,%xmm10,%xmm10
 	vmovdqu	%xmm10,(%rdi)
 	vzeroupper
-	.byte	0xf3,0xc3
+	ret
 
 
 
@@ -1132,10 +1124,6 @@ L$7_mask:
 .byte	71,72,65,83,72,32,102,111,114,32,120,56,54,95,54,52,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
 .p2align	6
 .text	
-#endif
-#if defined(__ELF__)
-// See https://www.airs.com/blog/archives/518.
-.section .note.GNU-stack,"",%progbits
 #endif
 #endif  // defined(__x86_64__) && defined(__APPLE__)
 #if defined(__linux__) && defined(__ELF__)

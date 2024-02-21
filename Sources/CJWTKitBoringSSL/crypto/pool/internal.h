@@ -18,6 +18,7 @@
 #include <CJWTKitBoringSSL_lhash.h>
 #include <CJWTKitBoringSSL_thread.h>
 
+#include "../internal.h"
 #include "../lhash/internal.h"
 
 

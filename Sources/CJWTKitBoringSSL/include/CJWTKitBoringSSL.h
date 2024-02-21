@@ -1,5 +1,18 @@
-#ifndef C_JWT_KIT_BORINGSSL_H
-#define C_JWT_KIT_BORINGSSL_H
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the SwiftCrypto open source project
+//
+// Copyright (c) 2019 Apple Inc. and the SwiftCrypto project authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See CONTRIBUTORS.md for the list of SwiftCrypto project authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+#ifndef C_CRYPTO_BORINGSSL_H
+#define C_CRYPTO_BORINGSSL_H
 
 #include "CJWTKitBoringSSL_aes.h"
 #include "CJWTKitBoringSSL_arm_arch.h"
@@ -18,7 +31,6 @@
 #include "CJWTKitBoringSSL_cpu.h"
 #include "CJWTKitBoringSSL_curve25519.h"
 #include "CJWTKitBoringSSL_des.h"
-#include "CJWTKitBoringSSL_dtls1.h"
 #include "CJWTKitBoringSSL_e_os2.h"
 #include "CJWTKitBoringSSL_ec.h"
 #include "CJWTKitBoringSSL_ec_key.h"
@@ -47,4 +59,4 @@
 #include "CJWTKitBoringSSL_trust_token.h"
 #include "CJWTKitBoringSSL_x509v3.h"
 
-#endif  // C_JWT_KIT_BORINGSSL_H
+#endif  // C_CRYPTO_BORINGSSL_H

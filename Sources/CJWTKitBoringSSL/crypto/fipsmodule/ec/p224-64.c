@@ -24,6 +24,7 @@
 #include <CJWTKitBoringSSL_err.h>
 #include <CJWTKitBoringSSL_mem.h>
 
+#include <assert.h>
 #include <string.h>
 
 #include "internal.h"
@@ -836,12 +837,12 @@ static void p224_select_point(const uint64_t idx, size_t size,
 
   for (size_t i = 0; i < size; i++) {
     const p224_limb *inlimbs = &pre_comp[i][0][0];
-    uint64_t mask = i ^ idx;
-    mask |= mask >> 4;
-    mask |= mask >> 2;
-    mask |= mask >> 1;
-    mask &= 1;
-    mask--;
+    static_assert(sizeof(uint64_t) <= sizeof(crypto_word_t),
+                  "crypto_word_t too small");
+    static_assert(sizeof(size_t) <= sizeof(crypto_word_t),
+                  "crypto_word_t too small");
+    // Without a value barrier, Clang adds a branch here.
+    uint64_t mask = value_barrier_w(constant_time_eq_w(i, idx));
     for (size_t j = 0; j < 4 * 3; j++) {
       outlimbs[j] |= inlimbs[j] & mask;
     }
@@ -1142,9 +1143,6 @@ static void ec_GFp_nistp224_felem_sqr(const EC_GROUP *group, EC_FELEM *r,
 }
 
 DEFINE_METHOD_FUNCTION(EC_METHOD, EC_GFp_nistp224_method) {
-  out->group_init = ec_GFp_simple_group_init;
-  out->group_finish = ec_GFp_simple_group_finish;
-  out->group_set_curve = ec_GFp_simple_group_set_curve;
   out->point_get_affine_coordinates =
       ec_GFp_nistp224_point_get_affine_coordinates;
   out->add = ec_GFp_nistp224_add;

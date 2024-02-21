@@ -3,17 +3,9 @@
 // This file is generated from a similarly-named Perl script in the BoringSSL
 // source tree. Do not edit by hand.
 
-#if !defined(__has_feature)
-#define __has_feature(x) 0
-#endif
-#if __has_feature(memory_sanitizer) && !defined(OPENSSL_NO_ASM)
-#define OPENSSL_NO_ASM
-#endif
+#include <CJWTKitBoringSSL_asm_base.h>
 
-#if !defined(OPENSSL_NO_ASM) && defined(__AARCH64EL__) && defined(__ELF__)
-#if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
-#endif
+#if !defined(OPENSSL_NO_ASM) && defined(OPENSSL_AARCH64) && defined(__ELF__)
 // Copyright 2014-2020 The OpenSSL Project Authors. All Rights Reserved.
 //
 // Licensed under the OpenSSL license (the "License").  You may not use
@@ -60,24 +52,11 @@
 
 .text
 
-
-.hidden	OPENSSL_armcap_P
-.globl	sha256_block_data_order
-.hidden	sha256_block_data_order
-.type	sha256_block_data_order,%function
+.globl	sha256_block_data_order_nohw
+.hidden	sha256_block_data_order_nohw
+.type	sha256_block_data_order_nohw,%function
 .align	6
-sha256_block_data_order:
-	AARCH64_VALID_CALL_TARGET
-#ifndef	__KERNEL__
-#if __has_feature(hwaddress_sanitizer) && __clang_major__ >= 10
-	adrp	x16,:pg_hi21_nc:OPENSSL_armcap_P
-#else
-	adrp	x16,OPENSSL_armcap_P
-#endif
-	ldr	w16,[x16,:lo12:OPENSSL_armcap_P]
-	tst	w16,#ARMV8_SHA256
-	b.ne	.Lv8_entry
-#endif
+sha256_block_data_order_nohw:
 	AARCH64_SIGN_LINK_REGISTER
 	stp	x29,x30,[sp,#-128]!
 	add	x29,sp,#0
@@ -1041,7 +1020,7 @@ sha256_block_data_order:
 	ldp	x29,x30,[sp],#128
 	AARCH64_VALIDATE_LINK_REGISTER
 	ret
-.size	sha256_block_data_order,.-sha256_block_data_order
+.size	sha256_block_data_order_nohw,.-sha256_block_data_order_nohw
 
 .section	.rodata
 .align	6
@@ -1070,11 +1049,13 @@ sha256_block_data_order:
 .align	2
 .text
 #ifndef	__KERNEL__
-.type	sha256_block_armv8,%function
+.globl	sha256_block_data_order_hw
+.hidden	sha256_block_data_order_hw
+.type	sha256_block_data_order_hw,%function
 .align	6
-sha256_block_armv8:
-.Lv8_entry:
+sha256_block_data_order_hw:
 	// Armv8.3-A PAuth: even though x30 is pushed to stack it is not popped later.
+	AARCH64_VALID_CALL_TARGET
 	stp	x29,x30,[sp,#-16]!
 	add	x29,sp,#0
 
@@ -1209,13 +1190,9 @@ sha256_block_armv8:
 
 	ldr	x29,[sp],#16
 	ret
-.size	sha256_block_armv8,.-sha256_block_armv8
+.size	sha256_block_data_order_hw,.-sha256_block_data_order_hw
 #endif
-#endif  // !OPENSSL_NO_ASM && defined(__AARCH64EL__) && defined(__ELF__)
-#if defined(__ELF__)
-// See https://www.airs.com/blog/archives/518.
-.section .note.GNU-stack,"",%progbits
-#endif
+#endif  // !OPENSSL_NO_ASM && defined(OPENSSL_AARCH64) && defined(__ELF__)
 #endif  // defined(__aarch64__) && defined(__linux__)
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits

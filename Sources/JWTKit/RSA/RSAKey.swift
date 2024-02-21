@@ -172,18 +172,20 @@ public final class RSAKey: OpenSSLKey {
     }
 
     let type: KeyType
-    
-    internal var c: UnsafeMutablePointer<RSA> {
-        return self.cRaw.assumingMemoryBound(to: RSA.self)
-    }
-    internal let cRaw: UnsafeMutableRawPointer//RSA
 
-    init(_ c: UnsafeMutablePointer<RSA>, _ type: KeyType) {
+    internal var c: OpaquePointer {
+        return CJWTKitBoringSSL_EVP_PKEY_get1_RSA(self.cRaw)
+    }
+    
+    let cRaw: OpaquePointer
+
+    init(_ c: OpaquePointer, _ type: KeyType) {
         self.type = type
-        self.cRaw = UnsafeMutableRawPointer(c)
+        self.cRaw = CJWTKitBoringSSL_EVP_PKEY_new()
+        CJWTKitBoringSSL_EVP_PKEY_assign_RSA(cRaw, c)
     }
 
     deinit {
-        CJWTKitBoringSSL_RSA_free(self.c)
+        CJWTKitBoringSSL_EVP_PKEY_free(self.c)
     }
 }

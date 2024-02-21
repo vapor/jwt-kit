@@ -3,38 +3,20 @@
 // This file is generated from a similarly-named Perl script in the BoringSSL
 // source tree. Do not edit by hand.
 
-#if !defined(__has_feature)
-#define __has_feature(x) 0
-#endif
-#if __has_feature(memory_sanitizer) && !defined(OPENSSL_NO_ASM)
-#define OPENSSL_NO_ASM
-#endif
+#include <CJWTKitBoringSSL_asm_base.h>
 
-#if !defined(OPENSSL_NO_ASM) && defined(__AARCH64EL__) && defined(__APPLE__)
-#if defined(BORINGSSL_PREFIX)
-#include <CJWTKitBoringSSL_boringssl_prefix_symbols_asm.h>
-#endif
+#if !defined(OPENSSL_NO_ASM) && defined(OPENSSL_AARCH64) && defined(__APPLE__)
 #include <CJWTKitBoringSSL_arm_arch.h>
 
 .text
 
-
-.private_extern	_OPENSSL_armcap_P
-.globl	_sha1_block_data_order
-.private_extern	_sha1_block_data_order
+.globl	_sha1_block_data_order_nohw
+.private_extern	_sha1_block_data_order_nohw
 
 .align	6
-_sha1_block_data_order:
+_sha1_block_data_order_nohw:
 	// Armv8.3-A PAuth: even though x30 is pushed to stack it is not popped later.
 	AARCH64_VALID_CALL_TARGET
-#if __has_feature(hwaddress_sanitizer) && __clang_major__ >= 10
-	adrp	x16,:pg_hi21_nc:_OPENSSL_armcap_P
-#else
-	adrp	x16,_OPENSSL_armcap_P@PAGE
-#endif
-	ldr	w16,[x16,_OPENSSL_armcap_P@PAGEOFF]
-	tst	w16,#ARMV8_SHA1
-	b.ne	Lv8_entry
 
 	stp	x29,x30,[sp,#-96]!
 	add	x29,sp,#0
@@ -1091,12 +1073,13 @@ Loop:
 	ldr	x29,[sp],#96
 	ret
 
+.globl	_sha1_block_data_order_hw
+.private_extern	_sha1_block_data_order_hw
 
 .align	6
-sha1_block_armv8:
+_sha1_block_data_order_hw:
 	// Armv8.3-A PAuth: even though x30 is pushed to stack it is not popped later.
 	AARCH64_VALID_CALL_TARGET
-Lv8_entry:
 	stp	x29,x30,[sp,#-16]!
 	add	x29,sp,#0
 
@@ -1234,11 +1217,7 @@ Lconst:
 .byte	83,72,65,49,32,98,108,111,99,107,32,116,114,97,110,115,102,111,114,109,32,102,111,114,32,65,82,77,118,56,44,32,67,82,89,80,84,79,71,65,77,83,32,98,121,32,60,97,112,112,114,111,64,111,112,101,110,115,115,108,46,111,114,103,62,0
 .align	2
 .align	2
-#endif  // !OPENSSL_NO_ASM && defined(__AARCH64EL__) && defined(__APPLE__)
-#if defined(__ELF__)
-// See https://www.airs.com/blog/archives/518.
-.section .note.GNU-stack,"",%progbits
-#endif
+#endif  // !OPENSSL_NO_ASM && defined(OPENSSL_AARCH64) && defined(__APPLE__)
 #endif  // defined(__aarch64__) && defined(__APPLE__)
 #if defined(__linux__) && defined(__ELF__)
 .section .note.GNU-stack,"",%progbits
