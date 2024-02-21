@@ -4,6 +4,7 @@ set -e -o pipefail
 
 mkdir jwt_x5c_certs
 pushd jwt_x5c_certs
+
 # Create a Root Certificate (self-signed):
 
 # Generate a private key for the Root CA
