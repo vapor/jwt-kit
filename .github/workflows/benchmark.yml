@@ -13,7 +13,6 @@ jobs:
       - name: jemalloc dependency
         run: sudo apt-get update && sudo apt-get install -y libjemalloc-dev
       - name: Run benchmarks for PR branch
-        if: ${{ hashFiles('Benchmarks/**') != '' }}
         run: |
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
           git checkout main
