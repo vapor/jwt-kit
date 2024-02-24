@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: jemalloc dependency
-        run: sudo apt-get update && sudo apt-get install -y libjemalloc-dev
+        run: apt-get update && apt-get install -y libjemalloc-dev
       - name: Run benchmarks for PR branch
         run: |
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
