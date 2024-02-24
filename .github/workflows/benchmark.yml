@@ -1,0 +1,27 @@
+name: Benchmark PR vs main
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+  
+jobs:
+  benchmark-delta-linux:
+    runs-on: ubuntu-latest
+    container: swift:jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: jemalloc dependency
+        run: sudo apt-get update && sudo apt-get install -y libjemalloc-dev
+      - name: Run benchmarks for PR branch
+        if: ${{ hashFiles('Benchmarks/**') != '' }}
+        run: |
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
+          git checkout main
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
+          date >>"${GITHUB_STEP_SUMMARY}"
+          swift package benchmark baseline check main pull_request --format markdown >>"${GITHUB_STEP_SUMMARY}"
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ format('[PR benchmark comparison Linux|main]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
+          comment_tag: 'PR benchmark comparison Linux'
