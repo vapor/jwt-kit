@@ -20,7 +20,7 @@ jobs:
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
           date >>"${GITHUB_STEP_SUMMARY}"
           swift package benchmark baseline check main pull_request --format markdown >>"${GITHUB_STEP_SUMMARY}"
-        uses: thollander/actions-comment-pull-request@v2
+      - uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: ${{ format('[PR benchmark comparison Linux|main]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
