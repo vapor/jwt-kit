@@ -1,21 +1,57 @@
 /// The header (details) used for signing and processing the JWT.
-struct JWTHeader: Codable {
-    /// The algorithm used with the signing.
-    var alg: String?
-    
-    /// The Signature's Content Type.
-    var typ: String?
-    
-    /// The Payload's Content Type.
-    var cty: String?
+@dynamicMemberLookup
+public struct JWTHeader: Sendable {
+    public var fields: [String: JWTHeaderField]
 
-    /// Critical fields.
-    var crit: [String]?
+    public init(fields: [String: JWTHeaderField] = [:]) {
+        self.fields = fields
+    }
 
-    /// The JWT key identifier.
-    var kid: JWKIdentifier?
-
-    /// The x5c certificate chain.
-    var x5c: [String]?
+    public subscript(dynamicMember member: String) -> JWTHeaderField? {
+        get { fields[member] }
+        set { fields[member] = newValue }
+    }
 }
 
+extension JWTHeader: ExpressibleByDictionaryLiteral {
+     public init(dictionaryLiteral elements: (String, JWTHeaderField)...) {
+         self.init(fields: Dictionary(uniqueKeysWithValues: elements))
+     }
+ }
+
+extension JWTHeader: Codable {
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try fields.forEach { key, value in
+            try container.encode(value, forKey: .custom(name: key))
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        self.fields = try Set(container.allKeys)
+            .reduce(into: [String: JWTHeaderField]()) { result, key in
+                result[key.stringValue] = try container.decode(JWTHeaderField.self, forKey: key)
+            }
+    }
+
+    private enum CodingKeys: CodingKey, Equatable, Hashable {
+        case custom(name: String)
+
+        var stringValue: String {
+            switch self {
+            case let .custom(name):
+                return name
+            }
+        }
+
+        var intValue: Int? { nil }
+
+        init?(stringValue: String) {
+            self = .custom(name: stringValue)
+        }
+
+        init?(intValue _: Int) { nil }
+    }
+}

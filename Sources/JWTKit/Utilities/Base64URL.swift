@@ -1,25 +1,37 @@
 import Foundation
 
-extension DataProtocol {
-    func base64URLDecodedBytes() -> [UInt8] {
-        return Data(base64Encoded: Data(self.copyBytes()).base64URLUnescaped())?.copyBytes() ?? []
-    }
+extension String {
+    func base64URLDecodedData() -> Data? {
+        var base64URL = replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
 
-    func base64URLEncodedBytes() -> [UInt8] {
-        return Data(self.copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
+        base64URL.append(contentsOf: "===".prefix((4 - (base64URL.count & 3)) & 3))
+
+        return Data(base64Encoded: base64URL)
     }
 }
 
-/// MARK: Data Escape
+package extension DataProtocol {
+    func base64URLDecodedBytes() -> [UInt8] {
+        Data(base64Encoded: Data(copyBytes()).base64URLUnescaped())?.copyBytes() ?? []
+    }
+
+    func base64URLEncodedBytes() -> [UInt8] {
+        Data(copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
+    }
+}
+
+// MARK: Data Escape
+
 private extension Data {
     /// Converts base64-url encoded data to a base64 encoded data.
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
     mutating func base64URLUnescape() {
-        for (i, byte) in self.enumerated() {
-            switch byte {
-            case 0x2D: self[self.index(self.startIndex, offsetBy: i)] = 0x2B
-            case 0x5F: self[self.index(self.startIndex, offsetBy: i)] = 0x2F
+        for idx in self.indices {
+            switch self[idx] {
+            case 0x2D /* - */: self[idx] = 0x2B /* + */
+            case 0x5F /* _ */: self[idx] = 0x2F /* / */
             default: break
             }
         }
@@ -34,10 +46,10 @@ private extension Data {
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
     mutating func base64URLEscape() {
-        for (i, byte) in enumerated() {
-            switch byte {
-            case 0x2B: self[self.index(self.startIndex, offsetBy: i)] = 0x2D
-            case 0x2F: self[self.index(self.startIndex, offsetBy: i)] = 0x5F
+        for idx in self.indices {
+            switch self[idx] {
+            case 0x2B /* + */: self[idx] = 0x2D /* - */
+            case 0x2F /* / */: self[idx] = 0x5F /* _ */
             default: break
             }
         }

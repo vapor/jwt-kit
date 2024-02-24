@@ -7,10 +7,10 @@
 /// to prevent the JWT from being replayed.  The "jti" value is a case-
 /// sensitive string.  Use of this claim is OPTIONAL.
 public struct IDClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public var value: String
 
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public init(value: String) {
         self.value = value
     }

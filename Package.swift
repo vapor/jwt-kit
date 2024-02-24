@@ -1,41 +1,48 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.9
 import PackageDescription
-
-// This package contains a vendored copy of BoringSSL. For ease of tracking
-// down problems with the copy of BoringSSL in use, we include a copy of the
-// commit hash of the revision of BoringSSL included in the given release.
-// This is also reproduced in a file called hash.txt in the
-// Sources/CCryptoBoringSSL directory. The source repository is at
-// https://boringssl.googlesource.com/boringssl.
-//
-// BoringSSL Commit: 58a318edc892a595a5b043359a5d441869158699
 
 let package = Package(
     name: "jwt-kit",
     platforms: [
-        .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
-        .watchOS(.v6),
+        .macOS(.v13),
+        .iOS(.v16),
+        .tvOS(.v16),
+        .watchOS(.v9),
     ],
     products: [
         .library(name: "JWTKit", targets: ["JWTKit"]),
-        /* This target is used only for symbol mangling. It's added and removed automatically because it emits build warnings. MANGLE_START
-        .library(name: "CJWTKitBoringSSL", type: .static, targets: ["CJWTKitBoringSSL"]),
-        MANGLE_END */
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", "2.0.0" ..< "4.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0"),
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.2.0"),
+        .package(url: "https://github.com/attaswift/BigInt.git", from: "5.3.0"),
     ],
     targets: [
-        .target(name: "CJWTKitBoringSSL"),
-        .target(name: "JWTKit", dependencies: [
-            .target(name: "CJWTKitBoringSSL"),
-            .product(name: "Crypto", package: "swift-crypto"),
-        ]),
-        .testTarget(name: "JWTKitTests", dependencies: [
-            .target(name: "JWTKit"),
-        ]),
-    ],
-    cxxLanguageStandard: .cxx11
+        .target(
+            name: "JWTKit",
+            dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "_CryptoExtras", package: "swift-crypto"),
+                .product(name: "X509", package: "swift-certificates"),
+                .product(name: "BigInt", package: "BigInt"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
+            ]
+        ),
+        .testTarget(
+            name: "JWTKitTests",
+            dependencies: [
+                "JWTKit",
+            ],
+            resources: [
+                .copy("TestVectors"),
+                .copy("TestCertificates"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ConciseMagicFile"),
+            ]
+        ),
+    ]
 )

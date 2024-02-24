@@ -1,78 +1,36 @@
 import Foundation
 
 /// A JWT signer.
-public final class JWTSigner {
-    public let algorithm: JWTAlgorithm
-    
-    internal var jsonEncoder: (any JWTJSONEncoder)?
-    internal var jsonDecoder: (any JWTJSONDecoder)?
+final class JWTSigner: Sendable {
+    let algorithm: JWTAlgorithm
 
-    public init(algorithm: JWTAlgorithm) {
+    let parser: any JWTParser
+    let serializer: any JWTSerializer
+
+    init(algorithm: JWTAlgorithm, parser: some JWTParser = DefaultJWTParser(), serializer: some JWTSerializer = DefaultJWTSerializer()) {
         self.algorithm = algorithm
-        self.jsonEncoder = nil
-        self.jsonDecoder = nil
-    }
-    
-    public init(algorithm: JWTAlgorithm, jsonEncoder: (any JWTJSONEncoder)?, jsonDecoder: (any JWTJSONDecoder)?) {
-        self.algorithm = algorithm
-        self.jsonEncoder = jsonEncoder
-        self.jsonDecoder = jsonDecoder
+        self.parser = parser
+        self.serializer = serializer
     }
 
-    public func sign<Payload>(
-        _ payload: Payload,
-        typ: String = "JWT",
-        kid: JWKIdentifier? = nil,
-        cty: String? = nil
-    ) throws -> String
+    func sign(_ payload: some JWTPayload, with header: JWTHeader = .init()) async throws -> String {
+        try await serializer.sign(payload, with: header, using: self.algorithm)
+    }
+
+    func verify<Payload>(_ token: some DataProtocol) async throws -> Payload
         where Payload: JWTPayload
     {
-        try JWTSerializer().sign(payload, using: self, typ: typ, kid: kid, cty: cty, jsonEncoder: self.jsonEncoder ?? .defaultForJWT)
-    }
+        let (encodedHeader, encodedPayload, encodedSignature) = try parser.getTokenParts(token)
+        let data = encodedHeader + [.period] + encodedPayload
+        let signature = encodedSignature.base64URLDecodedBytes()
 
-    public func unverified<Payload>(
-        _ token: String,
-        as payload: Payload.Type = Payload.self
-    ) throws -> Payload
-        where Payload: JWTPayload
-    {
-        try self.unverified([UInt8](token.utf8))
-    }
+        guard try algorithm.verify(signature, signs: data) else {
+            throw JWTError.signatureVerificationFailed
+        }
 
-    public func unverified<Message, Payload>(
-        _ token: Message,
-        as payload: Payload.Type = Payload.self
-    ) throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
-    {
-        try JWTParser(token: token).payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
-    }
+        let (_, payload, _) = try parser.parse(token, as: Payload.self)
 
-    public func verify<Payload>(
-        _ token: String,
-        as payload: Payload.Type = Payload.self
-    ) throws -> Payload
-        where Payload: JWTPayload
-    {
-        try self.verify([UInt8](token.utf8), as: Payload.self)
-    }
-
-    public func verify<Message, Payload>(
-        _ token: Message,
-        as payload: Payload.Type = Payload.self
-    ) throws -> Payload
-        where Message: DataProtocol, Payload: JWTPayload
-    {
-        let parser = try JWTParser(token: token)
-        return try self.verify(parser: parser)
-    }
-
-    func verify<Payload>(parser: JWTParser) throws -> Payload
-        where Payload: JWTPayload
-    {
-        try parser.verify(using: self)
-        let payload = try parser.payload(as: Payload.self, jsonDecoder: self.jsonDecoder ?? .defaultForJWT)
-        try payload.verify(using: self)
+        try await payload.verify(using: algorithm)
         return payload
     }
 }

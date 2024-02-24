@@ -10,26 +10,25 @@
 /// interpretation of audience values is generally application specific.
 /// Use of this claim is OPTIONAL.
 public struct AudienceClaim: JWTMultiValueClaim, Equatable, ExpressibleByStringLiteral {
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public var value: [String]
 
-    /// See `JWTClaim`.
+    /// See ``JWTClaim``.
     public init(value: [String]) {
         precondition(!value.isEmpty, "An audience claim must have at least one audience.")
         self.value = value
     }
-    
+
     /// See `ExpressibleByStringLiteral`.
     public init(stringLiteral value: String) {
         self.init(value: value)
     }
-    
+
     /// Verify that the given audience is included as one of the claim's
     /// intended audiences by simple string comparison.
     public func verifyIntendedAudience(includes audience: String) throws {
         guard self.value.contains(audience) else {
-            throw JWTError.claimVerificationFailure(name: "aud", reason: "not intended for \(audience)")
+            throw JWTError.claimVerificationFailure(failedClaim: self, reason: "not intended for \(audience)")
         }
     }
-
 }

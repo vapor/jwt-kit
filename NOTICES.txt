@@ -11,10 +11,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-This product contains a derivation of the Vendor BoringSSL and Build ASM scripts
-from Swift Crypto.
+This product contains a derivation of the Wycheproof tests from the Swift Crypto package.
 
   * LICENSE (Apache License 2.0):
     * https://www.apache.org/licenses/LICENSE-2.0
   * HOMEPAGE:
     * https://github.com/apple/swift-crypto
+
+This product contains the SubjectPublicKeyInfo.swift file from the Swift ASN1 package.
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://github.com/apple/swift-asn1
+    
+This product contains the NIOCompression and NIOCompression namespaces from the SwiftNIO Extras package.
+
+  * LICENSE (Apache License 2.0):
+    * https://www.apache.org/licenses/LICENSE-2.0
+  * HOMEPAGE:
+    * https://github.com/apple/swift-nio-extras
