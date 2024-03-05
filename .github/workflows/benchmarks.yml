@@ -1,0 +1,33 @@
+name: Benchmark Branches and PRs vs main
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  benchmark-delta-linux:
+    runs-on: ubuntu-latest
+    container: swift:jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: jemalloc dependency
+        run: apt-get update && apt-get install -y libjemalloc-dev
+      - name: Run benchmarks for current branch
+        run: |
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update ${{ github.ref_name }}
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git checkout main
+            swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
+            date >>"${GITHUB_STEP_SUMMARY}"
+            swift package benchmark baseline check main ${{ github.ref_name }} --format markdown >>"${GITHUB_STEP_SUMMARY}"
+          fi
+      - name: Post PR benchmark comparison comment
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ format('[Benchmark comparison|{0}]({1}/{2}/actions/runs/{3})', github.ref_name, github.server_url, github.repository, github.run_id) }}
+          comment_tag: 'Benchmark comparison'
