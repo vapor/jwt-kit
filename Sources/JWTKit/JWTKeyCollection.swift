@@ -12,7 +12,7 @@ public actor JWTKeyCollection: Sendable {
 
     private var storage: [JWKIdentifier: Signer]
     private var `default`: Signer?
-    
+
     public let defaultJWTParser: any JWTParser
     public let defaultJWTSerializer: any JWTSerializer
 
@@ -213,18 +213,27 @@ public actor JWTKeyCollection: Sendable {
     ///
     /// - Parameters:
     ///   - payload: The payload to sign.
-    ///   - typ: The JWT type header parameter. Defaults to "JWT".
-    ///   - kid: An optional key identifier to specify the signer. If not provided, the default signer is used.
-    ///   - x5c: An optional certificate chain to include in the header.
-    ///   - customFields: An optional dictionary of custom fields to include in the header.
+    ///   - kid: An optional key identifier to specify the signer.
+    ///         If not provided, the header is checked for a KID,
+    ///         and if that is not provided, the default signer is used.
+    ///   - header: An optional header to include in the JWT.
     /// - Throws: An error if the payload cannot be signed.
     /// - Returns: A signed JWT token string.
     public func sign(
         _ payload: some JWTPayload,
+        kid: JWKIdentifier? = nil,
         header: JWTHeader = JWTHeader()
     ) async throws -> String {
-        let kid = header.kid.flatMap { JWKIdentifier(string: $0) }
-        let signer = try self.getSigner(for: kid, alg: header.alg)
-        return try await signer.sign(payload, with: header)
+        // Prioritise the provided kid
+        let effectiveKid = kid ?? header.kid.flatMap { JWKIdentifier(string: $0) }
+
+        // Update the header with the effective `kid`, if not nil.
+        var updatedHeader = header
+        if let effectiveKidValue = effectiveKid?.string {
+            updatedHeader.kid = effectiveKidValue
+        }
+
+        let signer = try self.getSigner(for: effectiveKid, alg: updatedHeader.alg)
+        return try await signer.sign(payload, with: updatedHeader)
     }
 }

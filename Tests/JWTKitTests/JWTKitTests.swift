@@ -191,7 +191,7 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let data = try await keyCollection.sign(payload, header: ["kid": "1234"])
+        let data = try await keyCollection.sign(payload, kid: "1234")
         // test private signer decoding
         try await XCTAssertEqualAsync(await keyCollection.verify(data, as: TestPayload.self), payload)
         // test public signer decoding
@@ -272,7 +272,7 @@ class JWTKitTests: XCTestCase {
             var bar: Int
             func verify(using _: JWTAlgorithm) throws {}
         }
-        let jwt = try await keyCollection.sign(Foo(bar: 42), header: ["kid": "vapor"])
+        let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -451,7 +451,7 @@ class JWTKitTests: XCTestCase {
 
     func testSampleOpenbankingHeader() async throws {
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-
+        
         // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
         let customFields: JWTHeader = [
             "kid": "90210ABAD",
@@ -465,16 +465,16 @@ class JWTKitTests: XCTestCase {
                 "http://openbanking.org.uk/tan",
             ],
         ]
-
+        
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-
+        
         let token = try await keyCollection.sign(payload, header: customFields)
-
+        
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let iat = parsed.header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
         XCTAssertEqual(iat, 1_501_497_671)
@@ -486,23 +486,45 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(parsed.header.kid, "90210ABAD")
     }
 
-    func testCustomObjectHeader() async throws {
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-
-        let customFields: JWTHeader = [
-            "kid": "some-kid",
-            "foo": ["bar": "baz"],
-        ]
-
+    func testSigningWithKidInHeader() async throws {
+        let key = ES256PrivateKey()
+        
+        let keyCollection = await JWTKeyCollection()
+            .addES256(key: key, kid: "private")
+            .addES256(key: key.publicKey, kid: "public")
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
+        
+        let _ = try await keyCollection.sign(payload, header: ["kid": "private"])
+        await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, header: ["kid": "public"]))
+        let _ = try await keyCollection.sign(payload, kid: "private")
+        await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public"))
+        
+        let _ = try await keyCollection.sign(payload, kid: "private", header: ["kid": "public"])
+        await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public", header: ["kid": "private"]))
+    }
 
+    func testCustomObjectHeader() async throws {
+        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
+        
+        let customFields: JWTHeader = [
+            "kid": "some-kid",
+            "foo": ["bar": "baz"],
+        ]
+        
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        
         let token = try await keyCollection.sign(payload, header: customFields)
-
+        
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let foo = try parsed.header.foo?.asObject(of: String.self)
         XCTAssertEqual(foo, ["bar": "baz"])

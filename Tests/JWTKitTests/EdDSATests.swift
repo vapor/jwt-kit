@@ -29,7 +29,7 @@ final class EdDSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         for _ in 0 ..< 1000 {
-            let token = try await keys.sign(payload, header: ["kid": "private"])
+            let token = try await keys.sign(payload, kid: "private")
             // test public signer decoding
             try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
         }
@@ -123,7 +123,7 @@ final class EdDSATests: XCTestCase {
         let keyCollection = try await JWTKeyCollection()
             .addEdDSA(key: EdDSA.PrivateKey(x: x, d: d, curve: .ed25519), kid: "vapor")
 
-        let jwt = try await keyCollection.sign(Foo(bar: 42), header: ["kid": "vapor"])
+        let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
