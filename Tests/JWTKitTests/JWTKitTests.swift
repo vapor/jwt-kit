@@ -431,6 +431,9 @@ class JWTKitTests: XCTestCase {
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, header: ["kid": "public"]))
         let _ = try await keyCollection.sign(payload, kid: "private")
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public"))
+
+        let _ = try await keyCollection.sign(payload, kid: "private", header: ["kid": "public"])
+        await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public", header: ["kid": "private"]))
     }
 }
 
