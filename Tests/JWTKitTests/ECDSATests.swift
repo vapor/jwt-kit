@@ -231,6 +231,60 @@ final class ECDSATests: XCTestCase {
         let key2 = try ES256PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
+    
+    func testGetECParametersES256() async throws {
+        let message = "test".bytes
+
+        let ec = ES256PrivateKey()
+        let keys = await JWTKeyCollection().addES256(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES256(key: ES256PublicKey(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p256)
+    }
+
+    func testGetECParametersES384() async throws {
+        let message = "test".bytes
+
+        let ec = ES384PrivateKey()
+        let keys = await JWTKeyCollection().addES384(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES384(key: ES384PublicKey(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p384)
+    }
+
+    func testGetECParametersES512() async throws {
+        let message = "test".bytes
+
+        let ec = ES512PrivateKey()
+        let keys = await JWTKeyCollection().addES512(key: ec, kid: "initial")
+
+        let signature = try await keys.getKey(for: "initial").sign(message)
+
+        let params = ec.parameters!
+        try await keys.addES512(key: ES512PublicKey(parameters: params), kid: "params")
+        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        XCTAssertEqual(ec.curve, .p521)
+    }
+}
+
+extension ECDSA.PublicKey: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+    }
+}
+
+extension ECDSA.PrivateKey: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+    }
 }
 
 let ecdsaPrivateKey = """
