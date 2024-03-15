@@ -33,7 +33,7 @@ final class ECDSATests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        await XCTAssertThrowsErrorAsync(try await keys.sign(payload, header: ["kid": "public"])) { error in
+        await XCTAssertThrowsErrorAsync(try await keys.sign(payload, kid: "public")) { error in
             guard let error = error as? JWTError else {
                 XCTFail("Unexpected error: \(error)")
                 return
@@ -68,7 +68,7 @@ final class ECDSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         for _ in 0 ..< 1000 {
-            let token = try await keys.sign(payload, header: ["kid": "private"])
+            let token = try await keys.sign(payload, kid: "private")
             // test private signer decoding
             try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
             // test public signer decoding
@@ -92,7 +92,7 @@ final class ECDSATests: XCTestCase {
         let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try await keys.sign(Foo(bar: 42), header: ["kid": "vapor"])
+        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -131,7 +131,7 @@ final class ECDSATests: XCTestCase {
         let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try await keys.sign(Foo(bar: 42), header: ["kid": "vapor"])
+        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -170,7 +170,7 @@ final class ECDSATests: XCTestCase {
         let key = try ES384PrivateKey(key: privateKey)
         let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
 
-        let jwt = try await keys.sign(Foo(bar: 42), header: ["kid": "vapor"])
+        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """

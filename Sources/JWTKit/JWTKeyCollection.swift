@@ -233,7 +233,7 @@ public actor JWTKeyCollection: Sendable {
             updatedHeader.kid = effectiveKidValue
         }
 
-        let signer = try self.getSigner(for: kid, alg: header.alg)
-        return try await signer.sign(payload, with: header)
+        let signer = try self.getSigner(for: effectiveKid, alg: updatedHeader.alg)
+        return try await signer.sign(payload, with: updatedHeader)
     }
 }

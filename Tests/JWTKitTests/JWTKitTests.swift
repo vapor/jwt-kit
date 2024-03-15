@@ -191,7 +191,7 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let data = try await keyCollection.sign(payload, header: ["kid": "1234"])
+        let data = try await keyCollection.sign(payload, kid: "1234")
         // test private signer decoding
         try await XCTAssertEqualAsync(await keyCollection.verify(data, as: TestPayload.self), payload)
         // test public signer decoding
@@ -272,7 +272,7 @@ class JWTKitTests: XCTestCase {
             var bar: Int
             func verify(using _: JWTAlgorithm) throws {}
         }
-        let jwt = try await keyCollection.sign(Foo(bar: 42), header: ["kid": "vapor"])
+        let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks without alg
         let jwksString = """
@@ -412,6 +412,25 @@ class JWTKitTests: XCTestCase {
             }
             XCTAssertEqual(error.errorType, .malformedToken)
         }
+    }
+
+    func testSigningWithKidInHeader() async throws {
+        let key = ES256PrivateKey()
+
+        let keyCollection = await JWTKeyCollection()
+            .addES256(key: key, kid: "private")
+            .addES256(key: key.publicKey, kid: "public")
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let _ = try await keyCollection.sign(payload, header: ["kid": "private"])
+        await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, header: ["kid": "public"]))
+        let _ = try await keyCollection.sign(payload, kid: "private")
+        await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public"))
     }
 }
 
