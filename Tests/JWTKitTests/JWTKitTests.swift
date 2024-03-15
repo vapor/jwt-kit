@@ -413,10 +413,82 @@ class JWTKitTests: XCTestCase {
             XCTAssertEqual(error.errorType, .malformedToken)
         }
     }
+    
+    func testCustomHeaderFields() async throws {
+        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let customFields: JWTHeader = ["foo": "bar", "baz": 42]
+        let token = try await keyCollection.sign(payload, header: customFields)
+
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+        let foo = try XCTUnwrap(parsed.header.foo?.asString)
+        let baz = try XCTUnwrap(parsed.header.baz?.asInt)
+        XCTAssertEqual(foo, "bar")
+        XCTAssertEqual(baz, 42)
+
+        let encodedHeader = try JSONEncoder().encode(parsed.header)
+        let jsonFields = """
+        {
+          "alg": "HS256",
+          "typ": "JWT",
+          "foo": "bar",
+          "baz": 42
+        }
+        """
+
+        let jsonDecoder = JSONDecoder()
+        XCTAssertEqual(
+            try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
+            try jsonDecoder.decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
+        )
+    }
+
+    func testSampleOpenbankingHeader() async throws {
+        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
+        
+        // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
+        let customFields: JWTHeader = [
+            "kid": "90210ABAD",
+            "http://openbanking.org.uk/iat": 1_501_497_671,
+            "http://openbanking.org.uk/iss": "C=UK, ST=England, L=London, O=Acme Ltd.",
+            "http://openbanking.org.uk/tan": "openbanking.org.uk",
+            "crit": [
+                "b64",
+                "http://openbanking.org.uk/iat",
+                "http://openbanking.org.uk/iss",
+                "http://openbanking.org.uk/tan",
+            ],
+        ]
+        
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        
+        let token = try await keyCollection.sign(payload, header: customFields)
+        
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+        let iat = parsed.header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
+        XCTAssertEqual(iat, 1_501_497_671)
+        let iss = parsed.header[dynamicMember: "http://openbanking.org.uk/iss"]?.asString
+        XCTAssertEqual(iss, "C=UK, ST=England, L=London, O=Acme Ltd.")
+        let tan = parsed.header[dynamicMember: "http://openbanking.org.uk/tan"]?.asString
+        XCTAssertEqual(tan, "openbanking.org.uk")
+        XCTAssertEqual(parsed.header.crit, ["b64", "http://openbanking.org.uk/iat", "http://openbanking.org.uk/iss", "http://openbanking.org.uk/tan"])
+        XCTAssertEqual(parsed.header.kid, "90210ABAD")
+    }
 
     func testSigningWithKidInHeader() async throws {
         let key = ES256PrivateKey()
-
+        
         let keyCollection = await JWTKeyCollection()
             .addES256(key: key, kid: "private")
             .addES256(key: key.publicKey, kid: "public")
@@ -426,14 +498,36 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-
+        
         let _ = try await keyCollection.sign(payload, header: ["kid": "private"])
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, header: ["kid": "public"]))
         let _ = try await keyCollection.sign(payload, kid: "private")
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public"))
-
+        
         let _ = try await keyCollection.sign(payload, kid: "private", header: ["kid": "public"])
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public", header: ["kid": "private"]))
+    }
+
+    func testCustomObjectHeader() async throws {
+        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
+        
+        let customFields: JWTHeader = [
+            "kid": "some-kid",
+            "foo": ["bar": "baz"],
+        ]
+        
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        
+        let token = try await keyCollection.sign(payload, header: customFields)
+        
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+        let foo = try parsed.header.foo?.asObject(of: String.self)
+        XCTAssertEqual(foo, ["bar": "baz"])
     }
 }
 
