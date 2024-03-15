@@ -4,7 +4,7 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
-  push: { branches: [ main, jwtkit-5 ] }
+  push: { branches: [ main ] }
 
 jobs:
   linux-integration:
@@ -21,7 +21,7 @@ jobs:
         with:
           repository: vapor/jwt
           path: jwt
-          ref: v5
+          ref: main
       - name: Use local JWTKit
         run: swift package --package-path jwt edit jwt-kit --path ./jwt-kit
       - name: Run tests with Thread Sanitizer
@@ -30,4 +30,4 @@ jobs:
   unit-tests:
      uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
      with:
-       with_public_api_check: ${{ github.event_name == 'pull_request' && !contains(github.base_ref, 'jwtkit-5') }}
+       with_public_api_check: ${{ github.event_name == 'pull_request' }}
