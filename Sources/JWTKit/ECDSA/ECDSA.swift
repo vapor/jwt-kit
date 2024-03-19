@@ -5,7 +5,7 @@ import X509
 
 public enum ECDSA: Sendable {}
 
-public protocol ECDSAKey: Sendable {
+public protocol ECDSAKey<Curve>: Sendable {
     associatedtype Curve: ECDSACurveType
     
     var curve: ECDSACurve { get }
