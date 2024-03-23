@@ -1,8 +1,7 @@
 import Foundation
 
 /// JWT error type.
-/// @unchecked Sendable is fine as we're using Copy on Write semantics.
-public struct JWTError: Error, @unchecked Sendable {
+public struct JWTError: Error {
     public struct ErrorType: Sendable, Hashable, CustomStringConvertible {
         enum Base: Sendable, Hashable {
             case claimVerificationFailure
@@ -72,7 +71,7 @@ public struct JWTError: Error, @unchecked Sendable {
         }
     }
 
-    private final class Backing {
+    private struct Backing: Sendable {
         fileprivate var errorType: ErrorType
         fileprivate var name: String?
         fileprivate var reason: String?
