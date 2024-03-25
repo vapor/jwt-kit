@@ -54,6 +54,34 @@ public struct AppleIdentityToken: JWTPayload {
     /// A value that indicates whether the user appears to be a real person.
     public let realUserStatus: UserDetectionStatus?
 
+    public init(
+        issuer: IssuerClaim,
+        audience: AudienceClaim,
+        expires: ExpirationClaim,
+        issuedAt: IssuedAtClaim,
+        subject: SubjectClaim,
+        nonceSupported: BoolClaim? = nil,
+        nonce: String? = nil,
+        email: String? = nil,
+        orgId: String? = nil,
+        emailVerified: BoolClaim? = nil,
+        isPrivateEmail: BoolClaim? = nil,
+        realUserStatus: UserDetectionStatus? = nil
+    ) {
+        self.issuer = issuer
+        self.audience = audience
+        self.expires = expires
+        self.issuedAt = issuedAt
+        self.subject = subject
+        self.nonceSupported = nonceSupported
+        self.nonce = nonce
+        self.email = email
+        self.orgId = orgId
+        self.emailVerified = emailVerified
+        self.isPrivateEmail = isPrivateEmail
+        self.realUserStatus = realUserStatus
+    }
+
     public func verify(using _: JWTAlgorithm) throws {
         guard self.issuer.value == "https://appleid.apple.com" else {
             throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Apple")
