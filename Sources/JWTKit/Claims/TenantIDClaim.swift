@@ -17,7 +17,7 @@ public struct TenantIDClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, Ex
     }
 
     public init(stringLiteral value: String) {
-        self.value = value
+        self.init(value: value)
     }
 
     public init(nilLiteral: ()) {
