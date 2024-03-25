@@ -7,12 +7,20 @@
 /// logging or auditing the tenant context of the authenticated user. The value of "tid" is a
 /// case-sensitive string representing a GUID. The presence of this claim and its proper validation
 /// are critical for the security of multi-tenant applications.
-public struct TenantIDClaim: JWTClaim, Equatable {
-    /// See ``JWTClaim``.
+public struct TenantIDClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, ExpressibleByNilLiteral {
+    // See `JWTClaim.value`.
     public var value: String?
 
-    /// See ``JWTClaim``.
+    // See `JWTClaim.init(value:)`.
     public init(value: String?) {
         self.value = value
+    }
+
+    public init(stringLiteral value: String) {
+        self.init(value: value)
+    }
+
+    public init(nilLiteral: ()) {
+        self.init(value: nil)
     }
 }

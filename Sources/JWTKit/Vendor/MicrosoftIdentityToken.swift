@@ -106,6 +106,46 @@ public struct MicrosoftIdentityToken: JWTPayload {
     /// Indicates the version of the id_token.
     public let version: String?
 
+    public init(
+        audience: AudienceClaim,
+        issuer: IssuerClaim,
+        issuedAt: IssuedAtClaim,
+        identityProvider: String?,
+        notBefore: NotBeforeClaim,
+        expires: ExpirationClaim,
+        codeHash: String?,
+        accessTokenHash: String?,
+        preferredUsername: String?,
+        email: String?,
+        name: String?,
+        nonce: String?,
+        objectId: String,
+        roles: [String]?,
+        subject: SubjectClaim,
+        tenantId: TenantIDClaim,
+        uniqueName: String?,
+        version: String?
+    ) {
+        self.audience = audience
+        self.issuer = issuer
+        self.issuedAt = issuedAt
+        self.identityProvider = identityProvider
+        self.notBefore = notBefore
+        self.expires = expires
+        self.codeHash = codeHash
+        self.accessTokenHash = accessTokenHash
+        self.preferredUsername = preferredUsername
+        self.email = email
+        self.name = name
+        self.nonce = nonce
+        self.objectId = objectId
+        self.roles = roles
+        self.subject = subject
+        self.tenantId = tenantId
+        self.uniqueName = uniqueName
+        self.version = version
+    }
+
     public func verify(using _: JWTAlgorithm) throws {
         guard let tenantId = self.tenantId.value else {
             throw JWTError.claimVerificationFailure(failedClaim: tenantId, reason: "Token must contain tenant Id")

@@ -98,6 +98,44 @@ public struct GoogleIdentityToken: JWTPayload {
     /// The value of the nonce supplied by your app in the authentication request. You should enforce protection against replay attacks by ensuring it is presented only once.
     public let nonce: String?
 
+    public init(
+        issuer: IssuerClaim,
+        subject: SubjectClaim,
+        audience: AudienceClaim,
+        authorizedPresenter: String,
+        issuedAt: IssuedAtClaim,
+        expires: ExpirationClaim,
+        atHash: String? = nil,
+        hostedDomain: GoogleHostedDomainClaim? = nil,
+        email: String? = nil,
+        emailVerified: BoolClaim? = nil,
+        name: String? = nil,
+        picture: String? = nil,
+        profile: String? = nil,
+        givenName: String? = nil,
+        familyName: String? = nil,
+        locale: LocaleClaim? = nil,
+        nonce: String? = nil
+    ) {
+        self.issuer = issuer
+        self.subject = subject
+        self.audience = audience
+        self.authorizedPresenter = authorizedPresenter
+        self.issuedAt = issuedAt
+        self.expires = expires
+        self.atHash = atHash
+        self.hostedDomain = hostedDomain
+        self.email = email
+        self.emailVerified = emailVerified
+        self.name = name
+        self.picture = picture
+        self.profile = profile
+        self.givenName = givenName
+        self.familyName = familyName
+        self.locale = locale
+        self.nonce = nonce
+    }
+
     public func verify(using _: JWTAlgorithm) throws {
         guard ["accounts.google.com", "https://accounts.google.com"].contains(self.issuer.value) else {
             throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Google")
