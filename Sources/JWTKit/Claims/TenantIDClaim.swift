@@ -11,7 +11,7 @@ public struct TenantIDClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, Ex
     /// See ``JWTClaim``.
     public var value: String?
 
-    /// See ``JWTClaim``.
+    // See `JWTClaim.init(value:)`.
     public init(value: String?) {
         self.value = value
     }
