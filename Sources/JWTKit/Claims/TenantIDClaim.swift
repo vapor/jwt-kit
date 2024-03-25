@@ -8,7 +8,7 @@
 /// case-sensitive string representing a GUID. The presence of this claim and its proper validation
 /// are critical for the security of multi-tenant applications.
 public struct TenantIDClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, ExpressibleByNilLiteral {
-    /// See ``JWTClaim``.
+    // See `JWTClaim.value`.
     public var value: String?
 
     // See `JWTClaim.init(value:)`.
