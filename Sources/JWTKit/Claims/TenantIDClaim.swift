@@ -21,6 +21,6 @@ public struct TenantIDClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, Ex
     }
 
     public init(nilLiteral: ()) {
-        self.value = nil
+        self.init(value: nil)
     }
 }
