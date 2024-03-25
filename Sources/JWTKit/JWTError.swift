@@ -7,7 +7,7 @@ public struct JWTError: Error {
             case claimVerificationFailure
             case signingAlgorithmFailure
             case malformedToken
-            case signatureVerifictionFailed
+            case signatureVerificationFailed
             case missingKIDHeader
             case unknownKID
             case invalidJWK
@@ -27,7 +27,7 @@ public struct JWTError: Error {
 
         public static let claimVerificationFailure = Self(.claimVerificationFailure)
         public static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
-        public static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
+        public static let signatureVerificationFailed = Self(.signatureVerificationFailed)
         public static let missingKIDHeader = Self(.missingKIDHeader)
         public static let malformedToken = Self(.malformedToken)
         public static let unknownKID = Self(.unknownKID)
@@ -47,8 +47,8 @@ public struct JWTError: Error {
                 "signingAlgorithmFailure"
             case .malformedToken:
                 "malformedToken"
-            case .signatureVerifictionFailed:
-                "signatureVerifictionFailed"
+            case .signatureVerificationFailed:
+                "signatureVerificationFailed"
             case .missingKIDHeader:
                 "missingKIDHeader"
             case .unknownKID:
