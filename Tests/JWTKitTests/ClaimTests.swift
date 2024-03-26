@@ -68,4 +68,19 @@ final class ClaimTests: XCTestCase {
             XCTAssertEqual((jwtError.failedClaim as? AudienceClaim)?.value, [id1.uuidString, id2.uuidString])
         }
     }
+    
+    func testExpirationEncoding() async throws {
+        let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
+        let parser = DefaultJWTParser()
+        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes, parser: parser)
+        let jwt = try await keyCollection.sign(ExpirationPayload(exp: exp))
+        let parsed = try parser.parse(jwt.bytes, as: ExpirationPayload.self)
+        let header = parsed.header
+        let typ = try XCTUnwrap(header.typ)
+        XCTAssertEqual(typ, "JWT")
+        let alg = try XCTUnwrap(header.alg)
+        XCTAssertEqual(alg, "HS256")
+        XCTAssertEqual(parsed.payload.exp, exp)
+        _ = try await keyCollection.verify(jwt, as: ExpirationPayload.self)
+    }
 }

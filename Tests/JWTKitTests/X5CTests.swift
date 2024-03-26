@@ -205,6 +205,71 @@ final class X5CTests: XCTestCase {
             XCTFail("Should not have validated")
         }
     }
+    
+    func testSigningWithX5CChain() async throws {
+        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let header: JWTHeader = ["x5c": .array(x5cCerts.map(JWTHeaderField.string))]
+        let token = try await keyCollection.sign(payload, header: header)
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+
+        let x5c = try XCTUnwrap(parsed.header.x5c)
+        let pemCerts = try x5c.map(getPEMString)
+        XCTAssertEqual(pemCerts, x5cCerts)
+        let verifier = try X5CVerifier(rootCertificates: [x5cCerts.last!])
+        await XCTAssertNoThrowAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
+    }
+
+    func testSigningWithInvalidX5CChain() async throws {
+        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        // Remove the intermediate cert from the chain
+        let certs = x5cCerts.enumerated().filter { $0.offset != 1 }.map { $0.element }
+
+        let header: JWTHeader = ["x5c": .array(certs.map(JWTHeaderField.string))]
+        let token = try await keyCollection.sign(payload, header: header)
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+
+        let x5c = try XCTUnwrap(parsed.header.x5c)
+        let pemCerts = try x5c.map(getPEMString)
+        XCTAssertEqual(pemCerts, certs)
+        let verifier = try X5CVerifier(rootCertificates: [certs.last!])
+        await XCTAssertThrowsErrorAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
+    }
+    
+    // MARK: Private
+
+    private func getPEMString(from der: String) throws -> String {
+        var encoded = der[...]
+        let pemLineCount = (encoded.utf8.count + 64) / 64
+        var pemLines = [Substring]()
+        pemLines.reserveCapacity(pemLineCount + 2)
+
+        pemLines.append("-----BEGIN CERTIFICATE-----")
+
+        while encoded.count > 0 {
+            let prefixIndex = encoded.index(encoded.startIndex, offsetBy: 64, limitedBy: encoded.endIndex) ?? encoded.endIndex
+            pemLines.append(encoded[..<prefixIndex])
+            encoded = encoded[prefixIndex...]
+        }
+
+        pemLines.append("-----END CERTIFICATE-----")
+
+        return pemLines.joined(separator: "\n")
+    }
 }
 
 let validToken = """

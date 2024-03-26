@@ -7,6 +7,9 @@ public enum ECDSA: Sendable {}
 
 public protocol ECDSAKey: Sendable {
     associatedtype Curve: ECDSACurveType
+    
+    var curve: ECDSACurve { get }
+    var parameters: ECDSAParameters? { get }
 }
 
 public extension ECDSA {
@@ -14,9 +17,9 @@ public extension ECDSA {
         typealias Signature = Curve.Signature
         typealias PublicKey = Curve.PrivateKey.PublicKey
 
-        var curve: ECDSACurve = Curve.curve
+        public private(set) var curve: ECDSACurve = Curve.curve
 
-        var parameters: ECDSAParameters? {
+        public var parameters: ECDSAParameters? {
             // 0x04 || x || y
             let x = backing.x963Representation[Curve.byteRanges.x].base64EncodedString()
             let y = backing.x963Representation[Curve.byteRanges.y].base64EncodedString()
@@ -112,9 +115,9 @@ public extension ECDSA {
         typealias PrivateKey = Curve.PrivateKey
         typealias Signature = PrivateKey.Signature
 
-        var curve: ECDSACurve = Curve.curve
+        public private(set) var curve: ECDSACurve = Curve.curve
 
-        var parameters: ECDSAParameters? {
+        public var parameters: ECDSAParameters? {
             publicKey.parameters
         }
 

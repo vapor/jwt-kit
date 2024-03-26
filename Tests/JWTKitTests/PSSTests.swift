@@ -35,7 +35,7 @@ final class PSSTests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload, header: ["kid": "private"]))
+        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload, kid: "private"))
     }
 
     func testJWTPayloadVerification() async throws {
@@ -138,7 +138,7 @@ final class PSSTests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let token = try await keyCollection.sign(payload, header: ["kid": "private"])
+        let token = try await keyCollection.sign(payload, kid: "private")
         try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
     }
 

@@ -1,14 +1,13 @@
 import Foundation
 
 /// JWT error type.
-/// @unchecked Sendable is fine as we're using Copy on Write semantics.
-public struct JWTError: Error, @unchecked Sendable {
+public struct JWTError: Error {
     public struct ErrorType: Sendable, Hashable, CustomStringConvertible {
         enum Base: Sendable, Hashable {
             case claimVerificationFailure
             case signingAlgorithmFailure
             case malformedToken
-            case signatureVerifictionFailed
+            case signatureVerificationFailed
             case missingKIDHeader
             case unknownKID
             case invalidJWK
@@ -28,7 +27,7 @@ public struct JWTError: Error, @unchecked Sendable {
 
         public static let claimVerificationFailure = Self(.claimVerificationFailure)
         public static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
-        public static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
+        public static let signatureVerificationFailed = Self(.signatureVerificationFailed)
         public static let missingKIDHeader = Self(.missingKIDHeader)
         public static let malformedToken = Self(.malformedToken)
         public static let unknownKID = Self(.unknownKID)
@@ -48,8 +47,8 @@ public struct JWTError: Error, @unchecked Sendable {
                 "signingAlgorithmFailure"
             case .malformedToken:
                 "malformedToken"
-            case .signatureVerifictionFailed:
-                "signatureVerifictionFailed"
+            case .signatureVerificationFailed:
+                "signatureVerificationFailed"
             case .missingKIDHeader:
                 "missingKIDHeader"
             case .unknownKID:
@@ -72,7 +71,7 @@ public struct JWTError: Error, @unchecked Sendable {
         }
     }
 
-    private final class Backing {
+    private struct Backing: Sendable {
         fileprivate var errorType: ErrorType
         fileprivate var name: String?
         fileprivate var reason: String?

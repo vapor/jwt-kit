@@ -5,7 +5,7 @@ import class Foundation.JSONDecoder
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
 public struct JWK: Codable, Sendable {
-    public struct Curve: Codable, RawRepresentable, Sendable {
+    public struct Curve: Codable, RawRepresentable, Equatable, Sendable {
         let backing: Backing
 
         public var rawValue: String {
