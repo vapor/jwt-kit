@@ -17,11 +17,14 @@ jobs:
       - name: Run benchmarks for PR branch
         run: |
           cd Benchmarks
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
+          git fetch origin main:main
           git checkout main
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
           date >>"${GITHUB_STEP_SUMMARY}"
           swift package benchmark baseline check main pull_request --format markdown >>"${GITHUB_STEP_SUMMARY}"
+          echo '---' >>"${GITHUB_STEP_SUMMARY}"
+          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> $GITHUB_STEP_SUMMARY
       - uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
