@@ -1,0 +1,33 @@
+name: Benchmark PR vs main
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+  
+jobs:
+  benchmark-delta-linux:
+    runs-on: ubuntu-latest
+    container: swift:jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: jemalloc dependency
+        run: apt-get update && apt-get install -y libjemalloc-dev
+      - name: Fix Git config
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+          git fetch origin main:main --quiet
+      - name: Run benchmarks for PR branch
+        run: |
+          cd Benchmarks
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
+          git checkout main
+          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
+          date >> "${GITHUB_STEP_SUMMARY}"
+          swift package benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
+          echo '---' >> "${GITHUB_STEP_SUMMARY}"
+          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> "${GITHUB_STEP_SUMMARY}"
+      - uses: thollander/actions-comment-pull-request@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ format('[PR benchmark comparison Linux|main]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
+          comment_tag: 'PR benchmark comparison Linux'
