@@ -21,14 +21,12 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES256<Key: ECDSAKey>(
+    func addES256<Key: ECDSAKey<P256>>(
         key: Key,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self
-        where Key.Curve == P256
-    {
+    ) -> Self {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha256, name: "ES256"),
             parser: parser,
@@ -56,14 +54,12 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES384<Key: ECDSAKey>(
+    func addES384<Key: ECDSAKey<P384>>(
         key: Key,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self
-        where Key.Curve == P384
-    {
+    ) -> Self {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha384, name: "ES384"),
             parser: parser,
@@ -91,14 +87,12 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addES512<Key: ECDSAKey>(
+    func addES512<Key: ECDSAKey<P521>>(
         key: Key,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self
-        where Key.Curve == P521
-    {
+    ) -> Self {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha512, name: "ES512"),
             parser: parser,
