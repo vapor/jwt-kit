@@ -14,6 +14,7 @@ jobs:
         run: apt-get update && apt-get install -y libjemalloc-dev
       - name: Run benchmarks for PR branch
         run: |
+          cd Benchmarks
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request
           git checkout main
           swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main
