@@ -2,8 +2,18 @@ import Benchmark
 import Foundation
 import JWTKit
 
+let customThresholds = BenchmarkThresholds(
+    relative: [.p25: 15.0, .p50: 15.0, .p75: 15.0, .p90: 15.0, .p99: 15.0],
+    absolute: [:]
+)
+
 let benchmarks = {
-    Benchmark("ES256 Generated") { benchmark in
+    Benchmark(
+        "ES256 Generated",
+        configuration: .init(
+            thresholds: [.peakMemoryResident: customThresholds]
+        )
+    ) { benchmark in
         for _ in benchmark.scaledIterations {
             let key = ES256PrivateKey()
             let keyCollection = JWTKeyCollection()
@@ -13,7 +23,12 @@ let benchmarks = {
         }
     }
 
-    Benchmark("ES256 PEM") { benchmark in
+    Benchmark(
+        "ES256 PEM",
+        configuration: .init(
+            thresholds: [.peakMemoryResident: customThresholds]
+        )
+    ) { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try ES256PrivateKey(pem: ecdsaPrivateKey)
             let keyCollection = JWTKeyCollection()
@@ -23,7 +38,12 @@ let benchmarks = {
         }
     }
 
-    Benchmark("RSA PEM") { benchmark in
+    Benchmark(
+        "RSA PEM",
+        configuration: .init(
+            thresholds: [.peakMemoryResident: customThresholds]
+        )
+    ) { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try Insecure.RSA.PrivateKey(pem: rsaPrivateKey)
             let keyCollection = JWTKeyCollection()
@@ -33,7 +53,12 @@ let benchmarks = {
         }
     }
 
-    Benchmark("EdDSA Generated") { benchmark in
+    Benchmark(
+        "EdDSA Generated",
+        configuration: .init(
+            thresholds: [.peakMemoryResident: customThresholds]
+        )
+    ) { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey()
             let keyCollection = JWTKeyCollection()
@@ -43,7 +68,12 @@ let benchmarks = {
         }
     }
 
-    Benchmark("EdDSA Coordinates") { benchmark in
+    Benchmark(
+        "EdDSA Coordinates",
+        configuration: .init(
+            thresholds: [.peakMemoryResident: customThresholds]
+        )
+    ) { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey(x: eddsaPublicKeyBase64Url, d: eddsaPrivateKeyBase64Url, curve: .ed25519)
             let keyCollection = JWTKeyCollection()
