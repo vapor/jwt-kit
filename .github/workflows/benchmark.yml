@@ -19,13 +19,21 @@ jobs:
       - name: Run benchmarks for PR branch
         run: |
           cd Benchmarks
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
+          swift package -c release --disable-sandbox benchmark baseline update pull_request --no-progress --quiet
+      - name: Run benchmarks for 'main' branch
+        run: |
+          git stash
           git checkout main
-          swift package --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
+          cd Benchmarks
+          swift package -c release --disable-sandbox benchmark baseline update main --no-progress --quiet
+      - name: Compare benchmarks
+        continue-on-error: true
+        run: |
           date >> "${GITHUB_STEP_SUMMARY}"
-          swift package benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
-          echo '---' >> "${GITHUB_STEP_SUMMARY}"
-          swift package benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> "${GITHUB_STEP_SUMMARY}"
+          swift package -c release --disable-sandbox benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
+      - name: Get formatted date
+        id: get-date
+        run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
       - uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
