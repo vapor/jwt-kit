@@ -20,15 +20,17 @@ jobs:
       - name: Run benchmarks for PR branch
         continue-on-error: true
         run: |
-          cd Benchmarks
-          swift package -c release --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update pull_request --no-progress --quiet
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update pull_request
+      - name: Run benchmarks for 'main' branch
+        run: |
           git stash
           git checkout main
-          swift package -c release --allow-writing-to-directory .benchmarkBaselines/ benchmark baseline update main --no-progress --quiet
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update main
+      - name: Compare benchmarks
+        continue-on-error: true
+        run: |
           date >> "${GITHUB_STEP_SUMMARY}"
-          swift package -c release benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
-          echo '---' >> "${GITHUB_STEP_SUMMARY}"
-          swift package -c release  benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> "${GITHUB_STEP_SUMMARY}"
+          swift package -c release --package-path Benchmarks benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
       - name: Get formatted date
         id: get-date
         run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT

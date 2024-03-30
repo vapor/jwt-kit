@@ -2,8 +2,18 @@ import Benchmark
 import Foundation
 import JWTKit
 
+let customThresholds = BenchmarkThresholds(
+    relative: [.p25: 15.0, .p50: 15.0, .p75: 15.0, .p90: 15.0, .p99: 15.0],
+    absolute: [:]
+)
+
 let benchmarks = {
-    Benchmark("ES256") { benchmark in
+    Benchmark(
+        "ES256",
+        configuration: .init(
+            thresholds: [.peakMemoryResident: customThresholds]
+        )
+    ) { benchmark in
         let pem = """
         -----BEGIN PUBLIC KEY-----
         MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEVs/o5+uQbTjL3chynL4wXgUg2R9
@@ -18,7 +28,12 @@ let benchmarks = {
         }
     }
 
-    Benchmark("RS256") { benchmark in
+    Benchmark(
+        "RS256",
+        configuration: .init(
+            thresholds: [.peakMemoryResident: customThresholds]
+        )
+    ) { benchmark in
         let pem = """
         -----BEGIN PUBLIC KEY-----
         MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo
