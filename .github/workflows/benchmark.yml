@@ -32,5 +32,5 @@ jobs:
       - uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{ format('[PR benchmark comparison Linux|main]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
+          message: ${{ format('[PR benchmark comparison on ubuntu-latest with main run at $(date -Iseconds)]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
           comment_tag: 'PR benchmark comparison Linux'
