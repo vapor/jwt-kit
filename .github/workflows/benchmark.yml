@@ -10,13 +10,15 @@ jobs:
     container: swift:jammy
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: jemalloc dependency
         run: apt-get update && apt-get install -y libjemalloc-dev
       - name: Fix Git config
         run: |
           git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-          git fetch origin main:main --quiet
       - name: Run benchmarks for PR branch
+        continue-on-error: true
         run: |
           cd Benchmarks
           swift package -c release --disable-sandbox benchmark baseline update pull_request --no-progress --quiet
@@ -37,5 +39,5 @@ jobs:
       - uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{ format('[PR benchmark comparison Linux|main]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
+          message: ${{ format('[PR benchmark comparison with main on ubuntu-latest run at {0}]({1}/{2}/actions/runs/{3})', steps.get-date.outputs.date, github.server_url, github.repository, github.run_id) }}
           comment_tag: 'PR benchmark comparison Linux'
