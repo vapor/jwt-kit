@@ -20,18 +20,15 @@ jobs:
       - name: Run benchmarks for PR branch
         continue-on-error: true
         run: |
-          cd Benchmarks
           swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update pull_request
       - name: Run benchmarks for 'main' branch
         run: |
           git stash
           git checkout main
-          cd Benchmarks
           swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update main
       - name: Compare benchmarks
         continue-on-error: true
         run: |
-          cd Benchmarks
           date >> "${GITHUB_STEP_SUMMARY}"
           swift package -c release --package-path Benchmarks benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
       - name: Get formatted date
