@@ -21,13 +21,13 @@ jobs:
         continue-on-error: true
         run: |
           cd Benchmarks
-          swift package -c release --disable-sandbox benchmark baseline update pull_request --no-progress --quiet
+          swift package -c release --disable-sandbox benchmark baseline update pull_request
       - name: Run benchmarks for 'main' branch
         run: |
           git stash
           git checkout main
           cd Benchmarks
-          swift package -c release --disable-sandbox benchmark baseline update main --no-progress --quiet
+          swift package -c release --disable-sandbox benchmark baseline update main
       - name: Compare benchmarks
         continue-on-error: true
         run: |
