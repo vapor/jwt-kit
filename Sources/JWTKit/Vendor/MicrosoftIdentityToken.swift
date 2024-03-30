@@ -146,7 +146,7 @@ public struct MicrosoftIdentityToken: JWTPayload {
         self.version = version
     }
 
-    public func verify(using _: JWTAlgorithm) throws {
+    public func verify(using _: some JWTAlgorithm) throws {
         guard let tenantId = self.tenantId.value else {
             throw JWTError.claimVerificationFailure(failedClaim: tenantId, reason: "Token must contain tenant Id")
         }

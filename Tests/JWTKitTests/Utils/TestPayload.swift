@@ -6,7 +6,7 @@ struct TestPayload: JWTPayload, Equatable {
     var admin: Bool
     var exp: ExpirationClaim
 
-    func verify(using _: JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         try exp.verifyNotExpired()
     }
 }

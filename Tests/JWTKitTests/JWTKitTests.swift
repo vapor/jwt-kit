@@ -30,7 +30,7 @@ class JWTKitTests: XCTestCase {
             //
             // Since we have an ExpirationClaim, we will
             // call its verify method.
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 try expiration.verifyNotExpired()
             }
         }
@@ -133,7 +133,7 @@ class JWTKitTests: XCTestCase {
             var admin: Bool
             var iat: IssuedAtClaim
 
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 // no verifiable claims
             }
         }
@@ -235,7 +235,7 @@ class JWTKitTests: XCTestCase {
         }
         struct Payload: JWTPayload {
             let foo: String
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }
@@ -270,7 +270,7 @@ class JWTKitTests: XCTestCase {
         ), kid: "vapor")
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
         let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
@@ -413,7 +413,7 @@ class JWTKitTests: XCTestCase {
             XCTAssertEqual(error.errorType, .malformedToken)
         }
     }
-    
+
     func testCustomHeaderFields() async throws {
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
 
@@ -451,7 +451,7 @@ class JWTKitTests: XCTestCase {
 
     func testSampleOpenbankingHeader() async throws {
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-        
+
         // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
         let customFields: JWTHeader = [
             "kid": "90210ABAD",
@@ -465,16 +465,16 @@ class JWTKitTests: XCTestCase {
                 "http://openbanking.org.uk/tan",
             ],
         ]
-        
+
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        
+
         let token = try await keyCollection.sign(payload, header: customFields)
-        
+
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let iat = parsed.header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
         XCTAssertEqual(iat, 1_501_497_671)
@@ -488,7 +488,7 @@ class JWTKitTests: XCTestCase {
 
     func testSigningWithKidInHeader() async throws {
         let key = ES256PrivateKey()
-        
+
         let keyCollection = await JWTKeyCollection()
             .addES256(key: key, kid: "private")
             .addES256(key: key.publicKey, kid: "public")
@@ -498,33 +498,33 @@ class JWTKitTests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        
+
         let _ = try await keyCollection.sign(payload, header: ["kid": "private"])
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, header: ["kid": "public"]))
         let _ = try await keyCollection.sign(payload, kid: "private")
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public"))
-        
+
         let _ = try await keyCollection.sign(payload, kid: "private", header: ["kid": "public"])
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public", header: ["kid": "private"]))
     }
 
     func testCustomObjectHeader() async throws {
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-        
+
         let customFields: JWTHeader = [
             "kid": "some-kid",
             "foo": ["bar": "baz"],
         ]
-        
+
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        
+
         let token = try await keyCollection.sign(payload, header: customFields)
-        
+
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let foo = try parsed.header.foo?.asObject(of: String.self)
         XCTAssertEqual(foo, ["bar": "baz"])
@@ -560,7 +560,7 @@ struct BadBoolPayload: Decodable {
 struct ExpirationPayload: JWTPayload {
     var exp: ExpirationClaim
 
-    func verify(using _: JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         try exp.verifyNotExpired()
     }
 }
@@ -634,7 +634,7 @@ struct FirebasePayload: JWTPayload, Equatable {
     let issuedAt: IssuedAtClaim
     let expiration: ExpirationClaim
 
-    func verify(using _: JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         try expiration.verifyNotExpired(currentDate: .distantPast)
     }
 }
