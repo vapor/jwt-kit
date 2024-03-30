@@ -21,19 +21,19 @@ jobs:
         continue-on-error: true
         run: |
           cd Benchmarks
-          swift package -c release --disable-sandbox benchmark baseline update pull_request
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update pull_request
       - name: Run benchmarks for 'main' branch
         run: |
           git stash
           git checkout main
           cd Benchmarks
-          swift package -c release --disable-sandbox benchmark baseline update main
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update main
       - name: Compare benchmarks
         continue-on-error: true
         run: |
           cd Benchmarks
           date >> "${GITHUB_STEP_SUMMARY}"
-          swift package -c release --disable-sandbox benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
+          swift package -c release --package-path Benchmarks benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
       - name: Get formatted date
         id: get-date
         run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
