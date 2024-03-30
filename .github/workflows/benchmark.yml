@@ -29,8 +29,11 @@ jobs:
           swift package -c release benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
           echo '---' >> "${GITHUB_STEP_SUMMARY}"
           swift package -c release  benchmark baseline compare main pull_request --no-progress --quiet --format markdown >> "${GITHUB_STEP_SUMMARY}"
+      - name: Get formatted date
+        id: get-date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d %H:%M:%S')"
       - uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{ format('[PR benchmark comparison on ubuntu-latest with main run at $(date -Iseconds)]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
+          message: ${{ format('[PR benchmark comparison with main on ubuntu-latest run at {0}]({1}/{2}/actions/runs/{3})', steps.get-date.outputs.date, github.server_url, github.repository, github.run_id) }}
           comment_tag: 'PR benchmark comparison Linux'
