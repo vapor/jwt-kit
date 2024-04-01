@@ -1,32 +1,18 @@
 <p align="center">
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/06939767-8779-42ea-9bb6-9d3e7a07d20c">
-        <source media="(prefers-color-scheme: light)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394">
-        <img src="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394" height="96" alt="JWTKit">
-    </picture> 
-    <br>
-    <br>
-    <a href="https://docs.vapor.codes/4.0/">
-        <img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation">
-    </a>
-    <a href="https://discord.gg/vapor">
-        <img src="https://design.vapor.codes/images/discordchat.svg" alt="Team Chat">
-    </a>
-    <a href="LICENSE">
-        <img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License">
-    </a>
-    <a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml">
-        <img src="https://img.shields.io/github/actions/workflow/status/vapor/jwt-kit/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration">
-    </a>
-    <a href="https://codecov.io/github/vapor/jwt-kit">
-        <img src="https://img.shields.io/codecov/c/github/vapor/jwt-kit?style=plastic&logo=codecov&label=codecov">
-    </a>
-    <a href="https://swift.org">
-        <img src="https://design.vapor.codes/images/swift59up.svg" alt="Swift 5.9+">
-    </a>
-    <a href="https://www.swift.org/sswg/incubation-process.html">
-        <img src="https://design.vapor.codes/images/sswg-graduated.svg" alt="SSWG Incubation Level: Graduated">
-    </a>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/06939767-8779-42ea-9bb6-9d3e7a07d20c">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394">
+  <img src="https://github.com/vapor/jwt-kit/assets/1130717/bdc5befe-01c4-4e50-a203-c6ef71e16394" height="96" alt="JWTKit">
+</picture> 
+<br>
+<br>
+<a href="https://docs.vapor.codes/4.0/"><img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation"></a>
+<a href="https://discord.gg/vapor"><img src="https://design.vapor.codes/images/discordchat.svg" alt="Team Chat"></a>
+<a href="LICENSE"><img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License"></a>
+<a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/vapor/jwt-kit/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration"></a>
+<a href="https://codecov.io/github/vapor/jwt-kit"><img src="https://img.shields.io/codecov/c/github/vapor/jwt-kit?style=plastic&logo=codecov&label=codecov"></a>
+<a href="https://swift.org"><img src="https://design.vapor.codes/images/swift59up.svg" alt="Swift 5.9+"></a>
+<a href="https://www.swift.org/sswg/incubation-process.html"><img src="https://design.vapor.codes/images/sswg-graduated.svg" alt="SSWG Incubation Level: Graduated"></a>
 </p>
 <br>
 
