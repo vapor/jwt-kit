@@ -385,7 +385,7 @@ class JWTKitTests: XCTestCase {
     func testJWKEncoding() async throws {
         let jwkIdentifier = JWKIdentifier(string: "vapor")
         let data = try JSONEncoder().encode(jwkIdentifier)
-        let string = String(data: data, encoding: .utf8)!
+        let string = String(decoding: data, as: UTF8.self)
         XCTAssertEqual(string, "\"vapor\"")
     }
 
@@ -445,7 +445,7 @@ class JWTKitTests: XCTestCase {
         let jsonDecoder = JSONDecoder()
         XCTAssertEqual(
             try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
-            try jsonDecoder.decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
+            try jsonDecoder.decode([String: JWTHeaderField].self, from: Data(jsonFields.utf8))
         )
     }
 
@@ -541,7 +541,7 @@ struct LocalePayload: Codable {
 
 extension LocalePayload {
     static func from(_ string: String) throws -> LocalePayload {
-        let data = string.data(using: .utf8)!
+        let data = Data(string.utf8)
         return try JSONDecoder().decode(LocalePayload.self, from: data)
     }
 }
