@@ -44,7 +44,9 @@ public extension EdDSA {
         /// - Throws:
         ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
         public init(x: String, curve: EdDSACurve) throws {
-            guard let xData = x.data(using: .utf8), !xData.isEmpty else {
+            let xData = Data(x.utf8)
+            
+            guard !xData.isEmpty else {
                 throw EdDSAError.publicKeyMissing
             }
 
@@ -122,11 +124,13 @@ public extension EdDSA {
         ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
         ///   - ``EdDSAError/privateKeyMissing`` if the private key data is missing or cannot be properly converted.
         public init(x: String, d: String, curve: EdDSACurve) throws {
-            guard let xData = x.data(using: .utf8), !xData.isEmpty else {
+            let xData = Data(x.utf8)
+            guard !xData.isEmpty else {
                 throw EdDSAError.publicKeyMissing
             }
-
-            guard let dData = d.data(using: .utf8), !dData.isEmpty else {
+            
+            let dData = Data(d.utf8)
+            guard !dData.isEmpty else {
                 throw EdDSAError.privateKeyMissing
             }
 

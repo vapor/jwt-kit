@@ -4,7 +4,7 @@ import XCTest
 final class ClaimTests: XCTestCase {
     func testBoolClaim() throws {
         let str = #"{"trueStr":"true","trueBool":true,"falseStr":"false","falseBool":false}"#
-        var data = str.data(using: .utf8)!
+        var data = Data(str.utf8)
         let decoded = try! JSONDecoder().decode(BoolPayload.self, from: data)
 
         XCTAssertTrue(decoded.trueStr.value)
@@ -12,7 +12,7 @@ final class ClaimTests: XCTestCase {
         XCTAssertFalse(decoded.falseBool.value)
         XCTAssertFalse(decoded.falseStr.value)
 
-        data = #"{"bad":"Not boolean"}"#.data(using: .utf8)!
+        data = Data(#"{"bad":"Not boolean"}"#.utf8)
         XCTAssertThrowsError(try JSONDecoder().decode(BoolPayload.self, from: data))
     }
 
@@ -39,7 +39,7 @@ final class ClaimTests: XCTestCase {
     func testSingleAudienceClaim() throws {
         let id = UUID()
         let str = "{\"audience\":\"\(id.uuidString)\"}"
-        let data = str.data(using: .utf8)!
+        let data = Data(str.utf8)
         let decoded = try! JSONDecoder().decode(AudiencePayload.self, from: data)
 
         XCTAssertEqual(decoded.audience.value, [id.uuidString])
@@ -55,7 +55,7 @@ final class ClaimTests: XCTestCase {
     func testMultipleAudienceClaim() throws {
         let id1 = UUID(), id2 = UUID()
         let str = "{\"audience\":[\"\(id1.uuidString)\", \"\(id2.uuidString)\"]}"
-        let data = str.data(using: .utf8)!
+        let data = Data(str.utf8)
         let decoded = try! JSONDecoder().decode(AudiencePayload.self, from: data)
 
         XCTAssertEqual(decoded.audience.value, [id1.uuidString, id2.uuidString])
