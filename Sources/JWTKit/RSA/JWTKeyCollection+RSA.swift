@@ -1,6 +1,31 @@
 import _CryptoExtras
 
 public extension JWTKeyCollection {
+    @discardableResult
+    func addRSA(
+        key: some RSAKey,
+        digestAlgorithm: DigestAlgorithm,
+        kid: JWKIdentifier? = nil,
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
+    ) -> Self {
+        let name = switch digestAlgorithm {
+        case .sha256:
+            "RS256"
+        case .sha384:
+            "RS384"
+        case .sha512:
+            "RS512"
+        }
+
+        return add(.init(
+            algorithm: RSASigner(key: key, algorithm: digestAlgorithm, name: name, padding: .insecurePKCS1v1_5),
+            parser: parser,
+            serializer: serializer
+        ),
+        for: kid)
+    }
+
     /// Adds an RS256 key to the collection.
     ///
     /// This method configures and adds an RS256 (RSA Signature with SHA-256) key to the collection.

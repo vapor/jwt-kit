@@ -1,6 +1,27 @@
 import Crypto
 
 public extension JWTKeyCollection {
+    @discardableResult
+    func addECDSA<Key: ECDSAKey>(
+        key: Key,
+        kid: JWKIdentifier? = nil,
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
+    ) throws -> Self {
+        let algorithm: ECDSASigner = switch Key.Curve.self {
+        case is P256.Type:
+            ECDSASigner(key: key, algorithm: .sha256, name: "ES256")
+        case is P384.Type:
+            ECDSASigner(key: key, algorithm: .sha384, name: "ES384")
+        case is P521.Type:
+            ECDSASigner(key: key, algorithm: .sha512, name: "ES512")
+        default:
+            throw JWTError.unsupportedCurve(curve: Key.Curve.self)
+        }
+
+        return add(.init(algorithm: algorithm, parser: parser, serializer: serializer), for: kid)
+    }
+
     /// Adds an ES256 key to the collection.
     ///
     /// This method configures and adds an ES256 (ECDSA using P-256 and SHA-256) key to the collection.
@@ -26,9 +47,7 @@ public extension JWTKeyCollection {
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self
-        where Key.Curve == P256
-    {
+    ) -> Self {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha256, name: "ES256"),
             parser: parser,
@@ -61,9 +80,7 @@ public extension JWTKeyCollection {
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self
-        where Key.Curve == P384
-    {
+    ) -> Self {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha384, name: "ES384"),
             parser: parser,
@@ -96,9 +113,7 @@ public extension JWTKeyCollection {
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self
-        where Key.Curve == P521
-    {
+    ) -> Self {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: .sha512, name: "ES512"),
             parser: parser,

@@ -1,13 +1,14 @@
 import Foundation
 
 /// JWT error type.
-public struct JWTError: Error {
+/// @unchecked Sendable is fine as we're using Copy on Write semantics.
+public struct JWTError: Error, @unchecked Sendable {
     public struct ErrorType: Sendable, Hashable, CustomStringConvertible {
-        enum Base: Sendable, Hashable {
+        enum Base: String, Sendable, Hashable {
             case claimVerificationFailure
             case signingAlgorithmFailure
             case malformedToken
-            case signatureVerificationFailed
+            case signatureVerifictionFailed
             case missingKIDHeader
             case unknownKID
             case invalidJWK
@@ -16,6 +17,7 @@ public struct JWTError: Error {
             case missingX5CHeader
             case invalidX5CChain
             case invalidHeaderField
+            case unsupportedCurve
             case generic
         }
 
@@ -27,7 +29,7 @@ public struct JWTError: Error {
 
         public static let claimVerificationFailure = Self(.claimVerificationFailure)
         public static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
-        public static let signatureVerificationFailed = Self(.signatureVerificationFailed)
+        public static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
         public static let missingKIDHeader = Self(.missingKIDHeader)
         public static let malformedToken = Self(.malformedToken)
         public static let unknownKID = Self(.unknownKID)
@@ -37,41 +39,15 @@ public struct JWTError: Error {
         public static let missingX5CHeader = Self(.missingX5CHeader)
         public static let invalidX5CChain = Self(.invalidX5CChain)
         public static let invalidHeaderField = Self(.invalidHeaderField)
+        public static let unsupportedCurve = Self(.unsupportedCurve)
         public static let generic = Self(.generic)
 
         public var description: String {
-            switch self.base {
-            case .claimVerificationFailure:
-                "claimVerificationFailure"
-            case .signingAlgorithmFailure:
-                "signingAlgorithmFailure"
-            case .malformedToken:
-                "malformedToken"
-            case .signatureVerificationFailed:
-                "signatureVerificationFailed"
-            case .missingKIDHeader:
-                "missingKIDHeader"
-            case .unknownKID:
-                "unknownKID"
-            case .invalidJWK:
-                "invalidJWK"
-            case .invalidBool:
-                "invalidBool"
-            case .noKeyProvided:
-                "noKeyProvided"
-            case .invalidX5CChain:
-                "invalidX5CChain"
-            case .invalidHeaderField:
-                "invalidHeaderField"
-            case .missingX5CHeader:
-                "missingX5CHeader"
-            case .generic:
-                "generic"
-            }
+            base.rawValue
         }
     }
 
-    private struct Backing: Sendable {
+    private final class Backing {
         fileprivate var errorType: ErrorType
         fileprivate var name: String?
         fileprivate var reason: String?
@@ -79,6 +55,7 @@ public struct JWTError: Error {
         fileprivate var kid: JWKIdentifier?
         fileprivate var identifier: String?
         fileprivate var failedClaim: (any JWTClaim)?
+        fileprivate var curve: (any ECDSACurveType)?
 
         init(errorType: ErrorType) {
             self.errorType = errorType
@@ -121,6 +98,8 @@ public struct JWTError: Error {
         get { self.backing.failedClaim }
         set { self.backing.failedClaim = newValue }
     }
+
+    public internal(set) var curve: (any ECDSACurveType.Type)?
 
     init(errorType: ErrorType) {
         self.backing = .init(errorType: errorType)
@@ -178,6 +157,12 @@ public struct JWTError: Error {
     public static func invalidHeaderField(reason: String) -> Self {
         var new = Self(errorType: .invalidHeaderField)
         new.reason = reason
+        return new
+    }
+
+    public static func unsupportedCurve(curve: any ECDSACurveType.Type) -> Self {
+        var new = Self(errorType: .unsupportedCurve)
+        new.curve = curve
         return new
     }
 

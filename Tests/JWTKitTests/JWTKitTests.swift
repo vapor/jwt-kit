@@ -139,7 +139,8 @@ class JWTKitTests: XCTestCase {
         }
 
         // create public key signer (verifier)
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PublicKey(pem: publicKey.bytes))
+        let keyCollection = try await JWTKeyCollection()
+            .addECDSA(key: ES256PublicKey(pem: publicKey.bytes))
 
         // decode jwt and test payload contents
         let jwt = try await keyCollection.verify(token, as: JWTioPayload.self)
@@ -242,7 +243,7 @@ class JWTKitTests: XCTestCase {
             }
         }
 
-        let keyCollection = await JWTKeyCollection().addES256(key: ES256PrivateKey())
+        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey())
         do {
             let token = try await keyCollection.sign(Payload(foo: "qux"))
             _ = try await keyCollection.verify(token, as: Payload.self)
@@ -355,7 +356,7 @@ class JWTKitTests: XCTestCase {
         struct CustomParser: JWTParser {
             var jsonDecoder: JWTJSONDecoder = .defaultForJWT
 
-            func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
+            func parse<Payload>(_ token: some DataProtocol, as _: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
                 let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
                 let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
@@ -385,7 +386,7 @@ class JWTKitTests: XCTestCase {
     func testJWKEncoding() async throws {
         let jwkIdentifier = JWKIdentifier(string: "vapor")
         let data = try JSONEncoder().encode(jwkIdentifier)
-        let string = String(decoding: data, as: UTF8.self)
+        let string = String(data: data, encoding: .utf8)!
         XCTAssertEqual(string, "\"vapor\"")
     }
 
@@ -413,7 +414,7 @@ class JWTKitTests: XCTestCase {
             XCTAssertEqual(error.errorType, .malformedToken)
         }
     }
-    
+
     func testCustomHeaderFields() async throws {
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
 
@@ -445,13 +446,13 @@ class JWTKitTests: XCTestCase {
         let jsonDecoder = JSONDecoder()
         XCTAssertEqual(
             try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
-            try jsonDecoder.decode([String: JWTHeaderField].self, from: Data(jsonFields.utf8))
+            try jsonDecoder.decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
         )
     }
 
     func testSampleOpenbankingHeader() async throws {
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-        
+
         // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
         let customFields: JWTHeader = [
             "kid": "90210ABAD",
@@ -465,16 +466,16 @@ class JWTKitTests: XCTestCase {
                 "http://openbanking.org.uk/tan",
             ],
         ]
-        
+
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        
+
         let token = try await keyCollection.sign(payload, header: customFields)
-        
+
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let iat = parsed.header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
         XCTAssertEqual(iat, 1_501_497_671)
@@ -488,43 +489,43 @@ class JWTKitTests: XCTestCase {
 
     func testSigningWithKidInHeader() async throws {
         let key = ES256PrivateKey()
-        
-        let keyCollection = await JWTKeyCollection()
-            .addES256(key: key, kid: "private")
-            .addES256(key: key.publicKey, kid: "public")
+
+        let keyCollection = try await JWTKeyCollection()
+            .addECDSA(key: key, kid: "private")
+            .addECDSA(key: key.publicKey, kid: "public")
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        
+
         let _ = try await keyCollection.sign(payload, header: ["kid": "private"])
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, header: ["kid": "public"]))
         let _ = try await keyCollection.sign(payload, kid: "private")
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public"))
-        
+
         let _ = try await keyCollection.sign(payload, kid: "private", header: ["kid": "public"])
         await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public", header: ["kid": "private"]))
     }
 
     func testCustomObjectHeader() async throws {
         let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-        
+
         let customFields: JWTHeader = [
             "kid": "some-kid",
             "foo": ["bar": "baz"],
         ]
-        
+
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        
+
         let token = try await keyCollection.sign(payload, header: customFields)
-        
+
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let foo = try parsed.header.foo?.asObject(of: String.self)
         XCTAssertEqual(foo, ["bar": "baz"])
@@ -541,7 +542,7 @@ struct LocalePayload: Codable {
 
 extension LocalePayload {
     static func from(_ string: String) throws -> LocalePayload {
-        let data = Data(string.utf8)
+        let data = string.data(using: .utf8)!
         return try JSONDecoder().decode(LocalePayload.self, from: data)
     }
 }

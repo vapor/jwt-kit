@@ -2,6 +2,58 @@ import Crypto
 import Foundation
 
 public extension JWTKeyCollection {
+    @discardableResult
+    func addHMAC(
+        key: String,
+        digestAlgorithm: DigestAlgorithm,
+        kid: JWKIdentifier? = nil,
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
+    ) -> Self {
+        addHMAC(
+            key: [UInt8](key.utf8),
+            digestAlgorithm: digestAlgorithm,
+            kid: kid,
+            parser: parser,
+            serializer: serializer
+        )
+    }
+
+    @discardableResult
+    func addHMAC(
+        key: some DataProtocol,
+        digestAlgorithm: DigestAlgorithm,
+        kid: JWKIdentifier? = nil,
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
+    ) -> Self {
+        addHMAC(
+            key: SymmetricKey(data: key.copyBytes()),
+            digestAlgorithm: digestAlgorithm,
+            kid: kid,
+            parser: parser,
+            serializer: serializer
+        )
+    }
+
+    @discardableResult
+    func addHMAC(
+        key: SymmetricKey,
+        digestAlgorithm: DigestAlgorithm,
+        kid: JWKIdentifier? = nil,
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
+    ) -> Self {
+        switch digestAlgorithm {
+        case .sha256:
+            add(.init(algorithm: HMACSigner<SHA256>(key: key, name: "HS256"), parser: parser, serializer: serializer), for: kid)
+        case .sha384:
+            add(.init(algorithm: HMACSigner<SHA384>(key: key, name: "HS384"), parser: parser, serializer: serializer), for: kid)
+        case .sha512:
+            add(.init(algorithm: HMACSigner<SHA512>(key: key, name: "HS512"), parser: parser, serializer: serializer), for: kid)
+        }
+    }
+
     // MARK: 256
 
     /// Adds an HS256 key to the collection.
@@ -64,7 +116,7 @@ public extension JWTKeyCollection {
         let symmetricKey = SymmetricKey(data: key.copyBytes())
         return addHS256(key: symmetricKey, kid: kid, parser: parser, serializer: serializer)
     }
-    
+
     /// Adds an HS256 key to the collection.
     ///
     /// This method configures and adds an HS256 (HMAC with SHA-256) key to the collection.
