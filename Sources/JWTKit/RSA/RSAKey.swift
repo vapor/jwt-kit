@@ -176,7 +176,7 @@ public final class RSAKey: OpenSSLKey {
     internal var c: OpaquePointer {
         return CJWTKitBoringSSL_EVP_PKEY_get1_RSA(self.cRaw)
     }
-    
+
     let cRaw: OpaquePointer
 
     init(_ c: OpaquePointer, _ type: KeyType) {
@@ -186,6 +186,6 @@ public final class RSAKey: OpenSSLKey {
     }
 
     deinit {
-        CJWTKitBoringSSL_EVP_PKEY_free(self.c)
+        CJWTKitBoringSSL_EVP_PKEY_free(self.cRaw)
     }
 }
