@@ -21,6 +21,7 @@ jobs:
         with:
           repository: vapor/jwt
           path: jwt
+          ref: ${{ github.base_ref == 'v4' && 'v4' || 'main' }}
       - name: Use local JWTKit
         run: swift package --package-path jwt edit jwt-kit --path ./jwt-kit
       - name: Run tests with Thread Sanitizer
