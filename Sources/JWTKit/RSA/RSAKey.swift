@@ -174,7 +174,7 @@ public final class RSAKey: OpenSSLKey {
     let type: KeyType
 
     internal var c: OpaquePointer {
-        return CJWTKitBoringSSL_EVP_PKEY_get1_RSA(self.cRaw)
+        CJWTKitBoringSSL_EVP_PKEY_get0_RSA(self.cRaw)
     }
 
     let cRaw: OpaquePointer
