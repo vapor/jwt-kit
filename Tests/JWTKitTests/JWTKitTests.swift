@@ -264,11 +264,15 @@ class JWTKitTests: XCTestCase {
         let privateExponent = "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
 
         // sign jwt
-        let keyCollection = try await JWTKeyCollection().addRS256(key: Insecure.RSA.PrivateKey(
-            modulus: modulus,
-            exponent: exponent,
-            privateExponent: privateExponent
-        ), kid: "vapor")
+        let keyCollection = try await JWTKeyCollection().addRSA(
+            key: Insecure.RSA.PrivateKey(
+                modulus: modulus,
+                exponent: exponent,
+                privateExponent: privateExponent
+            ),
+            digestAlgorithm: .sha256,
+            kid: "vapor"
+        )
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: JWTAlgorithm) throws {}
@@ -301,7 +305,7 @@ class JWTKitTests: XCTestCase {
 
     func testFirebaseJWTAndCertificate() async throws {
         let payload = try await JWTKeyCollection()
-            .addRS256(key: Insecure.RSA.PublicKey(certificatePEM: firebaseCert))
+            .addRSA(key: Insecure.RSA.PublicKey(certificatePEM: firebaseCert), digestAlgorithm: .sha256)
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
@@ -490,7 +494,7 @@ class JWTKitTests: XCTestCase {
     func testSigningWithKidInHeader() async throws {
         let key = ES256PrivateKey()
 
-        let keyCollection = try await JWTKeyCollection()
+        let keyCollection = await JWTKeyCollection()
             .addECDSA(key: key, kid: "private")
             .addECDSA(key: key.publicKey, kid: "public")
         let payload = TestPayload(
