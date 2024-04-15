@@ -24,7 +24,7 @@ public extension JWTKeyCollection {
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) throws -> Self {
+    ) -> Self {
         add(.init(
             algorithm: ECDSASigner(key: key, algorithm: Key.Curve.digestAlgorithm, name: Key.Curve.name),
             parser: parser,

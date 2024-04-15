@@ -205,9 +205,9 @@ final class X5CTests: XCTestCase {
             XCTFail("Should not have validated")
         }
     }
-    
+
     func testSigningWithX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey(pem: x5cLeafCertKey))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -227,7 +227,7 @@ final class X5CTests: XCTestCase {
     }
 
     func testSigningWithInvalidX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey(pem: x5cLeafCertKey))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -249,7 +249,7 @@ final class X5CTests: XCTestCase {
         let verifier = try X5CVerifier(rootCertificates: [certs.last!])
         await XCTAssertThrowsErrorAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
     }
-    
+
     // MARK: Private
 
     private func getPEMString(from der: String) throws -> String {

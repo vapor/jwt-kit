@@ -243,7 +243,7 @@ class JWTKitTests: XCTestCase {
             }
         }
 
-        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey())
+        let keyCollection = await JWTKeyCollection().addECDSA(key: ES256PrivateKey())
         do {
             let token = try await keyCollection.sign(Payload(foo: "qux"))
             _ = try await keyCollection.verify(token, as: Payload.self)
