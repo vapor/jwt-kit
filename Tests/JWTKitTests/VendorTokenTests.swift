@@ -23,7 +23,7 @@ final class VendorTokenTests: XCTestCase {
             nonce: "nonceValue"
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertNoThrowAsync(try await collection.verify(jwt, as: GoogleIdentityToken.self))
@@ -50,7 +50,7 @@ final class VendorTokenTests: XCTestCase {
             nonce: "nonceValue"
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: GoogleIdentityToken.self)) { error in
@@ -83,7 +83,7 @@ final class VendorTokenTests: XCTestCase {
             nonce: "nonceValue"
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: GoogleIdentityToken.self)) { error in
@@ -111,7 +111,7 @@ final class VendorTokenTests: XCTestCase {
             realUserStatus: .likelyReal
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertNoThrowAsync(try await collection.verify(jwt, as: AppleIdentityToken.self))
@@ -133,7 +133,7 @@ final class VendorTokenTests: XCTestCase {
             realUserStatus: .likelyReal
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: AppleIdentityToken.self)) { error in
@@ -169,7 +169,7 @@ final class VendorTokenTests: XCTestCase {
             version: "2.0"
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertNoThrowAsync(try await collection.verify(jwt, as: MicrosoftIdentityToken.self))
@@ -197,7 +197,7 @@ final class VendorTokenTests: XCTestCase {
             version: "2.0"
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: MicrosoftIdentityToken.self)) { error in
@@ -231,7 +231,7 @@ final class VendorTokenTests: XCTestCase {
             version: "2.0"
         )
 
-        let collection = await JWTKeyCollection().addHS256(key: "secret")
+        let collection = await JWTKeyCollection().addHMAC(key: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: MicrosoftIdentityToken.self)) { error in
