@@ -28,7 +28,6 @@ final class ECDSATests: XCTestCase {
         let keys = await JWTKeyCollection()
             .addECDSA(key: key, kid: "private")
             .addECDSA(key: publicKey, kid: "public")
-        // let keys = await JWTKeyCollection().addES256(key: key, kid: "private").addES256(key: publicKey, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",

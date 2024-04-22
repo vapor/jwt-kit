@@ -1,7 +1,6 @@
 import Crypto
 import Foundation
 
-@frozen
 public enum DigestAlgorithm: Sendable {
     case sha256
     case sha384

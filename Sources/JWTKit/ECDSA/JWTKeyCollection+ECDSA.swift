@@ -26,7 +26,7 @@ public extension JWTKeyCollection {
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
         add(.init(
-            algorithm: ECDSASigner(key: key, algorithm: Key.Curve.digestAlgorithm, name: Key.Curve.name),
+            algorithm: ECDSASigner(key: key, algorithm: Key.Curve.SigningAlgorithm.digestAlgorithm, name: Key.Curve.SigningAlgorithm.name),
             parser: parser,
             serializer: serializer
         ), for: kid)

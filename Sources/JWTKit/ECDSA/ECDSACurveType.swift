@@ -19,8 +19,8 @@
 public protocol ECDSACurveType: Sendable {
     associatedtype Signature: ECDSASignature
     associatedtype PrivateKey: ECDSAPrivateKey
+    associatedtype SigningAlgorithm: ECDSASigningAlgorithm
+
     static var curve: ECDSACurve { get }
     static var byteRanges: (x: Range<Int>, y: Range<Int>) { get }
-    static var name: String { get }
-    static var digestAlgorithm: DigestAlgorithm { get }
 }

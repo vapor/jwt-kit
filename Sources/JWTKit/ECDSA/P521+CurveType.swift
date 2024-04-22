@@ -18,9 +18,10 @@ extension P521: ECDSACurveType, @unchecked Sendable {
     /// - The Y coordinate spans bytes 67 through 132.
     public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 67, 67 ..< 133)
 
-    public static let name = "P521"
-
-    public static let digestAlgorithm: DigestAlgorithm = .sha512
+    public enum SigningAlgorithm: ECDSASigningAlgorithm {
+        public static let name = "ES512"
+        public static let digestAlgorithm: DigestAlgorithm = .sha512
+    }
 }
 
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable

@@ -17,9 +17,10 @@ extension P256: ECDSACurveType, @unchecked Sendable {
     /// - The Y coordinate spans bytes 33 through 64.
     public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 33, 33 ..< 65)
 
-    public static let name = "P256"
-
-    public static let digestAlgorithm: DigestAlgorithm = .sha256
+    public struct SigningAlgorithm: ECDSASigningAlgorithm {
+        public static let name = "ES256"
+        public static let digestAlgorithm: DigestAlgorithm = .sha256
+    }
 }
 
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
