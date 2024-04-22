@@ -1,7 +1,6 @@
 import Foundation
 
 /// JWT error type.
-/// @unchecked Sendable is fine as we're using Copy on Write semantics.
 public struct JWTError: Error, Sendable {
     public struct ErrorType: Sendable, Hashable, CustomStringConvertible {
         enum Base: String, Sendable {
