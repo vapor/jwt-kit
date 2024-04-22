@@ -1,9 +1,10 @@
 import Foundation
 
 /// JWT error type.
-public struct JWTError: Error {
+/// @unchecked Sendable is fine as we're using Copy on Write semantics.
+public struct JWTError: Error, Sendable {
     public struct ErrorType: Sendable, Hashable, CustomStringConvertible {
-        enum Base: Sendable, Hashable {
+        enum Base: String, Sendable {
             case claimVerificationFailure
             case signingAlgorithmFailure
             case malformedToken
@@ -40,129 +41,80 @@ public struct JWTError: Error {
         public static let generic = Self(.generic)
 
         public var description: String {
-            switch self.base {
-            case .claimVerificationFailure:
-                "claimVerificationFailure"
-            case .signingAlgorithmFailure:
-                "signingAlgorithmFailure"
-            case .malformedToken:
-                "malformedToken"
-            case .signatureVerificationFailed:
-                "signatureVerificationFailed"
-            case .missingKIDHeader:
-                "missingKIDHeader"
-            case .unknownKID:
-                "unknownKID"
-            case .invalidJWK:
-                "invalidJWK"
-            case .invalidBool:
-                "invalidBool"
-            case .noKeyProvided:
-                "noKeyProvided"
-            case .invalidX5CChain:
-                "invalidX5CChain"
-            case .invalidHeaderField:
-                "invalidHeaderField"
-            case .missingX5CHeader:
-                "missingX5CHeader"
-            case .generic:
-                "generic"
-            }
+            base.rawValue
         }
     }
 
     private struct Backing: Sendable {
-        fileprivate var errorType: ErrorType
-        fileprivate var name: String?
-        fileprivate var reason: String?
-        fileprivate var underlying: Error?
-        fileprivate var kid: JWKIdentifier?
-        fileprivate var identifier: String?
-        fileprivate var failedClaim: (any JWTClaim)?
+        fileprivate let errorType: ErrorType
+        fileprivate let name: String?
+        fileprivate let reason: String?
+        fileprivate let underlying: Error?
+        fileprivate let kid: JWKIdentifier?
+        fileprivate let identifier: String?
+        fileprivate let failedClaim: (any JWTClaim)?
 
-        init(errorType: ErrorType) {
+        init(
+            errorType: ErrorType,
+            name: String? = nil,
+            reason: String? = nil,
+            underlying: Error? = nil,
+            kid: JWKIdentifier? = nil,
+            identifier: String? = nil,
+            failedClaim: (any JWTClaim)? = nil
+        ) {
             self.errorType = errorType
+            self.name = name
+            self.reason = reason
+            self.underlying = underlying
+            self.kid = kid
+            self.identifier = identifier
+            self.failedClaim = failedClaim
         }
     }
 
     private var backing: Backing
 
-    public internal(set) var errorType: ErrorType {
-        get { self.backing.errorType }
-        set { self.backing.errorType = newValue }
+    public var errorType: ErrorType { backing.errorType }
+    public var name: String? { backing.name }
+    public var reason: String? { backing.reason }
+    public var underlying: (any Error)? { backing.underlying }
+    public var kid: JWKIdentifier? { backing.kid }
+    public var identifier: String? { backing.identifier }
+    public var failedClaim: (any JWTClaim)? { backing.failedClaim }
+
+    private init(backing: Backing) {
+        self.backing = backing
     }
 
-    public internal(set) var name: String? {
-        get { self.backing.name }
-        set { self.backing.name = newValue }
-    }
-
-    public internal(set) var reason: String? {
-        get { self.backing.reason }
-        set { self.backing.reason = newValue }
-    }
-
-    public internal(set) var underlying: Error? {
-        get { self.backing.underlying }
-        set { self.backing.underlying = newValue }
-    }
-
-    public internal(set) var kid: JWKIdentifier? {
-        get { self.backing.kid }
-        set { self.backing.kid = newValue }
-    }
-
-    public internal(set) var identifier: String? {
-        get { self.backing.identifier }
-        set { self.backing.identifier = newValue }
-    }
-
-    public internal(set) var failedClaim: (any JWTClaim)? {
-        get { self.backing.failedClaim }
-        set { self.backing.failedClaim = newValue }
-    }
-
-    init(errorType: ErrorType) {
+    private init(errorType: ErrorType) {
         self.backing = .init(errorType: errorType)
     }
 
     public static func claimVerificationFailure(failedClaim: (any JWTClaim)?, reason: String) -> Self {
-        var new = Self(errorType: .claimVerificationFailure)
-        new.failedClaim = failedClaim
-        new.reason = reason
-        return new
+        .init(backing: .init(errorType: .claimVerificationFailure, reason: reason, failedClaim: failedClaim))
     }
 
     public static func signingAlgorithmFailure(_ error: Error) -> Self {
-        var new = Self(errorType: .signingAlgorithmFailure)
-        new.underlying = error
-        return new
+        .init(backing: .init(errorType: .signingAlgorithmFailure, underlying: error))
     }
 
     public static func malformedToken(reason: String) -> Self {
-        var new = Self(errorType: .malformedToken)
-        new.reason = reason
-        return new
+        .init(backing: .init(errorType: .malformedToken, reason: reason))
     }
-
-    public static let malformedToken = Self(errorType: .malformedToken)
 
     public static let signatureVerificationFailed = Self(errorType: .signatureVerificationFailed)
 
     public static let missingKIDHeader = Self(errorType: .missingKIDHeader)
 
     public static func unknownKID(_ kid: JWKIdentifier) -> Self {
-        var new = Self(errorType: .unknownKID)
-        new.kid = kid
-        return new
+        .init(backing: .init(errorType: .unknownKID, kid: kid))
     }
 
     public static let invalidJWK = Self(errorType: .invalidJWK)
 
     public static func invalidBool(_ name: String) -> Self {
-        var new = Self(errorType: .invalidBool)
-        new.name = name
-        return new
+        .init(backing: .init(errorType: .invalidBool, name: name))
     }
 
     public static let noKeyProvided = Self(errorType: .noKeyProvided)
@@ -170,22 +122,15 @@ public struct JWTError: Error {
     public static let missingX5CHeader = Self(errorType: .missingX5CHeader)
 
     public static func invalidX5CChain(reason: String) -> Self {
-        var new = Self(errorType: .invalidX5CChain)
-        new.reason = reason
-        return new
+        .init(backing: .init(errorType: .invalidX5CChain, reason: reason))
     }
 
     public static func invalidHeaderField(reason: String) -> Self {
-        var new = Self(errorType: .invalidHeaderField)
-        new.reason = reason
-        return new
+        .init(backing: .init(errorType: .invalidHeaderField, reason: reason))
     }
 
     public static func generic(identifier: String, reason: String) -> Self {
-        var new = Self(errorType: .generic)
-        new.identifier = identifier
-        new.reason = reason
-        return new
+        .init(backing: .init(errorType: .generic, reason: reason))
     }
 }
 
