@@ -10,7 +10,7 @@ public extension JWTParser {
         let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
 
         guard tokenParts.count == 3 else {
-            throw JWTError.malformedToken
+            throw JWTError.malformedToken(reason: "Token is not split in 3 parts")
         }
 
         return (tokenParts[0], tokenParts[1], tokenParts[2])
