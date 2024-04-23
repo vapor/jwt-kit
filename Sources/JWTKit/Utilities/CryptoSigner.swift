@@ -1,10 +1,18 @@
 import Crypto
 import Foundation
 
-enum DigestAlgorithm {
-    case sha256
-    case sha384
-    case sha512
+public struct DigestAlgorithm: Sendable, Equatable {
+    enum Backing {
+        case sha256
+        case sha384
+        case sha512
+    }
+
+    let backing: Backing
+
+    public static let sha256 = Self(backing: .sha256)
+    public static let sha384 = Self(backing: .sha384)
+    public static let sha512 = Self(backing: .sha512)
 }
 
 protocol CryptoSigner: Sendable {
@@ -21,7 +29,7 @@ private enum CryptoError: Error {
 
 extension CryptoSigner {
     func digest(_ plaintext: some DataProtocol) throws -> any Digest {
-        switch algorithm {
+        switch algorithm.backing {
         case .sha256:
             SHA256.hash(data: plaintext)
         case .sha384:

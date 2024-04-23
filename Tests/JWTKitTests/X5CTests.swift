@@ -147,7 +147,7 @@ final class X5CTests: XCTestCase {
             let signedDate: Date
             let notificationType: String
 
-            func verify(using _: JWTAlgorithm) async throws {}
+            func verify(using _: some JWTAlgorithm) async throws {}
         }
 
         let verifier = try X5CVerifier(rootCertificates: [cert])
@@ -205,9 +205,9 @@ final class X5CTests: XCTestCase {
             XCTFail("Should not have validated")
         }
     }
-    
+
     func testSigningWithX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey(pem: x5cLeafCertKey))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -227,7 +227,7 @@ final class X5CTests: XCTestCase {
     }
 
     func testSigningWithInvalidX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey(pem: x5cLeafCertKey))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -249,7 +249,7 @@ final class X5CTests: XCTestCase {
         let verifier = try X5CVerifier(rootCertificates: [certs.last!])
         await XCTAssertThrowsErrorAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
     }
-    
+
     // MARK: Private
 
     private func getPEMString(from der: String) throws -> String {
@@ -370,7 +370,7 @@ let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: "MIIBn
 private struct TokenPayload: JWTPayload {
     var cool: BoolClaim
 
-    func verify(using _: JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         if !cool.value {
             throw JWTError.claimVerificationFailure(failedClaim: cool, reason: "not cool")
         }

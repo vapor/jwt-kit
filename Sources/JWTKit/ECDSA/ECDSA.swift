@@ -7,7 +7,7 @@ public enum ECDSA: Sendable {}
 
 public protocol ECDSAKey: Sendable {
     associatedtype Curve: ECDSACurveType
-    
+
     var curve: ECDSACurve { get }
     var parameters: ECDSAParameters? { get }
 }

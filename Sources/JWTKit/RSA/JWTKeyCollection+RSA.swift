@@ -1,156 +1,60 @@
 import _CryptoExtras
 
 public extension JWTKeyCollection {
-    /// Adds an RS256 key to the collection.
+    /// Adds an RSA key to the collection.
     ///
-    /// This method configures and adds an RS256 (RSA Signature with SHA-256) key to the collection.
-    ///
-    /// Example Usage:
-    /// ```
-    /// let collection = await JWTKeyCollection()
-    ///     .addRS256(key: myRSAKey)
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
-    ///          in the JWT `kid` header field.
-    ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
-    ///          If `nil`, a default encoder is used.
-    ///   - jsonDecoder: An optional custom JSON decoder conforming to ``JWTJSONDecoder`` used for decoding JWTs.
-    ///          If `nil`, a default decoder is used.
-    /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
-    @discardableResult
-    func addRS256(
-        key: some RSAKey,
-        kid: JWKIdentifier? = nil,
-        parser: some JWTParser = DefaultJWTParser(),
-        serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self {
-        add(.init(
-            algorithm: RSASigner(key: key, algorithm: .sha256, name: "RS256", padding: .insecurePKCS1v1_5),
-            parser: parser,
-            serializer: serializer
-        ),
-        for: kid)
-    }
-
-    /// Adds an RS384 key to the collection.
-    ///
-    /// This method configures and adds an RS384 (RSA Signature with SHA-384) key to the collection.
-    ///
-    /// Example Usage:
-    /// ```
-    /// let collection = try await JWTKeyCollection()
-    ///     .addRS384(key: myRSAKey)
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
-    ///          in the JWT `kid` header field.
-    ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
-    ///          If `nil`, a default encoder is used.
-    ///   - jsonDecoder: An optional custom JSON decoder conforming to ``JWTJSONDecoder`` used for decoding JWTs.
-    ///          If `nil`, a default decoder is used.
-    /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
-    @discardableResult
-    func addRS384(
-        key: some RSAKey,
-        kid: JWKIdentifier? = nil,
-        parser: some JWTParser = DefaultJWTParser(),
-        serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self {
-        add(.init(
-            algorithm: RSASigner(key: key, algorithm: .sha384, name: "RS384", padding: .insecurePKCS1v1_5),
-            parser: parser,
-            serializer: serializer
-        ),
-        for: kid)
-    }
-
-    /// Adds an RS512 key to the collection.
-    ///
-    /// This method configures and adds an RS512 (RSA Signature with SHA-512) key to the collection.
-    ///
-    /// Example Usage:
-    /// ```
-    /// let collection = try await JWTKeyCollection()
-    ///     .addRS512(key: myRSAKey)
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
-    ///          in the JWT `kid` header field.
-    ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
-    ///          If `nil`, a default encoder is used.
-    ///   - jsonDecoder: An optional custom JSON decoder conforming to ``JWTJSONDecoder`` used for decoding JWTs.
-    ///          If `nil`, a default decoder is used.
-    /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
-    @discardableResult
-    func addRS512(
-        key: some RSAKey,
-        kid: JWKIdentifier? = nil,
-        parser: some JWTParser = DefaultJWTParser(),
-        serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self {
-        add(.init(
-            algorithm: RSASigner(key: key, algorithm: .sha512, name: "RS512", padding: .insecurePKCS1v1_5),
-            parser: parser,
-            serializer: serializer
-        ),
-        for: kid)
-    }
-
-    // MARK: PSS
-
-    /// Adds a PS256 key to the collection.
-    ///
-    /// This method configures and adds a PS256 (RSA PSS Signature with SHA-256) key to the collection. PS256
-    /// uses RSASSA-PSS with SHA-256 for the RSA signature, which is considered more secure than PKCS#1 v1.5
-    /// padding used in RS256.
+    /// This method configures and adds an RSA key to the collection. The key is used for signing JWTs
     ///
     /// Example Usage:
     /// ```
     /// let collection = await JWTKeyCollection()
-    ///     .addPS256(key: myRSAKey)
+    ///    .addRSA(key: myRSAKey)
     /// ```
     ///
     /// - Parameters:
     ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
     ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
-    ///          in the JWT `kid` header field.
+    ///       in the JWT `kid` header field.
     ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
-    ///          If `nil`, a default encoder is used.
+    ///       If `nil`, a default encoder is used.
     ///   - jsonDecoder: An optional custom JSON decoder conforming to ``JWTJSONDecoder`` used for decoding JWTs.
-    ///          If `nil`, a default decoder is used.
-    /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
+    ///       If `nil`, a default decoder is used.
+    ///   - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
-    func addPS256(
+    func addRSA(
         key: some RSAKey,
+        digestAlgorithm: DigestAlgorithm,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(
-            algorithm: RSASigner(key: key, algorithm: .sha256, name: "PS256", padding: .PSS),
+        let name = switch digestAlgorithm.backing {
+        case .sha256:
+            "RS256"
+        case .sha384:
+            "RS384"
+        case .sha512:
+            "RS512"
+        }
+
+        return add(.init(
+            algorithm: RSASigner(key: key, algorithm: digestAlgorithm, name: name, padding: .insecurePKCS1v1_5),
             parser: parser,
             serializer: serializer
         ),
         for: kid)
     }
 
-    /// Adds a PS384 key to the collection.
+    /// Adds a PSS key to the collection.
     ///
-    /// This method configures and adds a PS256 (RSA PSS Signature with SHA-384) key to the collection. PS384
-    /// uses RSASSA-PSS with SHA-384 for the RSA signature, which is considered more secure than PKCS#1 v1.5
-    /// padding used in RS384.
+    /// This method configures and adds a PSS (RSA PSS Signature) key to the collection. PSS
+    /// uses RSASSA-PSS for the RSA signature, which is considered more secure than PKCS#1 v1.5
+    /// padding used in RSA.
     ///
     /// Example Usage:
     /// ```
     /// let collection = await JWTKeyCollection()
-    ///     .addPS384(key: myRSAKey)
+    ///     .addPSS(key: myRSAKey)
     /// ```
     ///
     /// - Parameters:
@@ -163,50 +67,24 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
-    func addPS384(
+    func addPSS(
         key: some RSAKey,
+        digestAlgorithm: DigestAlgorithm,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(
-            algorithm: RSASigner(key: key, algorithm: .sha384, name: "PS384", padding: .PSS),
-            parser: parser,
-            serializer: serializer
-        ),
-        for: kid)
-    }
+        let name = switch digestAlgorithm.backing {
+        case .sha256:
+            "PS256"
+        case .sha384:
+            "PS384"
+        case .sha512:
+            "PS512"
+        }
 
-    /// Adds a PS512 key to the collection.
-    ///
-    /// This method configures and adds a PS512 (RSA PSS Signature with SHA-512) key to the collection. PS512
-    /// uses RSASSA-PSS with SHA-512 for the RSA signature, which is considered more secure than PKCS#1 v1.5
-    /// padding used in RS512.
-    ///
-    /// Example Usage:
-    /// ```
-    /// let collection = await JWTKeyCollection()
-    ///     .addPS512(key: myRSAKey)
-    /// ```
-    ///
-    /// - Parameters:
-    ///   - key: The ``RSAKey`` to use for signing. This key should be kept secure and not exposed.
-    ///   - kid: An optional ``JWKIdentifier`` (Key ID). If provided, it will be used to identify this key
-    ///          in the JWT `kid` header field.
-    ///   - jsonEncoder: An optional custom JSON encoder conforming to ``JWTJSONEncoder`` used for encoding JWTs.
-    ///          If `nil`, a default encoder is used.
-    ///   - jsonDecoder: An optional custom JSON decoder conforming to ``JWTJSONDecoder`` used for decoding JWTs.
-    ///          If `nil`, a default decoder is used.
-    /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
-    @discardableResult
-    func addPS512(
-        key: some RSAKey,
-        kid: JWKIdentifier? = nil,
-        parser: some JWTParser = DefaultJWTParser(),
-        serializer: some JWTSerializer = DefaultJWTSerializer()
-    ) -> Self {
-        add(.init(
-            algorithm: RSASigner(key: key, algorithm: .sha512, name: "PS512", padding: .PSS),
+        return add(.init(
+            algorithm: RSASigner(key: key, algorithm: digestAlgorithm, name: name, padding: .PSS),
             parser: parser,
             serializer: serializer
         ),

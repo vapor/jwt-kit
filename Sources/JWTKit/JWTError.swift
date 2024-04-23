@@ -7,7 +7,7 @@ public struct JWTError: Error, Sendable {
             case claimVerificationFailure
             case signingAlgorithmFailure
             case malformedToken
-            case signatureVerificationFailed
+            case signatureVerifictionFailed
             case missingKIDHeader
             case unknownKID
             case invalidJWK
@@ -16,6 +16,7 @@ public struct JWTError: Error, Sendable {
             case missingX5CHeader
             case invalidX5CChain
             case invalidHeaderField
+            case unsupportedCurve
             case generic
         }
 
@@ -27,7 +28,7 @@ public struct JWTError: Error, Sendable {
 
         public static let claimVerificationFailure = Self(.claimVerificationFailure)
         public static let signingAlgorithmFailure = Self(.signingAlgorithmFailure)
-        public static let signatureVerificationFailed = Self(.signatureVerificationFailed)
+        public static let signatureVerificationFailed = Self(.signatureVerifictionFailed)
         public static let missingKIDHeader = Self(.missingKIDHeader)
         public static let malformedToken = Self(.malformedToken)
         public static let unknownKID = Self(.unknownKID)
@@ -37,6 +38,7 @@ public struct JWTError: Error, Sendable {
         public static let missingX5CHeader = Self(.missingX5CHeader)
         public static let invalidX5CChain = Self(.invalidX5CChain)
         public static let invalidHeaderField = Self(.invalidHeaderField)
+        public static let unsupportedCurve = Self(.unsupportedCurve)
         public static let generic = Self(.generic)
 
         public var description: String {
@@ -52,6 +54,7 @@ public struct JWTError: Error, Sendable {
         fileprivate let kid: JWKIdentifier?
         fileprivate let identifier: String?
         fileprivate let failedClaim: (any JWTClaim)?
+        fileprivate var curve: (any ECDSACurveType)?
 
         init(
             errorType: ErrorType,
@@ -60,7 +63,8 @@ public struct JWTError: Error, Sendable {
             underlying: Error? = nil,
             kid: JWKIdentifier? = nil,
             identifier: String? = nil,
-            failedClaim: (any JWTClaim)? = nil
+            failedClaim: (any JWTClaim)? = nil,
+            curve: (any ECDSACurveType)? = nil
         ) {
             self.errorType = errorType
             self.name = name
@@ -69,6 +73,7 @@ public struct JWTError: Error, Sendable {
             self.kid = kid
             self.identifier = identifier
             self.failedClaim = failedClaim
+            self.curve = curve
         }
     }
 
@@ -81,6 +86,7 @@ public struct JWTError: Error, Sendable {
     public var kid: JWKIdentifier? { backing.kid }
     public var identifier: String? { backing.identifier }
     public var failedClaim: (any JWTClaim)? { backing.failedClaim }
+    public var curve: (any ECDSACurveType)? { backing.curve }
 
     private init(backing: Backing) {
         self.backing = backing
@@ -126,6 +132,10 @@ public struct JWTError: Error, Sendable {
 
     public static func invalidHeaderField(reason: String) -> Self {
         .init(backing: .init(errorType: .invalidHeaderField, reason: reason))
+    }
+
+    public static func unsupportedCurve(curve: any ECDSACurveType) -> Self {
+        .init(backing: .init(errorType: .unsupportedCurve, curve: curve))
     }
 
     public static func generic(identifier: String, reason: String) -> Self {

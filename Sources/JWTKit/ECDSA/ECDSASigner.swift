@@ -3,10 +3,10 @@ import Foundation
 struct ECDSASigner<Key: ECDSAKey>: JWTAlgorithm, CryptoSigner {
     let privateKey: ECDSA.PrivateKey<Key.Curve>?
     let publicKey: ECDSA.PublicKey<Key.Curve>
-    let algorithm: DigestAlgorithm
-    public let name: String
+    let algorithm: DigestAlgorithm = Key.Curve.SigningAlgorithm.digestAlgorithm
+    let name: String = Key.Curve.SigningAlgorithm.name
 
-    init(key: Key, algorithm: DigestAlgorithm, name: String) {
+    init(key: Key) {
         switch key {
         case let privateKey as ECDSA.PrivateKey<Key.Curve>:
             self.privateKey = privateKey
@@ -18,8 +18,6 @@ struct ECDSASigner<Key: ECDSAKey>: JWTAlgorithm, CryptoSigner {
             // This should never happen
             fatalError("Unexpected key type: \(type(of: key))")
         }
-        self.algorithm = algorithm
-        self.name = name
     }
 
     func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {

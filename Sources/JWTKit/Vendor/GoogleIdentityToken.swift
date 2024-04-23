@@ -136,7 +136,7 @@ public struct GoogleIdentityToken: JWTPayload {
         self.nonce = nonce
     }
 
-    public func verify(using _: JWTAlgorithm) throws {
+    public func verify(using _: some JWTAlgorithm) throws {
         guard ["accounts.google.com", "https://accounts.google.com"].contains(self.issuer.value) else {
             throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Google")
         }

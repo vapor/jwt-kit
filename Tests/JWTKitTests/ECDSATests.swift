@@ -25,7 +25,9 @@ final class ECDSATests: XCTestCase {
     func testSigningWithPublicKey() async throws {
         let key = try ES256PrivateKey(pem: ecdsaPrivateKey)
         let publicKey = try ES256PublicKey(pem: ecdsaPublicKey)
-        let keys = await JWTKeyCollection().addES256(key: key, kid: "private").addES256(key: publicKey, kid: "public")
+        let keys = await JWTKeyCollection()
+            .addECDSA(key: key, kid: "private")
+            .addECDSA(key: publicKey, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -51,15 +53,15 @@ final class ECDSATests: XCTestCase {
         )
         let keyCollection = JWTKeyCollection()
         let key = ES256PrivateKey()
-        await keyCollection.addES256(key: key)
+        await keyCollection.addECDSA(key: key)
         let token = try await keyCollection.sign(payload)
         try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
     }
 
     func testECDSAPublicPrivate() async throws {
         let keys = try await JWTKeyCollection()
-            .addES256(key: ES256PublicKey(pem: ecdsaPublicKey), kid: "public")
-            .addES256(key: ES256PrivateKey(pem: ecdsaPrivateKey), kid: "private")
+            .addECDSA(key: ES256PublicKey(pem: ecdsaPublicKey), kid: "public")
+            .addECDSA(key: ES256PrivateKey(pem: ecdsaPrivateKey), kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -79,7 +81,7 @@ final class ECDSATests: XCTestCase {
     func testVerifyingECDSAKeyUsingJWK() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
 
         // ecdsa key
@@ -90,7 +92,7 @@ final class ECDSATests: XCTestCase {
 
         // sign jwt
         let key = try ES384PrivateKey(key: privateKey)
-        let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
+        let keys = await JWTKeyCollection().addECDSA(key: key, kid: "vapor")
 
         let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
@@ -117,7 +119,7 @@ final class ECDSATests: XCTestCase {
     func testVerifyingECDSAKeyUsingJWKBase64URL() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
 
         // ecdsa key in base64url format
@@ -129,7 +131,7 @@ final class ECDSATests: XCTestCase {
 
         // sign jwt
         let key = try ES384PrivateKey(key: privateKey)
-        let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
+        let keys = await JWTKeyCollection().addECDSA(key: key, kid: "vapor")
 
         let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
@@ -156,7 +158,7 @@ final class ECDSATests: XCTestCase {
     func testVerifyingECDSAKeyUsingJWKWithMixedBase64Formats() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
 
         // ecdsa key in base64url format
@@ -168,7 +170,7 @@ final class ECDSATests: XCTestCase {
 
         // sign jwt
         let key = try ES384PrivateKey(key: privateKey)
-        let keys = await JWTKeyCollection().addES384(key: key, kid: "vapor")
+        let keys = await JWTKeyCollection().addECDSA(key: key, kid: "vapor")
 
         let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
 
@@ -198,14 +200,14 @@ final class ECDSATests: XCTestCase {
         }
         struct Payload: JWTPayload {
             let foo: String
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }
             }
         }
 
-        let keys = await JWTKeyCollection().addES256(key: ES256PrivateKey(), kid: "vapor")
+        let keys = await JWTKeyCollection().addECDSA(key: ES256PrivateKey(), kid: "vapor")
 
         do {
             let token = try await keys.sign(Payload(foo: "qux"))
@@ -231,17 +233,17 @@ final class ECDSATests: XCTestCase {
         let key2 = try ES256PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
-    
+
     func testGetECParametersES256() async throws {
         let message = "test".bytes
 
         let ec = ES256PrivateKey()
-        let keys = await JWTKeyCollection().addES256(key: ec, kid: "initial")
+        let keys = await JWTKeyCollection().addECDSA(key: ec, kid: "initial")
 
         let signature = try await keys.getKey(for: "initial").sign(message)
 
         let params = ec.parameters!
-        try await keys.addES256(key: ES256PublicKey(parameters: params), kid: "params")
+        try await keys.addECDSA(key: ES256PublicKey(parameters: params), kid: "params")
         try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p256)
     }
@@ -250,12 +252,12 @@ final class ECDSATests: XCTestCase {
         let message = "test".bytes
 
         let ec = ES384PrivateKey()
-        let keys = await JWTKeyCollection().addES384(key: ec, kid: "initial")
+        let keys = await JWTKeyCollection().addECDSA(key: ec, kid: "initial")
 
         let signature = try await keys.getKey(for: "initial").sign(message)
 
         let params = ec.parameters!
-        try await keys.addES384(key: ES384PublicKey(parameters: params), kid: "params")
+        try await keys.addECDSA(key: ES384PublicKey(parameters: params), kid: "params")
         try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p384)
     }
@@ -264,12 +266,12 @@ final class ECDSATests: XCTestCase {
         let message = "test".bytes
 
         let ec = ES512PrivateKey()
-        let keys = await JWTKeyCollection().addES512(key: ec, kid: "initial")
+        let keys = await JWTKeyCollection().addECDSA(key: ec, kid: "initial")
 
         let signature = try await keys.getKey(for: "initial").sign(message)
 
         let params = ec.parameters!
-        try await keys.addES512(key: ES512PublicKey(parameters: params), kid: "params")
+        try await keys.addECDSA(key: ES512PublicKey(parameters: params), kid: "params")
         try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p521)
     }

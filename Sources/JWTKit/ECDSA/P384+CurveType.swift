@@ -16,6 +16,11 @@ extension P384: ECDSACurveType, @unchecked Sendable {
     /// - The X coordinate spans bytes 1 through 48.
     /// - The Y coordinate spans bytes 49 through 96.
     public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 49, 49 ..< 97)
+
+    public enum SigningAlgorithm: ECDSASigningAlgorithm {
+        public static let name = "ES384"
+        public static let digestAlgorithm: DigestAlgorithm = .sha384
+    }
 }
 
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable

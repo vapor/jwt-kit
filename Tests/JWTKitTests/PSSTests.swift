@@ -4,14 +4,14 @@ import XCTest
 final class PSSTests: XCTestCase {
     func testPSSDocs() async throws {
         await XCTAssertNoThrowAsync(
-            try await JWTKeyCollection().addPS256(key: Insecure.RSA.PublicKey(pem: publicKey))
+            try await JWTKeyCollection().addPSS(key: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256)
         )
     }
 
     func testSigning() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .addPS256(key: Insecure.RSA.PrivateKey(pem: privateKey), kid: "private")
-            .addPS256(key: Insecure.RSA.PublicKey(pem: publicKey), kid: "public")
+            .addPSS(key: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256, kid: "private")
+            .addPSS(key: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -26,7 +26,7 @@ final class PSSTests: XCTestCase {
 
     func testSigningWithPublic() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .addPS256(key: Insecure.RSA.PublicKey(pem: publicKey), kid: "public")
+            .addPSS(key: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -44,7 +44,7 @@ final class PSSTests: XCTestCase {
         }
         struct Payload: JWTPayload {
             var foo: String
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }
@@ -52,8 +52,8 @@ final class PSSTests: XCTestCase {
         }
 
         let keyCollection = try await JWTKeyCollection()
-            .addPS256(key: Insecure.RSA.PrivateKey(pem: privateKey), kid: "private")
-            .addPS256(key: Insecure.RSA.PublicKey(pem: publicKey), kid: "public")
+            .addPSS(key: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256, kid: "private")
+            .addPSS(key: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
 
         do {
             let token = try await keyCollection.sign(Payload(foo: "qux"), header: ["kid": "private"])
@@ -92,7 +92,7 @@ final class PSSTests: XCTestCase {
         let token = "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.dCaprjSiEw1w_cS2JzjWlp1mxdF9MV86VMylKiEZf6gM8NZhNo3hgnI3Gg7G_WL_bSzys9Z0QtNpWZeW1Mooa29qDqZolQLKbzyjiIMDFBslz_Hei-tI5318UdFLKIlMT0VyDThwFjyPCiVEvOkKokWSXXGZCHArGXouTWvaTND9C0gOMwSkE8cHU7e0u-_pDEfdv9MRQiGy1Wj-9T_ZN6a0g8yFMQcOU6voo-WSY-m98oylYOifiOighitlD0xNScDnxBH5Qp7yyU81m-s2-xoYVQJhGduvi8mxbo_bU48WIJfmdAYX3aAUh_xpvgcd55bdeMT55G_qnkDBDSLvbQ"
 
         let keyCollection = try await JWTKeyCollection()
-            .addPS256(key: Insecure.RSA.PublicKey(pem: publicKey), kid: "public")
+            .addPSS(key: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(payload.sub.value, "1234567890")
