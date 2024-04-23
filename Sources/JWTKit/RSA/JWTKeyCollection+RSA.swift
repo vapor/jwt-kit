@@ -28,7 +28,7 @@ public extension JWTKeyCollection {
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        let name = switch digestAlgorithm {
+        let name = switch digestAlgorithm.backing {
         case .sha256:
             "RS256"
         case .sha384:
@@ -74,7 +74,7 @@ public extension JWTKeyCollection {
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        let name = switch digestAlgorithm {
+        let name = switch digestAlgorithm.backing {
         case .sha256:
             "PS256"
         case .sha384:

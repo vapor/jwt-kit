@@ -98,7 +98,7 @@ public extension JWTKeyCollection {
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        switch digestAlgorithm {
+        switch digestAlgorithm.backing {
         case .sha256:
             add(.init(algorithm: HMACSigner<SHA256>(key: key, name: "HS256"), parser: parser, serializer: serializer), for: kid)
         case .sha384:
