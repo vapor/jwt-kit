@@ -29,7 +29,7 @@ The table below shows a list of JWTKit major releases alongside their compatible
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0")
+.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-beta.3")
 ```
 
 and add it to your target's dependencies:
@@ -90,7 +90,7 @@ To add a signing key to the collection, use the `add` method for the respective 
 
 ```swift
 // Registers an HS256 (HMAC-SHA-256) signer.
-await keys.addHS256(key: "secret")
+await keys.addHMAC(key: "secret", digestAlgorithm: .sha256)
 ```
 
 This example uses the _very_ secure key `"secret"`.
@@ -99,7 +99,7 @@ You can also add an optional key identifier (`kid`) to the key:
 
 ```swift
 // Registers an HS256 (HMAC-SHA-256) signer with a key identifier.
-await keys.addHS256(key: "secret", kid: "my-key")
+await keys.addHMAC(key: "secret", digestAlgorithm: .sha256, kid: "my-key")
 ```
 
 This is useful when you have multiple keys and need to select the correct one for verification. Based on the `kid` defined in the JWT header, the correct key will be selected for verification.
@@ -117,7 +117,7 @@ struct ExamplePayload: JWTPayload {
     var exp: ExpirationClaim
     var admin: BoolClaim
 
-    func verify(using key: JWTAlgorithm) throws {
+    func verify(using key: some JWTAlgorithm) throws {
         try self.exp.verifyNotExpired()
     }
 }
@@ -210,7 +210,7 @@ To add an HMAC key to the key collection, use the `addHS256`, `addHS384`, or `ad
 
 ```swift
 // Add HMAC with SHA-256 signer.
-await keys.addHS256(key: "secret")
+await keys.addHMAC(key: "secret", digestAlgorithm: .sha256)
 ```
 
 > [!IMPORTANT]  
@@ -238,7 +238,7 @@ Once you have an ECDSA key, you can add to the key collection using the followin
 
 ```swift
 // Add ECDSA with SHA-256 algorithm
-await keys.addES256(key: key)
+await keys.addECDSA(key: key)
 ```
 
 ## EdDSA
@@ -303,10 +303,10 @@ Once you have an RSA key, you can add to the key collection using the following 
 
 ```swift
 // Add RSA with SHA-256 algorithm 
-await keys.addRS256(key: key)
+await keys.addRSA(key: key, digestAlgorithm: .sha256)
 
 // Add RSA with SHA-256 and PSS padding algorithm
-await keys.addPS256(key: key)
+await keys.addPSS(key: key, digestAlgorithm: .sha256)
 ```
 
 ## Claims
@@ -384,8 +384,12 @@ struct CustomParser: JWTParser {
 And then use them like this:
 
 ```swift
-let keyCollection = await JWTKeyCollection()
-    .addHS256(key: "secret", parser: CustomParser(), serializer: CustomSerializer())
+let keyCollection = await JWTKeyCollection().addHMAC(
+    key: "secret", 
+    digestAlgorithm: .sha256,
+    parser: CustomParser(), 
+    serializer: CustomSerializer()
+)
 
 let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
 
@@ -403,8 +407,12 @@ let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
 let parser = DefaultJWTParser(jsonDecoder: decoder)
 let serializer = DefaultJWTSerializer(jsonEncoder: encoder)
 
-let keyCollection = await JWTKeyCollection()
-    .addHS256(key: "secret", parser: parser, serializer: serializer)
+let keyCollection = await JWTKeyCollection().addHMAC(
+    key: "secret",
+    digestAlgorithm: .sha256,
+    parser: parser, 
+    serializer: serializer
+)
 ```
 
 ---
