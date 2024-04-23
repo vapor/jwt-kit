@@ -30,7 +30,7 @@ class JWTKitTests: XCTestCase {
             //
             // Since we have an ExpirationClaim, we will
             // call its verify method.
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 try expiration.verifyNotExpired()
             }
         }
@@ -133,7 +133,7 @@ class JWTKitTests: XCTestCase {
             var admin: Bool
             var iat: IssuedAtClaim
 
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 // no verifiable claims
             }
         }
@@ -236,7 +236,7 @@ class JWTKitTests: XCTestCase {
         }
         struct Payload: JWTPayload {
             let foo: String
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }
@@ -275,7 +275,7 @@ class JWTKitTests: XCTestCase {
         )
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
         let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
@@ -515,7 +515,6 @@ class JWTKitTests: XCTestCase {
 
     func testCustomObjectHeader() async throws {
         let keyCollection = await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256)
-
         let customFields: JWTHeader = [
             "kid": "some-kid",
             "foo": ["bar": "baz"],
@@ -565,7 +564,7 @@ struct BadBoolPayload: Decodable {
 struct ExpirationPayload: JWTPayload {
     var exp: ExpirationClaim
 
-    func verify(using _: JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         try exp.verifyNotExpired()
     }
 }
@@ -639,7 +638,7 @@ struct FirebasePayload: JWTPayload, Equatable {
     let issuedAt: IssuedAtClaim
     let expiration: ExpirationClaim
 
-    func verify(using _: JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         try expiration.verifyNotExpired(currentDate: .distantPast)
     }
 }

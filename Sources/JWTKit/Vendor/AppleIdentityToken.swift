@@ -82,7 +82,7 @@ public struct AppleIdentityToken: JWTPayload {
         self.realUserStatus = realUserStatus
     }
 
-    public func verify(using _: JWTAlgorithm) throws {
+    public func verify(using _: some JWTAlgorithm) throws {
         guard self.issuer.value == "https://appleid.apple.com" else {
             throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Apple")
         }

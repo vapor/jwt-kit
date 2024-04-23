@@ -81,7 +81,7 @@ final class ECDSATests: XCTestCase {
     func testVerifyingECDSAKeyUsingJWK() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
 
         // ecdsa key
@@ -119,7 +119,7 @@ final class ECDSATests: XCTestCase {
     func testVerifyingECDSAKeyUsingJWKBase64URL() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
 
         // ecdsa key in base64url format
@@ -158,7 +158,7 @@ final class ECDSATests: XCTestCase {
     func testVerifyingECDSAKeyUsingJWKWithMixedBase64Formats() async throws {
         struct Foo: JWTPayload {
             var bar: Int
-            func verify(using _: JWTAlgorithm) throws {}
+            func verify(using _: some JWTAlgorithm) throws {}
         }
 
         // ecdsa key in base64url format
@@ -200,7 +200,7 @@ final class ECDSATests: XCTestCase {
         }
         struct Payload: JWTPayload {
             let foo: String
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }

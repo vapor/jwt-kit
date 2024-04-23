@@ -147,7 +147,7 @@ final class X5CTests: XCTestCase {
             let signedDate: Date
             let notificationType: String
 
-            func verify(using _: JWTAlgorithm) async throws {}
+            func verify(using _: some JWTAlgorithm) async throws {}
         }
 
         let verifier = try X5CVerifier(rootCertificates: [cert])
@@ -370,7 +370,7 @@ let intermediate = try! Certificate(derEncoded: Array(Data(base64Encoded: "MIIBn
 private struct TokenPayload: JWTPayload {
     var cool: BoolClaim
 
-    func verify(using _: JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         if !cool.value {
             throw JWTError.claimVerificationFailure(failedClaim: cool, reason: "not cool")
         }
