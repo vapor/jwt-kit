@@ -36,7 +36,7 @@ class JWTKitTests: XCTestCase {
         }
 
         let keyCollection = await JWTKeyCollection()
-            .addHS256(key: "secret")
+            .addHMAC(key: "secret", digestAlgorithm: .sha256)
 
         do {
             let jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo"
@@ -57,7 +57,7 @@ class JWTKitTests: XCTestCase {
     func testParse() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
 
-        let test = try await JWTKeyCollection().addHS256(key: "secret".bytes)
+        let test = try await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256)
             .verify(data, as: TestPayload.self)
 
         XCTAssertEqual(test.name, "John Doe")
@@ -69,7 +69,7 @@ class JWTKitTests: XCTestCase {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MX0.-x_DAYIg4R4R9oZssqgWyJP_oWO1ESj8DgKrGCk7i5o"
 
         do {
-            _ = try await JWTKeyCollection().addHS256(key: "secret".bytes)
+            _ = try await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256)
                 .verify(data, as: TestPayload.self)
         } catch let error as JWTError {
             XCTAssertEqual(error.errorType, .claimVerificationFailure)
@@ -81,14 +81,14 @@ class JWTKitTests: XCTestCase {
     func testExpirationDecoding() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwMDAwMDAwMDB9.JgCO_GqUQnbS0z2hCxJLE9Tpt5SMoZObHBxzGBWuTYQ"
 
-        let test = try await JWTKeyCollection().addHS256(key: "secret".bytes)
+        let test = try await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256)
             .verify(data, as: ExpirationPayload.self)
         XCTAssertEqual(test.exp.value, Date(timeIntervalSince1970: 2_000_000_000))
     }
 
     func testSigners() async throws {
         let data = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZvbyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5OTl9.Gf7leJ8i30LmMI7GBTpWDMXV60y1wkTOCOBudP9v9ms"
-        let keyCollection = await JWTKeyCollection().addHS256(key: "bar".bytes, kid: "foo")
+        let keyCollection = await JWTKeyCollection().addHMAC(key: "bar".bytes, digestAlgorithm: .sha256, kid: "foo")
         let payload = try await keyCollection.verify(data, as: TestPayload.self)
         XCTAssertEqual(payload.name, "John Doe")
     }
@@ -139,7 +139,8 @@ class JWTKitTests: XCTestCase {
         }
 
         // create public key signer (verifier)
-        let keyCollection = try await JWTKeyCollection().addES256(key: ES256PublicKey(pem: publicKey.bytes))
+        let keyCollection = try await JWTKeyCollection()
+            .addECDSA(key: ES256PublicKey(pem: publicKey.bytes))
 
         // decode jwt and test payload contents
         let jwt = try await keyCollection.verify(token, as: JWTioPayload.self)
@@ -242,7 +243,7 @@ class JWTKitTests: XCTestCase {
             }
         }
 
-        let keyCollection = await JWTKeyCollection().addES256(key: ES256PrivateKey())
+        let keyCollection = await JWTKeyCollection().addECDSA(key: ES256PrivateKey())
         do {
             let token = try await keyCollection.sign(Payload(foo: "qux"))
             _ = try await keyCollection.verify(token, as: Payload.self)
@@ -263,11 +264,15 @@ class JWTKitTests: XCTestCase {
         let privateExponent = "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
 
         // sign jwt
-        let keyCollection = try await JWTKeyCollection().addRS256(key: Insecure.RSA.PrivateKey(
-            modulus: modulus,
-            exponent: exponent,
-            privateExponent: privateExponent
-        ), kid: "vapor")
+        let keyCollection = try await JWTKeyCollection().addRSA(
+            key: Insecure.RSA.PrivateKey(
+                modulus: modulus,
+                exponent: exponent,
+                privateExponent: privateExponent
+            ),
+            digestAlgorithm: .sha256,
+            kid: "vapor"
+        )
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: some JWTAlgorithm) throws {}
@@ -300,7 +305,7 @@ class JWTKitTests: XCTestCase {
 
     func testFirebaseJWTAndCertificate() async throws {
         let payload = try await JWTKeyCollection()
-            .addRS256(key: Insecure.RSA.PublicKey(certificatePEM: firebaseCert))
+            .addRSA(key: Insecure.RSA.PublicKey(certificatePEM: firebaseCert), digestAlgorithm: .sha256)
             .verify(firebaseJWT, as: FirebasePayload.self)
         XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
@@ -355,7 +360,7 @@ class JWTKitTests: XCTestCase {
         struct CustomParser: JWTParser {
             var jsonDecoder: JWTJSONDecoder = .defaultForJWT
 
-            func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
+            func parse<Payload>(_ token: some DataProtocol, as _: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
                 let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
                 let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
@@ -373,7 +378,7 @@ class JWTKitTests: XCTestCase {
         }
 
         let keyCollection = await JWTKeyCollection()
-            .addHS256(key: "secret", parser: CustomParser(), serializer: CustomSerializer())
+            .addHMAC(key: "secret", digestAlgorithm: .sha256, parser: CustomParser(), serializer: CustomSerializer())
 
         let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
 
@@ -385,7 +390,7 @@ class JWTKitTests: XCTestCase {
     func testJWKEncoding() async throws {
         let jwkIdentifier = JWKIdentifier(string: "vapor")
         let data = try JSONEncoder().encode(jwkIdentifier)
-        let string = String(decoding: data, as: UTF8.self)
+        let string = String(data: data, encoding: .utf8)!
         XCTAssertEqual(string, "\"vapor\"")
     }
 
@@ -415,7 +420,7 @@ class JWTKitTests: XCTestCase {
     }
 
     func testCustomHeaderFields() async throws {
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
+        let keyCollection = await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256)
 
         let payload = TestPayload(
             sub: "vapor",
@@ -445,12 +450,12 @@ class JWTKitTests: XCTestCase {
         let jsonDecoder = JSONDecoder()
         XCTAssertEqual(
             try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
-            try jsonDecoder.decode([String: JWTHeaderField].self, from: Data(jsonFields.utf8))
+            try jsonDecoder.decode([String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
         )
     }
 
     func testSampleOpenbankingHeader() async throws {
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
+        let keyCollection = await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256)
 
         // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
         let customFields: JWTHeader = [
@@ -490,8 +495,8 @@ class JWTKitTests: XCTestCase {
         let key = ES256PrivateKey()
 
         let keyCollection = await JWTKeyCollection()
-            .addES256(key: key, kid: "private")
-            .addES256(key: key.publicKey, kid: "public")
+            .addECDSA(key: key, kid: "private")
+            .addECDSA(key: key.publicKey, kid: "public")
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
@@ -509,8 +514,7 @@ class JWTKitTests: XCTestCase {
     }
 
     func testCustomObjectHeader() async throws {
-        let keyCollection = await JWTKeyCollection().addHS256(key: "secret".bytes)
-
+        let keyCollection = await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256)
         let customFields: JWTHeader = [
             "kid": "some-kid",
             "foo": ["bar": "baz"],
@@ -541,7 +545,7 @@ struct LocalePayload: Codable {
 
 extension LocalePayload {
     static func from(_ string: String) throws -> LocalePayload {
-        let data = Data(string.utf8)
+        let data = string.data(using: .utf8)!
         return try JSONDecoder().decode(LocalePayload.self, from: data)
     }
 }
