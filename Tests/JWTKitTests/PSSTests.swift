@@ -44,7 +44,7 @@ final class PSSTests: XCTestCase {
         }
         struct Payload: JWTPayload {
             var foo: String
-            func verify(using _: JWTAlgorithm) throws {
+            func verify(using _: some JWTAlgorithm) throws {
                 guard foo == "bar" else {
                     throw NotBar(foo: foo)
                 }
