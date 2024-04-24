@@ -11,7 +11,7 @@
 <a href="LICENSE"><img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License"></a>
 <a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/vapor/jwt-kit/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration"></a>
 <a href="https://codecov.io/github/vapor/jwt-kit"><img src="https://img.shields.io/codecov/c/github/vapor/jwt-kit?style=plastic&logo=codecov&label=codecov"></a>
-<a href="https://swift.org"><img src="https://design.vapor.codes/images/swift59up.svg" alt="Swift 5.9+"></a>
+<a href="https://swift.org"><img src="https://design.vapor.codes/images/swift510up.svg" alt="Swift 5.10+"></a>
 <a href="https://www.swift.org/sswg/incubation-process.html"><img src="https://design.vapor.codes/images/sswg-graduated.svg" alt="SSWG Incubation Level: Graduated"></a>
 </p>
 <br>
@@ -24,7 +24,7 @@ The table below shows a list of JWTKit major releases alongside their compatible
 
 |Version|Swift|SPM|
 |---|---|---|
-|5.0|5.9+|`from: "5.0.0"`|
+|5.0|5.10+|`from: "5.0.0"`|
 
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
@@ -42,7 +42,7 @@ and add it to your target's dependencies:
 
 ### Supported Platforms
 
-JWTKit supports all platforms supported by Swift 5.9 and later, with the exception of Windows.
+JWTKit supports all platforms supported by Swift 5.10 and later, with the exception of Windows.
 
 ## Overview
 
