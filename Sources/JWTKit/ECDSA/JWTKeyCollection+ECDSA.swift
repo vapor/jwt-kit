@@ -19,8 +19,8 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func addECDSA(
-        key: some ECDSAKey,
+    func add(
+        ecdsa key: some ECDSAKey,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
