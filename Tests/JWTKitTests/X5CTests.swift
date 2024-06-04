@@ -207,7 +207,7 @@ final class X5CTests: XCTestCase {
     }
 
     func testSigningWithX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection().add(ecdsa: ES256PrivateKey(pem: x5cLeafCertKey))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -227,7 +227,7 @@ final class X5CTests: XCTestCase {
     }
 
     func testSigningWithInvalidX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().addECDSA(key: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection().add(ecdsa: ES256PrivateKey(pem: x5cLeafCertKey))
 
         let payload = TestPayload(
             sub: "vapor",

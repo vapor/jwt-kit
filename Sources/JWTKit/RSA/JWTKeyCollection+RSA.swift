@@ -21,8 +21,8 @@ public extension JWTKeyCollection {
     ///       If `nil`, a default decoder is used.
     ///   - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
-    func addRSA(
-        key: some RSAKey,
+    func add(
+        rsa key: some RSAKey,
         digestAlgorithm: DigestAlgorithm,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
@@ -67,8 +67,8 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
-    func addPSS(
-        key: some RSAKey,
+    func add(
+        pss key: some RSAKey,
         digestAlgorithm: DigestAlgorithm,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),

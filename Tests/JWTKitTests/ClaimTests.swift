@@ -72,7 +72,7 @@ final class ClaimTests: XCTestCase {
     func testExpirationEncoding() async throws {
         let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
         let parser = DefaultJWTParser()
-        let keyCollection = await JWTKeyCollection().addHMAC(key: "secret".bytes, digestAlgorithm: .sha256, parser: parser)
+        let keyCollection = await JWTKeyCollection().add(hmac: .init(from: "secret".bytes), digestAlgorithm: .sha256, parser: parser)
         let jwt = try await keyCollection.sign(ExpirationPayload(exp: exp))
         let parsed = try parser.parse(jwt.bytes, as: ExpirationPayload.self)
         let header = parsed.header
