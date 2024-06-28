@@ -1,4 +1,5 @@
 import Foundation
+import Logging
 
 /// A collection of JWT and JWK signers for handling JSON Web Tokens (JWTs).
 ///
@@ -19,6 +20,8 @@ public actor JWTKeyCollection: Sendable {
     /// Whether the collection should iterate over all keys when verifying a JWT.
     let shouldIterateKeys: Bool
 
+    let logger: Logger
+
     /// Creates a new empty Signers collection.
     /// - parameters:
     ///    - shouldIterateKeys: Whether the collection should iterate over all keys when verifying a JWT.
@@ -27,12 +30,14 @@ public actor JWTKeyCollection: Sendable {
     public init(
         shouldIterateKeys: Bool = false,
         defaultJWTParser: some JWTParser = DefaultJWTParser(),
-        defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer()
+        defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer(),
+        logger: Logger = Logger(label: "jwt_kit_do_not_log", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
         self.storage = [:]
         self.shouldIterateKeys = shouldIterateKeys
         self.defaultJWTParser = defaultJWTParser
         self.defaultJWTSerializer = defaultJWTSerializer
+        self.logger = logger
     }
 
     /// Adds a ``JWTSigner`` to the collection, optionally associating it with a specific key identifier (KID).
@@ -49,12 +54,12 @@ public actor JWTKeyCollection: Sendable {
 
         if let kid {
             if self.storage[kid] != nil {
-                print("Warning: Overwriting existing JWT signer for key identifier '\(kid)'.")
+                logger.warning("Overwriting existing JWT signer", metadata: ["kid": "\(kid)"])
             }
             self.storage[kid] = .jwt(signer)
         } else {
             if self.default != nil {
-                print("Warning: Overwriting existing default JWT signer.")
+                logger.warning("Overwriting existing default JWT signer")
             }
             self.default = .jwt(signer)
         }
