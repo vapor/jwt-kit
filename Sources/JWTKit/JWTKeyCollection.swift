@@ -16,11 +16,12 @@ public actor JWTKeyCollection: Sendable {
     public let defaultJWTParser: any JWTParser
     public let defaultJWTSerializer: any JWTSerializer
 
-    /// Whether the collection should iterate over all signers when verifying a JWT.
+    /// Whether the collection should iterate over all keys when verifying a JWT.
     let shouldIterateKeys: Bool
 
     /// Creates a new empty Signers collection.
     /// - parameters:
+    ///    - shouldIterateKeys: Whether the collection should iterate over all keys when verifying a JWT.
     ///    - jsonEncoder: The default JSON encoder.
     ///    - jsonDecoder: The default JSON decoder.
     public init(
@@ -218,20 +219,15 @@ public actor JWTKeyCollection: Sendable {
         do {
             return try await signer.verify(token)
         } catch {
-            if shouldIterateKeys == false {
-                throw error
-            } else {
+            if self.shouldIterateKeys {
                 for (kid, _) in self.storage {
                     do {
                         signer = try self.getSigner(for: kid, alg: header.alg)
                         return try await signer.verify(token)
-                    } catch {
-                        continue
-                    }
+                    } catch {}
                 }
-
-                throw error
             }
+            throw error
         }
     }
 

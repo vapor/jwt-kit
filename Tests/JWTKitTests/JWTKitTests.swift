@@ -534,7 +534,7 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(foo, ["bar": "baz"])
     }
 
-    func testDifferentJWTsWithNonIteratingKeys() async throws {
+    func testKeyCollectionIteration() async throws {
         let hmacToken = """
         eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.GW-OvOyauZXQeFuzFHRFL7saTXJrudGQ_qHtpbVWW9Y
         """
@@ -564,16 +564,16 @@ class JWTKitTests: XCTestCase {
             guard let error = $0 as? JWTError else { return }
             XCTAssertEqual(error.errorType, .signatureVerificationFailed)
         }
-        
+
         // If we instead create an iterating key collection,
         // the test should succeed.
         let iteratingKeyCollection = await JWTKeyCollection(shouldIterateKeys: true)
             .add(hmac: "secret", digestAlgorithm: .sha256, kid: "hmac")
             .add(ecdsa: ecdsaPrivateKey, kid: "ecdsa")
-        
+
         let hmacIteratinglyVerified = try await iteratingKeyCollection.verify(hmacToken, as: TestPayload.self)
         XCTAssertEqual(hmacIteratinglyVerified.sub, "1234567890")
-        
+
         let ecdsaIteratinglyVerified = try await iteratingKeyCollection.verify(ecdsaToken, as: TestPayload.self)
         XCTAssertEqual(ecdsaIteratinglyVerified.sub, "1234567890")
     }
