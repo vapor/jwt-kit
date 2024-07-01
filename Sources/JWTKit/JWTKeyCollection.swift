@@ -224,8 +224,8 @@ public actor JWTKeyCollection: Sendable {
         do {
             return try await signer.verify(token)
         } catch {
-            if self.shouldIterateKeys {
-                for (kid, _) in self.storage {
+            if self.shouldIterateKeys == true {
+                for (_kid, _) in self.storage where _kid != kid {
                     do {
                         signer = try self.getSigner(for: kid, alg: header.alg)
                         return try await signer.verify(token)
