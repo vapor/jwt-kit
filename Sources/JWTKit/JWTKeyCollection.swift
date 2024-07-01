@@ -17,9 +17,6 @@ public actor JWTKeyCollection: Sendable {
     public let defaultJWTParser: any JWTParser
     public let defaultJWTSerializer: any JWTSerializer
 
-    /// Whether the collection should iterate over all keys when verifying a JWT.
-    let shouldIterateKeys: Bool
-
     let logger: Logger
 
     /// Creates a new empty Signers collection.
@@ -28,13 +25,11 @@ public actor JWTKeyCollection: Sendable {
     ///    - jsonEncoder: The default JSON encoder.
     ///    - jsonDecoder: The default JSON decoder.
     public init(
-        shouldIterateKeys: Bool = false,
         defaultJWTParser: some JWTParser = DefaultJWTParser(),
         defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer(),
         logger: Logger = Logger(label: "jwt_kit_do_not_log", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
         self.storage = [:]
-        self.shouldIterateKeys = shouldIterateKeys
         self.defaultJWTParser = defaultJWTParser
         self.defaultJWTSerializer = defaultJWTSerializer
         self.logger = logger
@@ -198,11 +193,12 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: String,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        iteratingKeys: Bool = false
     ) async throws -> Payload
         where Payload: JWTPayload
     {
-        try await self.verify([UInt8](token.utf8), as: Payload.self)
+        try await self.verify([UInt8](token.utf8), as: Payload.self, iteratingKeys: iteratingKeys)
     }
 
     /// Verifies and decodes a JWT token to extract the payload.
@@ -213,7 +209,8 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: some DataProtocol & Sendable,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        iteratingKeys: Bool = false
     ) async throws -> Payload
         where Payload: JWTPayload
     {
@@ -224,10 +221,10 @@ public actor JWTKeyCollection: Sendable {
         do {
             return try await signer.verify(token)
         } catch {
-            if self.shouldIterateKeys == true {
+            if iteratingKeys == true {
                 for (_kid, _) in self.storage where _kid != kid {
                     do {
-                        signer = try self.getSigner(for: kid, alg: header.alg)
+                        signer = try self.getSigner(for: _kid, alg: header.alg)
                         return try await signer.verify(token)
                     } catch {}
                 }

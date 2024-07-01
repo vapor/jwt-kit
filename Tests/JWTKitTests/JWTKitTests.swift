@@ -565,16 +565,10 @@ class JWTKitTests: XCTestCase {
             XCTAssertEqual(error.errorType, .signatureVerificationFailed)
         }
 
-        // If we instead create an iterating key collection,
-        // the test should succeed.
-        let iteratingKeyCollection = await JWTKeyCollection(shouldIterateKeys: true)
-            .add(hmac: "secret", digestAlgorithm: .sha256, kid: "hmac")
-            .add(ecdsa: ecdsaPrivateKey, kid: "ecdsa")
-
-        let hmacIteratinglyVerified = try await iteratingKeyCollection.verify(hmacToken, as: TestPayload.self)
+        let hmacIteratinglyVerified = try await keyCollection.verify(hmacToken, as: TestPayload.self, iteratingKeys: true)
         XCTAssertEqual(hmacIteratinglyVerified.sub, "1234567890")
 
-        let ecdsaIteratinglyVerified = try await iteratingKeyCollection.verify(ecdsaToken, as: TestPayload.self)
+        let ecdsaIteratinglyVerified = try await keyCollection.verify(ecdsaToken, as: TestPayload.self, iteratingKeys: true)
         XCTAssertEqual(ecdsaIteratinglyVerified.sub, "1234567890")
     }
 }
