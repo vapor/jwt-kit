@@ -139,10 +139,7 @@ HMAC is the simplest JWT signing algorithm. It uses a single key that can both s
 
 To add an HMAC key to the key collection, use the `addHS256`, `addHS384`, or `addHS512` methods:
 
-```swift
-// Add HMAC with SHA-256 signer.
-await keys.addHS256(key: "secret")
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_ADD_HS256)
 
 > Important:
 > Cryptography is a complex topic, and the decision of algorithm can directly impact the integrity, security, and privacy of your data. This README does not attempt to offer a meaningful discussion of these concerns; the package authors recommend doing your own research before making a final decision.
@@ -154,12 +151,7 @@ It uses a public key to verify tokens and a private key to sign them.
 
 You can load ECDSA keys using PEM files:
 
-```swift
-let ecdsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
-
-// Initialize an ECDSA key with public pem.
-let key = try ES256PublicKey(pem: ecdsaPublicKey)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_CREATE_ES256)
 
 Once you have an ECDSA key, you can add to the key collection using the following methods:
 
@@ -167,10 +159,7 @@ Once you have an ECDSA key, you can add to the key collection using the followin
 - `addES384`: ECDSA with SHA-384
 - `addES512`: ECDSA with SHA-512
 
-```swift
-// Add ECDSA with SHA-256 algorithm
-await keys.addES256(key: key)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_ADD_ES256)
 
 ## EdDSA
 
@@ -178,19 +167,7 @@ EdDSA is a modern algorithm that is considered to be more secure than RSA and EC
 
 You can create an EdDSA key using its coordinates:
 
-```swift
-// Initialize an EdDSA key with public PEM
-let publicKey = try EdDSA.PublicKey(x: "...", curve: .ed25519)
-
-// Initialize an EdDSA key with private PEM
-let privateKey = try EdDSA.PrivateKey(x: "...", d: "...", curve: .ed25519)
-
-// Add public key to the key collection
-await keys.addEdDSA(key: publicKey)
-
-// Add private key to the key collection
-await keys.addEdDSA(key: privateKey)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: EDDSA)
 
 ## RSA
 
@@ -202,25 +179,13 @@ RSA is an asymmetric algorithm. It uses a public key to verify tokens and a priv
 
 To create an RSA signer, first initialize an `RSAKey`. This can be done by passing in the components:
 
-```swift
-// Initialize an RSA key with components.
-let key = try Insecure.RSA.PrivateKey(
-    modulus: "...",
-    exponent: "...",
-    privateExponent: "..."
-)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA)
 
 The same initializer can be used for public keys without the `privateExponent` parameter.
 
 You can also choose to load a PEM file:
 
-```swift
-let rsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
-
-// Initialize an RSA key with public PEM
-let key = try Insecure.RSA.PublicKey(pem: rsaPublicKey)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA_FROM_PEM)
 
 Use `Insecure.RSA.PrivateKey(pem:)` for loading private RSA pem keys and `Insecure.RSA.PublicKey(certificatePEM:)` for loading X.509 certificates.
 Once you have an RSA key, you can add to the key collection using the following methods depending on the digest and the padding:
@@ -232,13 +197,7 @@ Once you have an RSA key, you can add to the key collection using the following 
 - `addPS384`: RSA with SHA-384 and PSS padding
 - `addPS512`: RSA with SHA-512 and PSS padding
 
-```swift
-// Add RSA with SHA-256 algorithm
-await keys.addRS256(key: key)
-
-// Add RSA with SHA-256 and PSS padding algorithm
-await keys.addPS256(key: key)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA_ADD)
 
 ## Claims
 
