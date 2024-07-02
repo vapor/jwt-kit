@@ -21,7 +21,6 @@ public actor JWTKeyCollection: Sendable {
 
     /// Creates a new empty Signers collection.
     /// - parameters:
-    ///    - shouldIterateKeys: Whether the collection should iterate over all keys when verifying a JWT.
     ///    - jsonEncoder: The default JSON encoder.
     ///    - jsonDecoder: The default JSON decoder.
     public init(
@@ -189,6 +188,8 @@ public actor JWTKeyCollection: Sendable {
     ///
     /// - Parameters:
     ///   - token: A JWT token string.
+    ///   - as: The type of payload to decode.
+    ///   - iteratingKeys: Whether to try verifying the token with all keys in the collection.
     /// - Throws: An error if the token cannot be verified or decoded.
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
@@ -205,6 +206,8 @@ public actor JWTKeyCollection: Sendable {
     ///
     /// - Parameters:
     ///   - token: A JWT token.
+    ///   - as: The type of payload to decode.
+    ///   - iteratingKeys: Whether to try verifying the token with all keys in the collection.
     /// - Throws: An error if the token cannot be verified or decoded.
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
