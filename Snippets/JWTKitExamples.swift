@@ -108,3 +108,85 @@ do
     await keys.add(pss: key, digestAlgorithm: .sha256)
     // snippet.end
 }
+
+import Foundation
+
+extension DataProtocol {
+    func base64URLDecodedBytes() -> [UInt8] {
+        let string = String(decoding: self, as: UTF8.self)
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let padding = string.count % 4 == 0 ? "" : String(repeating: "=", count: 4 - string.count % 4)
+        return [UInt8](Data(base64Encoded: string + padding) ?? Data())
+    }
+
+    func base64URLEncodedBytes() -> [UInt8] {
+        Data(self).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+            .utf8
+            .map { UInt8($0) }
+    }
+}
+
+// snippet.CUSTOM_SERIALIZER
+struct CustomSerializer: JWTSerializer {
+    var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+
+    func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
+        if header.b64?.asBool == true {
+            try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
+        } else {
+            try jsonEncoder.encode(payload)
+        }
+    }
+}
+
+struct CustomParser: JWTParser {
+    var jsonDecoder: JWTJSONDecoder = .defaultForJWT
+
+    func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
+        let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
+
+        let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+
+        let payload = if header.b64?.asBool ?? true {
+            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+        } else {
+            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
+        }
+
+        let signature = Data(encodedSignature.base64URLDecodedBytes())
+
+        return (header: header, payload: payload, signature: signature)
+    }
+}
+// snippet.end
+
+do
+{
+    // snippet.CUSTOM_SIGNING
+    let keyCollection = await JWTKeyCollection()
+        .add(hmac: "secret", digestAlgorithm: .sha256, parser: CustomParser(), serializer: CustomSerializer())
+
+    let payload = ExamplePayload(sub: "vapor", exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)), admin: false)
+
+    let token = try await keyCollection.sign(payload, header: ["b64": true])
+    // snippet.end
+    _ = token
+}
+do
+{
+    // snippet.CUSTOM_ENCODING
+    let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+    let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+
+    let parser = DefaultJWTParser(jsonDecoder: decoder)
+    let serializer = DefaultJWTSerializer(jsonEncoder: encoder)
+
+    let keyCollection = await JWTKeyCollection()
+        .add(hmac: "secret", digestAlgorithm: .sha256, parser: parser, serializer: serializer)
+    // snippet.end
+    _ = keyCollection
+}

@@ -229,64 +229,17 @@ The `JWTParser` and `JWTSerializer` protocols allow you to define custom parsing
 
 For example you might need to set the `b64` header to false, which does not base64 encode the payload. You can create your own `JWTParser` and `JWTSerializer` to handle this.
 
-```swift
-struct CustomSerializer: JWTSerializer {
-    var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: CUSTOM_SERIALIZER)
 
-    func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
-        if header.b64?.asBool == true {
-            try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
-        } else {
-            try jsonEncoder.encode(payload)
-        }
-    }
-}
-
-struct CustomParser: JWTParser {
-    var jsonDecoder: JWTJSONDecoder = .defaultForJWT
-
-    func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
-        let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
-
-        let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
-
-        let payload = if header.b64?.asBool ?? true {
-            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
-        } else {
-            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
-        }
-
-        let signature = Data(encodedSignature.base64URLDecodedBytes())
-
-        return (header: header, payload: payload, signature: signature)
-    }
-}
-```
 And then use them like this:
 
-```swift
-let keyCollection = await JWTKeyCollection()
-    .addHS256(key: "secret", parser: CustomParser(), serializer: CustomSerializer())
-
-let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
-
-let token = try await keyCollection.sign(payload, header: ["b64": true])
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: CUSTOM_SIGNING)
 
 ## Custom JSON Encoder and Decoder
 
 If you don't need to specify custom parsing and serializing but you do need to use a custom JSON Encoder or Decoder, you can use the the `DefaultJWTParser` and `DefaultJWTSerializer` types to create a `JWTKeyCollection` with a custom JSON Encoder and Decoder.
 
-```swift
-let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
-let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
-
-let parser = DefaultJWTParser(jsonDecoder: decoder)
-let serializer = DefaultJWTSerializer(jsonEncoder: encoder)
-
-let keyCollection = await JWTKeyCollection()
-    .addHS256(key: "secret", parser: parser, serializer: serializer)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: CUSTOM_ENCODING)
 
 ---
 
