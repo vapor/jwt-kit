@@ -23,6 +23,7 @@ public actor JWTKeyCollection: Sendable {
     /// - parameters:
     ///    - jsonEncoder: The default JSON encoder.
     ///    - jsonDecoder: The default JSON decoder.
+    ///    - logger: The logger to use for logging, defaults to a no-op logger.
     public init(
         defaultJWTParser: some JWTParser = DefaultJWTParser(),
         defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer(),
