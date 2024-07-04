@@ -533,6 +533,44 @@ class JWTKitTests: XCTestCase {
         let foo = try parsed.header.foo?.asObject(of: String.self)
         XCTAssertEqual(foo, ["bar": "baz"])
     }
+
+    func testKeyCollectionIteration() async throws {
+        let hmacToken = """
+        eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.GW-OvOyauZXQeFuzFHRFL7saTXJrudGQ_qHtpbVWW9Y
+        """
+        let ecdsaToken = """
+        eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.bxLwoupZk9MW5Ys650FNn1CpedHBOPKLf9dRVjmETs3KUn4VIfcxSIK7tOEEeuExgpKssRxYEMpLlFyY6jsLRg
+        """
+
+        let ecdsaPrivateKey = try ES256PrivateKey(pem: """
+        -----BEGIN PRIVATE KEY-----
+        MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgevZzL1gdAFr88hb2
+        OF/2NxApJCzGCEDdfSp6VQO30hyhRANCAAQRWz+jn65BtOMvdyHKcvjBeBSDZH2r
+        1RTwjmYSi9R/zpBnuQ4EiMnCqfMPWiZqB4QdbAd0E7oH50VpuZ1P087G
+        -----END PRIVATE KEY-----
+        """)
+
+        let keyCollection = await JWTKeyCollection()
+            .add(hmac: "secret", digestAlgorithm: .sha256, kid: "hmac")
+            .add(ecdsa: ecdsaPrivateKey, kid: "ecdsa")
+
+        let hmacVerified = try await keyCollection.verify(hmacToken, as: TestPayload.self)
+        XCTAssertEqual(hmacVerified.sub, "1234567890")
+
+        // The tokens don't have a KID, which means, since we're not iterating
+        // over all the keys in the key collection, only the default (first added)
+        // signer will be used.
+        await XCTAssertThrowsErrorAsync(try await keyCollection.verify(ecdsaToken, as: TestPayload.self)) {
+            guard let error = $0 as? JWTError else { return }
+            XCTAssertEqual(error.errorType, .signatureVerificationFailed)
+        }
+
+        let hmacIteratinglyVerified = try await keyCollection.verify(hmacToken, as: TestPayload.self, iteratingKeys: true)
+        XCTAssertEqual(hmacIteratinglyVerified.sub, "1234567890")
+
+        let ecdsaIteratinglyVerified = try await keyCollection.verify(ecdsaToken, as: TestPayload.self, iteratingKeys: true)
+        XCTAssertEqual(ecdsaIteratinglyVerified.sub, "1234567890")
+    }
 }
 
 struct AudiencePayload: Codable {
