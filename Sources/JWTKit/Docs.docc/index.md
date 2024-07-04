@@ -8,7 +8,7 @@
 
 ### Major Releases
 
-The table below shows a list of JWTKit major releases alongside their compatible Swift versions. 
+The table below shows a list of JWTKit major releases alongside their compatible Swift versions.
 
 |Version|Swift|SPM|
 |---|---|---|
@@ -26,7 +26,7 @@ and add it to your target's dependencies:
 .product(name: "JWTKit", package: "jwt-kit")
 ```
 
-> Note: Prior to version 4.0, this package was part of [vapor/jwt](https://github.com/vapor/jwt). 
+> Note: Prior to version 4.0, this package was part of [vapor/jwt](https://github.com/vapor/jwt).
 
 ### Supported Platforms
 
@@ -65,30 +65,19 @@ The [vapor/jwt](https://github.com/vapor/jwt) package provides first-class integ
 
 ## Getting Started
 
-A `JWTKeyCollection` object is used to load signing keys and keysets, and to sign and verify tokens: 
+A `JWTKeyCollection` object is used to load signing keys and keysets, and to sign and verify tokens:
 
-```swift
-import JWTKit
-
-// Signs and verifies JWTs
-let keys = JWTKeyCollection()
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION)
 
 To add a signing key to the collection, use the `add` method for the respective algorithm:
 
-```swift
-// Registers an HS256 (HMAC-SHA-256) signer.
-await keys.addHS256(key: "secret")
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_ADD_HS256)
 
 This example uses the _very_ secure key `"secret"`.
 
 You can also add an optional key identifier (`kid`) to the key:
 
-```swift
-// Registers an HS256 (HMAC-SHA-256) signer with a key identifier.
-await keys.addHS256(key: "secret", kid: "my-key")
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_ADD_HS256_KID)
 
 This is useful when you have multiple keys and need to select the correct one for verification. Based on the `kid` defined in the JWT header, the correct key will be selected for verification.
 If you don't provide a `kid`, the key will be added to the collection as default.
@@ -99,32 +88,11 @@ To ensure thread-safety, `JWTKeyCollection` is an `actor`. This means that all o
 
 We can _generate_ JWTs, also known as signing. To demonstrate this, let's create a payload. Each property of the payload type corresponds to a claim in the token. JWTKit provides predefined types for all of the claims specified by RFC 7519, as well as some convenience types for working with custom claims. For the example token, the payload looks like this:
 
-```swift
-struct ExamplePayload: JWTPayload {
-    var sub: SubjectClaim
-    var exp: ExpirationClaim
-    var admin: BoolClaim
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: EXAMPLE_PAYLOAD)
 
-    func verify(using key: JWTAlgorithm) throws {
-        try self.exp.verifyNotExpired()
-    }
-}
+Then, pass the payload to `JWTKeyCollection.sign`.
 
-// Create a new instance of our JWTPayload
-let payload = ExamplePayload(
-    subject: "vapor",
-    expiration: .init(value: .distantFuture),
-    isAdmin: true
-)
-```
-
-Then, pass the payload to `JWTKeyCollection.sign`. 
-
-```swift
-// Sign the payload, returning the JWT as String
-let jwt = try await keys.sign(payload, header: ["kid": "my-key"])
-print(jwt)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: EXAMPLE_PAYLOAD_SIGN)
 
 Here we've added a custom header to the JWT. Any key-value pair can be added to the header. In this case the `kid` will be used to look up the correct key for verification from the `JWTKeyCollection`.
 
@@ -134,21 +102,13 @@ You should see a JWT printed. This can be fed back into the `verify` method to a
 
 Let's try to verify the following example JWT:
 
-```swift
-let exampleJWT = """
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo
-"""
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: VERIFYING)
 
-You can inspect the contents of this token by visiting [jwt.io](https://jwt.io) and pasting the token in the debugger. Set the key in the "Verify Signature" section to `secret`. 
+You can inspect the contents of this token by visiting [jwt.io](https://jwt.io) and pasting the token in the debugger. Set the key in the "Verify Signature" section to `secret`.
 
 To verify a token, the format of the payload must be known. In this case, we know that the payload is of type `ExamplePayload`. Using this payload, the `JWTKeyCollection` object can process and verify the example JWT, returning its payload on success:
 
-```swift
-// Parse the JWT, verifies its signature, and decodes its content
-let payload = try await keys.verify(exampleJWT, as: ExamplePayload.self)
-print(payload)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: VERIFYING_PAYLOAD)
 
 If all works correctly, this code will print something like this:
 
@@ -160,35 +120,18 @@ TestPayload(
 )
 ```
 
-> Note: 
-> The `admin` property of the example payload did not have to use the `BoolClaim` type; a simple `Bool` would have worked as well. The `BoolClaim` type is provided by JWTKit for convenience in working with the many JWT implementations which encode boolean values as JSON strings (e.g. `"true"` and `"false"`) rather than using JSON's `true` and `false` keywords.   
+> Note:
+> The `admin` property of the example payload did not have to use the `BoolClaim` type; a simple `Bool` would have worked as well. The `BoolClaim` type is provided by JWTKit for convenience in working with the many JWT implementations which encode boolean values as JSON strings (e.g. `"true"` and `"false"`) rather than using JSON's `true` and `false` keywords.
 
 ## JWK
 
 A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) data structure that represents a cryptographic key, defined in [RFC7517](https://www.rfc-editor.org/rfc/rfc7517.html). These are commonly used to supply clients with keys for verifying JWTs. For example, Apple hosts their _Sign in with Apple_ JWKS at the URL `https://appleid.apple.com/auth/keys`.
 
-You can add this JSON Web Key Set (JWKS) to your `JWTSigners`: 
+You can add this JSON Web Key Set (JWKS) to your `JWTSigners`:
 
-```swift
-import Foundation
-import JWTKit
+@Snippet(path: "jwt-kit/Snippets/JWKExamples")
 
-let rsaModulus = "..."
-
-let json = """
-{
-    "keys": [
-        {"kty": "RSA", "alg": "RS256", "kid": "a", "n": "\(rsaModulus)", "e": "AQAB"},
-        {"kty": "RSA", "alg": "RS512", "kid": "b", "n": "\(rsaModulus)", "e": "AQAB"},
-    ]
-}
-"""
-
-// Create key collection and add JWKS
-let keys = try await JWTKeyCollection().use(jwksJSON: json)
-```
-
-You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.  
+You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.
 
 ## HMAC
 
@@ -196,10 +139,7 @@ HMAC is the simplest JWT signing algorithm. It uses a single key that can both s
 
 To add an HMAC key to the key collection, use the `addHS256`, `addHS384`, or `addHS512` methods:
 
-```swift
-// Add HMAC with SHA-256 signer.
-await keys.addHS256(key: "secret")
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_ADD_HS256)
 
 > Important:
 > Cryptography is a complex topic, and the decision of algorithm can directly impact the integrity, security, and privacy of your data. This README does not attempt to offer a meaningful discussion of these concerns; the package authors recommend doing your own research before making a final decision.
@@ -209,14 +149,9 @@ await keys.addHS256(key: "secret")
 ECDSA is a modern asymmetric algorithm based on elliptic curve cryptography.
 It uses a public key to verify tokens and a private key to sign them.
 
-You can load ECDSA keys using PEM files: 
+You can load ECDSA keys using PEM files:
 
-```swift
-let ecdsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
-
-// Initialize an ECDSA key with public pem.
-let key = try ES256PublicKey(pem: ecdsaPublicKey)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_CREATE_ES256)
 
 Once you have an ECDSA key, you can add to the key collection using the following methods:
 
@@ -224,10 +159,7 @@ Once you have an ECDSA key, you can add to the key collection using the followin
 - `addES384`: ECDSA with SHA-384
 - `addES512`: ECDSA with SHA-512
 
-```swift
-// Add ECDSA with SHA-256 algorithm
-await keys.addES256(key: key)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: KEY_COLLECTION_ADD_ES256)
 
 ## EdDSA
 
@@ -235,19 +167,7 @@ EdDSA is a modern algorithm that is considered to be more secure than RSA and EC
 
 You can create an EdDSA key using its coordinates:
 
-```swift
-// Initialize an EdDSA key with public PEM
-let publicKey = try EdDSA.PublicKey(x: "...", curve: .ed25519)
-
-// Initialize an EdDSA key with private PEM
-let privateKey = try EdDSA.PrivateKey(x: "...", d: "...", curve: .ed25519)
-
-// Add public key to the key collection
-await keys.addEdDSA(key: publicKey)
-
-// Add private key to the key collection
-await keys.addEdDSA(key: privateKey)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: EDDSA)
 
 ## RSA
 
@@ -259,25 +179,13 @@ RSA is an asymmetric algorithm. It uses a public key to verify tokens and a priv
 
 To create an RSA signer, first initialize an `RSAKey`. This can be done by passing in the components:
 
-```swift
-// Initialize an RSA key with components.
-let key = try Insecure.RSA.PrivateKey(
-    modulus: "...",
-    exponent: "...",
-    privateExponent: "..."
-)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA)
 
 The same initializer can be used for public keys without the `privateExponent` parameter.
 
 You can also choose to load a PEM file:
 
-```swift
-let rsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
-
-// Initialize an RSA key with public PEM
-let key = try Insecure.RSA.PublicKey(pem: rsaPublicKey)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA_FROM_PEM)
 
 Use `Insecure.RSA.PrivateKey(pem:)` for loading private RSA pem keys and `Insecure.RSA.PublicKey(certificatePEM:)` for loading X.509 certificates.
 Once you have an RSA key, you can add to the key collection using the following methods depending on the digest and the padding:
@@ -289,17 +197,11 @@ Once you have an RSA key, you can add to the key collection using the following 
 - `addPS384`: RSA with SHA-384 and PSS padding
 - `addPS512`: RSA with SHA-512 and PSS padding
 
-```swift
-// Add RSA with SHA-256 algorithm 
-await keys.addRS256(key: key)
-
-// Add RSA with SHA-256 and PSS padding algorithm
-await keys.addPS256(key: key)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA_ADD)
 
 ## Claims
 
-JWTKit includes several helpers for implementing the "standard" JWT claims defined by [RFC § 4.1](https://www.rfc-editor.org/rfc/rfc7519.html#section-4.1): 
+JWTKit includes several helpers for implementing the "standard" JWT claims defined by [RFC § 4.1](https://www.rfc-editor.org/rfc/rfc7519.html#section-4.1):
 
 |Claim|Type|Verify Method|
 |---|---|---|
@@ -327,64 +229,17 @@ The `JWTParser` and `JWTSerializer` protocols allow you to define custom parsing
 
 For example you might need to set the `b64` header to false, which does not base64 encode the payload. You can create your own `JWTParser` and `JWTSerializer` to handle this.
 
-```swift
-struct CustomSerializer: JWTSerializer {
-    var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: CUSTOM_SERIALIZER)
 
-    func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
-        if header.b64?.asBool == true {
-            try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
-        } else {
-            try jsonEncoder.encode(payload)
-        }
-    }
-}
-
-struct CustomParser: JWTParser {
-    var jsonDecoder: JWTJSONDecoder = .defaultForJWT
-
-    func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
-        let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
-
-        let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
-
-        let payload = if header.b64?.asBool ?? true {
-            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
-        } else {
-            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
-        }
-
-        let signature = Data(encodedSignature.base64URLDecodedBytes())
-
-        return (header: header, payload: payload, signature: signature)
-    }
-}
-```
 And then use them like this:
 
-```swift
-let keyCollection = await JWTKeyCollection()
-    .addHS256(key: "secret", parser: CustomParser(), serializer: CustomSerializer())
-
-let payload = TestPayload(sub: "vapor", name: "Foo", admin: false, exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
-
-let token = try await keyCollection.sign(payload, header: ["b64": true])
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: CUSTOM_SIGNING)
 
 ## Custom JSON Encoder and Decoder
 
 If you don't need to specify custom parsing and serializing but you do need to use a custom JSON Encoder or Decoder, you can use the the `DefaultJWTParser` and `DefaultJWTSerializer` types to create a `JWTKeyCollection` with a custom JSON Encoder and Decoder.
 
-```swift
-let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
-let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
-
-let parser = DefaultJWTParser(jsonDecoder: decoder)
-let serializer = DefaultJWTSerializer(jsonEncoder: encoder)
-
-let keyCollection = await JWTKeyCollection()
-    .addHS256(key: "secret", parser: parser, serializer: serializer)
-```
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: CUSTOM_ENCODING)
 
 ---
 
