@@ -105,6 +105,9 @@ await keys.add(hmac: "secret", digestAlgorithm: .sha256, kid: "my-key")
 This is useful when you have multiple keys and need to select the correct one for verification. Based on the `kid` defined in the JWT header, the correct key will be selected for verification.
 If you don't provide a `kid`, the key will be added to the collection as default.
 
+> [!NOTE]
+> If multiple keys are added all without a `kid`, only the last one will be stored and the previous ones will be overwritten, which means if you want to store multiple keys you need to provide a `kid` for each one.
+
 To ensure thread-safety, `JWTKeyCollection` is an `actor`. This means that all of its methods are `async` and must be `await`ed.
 
 ### Signing

@@ -1,4 +1,5 @@
 import Foundation
+import Logging
 
 /// A collection of JWT and JWK signers for handling JSON Web Tokens (JWTs).
 ///
@@ -16,14 +17,22 @@ public actor JWTKeyCollection: Sendable {
     public let defaultJWTParser: any JWTParser
     public let defaultJWTSerializer: any JWTSerializer
 
+    let logger: Logger
+
     /// Creates a new empty Signers collection.
     /// - parameters:
     ///    - jsonEncoder: The default JSON encoder.
     ///    - jsonDecoder: The default JSON decoder.
-    public init(defaultJWTParser: some JWTParser = DefaultJWTParser(), defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer()) {
+    ///    - logger: The logger to use for logging, defaults to a no-op logger.
+    public init(
+        defaultJWTParser: some JWTParser = DefaultJWTParser(),
+        defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer(),
+        logger: Logger = Logger(label: "jwt_kit_do_not_log", factory: { _ in SwiftLogNoOpLogHandler() })
+    ) {
         self.storage = [:]
         self.defaultJWTParser = defaultJWTParser
         self.defaultJWTSerializer = defaultJWTSerializer
+        self.logger = logger
     }
 
     /// Adds a ``JWTSigner`` to the collection, optionally associating it with a specific key identifier (KID).
@@ -38,14 +47,14 @@ public actor JWTKeyCollection: Sendable {
     func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
         let signer = JWTSigner(algorithm: signer.algorithm, parser: signer.parser, serializer: signer.serializer)
 
-        if let kid = kid {
+        if let kid {
             if self.storage[kid] != nil {
-                print("Warning: Overwriting existing JWT signer for key identifier '\(kid)'.")
+                logger.debug("Overwriting existing JWT signer", metadata: ["kid": "\(kid)"])
             }
             self.storage[kid] = .jwt(signer)
         } else {
             if self.default != nil {
-                print("Warning: Overwriting existing default JWT signer.")
+                logger.debug("Overwriting existing default JWT signer")
             }
             self.default = .jwt(signer)
         }
@@ -180,33 +189,52 @@ public actor JWTKeyCollection: Sendable {
     ///
     /// - Parameters:
     ///   - token: A JWT token string.
+    ///   - as: The type of payload to decode.
+    ///   - iteratingKeys: Whether to try verifying the token with all keys in the collection.
     /// - Throws: An error if the token cannot be verified or decoded.
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: String,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        iteratingKeys: Bool = false
     ) async throws -> Payload
         where Payload: JWTPayload
     {
-        try await self.verify([UInt8](token.utf8), as: Payload.self)
+        try await self.verify([UInt8](token.utf8), as: Payload.self, iteratingKeys: iteratingKeys)
     }
 
     /// Verifies and decodes a JWT token to extract the payload.
     ///
     /// - Parameters:
     ///   - token: A JWT token.
+    ///   - as: The type of payload to decode.
+    ///   - iteratingKeys: Whether to try verifying the token with all keys in the collection.
     /// - Throws: An error if the token cannot be verified or decoded.
     /// - Returns: The verified and decoded payload of the specified type.
     public func verify<Payload>(
         _ token: some DataProtocol & Sendable,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        iteratingKeys: Bool = false
     ) async throws -> Payload
         where Payload: JWTPayload
     {
         let header = try defaultJWTParser.parseHeader(token)
         let kid = header.kid.flatMap { JWKIdentifier(string: $0) }
-        let signer = try self.getSigner(for: kid, alg: header.alg)
-        return try await signer.verify(token)
+        var signer = try self.getSigner(for: kid, alg: header.alg)
+
+        do {
+            return try await signer.verify(token)
+        } catch {
+            if iteratingKeys == true {
+                for (_kid, _) in self.storage where _kid != kid {
+                    do {
+                        signer = try self.getSigner(for: _kid, alg: header.alg)
+                        return try await signer.verify(token)
+                    } catch {}
+                }
+            }
+            throw error
+        }
     }
 
     /// Signs a JWT payload and returns the JWT string.
