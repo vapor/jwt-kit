@@ -1,113 +1,127 @@
-struct JWKSigner: Sendable {
+final class JWKSigner: Sendable {
     let jwk: JWK
-
+    var signer: JWTSigner?
+    
     let parser: any JWTParser
     let serializer: any JWTSerializer
 
-    init(jwk: JWK, parser: some JWTParser, serializer: some JWTSerializer) {
+    init(
+        jwk: JWK,
+        parser: some JWTParser = DefaultJWTParser(),
+        serializer: some JWTSerializer = DefaultJWTSerializer()
+    ) throws {
         self.jwk = jwk
+        let algorithm = try jwk.getKey()
+        if let algorithm {
+            self.signer = .init(algorithm: algorithm, parser: parser, serializer: serializer)
+        } else {
+            self.signer = nil
+        }
         self.parser = parser
         self.serializer = serializer
     }
+    
+    func makeSigner(for algorithm: JWK.Algorithm) throws -> JWTSigner {
+        guard let key = try jwk.getKey(for: algorithm) else {
+            throw JWTError.invalidJWK(reason: "Unable to create signer with given algorithm")
+        }
+        
+        let signer = JWTSigner(algorithm: key, parser: parser, serializer: serializer)
+        self.signer = signer
+        return signer
+    }
+}
 
-    func signer(for algorithm: JWK.Algorithm? = nil) -> JWTSigner? {
-        switch jwk.keyType.backing {
+extension JWK {
+    func getKey(for alg: JWK.Algorithm? = nil) throws -> (any JWTAlgorithm)? {
+        switch self.keyType.backing {
         case .rsa:
             guard
-                let modulus = self.jwk.modulus,
-                let exponent = self.jwk.exponent
+                let modulus = self.modulus,
+                let exponent = self.exponent
             else {
-                return nil
+                throw JWTError.invalidJWK(reason: "Missing RSA primitives")
             }
 
             let rsaKey: RSAKey
-            do {
-                if let privateExponent = jwk.privateExponent {
-                    rsaKey = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: exponent, privateExponent: privateExponent)
-                } else {
-                    rsaKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
-                }
-            } catch {
-                return nil
+            if let privateExponent = self.privateExponent {
+                rsaKey = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: exponent, privateExponent: privateExponent)
+            } else {
+                rsaKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
             }
-
-            guard let algorithm = algorithm ?? self.jwk.algorithm else {
-                return nil
-            }
+            
+            let algorithm = alg ?? self.algorithm
 
             switch algorithm {
             case .rs256:
-                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha256, name: "RS256", padding: .insecurePKCS1v1_5))
+                return RSASigner(key: rsaKey, algorithm: .sha256, name: "RS256", padding: .insecurePKCS1v1_5)
             case .rs384:
-                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha384, name: "RS384", padding: .insecurePKCS1v1_5))
+                return RSASigner(key: rsaKey, algorithm: .sha384, name: "RS384", padding: .insecurePKCS1v1_5)
             case .rs512:
-                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha512, name: "RS512", padding: .insecurePKCS1v1_5))
+                return RSASigner(key: rsaKey, algorithm: .sha512, name: "RS512", padding: .insecurePKCS1v1_5)
             case .ps256:
-                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha256, name: "PS256", padding: .PSS))
+                return RSASigner(key: rsaKey, algorithm: .sha256, name: "PS256", padding: .PSS)
             case .ps384:
-                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha384, name: "PS384", padding: .PSS))
+                return RSASigner(key: rsaKey, algorithm: .sha384, name: "PS384", padding: .PSS)
             case .ps512:
-                return .init(algorithm: RSASigner(key: rsaKey, algorithm: .sha512, name: "PS512", padding: .PSS))
+                return RSASigner(key: rsaKey, algorithm: .sha512, name: "PS512", padding: .PSS)
             default:
                 return nil
             }
 
+        // ECDSA
+            
         case .ecdsa:
-            guard let x = self.jwk.x else {
-                return nil
+            guard
+                let x = self.x,
+                let y = self.y
+            else {
+                throw JWTError.invalidJWK(reason: "Missing ECDSA coordinates")
             }
-            guard let y = self.jwk.y else {
-                return nil
-            }
+            
+            let algorithm = alg ?? self.algorithm
 
-            guard let algorithm = algorithm ?? self.jwk.algorithm else {
-                return nil
-            }
-
-            do {
-                switch algorithm {
-                case .es256:
-                    if let privateExponent = self.jwk.privateExponent {
-                        return try .init(algorithm: ECDSASigner(key: ES256PrivateKey(key: privateExponent)))
-                    } else {
-                        return try .init(algorithm: ECDSASigner(key: ES256PublicKey(parameters: (x, y))))
-                    }
-
-                case .es384:
-                    if let privateExponent = self.jwk.privateExponent {
-                        return try .init(algorithm: ECDSASigner(key: ES384PrivateKey(key: privateExponent)))
-                    } else {
-                        return try .init(algorithm: ECDSASigner(key: ES384PublicKey(parameters: (x, y))))
-                    }
-                case .es512:
-                    if let privateExponent = self.jwk.privateExponent {
-                        return try .init(algorithm: ECDSASigner(key: ES512PrivateKey(key: privateExponent)))
-                    } else {
-                        return try .init(algorithm: ECDSASigner(key: ES512PublicKey(parameters: (x, y))))
-                    }
-                default:
-                    return nil
+            switch algorithm {
+            case .es256:
+                if let privateExponent = self.privateExponent {
+                    return try ECDSASigner(key: ES256PrivateKey(key: privateExponent))
+                } else {
+                    return try ECDSASigner(key: ES256PublicKey(parameters: (x, y)))
                 }
-            } catch {
+
+            case .es384:
+                if let privateExponent = self.privateExponent {
+                    return try ECDSASigner(key: ES384PrivateKey(key: privateExponent))
+                } else {
+                    return try ECDSASigner(key: ES384PublicKey(parameters: (x, y)))
+                }
+            case .es512:
+                if let privateExponent = self.privateExponent {
+                    return try ECDSASigner(key: ES512PrivateKey(key: privateExponent))
+                } else {
+                    return try ECDSASigner(key: ES512PublicKey(parameters: (x, y)))
+                }
+            default:
                 return nil
             }
+            
+        // EdDSA
+            
         case .octetKeyPair:
-            guard let algorithm = algorithm ?? self.jwk.algorithm else {
-                return nil
+            guard let curve = self.curve.flatMap({ EdDSACurve(rawValue: $0.rawValue) }) else {
+                throw JWTError.invalidJWK(reason: "Invalid EdDSA curve")
             }
+            
+            let algorithm = alg ?? self.algorithm
 
-            guard let curve = self.jwk.curve.flatMap({ EdDSACurve(rawValue: $0.rawValue) }) else {
-                return nil
-            }
-
-            switch (algorithm, self.jwk.x, self.jwk.privateExponent) {
+            switch (algorithm, self.x, self.privateExponent) {
             case let (.eddsa, .some(x), .some(d)):
-                let key = try? EdDSA.PrivateKey(x: x, d: d, curve: curve)
-                return key.map { .init(algorithm: EdDSASigner(key: $0)) }
+                let key = try EdDSA.PrivateKey(x: x, d: d, curve: curve)
+                return EdDSASigner(key: key)
 
             case let (.eddsa, .some(x), .none):
-                let key = try? EdDSA.PublicKey(x: x, curve: curve)
-                return key.map { .init(algorithm: EdDSASigner(key: $0)) }
+                let key = try EdDSA.PublicKey(x: x, curve: curve)
+                return EdDSASigner(key: key)
 
             default:
                 return nil

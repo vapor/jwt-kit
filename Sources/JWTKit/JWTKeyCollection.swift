@@ -29,7 +29,7 @@ public actor JWTKeyCollection: Sendable {
         defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer(),
         logger: Logger = Logger(label: "jwt_kit_do_not_log", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
-        self.storage = [:]
+        storage = [:]
         self.defaultJWTParser = defaultJWTParser
         self.defaultJWTSerializer = defaultJWTSerializer
         self.logger = logger
@@ -99,9 +99,10 @@ public actor JWTKeyCollection: Sendable {
         isDefault: Bool? = nil
     ) throws -> Self {
         guard let kid = jwk.keyIdentifier else {
-            throw JWTError.invalidJWK
+            throw JWTError.invalidJWK(reason: "Missing KID")
         }
-        let signer = JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
+        let signer = try JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
+
         self.storage[kid] = .jwk(signer)
         switch (self.default, isDefault) {
         case (.none, .none), (_, .some(true)):
@@ -131,10 +132,13 @@ public actor JWTKeyCollection: Sendable {
         case let .jwt(jwt):
             return jwt
         case let .jwk(jwk):
-            if let signer = jwk.signer(for: alg.flatMap { JWK.Algorithm(rawValue: $0) }) {
+            if let signer = jwk.signer {
                 return signer
             } else {
-                throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")
+                guard let alg, let jwkAlg = JWK.Algorithm(rawValue: alg) else {
+                    throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")
+                }
+                return try jwk.makeSigner(for: jwkAlg)
             }
         }
     }
@@ -146,7 +150,7 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: A ``JWTKey`` if one is found; otherwise, `nil`.
     /// - Throws: ``JWTError/generic`` if the algorithm cannot be retrieved.
     public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTAlgorithm {
-        try self.getSigner(for: kid, alg: alg).algorithm
+        try getSigner(for: kid, alg: alg).algorithm
     }
 
     /// Decodes an unverified JWT payload.
