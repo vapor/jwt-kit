@@ -38,9 +38,6 @@ let package = Package(
                 .copy("TestVectors"),
                 .copy("TestCertificates"),
             ],
-            swiftSettings: [
-                .enableUpcomingFeature("ConciseMagicFile"),
-            ]
         ),
     ],
     swiftLanguageVersions: [.v6]
