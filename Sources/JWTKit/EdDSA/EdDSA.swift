@@ -13,11 +13,16 @@ public extension EdDSA {
     /// A struct representing a public key used in EdDSA (Edwards-curve Digital Signature Algorithm).
     ///
     /// In JWT, EdDSA public keys are represented as a single x-coordinate and are used for verifying signatures.
-    /// Currently, only the ``Curve/ed25519`` curve is supported.
+    /// Currently, only the ``EdDSACurve/ed25519`` curve is supported.
     struct PublicKey: EdDSAKey {
         let backing: Curve25519.Signing.PublicKey
         let curve: EdDSACurve
 
+        /// Creates an ``EdDSA.PublicKey`` instance using the provided public key.
+        ///
+        /// This init constructs an ``EdDSA.PublicKey`` based on the corresponding SwiftCrypto
+        /// ``Curve25519.Signing.PublicKey``.
+        /// - Parameter backing: The SwiftCrypto ``Curve25519.Signing.PublicKey``
         public init(backing: Curve25519.Signing.PublicKey) {
             self.backing = backing
             self.curve = .ed25519
@@ -74,11 +79,12 @@ public extension EdDSA {
         /// - Throws: An error if key generation fails.
         /// - Returns: A new ``EdDSA.PrivateKey`` instance with a freshly generated key pair.
         public init(curve: EdDSACurve = .ed25519) throws {
-            switch curve.backing {
+            let key = switch curve.backing {
             case .ed25519:
-                let key = Curve25519.Signing.PrivateKey()
-                self.init(backing: key)
+                Curve25519.Signing.PrivateKey()
             }
+
+            self.init(backing: key)
         }
 
         /// Creates an ``EdDSA.PrivateKey`` instance using the provided private key.
