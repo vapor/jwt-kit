@@ -1,4 +1,4 @@
-import _CryptoExtras
+@preconcurrency import _CryptoExtras
 import Crypto
 import Foundation
 import SwiftASN1
