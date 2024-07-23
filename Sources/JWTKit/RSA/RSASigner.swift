@@ -47,8 +47,3 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
         return publicKey.isValidSignature(signature, for: digest, padding: padding)
     }
 }
-
-#if compiler(<6)
-extension _RSA.Signing.Padding: @unchecked Sendable {}
-#else
-#endif

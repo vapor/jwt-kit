@@ -27,9 +27,6 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "BigInt", package: "BigInt"),
                 .product(name: "Logging", package: "swift-log"),
-            ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency"),
             ]
         ),
         .testTarget(
@@ -42,7 +39,6 @@ let package = Package(
                 .copy("TestCertificates"),
             ],
             swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency"),
                 .enableUpcomingFeature("ConciseMagicFile"),
             ]
         ),
