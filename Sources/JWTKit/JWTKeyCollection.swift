@@ -29,7 +29,7 @@ public actor JWTKeyCollection: Sendable {
         defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer(),
         logger: Logger = Logger(label: "jwt_kit_do_not_log", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
-        storage = [:]
+        self.storage = [:]
         self.defaultJWTParser = defaultJWTParser
         self.defaultJWTSerializer = defaultJWTSerializer
         self.logger = logger
@@ -49,12 +49,12 @@ public actor JWTKeyCollection: Sendable {
 
         if let kid {
             if self.storage[kid] != nil {
-                logger.debug("Overwriting existing JWT signer", metadata: ["kid": "\(kid)"])
+                self.logger.debug("Overwriting existing JWT signer", metadata: ["kid": "\(kid)"])
             }
             self.storage[kid] = .jwt(signer)
         } else {
             if self.default != nil {
-                logger.debug("Overwriting existing default JWT signer")
+                self.logger.debug("Overwriting existing default JWT signer")
             }
             self.default = .jwt(signer)
         }
@@ -150,7 +150,7 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: A ``JWTKey`` if one is found; otherwise, `nil`.
     /// - Throws: ``JWTError/generic`` if the algorithm cannot be retrieved.
     public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTAlgorithm {
-        try getSigner(for: kid, alg: alg).algorithm
+        try self.getSigner(for: kid, alg: alg).algorithm
     }
 
     /// Decodes an unverified JWT payload.
@@ -186,7 +186,7 @@ public actor JWTKeyCollection: Sendable {
     ) throws -> Payload
         where Payload: JWTPayload
     {
-        try (parser ?? defaultJWTParser).parse(token, as: Payload.self).payload
+        try (parser ?? self.defaultJWTParser).parse(token, as: Payload.self).payload
     }
 
     /// Verifies and decodes a JWT token to extract the payload.
