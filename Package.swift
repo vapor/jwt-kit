@@ -37,7 +37,7 @@ let package = Package(
             resources: [
                 .copy("TestVectors"),
                 .copy("TestCertificates"),
-            ],
+            ]
         ),
     ],
     swiftLanguageVersions: [.v6]
