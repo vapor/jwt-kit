@@ -11,8 +11,7 @@ final class JWKSigner: Sendable {
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) throws {
         self.jwk = jwk
-        let algorithm = try jwk.getKey()
-        if let algorithm {
+        if let algorithm = try jwk.getKey() {
             self.signer = .init(algorithm: algorithm, parser: parser, serializer: serializer)
         } else {
             self.signer = nil
