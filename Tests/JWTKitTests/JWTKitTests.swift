@@ -572,6 +572,38 @@ class JWTKitTests: XCTestCase {
         let ecdsaIteratinglyVerified = try await keyCollection.verify(ecdsaToken, as: TestPayload.self, iteratingKeys: true)
         XCTAssertEqual(ecdsaIteratinglyVerified.sub, "1234567890")
     }
+
+    func testUnverifiedString() async throws {
+        let keyCollection = await JWTKeyCollection().addUnsecuredNone()
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let token = try await keyCollection.sign(payload)
+        let unverified = try await keyCollection.unverified(token, as: TestPayload.self)
+
+        XCTAssertEqual(unverified, payload)
+    }
+
+    func testUnverifiedData() async throws {
+        let keyCollection = await JWTKeyCollection().addUnsecuredNone()
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let token = try await keyCollection.sign(payload)
+        let unverified = try await keyCollection.unverified(token.bytes, as: TestPayload.self)
+
+        XCTAssertEqual(unverified, payload)
+    }
 }
 
 struct AudiencePayload: Codable {
