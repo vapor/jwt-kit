@@ -51,5 +51,4 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
 #if compiler(<6)
 extension _RSA.Signing.Padding: @unchecked Sendable {}
 #else
-extension _RSA.Signing.Padding: @unchecked @retroactive Sendable {}
 #endif
