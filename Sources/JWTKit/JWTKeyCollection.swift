@@ -160,7 +160,7 @@ public actor JWTKeyCollection: Sendable {
     public func unverified<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self,
-        parser: (some JWTParser)? = nil
+        parser: (any JWTParser)? = nil
     ) throws -> Payload
         where Payload: JWTPayload
     {
@@ -178,7 +178,7 @@ public actor JWTKeyCollection: Sendable {
     public func unverified<Payload>(
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
-        parser: (some JWTParser)? = nil
+        parser: (any JWTParser)? = nil
     ) throws -> Payload
         where Payload: JWTPayload
     {
