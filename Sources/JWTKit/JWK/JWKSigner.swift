@@ -1,7 +1,7 @@
-final class JWKSigner: Sendable {
+actor JWKSigner: Sendable {
     let jwk: JWK
-    var signer: JWTSigner?
-    
+    private(set) var signer: JWTSigner?
+
     let parser: any JWTParser
     let serializer: any JWTSerializer
 
@@ -19,12 +19,12 @@ final class JWKSigner: Sendable {
         self.parser = parser
         self.serializer = serializer
     }
-    
+
     func makeSigner(for algorithm: JWK.Algorithm) throws -> JWTSigner {
         guard let key = try jwk.getKey(for: algorithm) else {
             throw JWTError.invalidJWK(reason: "Unable to create signer with given algorithm")
         }
-        
+
         let signer = JWTSigner(algorithm: key, parser: parser, serializer: serializer)
         self.signer = signer
         return signer
@@ -48,7 +48,7 @@ extension JWK {
             } else {
                 rsaKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
             }
-            
+
             let algorithm = alg ?? self.algorithm
 
             switch algorithm {
@@ -69,7 +69,7 @@ extension JWK {
             }
 
         // ECDSA
-            
+
         case .ecdsa:
             guard
                 let x = self.x,
@@ -77,7 +77,7 @@ extension JWK {
             else {
                 throw JWTError.invalidJWK(reason: "Missing ECDSA coordinates")
             }
-            
+
             let algorithm = alg ?? self.algorithm
 
             switch algorithm {
@@ -87,7 +87,6 @@ extension JWK {
                 } else {
                     return try ECDSASigner(key: ES256PublicKey(parameters: (x, y)))
                 }
-
             case .es384:
                 if let privateExponent = self.privateExponent {
                     return try ECDSASigner(key: ES384PrivateKey(key: privateExponent))
@@ -103,14 +102,14 @@ extension JWK {
             default:
                 return nil
             }
-            
+
         // EdDSA
-            
+
         case .octetKeyPair:
             guard let curve = self.curve.flatMap({ EdDSACurve(rawValue: $0.rawValue) }) else {
                 throw JWTError.invalidJWK(reason: "Invalid EdDSA curve")
             }
-            
+
             let algorithm = alg ?? self.algorithm
 
             switch (algorithm, self.x, self.privateExponent) {
