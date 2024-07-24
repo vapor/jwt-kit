@@ -118,7 +118,7 @@ public actor JWTKeyCollection: Sendable {
     ///   - kid: An optional ``JWKIdentifier``. If not provided, the default signer is returned.
     ///   - alg: An optional algorithm identifier.
     /// - Returns: A ``JWTSigner`` if one is found; otherwise, `nil`.
-    func getSigner(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTSigner {
+    func getSigner(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws -> JWTSigner {
         let signer: Signer
         if let kid = kid, let stored = self.storage[kid] {
             signer = stored
@@ -132,13 +132,13 @@ public actor JWTKeyCollection: Sendable {
         case let .jwt(jwt):
             return jwt
         case let .jwk(jwk):
-            if let signer = jwk.signer {
+            if let signer = await jwk.signer {
                 return signer
             } else {
                 guard let alg, let jwkAlg = JWK.Algorithm(rawValue: alg) else {
                     throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")
                 }
-                return try jwk.makeSigner(for: jwkAlg)
+                return try await jwk.makeSigner(for: jwkAlg)
             }
         }
     }
@@ -149,8 +149,8 @@ public actor JWTKeyCollection: Sendable {
     ///  - alg: An optional algorithm identifier.
     /// - Returns: A ``JWTKey`` if one is found; otherwise, `nil`.
     /// - Throws: ``JWTError/generic`` if the algorithm cannot be retrieved.
-    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) throws -> JWTAlgorithm {
-        try self.getSigner(for: kid, alg: alg).algorithm
+    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws -> JWTAlgorithm {
+        try await self.getSigner(for: kid, alg: alg).algorithm
     }
 
     /// Decodes an unverified JWT payload.
@@ -224,7 +224,7 @@ public actor JWTKeyCollection: Sendable {
     {
         let header = try defaultJWTParser.parseHeader(token)
         let kid = header.kid.flatMap { JWKIdentifier(string: $0) }
-        var signer = try self.getSigner(for: kid, alg: header.alg)
+        var signer = try await self.getSigner(for: kid, alg: header.alg)
 
         do {
             return try await signer.verify(token)
@@ -232,7 +232,7 @@ public actor JWTKeyCollection: Sendable {
             if iteratingKeys == true {
                 for (_kid, _) in self.storage where _kid != kid {
                     do {
-                        signer = try self.getSigner(for: _kid, alg: header.alg)
+                        signer = try await self.getSigner(for: _kid, alg: header.alg)
                         return try await signer.verify(token)
                     } catch {}
                 }
@@ -265,7 +265,7 @@ public actor JWTKeyCollection: Sendable {
             updatedHeader.kid = effectiveKidValue
         }
 
-        let signer = try self.getSigner(for: effectiveKid, alg: updatedHeader.alg)
+        let signer = try await self.getSigner(for: effectiveKid, alg: updatedHeader.alg)
         return try await signer.sign(payload, with: updatedHeader)
     }
 }

@@ -1,9 +1,8 @@
-final class JWKSigner: Sendable {
+actor JWKSigner: Sendable {
     let jwk: JWK
-    var signer: JWTSigner?
-
     let parser: any JWTParser
     let serializer: any JWTSerializer
+    private(set) var signer: JWTSigner?
 
     init(
         jwk: JWK,
