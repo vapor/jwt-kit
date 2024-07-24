@@ -7,7 +7,7 @@ final class JWTSigner: Sendable {
     let parser: any JWTParser
     let serializer: any JWTSerializer
 
-    init(algorithm: JWTAlgorithm, parser: some JWTParser = DefaultJWTParser(), serializer: some JWTSerializer = DefaultJWTSerializer()) {
+    init(algorithm: JWTAlgorithm, parser: any JWTParser = DefaultJWTParser(), serializer: any JWTSerializer = DefaultJWTSerializer()) {
         self.algorithm = algorithm
         self.parser = parser
         self.serializer = serializer
