@@ -49,12 +49,12 @@ public actor JWTKeyCollection: Sendable {
 
         if let kid {
             if self.storage[kid] != nil {
-                logger.debug("Overwriting existing JWT signer", metadata: ["kid": "\(kid)"])
+                self.logger.debug("Overwriting existing JWT signer", metadata: ["kid": "\(kid)"])
             }
             self.storage[kid] = .jwt(signer)
         } else {
             if self.default != nil {
-                logger.debug("Overwriting existing default JWT signer")
+                self.logger.debug("Overwriting existing default JWT signer")
             }
             self.default = .jwt(signer)
         }
@@ -99,9 +99,10 @@ public actor JWTKeyCollection: Sendable {
         isDefault: Bool? = nil
     ) throws -> Self {
         guard let kid = jwk.keyIdentifier else {
-            throw JWTError.invalidJWK
+            throw JWTError.invalidJWK(reason: "Missing KID")
         }
-        let signer = JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
+        let signer = try JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
+
         self.storage[kid] = .jwk(signer)
         switch (self.default, isDefault) {
         case (.none, .none), (_, .some(true)):
@@ -131,10 +132,13 @@ public actor JWTKeyCollection: Sendable {
         case let .jwt(jwt):
             return jwt
         case let .jwk(jwk):
-            if let signer = jwk.signer(for: alg.flatMap { JWK.Algorithm(rawValue: $0) }) {
+            if let signer = jwk.signer {
                 return signer
             } else {
-                throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")
+                guard let alg, let jwkAlg = JWK.Algorithm(rawValue: alg) else {
+                    throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")
+                }
+                return try jwk.makeSigner(for: jwkAlg)
             }
         }
     }
@@ -182,7 +186,7 @@ public actor JWTKeyCollection: Sendable {
     ) throws -> Payload
         where Payload: JWTPayload
     {
-        try (parser ?? defaultJWTParser).parse(token, as: Payload.self).payload
+        try (parser ?? self.defaultJWTParser).parse(token, as: Payload.self).payload
     }
 
     /// Verifies and decodes a JWT token to extract the payload.

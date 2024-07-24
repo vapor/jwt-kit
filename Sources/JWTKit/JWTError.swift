@@ -116,7 +116,9 @@ public struct JWTError: Error, Sendable {
         .init(backing: .init(errorType: .unknownKID, kid: kid))
     }
 
-    public static let invalidJWK = Self(errorType: .invalidJWK)
+    public static func invalidJWK(reason: String) -> Self {
+        .init(backing: .init(errorType: .invalidJWK, reason: reason))
+    }
 
     public static func invalidBool(_ name: String) -> Self {
         .init(backing: .init(errorType: .invalidBool, name: name))
