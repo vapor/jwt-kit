@@ -99,25 +99,16 @@ public extension EdDSA {
 
         /// Creates an ``EdDSA.PrivateKey`` instance using both the public and private key components along with the specified curve.
         ///
-        /// This init constructs an ``EdDSA.PrivateKey`` from the provided x-coordinate of the public key and the private key (d).
-        /// Both `x` and `d` are expected to be Base64 URL encoded strings.
+        /// This init constructs an ``EdDSA.PrivateKey`` from the provided private key (d).
+        /// `d` is expected to be a Base64 URL encoded string.
         ///
         /// - Parameters:
-        ///   - x: A `String` representing the x-coordinate of the public key, encoded in Base64 URL format.
         ///   - d: A `String` representing the private key, encoded in Base64 URL format.
-        ///   - curve: The ``Curve`` representing the elliptic curve used for the EdDSA key.
+        ///   - curve: The ``EdDSACurve`` representing the elliptic curve used for the EdDSA key.
         ///
         /// - Throws:
-        ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
         ///   - ``EdDSAError/privateKeyMissing`` if the private key data is missing or cannot be properly converted.
-        public init(x: String, d: String, curve: EdDSACurve) throws {
-            guard
-                let xData = x.base64URLDecodedData(),
-                !xData.isEmpty
-            else {
-                throw EdDSAError.publicKeyMissing
-            }
-
+        public init(d: String, curve: EdDSACurve) throws {
             guard
                 let dData = d.base64URLDecodedData(),
                 !dData.isEmpty
