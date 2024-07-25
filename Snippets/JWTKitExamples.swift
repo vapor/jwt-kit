@@ -10,7 +10,7 @@ struct ExamplePayload: JWTPayload {
     var exp: ExpirationClaim
     var admin: BoolClaim
 
-    func verify(using key: some JWTAlgorithm) throws {
+    func verify(using _: some JWTAlgorithm) throws {
         try self.exp.verifyNotExpired()
     }
 }
@@ -33,8 +33,7 @@ let key = try ES256PublicKey(pem: ecdsaPublicKey)
 await keys.add(ecdsa: key)
 
 // snippet.end
-do
-{
+do {
     // Create a new instance of our JWTPayload
     let payload = ExamplePayload(
         sub: "vapor",
@@ -49,8 +48,7 @@ do
     // snippet.end
 }
 
-do
-{
+do {
     // snippet.VERIFYING
     let exampleJWT = """
     eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo
@@ -63,14 +61,13 @@ do
     // snippet.end
 }
 
-do
-{
+do {
     // snippet.EDDSA
     // Initialize an EdDSA key with public PEM
     let publicKey = try EdDSA.PublicKey(x: "...", curve: .ed25519)
 
     // Initialize an EdDSA key with private PEM
-    let privateKey = try EdDSA.PrivateKey(x: "...", d: "...", curve: .ed25519)
+    let privateKey = try EdDSA.PrivateKey(d: "...", curve: .ed25519)
 
     // Add public key to the key collection
     await keys.add(eddsa: publicKey)
@@ -80,8 +77,7 @@ do
     // snippet.end
 }
 
-do
-{
+do {
     // snippet.RSA
     // Initialize an RSA key with components.
     let key = try Insecure.RSA.PrivateKey(
@@ -92,8 +88,8 @@ do
     // snippet.end
     _ = key
 }
-do
-{
+
+do {
     // snippet.RSA_FROM_PEM
     let rsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
 
@@ -136,9 +132,9 @@ struct CustomSerializer: JWTSerializer {
 
     func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
         if header.b64?.asBool == true {
-            try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
+            try Data(self.jsonEncoder.encode(payload).base64URLEncodedBytes())
         } else {
-            try jsonEncoder.encode(payload)
+            try self.jsonEncoder.encode(payload)
         }
     }
 }
@@ -146,15 +142,15 @@ struct CustomSerializer: JWTSerializer {
 struct CustomParser: JWTParser {
     var jsonDecoder: JWTJSONDecoder = .defaultForJWT
 
-    func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
+    func parse<Payload>(_ token: some DataProtocol, as _: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
         let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
 
         let payload = if header.b64?.asBool ?? true {
-            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+            try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
         } else {
-            try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
+            try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
         }
 
         let signature = Data(encodedSignature.base64URLDecodedBytes())
@@ -162,10 +158,10 @@ struct CustomParser: JWTParser {
         return (header: header, payload: payload, signature: signature)
     }
 }
+
 // snippet.end
 
-do
-{
+do {
     // snippet.CUSTOM_SIGNING
     let keyCollection = await JWTKeyCollection()
         .add(hmac: "secret", digestAlgorithm: .sha256, parser: CustomParser(), serializer: CustomSerializer())
@@ -176,8 +172,8 @@ do
     // snippet.end
     _ = token
 }
-do
-{
+
+do {
     // snippet.CUSTOM_ENCODING
     let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
     let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601

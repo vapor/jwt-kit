@@ -1,9 +1,8 @@
 actor JWKSigner: Sendable {
     let jwk: JWK
-    private(set) var signer: JWTSigner?
-
     let parser: any JWTParser
     let serializer: any JWTSerializer
+    private(set) var signer: JWTSigner?
 
     init(
         jwk: JWK,
@@ -113,8 +112,8 @@ extension JWK {
             let algorithm = alg ?? self.algorithm
 
             switch (algorithm, self.x, self.privateExponent) {
-            case let (.eddsa, .some(x), .some(d)):
-                let key = try EdDSA.PrivateKey(x: x, d: d, curve: curve)
+            case let (.eddsa, .some(_), .some(d)):
+                let key = try EdDSA.PrivateKey(d: d, curve: curve)
                 return EdDSASigner(key: key)
 
             case let (.eddsa, .some(x), .none):

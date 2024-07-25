@@ -13,23 +13,19 @@ public extension EdDSA {
     /// A struct representing a public key used in EdDSA (Edwards-curve Digital Signature Algorithm).
     ///
     /// In JWT, EdDSA public keys are represented as a single x-coordinate and are used for verifying signatures.
-    /// Currently, only the ``Curve/ed25519`` curve is supported.
+    /// Currently, only the ``EdDSACurve/ed25519`` curve is supported.
     struct PublicKey: EdDSAKey {
-        // https://www.rfc-editor.org/rfc/rfc8037.html#appendix-A.2
-        struct OctetKeyPair: Sendable {
-            let x: Data
-
-            init(x: Data) {
-                self.x = x
-            }
-        }
-
-        let keyPair: OctetKeyPair
-
+        let backing: Curve25519.Signing.PublicKey
         let curve: EdDSACurve
 
-        var rawRepresentation: Data {
-            keyPair.x
+        /// Creates an ``EdDSA.PublicKey`` instance using the provided public key.
+        ///
+        /// This init constructs an ``EdDSA.PublicKey`` based on the corresponding SwiftCrypto
+        /// ``Curve25519.Signing.PublicKey``.
+        /// - Parameter backing: The SwiftCrypto ``Curve25519.Signing.PublicKey``
+        public init(backing: Curve25519.Signing.PublicKey) {
+            self.backing = backing
+            self.curve = .ed25519
         }
 
         /// Creates an ``EdDSA.PublicKey`` instance using the public key x-coordinate and specified curve.
@@ -39,25 +35,28 @@ public extension EdDSA {
         ///
         /// - Parameters:
         ///   - x: A `String` representing the x-coordinate of the public key. This should be a Base64 URL encoded string.
-        ///   - curve: The ``Curve`` representing the elliptic curve used for the EdDSA public key.
+        ///   - curve: The ``EdDSACurve`` representing the elliptic curve used for the EdDSA public key.
         ///
         /// - Throws:
         ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
         public init(x: String, curve: EdDSACurve) throws {
-            let xData = Data(x.utf8)
-            
-            guard !xData.isEmpty else {
+            guard
+                let xData = x.base64URLDecodedData(),
+                !xData.isEmpty
+            else {
                 throw EdDSAError.publicKeyMissing
             }
 
-            self.init(keyPair: .init(
-                x: Data(xData.base64URLDecodedBytes())
-            ), curve: curve)
+            let key = switch curve.backing {
+            case .ed25519:
+                try Curve25519.Signing.PublicKey(rawRepresentation: xData)
+            }
+
+            self.init(backing: key)
         }
 
-        fileprivate init(keyPair: OctetKeyPair, curve: EdDSACurve) {
-            self.keyPair = keyPair
-            self.curve = curve
+        var rawRepresentation: Data {
+            self.backing.rawRepresentation
         }
     }
 }
@@ -68,28 +67,8 @@ public extension EdDSA {
     /// In JWT, EdDSA private keys are represented as a pair of x-coordinate and private key (d) and are used for signing.
     /// Currently, only the ``Curve/ed25519`` curve is supported.
     struct PrivateKey: EdDSAKey {
-        // https://www.rfc-editor.org/rfc/rfc8037.html#appendix-A.1
-        struct OctetKeyPair: Sendable {
-            let x: Data
-            let d: Data
-
-            init(x: Data, d: Data) {
-                self.x = x
-                self.d = d
-            }
-        }
-
-        let keyPair: OctetKeyPair
-
+        let backing: Curve25519.Signing.PrivateKey
         let curve: EdDSACurve
-
-        var publicKey: PublicKey {
-            .init(keyPair: .init(x: keyPair.x), curve: curve)
-        }
-
-        var rawRepresentation: Data {
-            keyPair.d
-        }
 
         /// Generates a new ``EdDSAKey`` instance with both public and private key components.
         ///
@@ -98,51 +77,62 @@ public extension EdDSA {
         ///
         /// - Parameter curve: The curve to be used for key generation.
         /// - Throws: An error if key generation fails.
-        /// - Returns: A new ``EdDSAKey`` instance with a freshly generated key pair.
+        /// - Returns: A new ``EdDSA.PrivateKey`` instance with a freshly generated key pair.
         public init(curve: EdDSACurve = .ed25519) throws {
-            switch curve.backing {
+            let key = switch curve.backing {
             case .ed25519:
-                let keyPair = Curve25519.Signing.PrivateKey()
-                self.init(keyPair: .init(
-                    x: keyPair.publicKey.rawRepresentation,
-                    d: keyPair.rawRepresentation
-                ), curve: curve)
+                Curve25519.Signing.PrivateKey()
             }
+
+            self.init(backing: key)
+        }
+
+        /// Creates an ``EdDSA.PrivateKey`` instance using the provided private key.
+        ///
+        /// This init constructs an ``EdDSA.PrivateKey`` based on the corresponding SwiftCrypto
+        /// ``Curve25519.Signing.PrivateKey``.
+        /// - Parameter privateKey: The SwiftCrypto ``Curve25519.Signing.PrivateKey``
+        public init(backing: Curve25519.Signing.PrivateKey) {
+            self.backing = backing
+            self.curve = .ed25519
         }
 
         /// Creates an ``EdDSA.PrivateKey`` instance using both the public and private key components along with the specified curve.
         ///
-        /// This init constructs an ``EdDSA.PrivateKey`` from the provided x-coordinate of the public key and the private key (d).
-        /// Both `x` and `d` are expected to be Base64 URL encoded strings.
+        /// This init constructs an ``EdDSA.PrivateKey`` from the provided private key (d).
+        /// `d` is expected to be a Base64 URL encoded string.
         ///
         /// - Parameters:
-        ///   - x: A `String` representing the x-coordinate of the public key, encoded in Base64 URL format.
         ///   - d: A `String` representing the private key, encoded in Base64 URL format.
-        ///   - curve: The ``Curve`` representing the elliptic curve used for the EdDSA key.
+        ///   - curve: The ``EdDSACurve`` representing the elliptic curve used for the EdDSA key.
         ///
         /// - Throws:
-        ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
         ///   - ``EdDSAError/privateKeyMissing`` if the private key data is missing or cannot be properly converted.
-        public init(x: String, d: String, curve: EdDSACurve) throws {
-            let xData = Data(x.utf8)
-            guard !xData.isEmpty else {
-                throw EdDSAError.publicKeyMissing
-            }
-            
-            let dData = Data(d.utf8)
-            guard !dData.isEmpty else {
+        public init(d: String, curve: EdDSACurve) throws {
+            guard
+                let dData = d.base64URLDecodedData(),
+                !dData.isEmpty
+            else {
                 throw EdDSAError.privateKeyMissing
             }
 
-            self.init(keyPair: .init(
-                x: Data(xData.base64URLDecodedBytes()),
-                d: Data(dData.base64URLDecodedBytes())
-            ), curve: curve)
+            let key = switch curve.backing {
+            case .ed25519:
+                try Curve25519.Signing.PrivateKey(rawRepresentation: dData)
+            }
+
+            self.init(backing: key)
         }
 
-        private init(keyPair: OctetKeyPair, curve: EdDSACurve) {
-            self.keyPair = keyPair
-            self.curve = curve
+        var publicKey: PublicKey {
+            .init(backing: self.backing.publicKey)
+        }
+
+        var rawRepresentation: Data {
+            self.backing.rawRepresentation
         }
     }
 }
+
+extension Curve25519.Signing.PublicKey: @unchecked Sendable {}
+extension Curve25519.Signing.PrivateKey: @unchecked Sendable {}
