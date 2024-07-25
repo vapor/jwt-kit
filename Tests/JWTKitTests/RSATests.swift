@@ -11,35 +11,39 @@ final class RSATests: XCTestCase {
     }
 
     func testRSADocs() async throws {
-        await XCTAssertNoThrowAsync(try await JWTKeyCollection().add(rsa: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256))
+        await XCTAssertNoThrowAsync(try await JWTKeyCollection().add(rsa: Insecure.RSA.PublicKey(pem: self.publicKey), digestAlgorithm: .sha256))
     }
 
     func testPrivateKeyInitialization() throws {
-        XCTAssertNoThrow(try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent))
+        XCTAssertNoThrow(try Insecure.RSA.PrivateKey(modulus: self.modulus, exponent: self.publicExponent, privateExponent: self.privateExponent))
     }
 
     func testPublicKeyInitialization() throws {
-        XCTAssertNoThrow(try Insecure.RSA.PublicKey(modulus: modulus, exponent: publicExponent))
+        XCTAssertNoThrow(try Insecure.RSA.PublicKey(modulus: self.modulus, exponent: self.publicExponent))
+    }
+
+    func testPrivateKeyInitializationWithPrimes() throws {
+        XCTAssertNoThrow(try Insecure.RSA.PrivateKey(modulus: self.modulus, exponent: self.publicExponent, privateExponent: self.privateExponent, prime1: self.prime1, prime2: self.prime2))
     }
 
     func testPublicKeyInitializationFromCryptoKey() throws {
-        let cryptoKey = try _RSA.Signing.PublicKey(pemRepresentation: publicKey)
+        let cryptoKey = try _RSA.Signing.PublicKey(pemRepresentation: self.publicKey)
         let jwtKey = try Insecure.RSA.PublicKey(backing: cryptoKey)
-        let otherKey = try Insecure.RSA.PublicKey(pem: publicKey)
+        let otherKey = try Insecure.RSA.PublicKey(pem: self.publicKey)
         XCTAssertEqual(jwtKey, otherKey)
     }
 
     func testPrivateKeyInitializationFromCryptoKey() throws {
-        let cryptoKey = try _RSA.Signing.PrivateKey(pemRepresentation: privateKey)
+        let cryptoKey = try _RSA.Signing.PrivateKey(pemRepresentation: self.privateKey)
         let jwtKey = try Insecure.RSA.PrivateKey(backing: cryptoKey)
-        let otherKey = try Insecure.RSA.PrivateKey(pem: privateKey)
+        let otherKey = try Insecure.RSA.PrivateKey(pem: self.privateKey)
         XCTAssertEqual(jwtKey, otherKey)
     }
 
     func testSigning() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256, kid: "private")
-            .add(rsa: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
+            .add(rsa: Insecure.RSA.PrivateKey(pem: self.privateKey), digestAlgorithm: .sha256, kid: "private")
+            .add(rsa: Insecure.RSA.PublicKey(pem: self.publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -54,7 +58,7 @@ final class RSATests: XCTestCase {
 
     func testSigningWithPublic() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .add(rsa: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
+            .add(rsa: Insecure.RSA.PublicKey(pem: self.publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -71,11 +75,10 @@ final class RSATests: XCTestCase {
     }
 
     func testSigningWithRawBuiltPrivateKey() async throws {
-        let privateKey = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let privateKey = try Insecure.RSA.PrivateKey(modulus: self.modulus, exponent: self.publicExponent, privateExponent: self.privateExponent)
 
         let keyCollection = try await JWTKeyCollection()
             .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation), digestAlgorithm: .sha256, kid: "private")
-            .add(rsa: Insecure.RSA.PublicKey(pem: privateKey.publicKey.pemRepresentation), digestAlgorithm: .sha256, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -84,48 +87,82 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let privateSigned = try await keyCollection.sign(payload)
-        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
-        try await XCTAssertEqualAsync(await keyCollection.verify(privateSigned, as: TestPayload.self), payload)
+        let signed = try await keyCollection.sign(payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(signed, as: TestPayload.self), payload)
+    }
+
+    func testSigningWithRawBuiltPrivateKeyWithPrimes() async throws {
+        let privateKey = try Insecure.RSA.PrivateKey(
+            modulus: self.modulus,
+            exponent: self.publicExponent,
+            privateExponent: self.privateExponent,
+            prime1: self.prime1,
+            prime2: self.prime2
+        )
+
+        let keyCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation), digestAlgorithm: .sha256, kid: "private")
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let signed = try await keyCollection.sign(payload)
+        try await XCTAssertEqualAsync(await keyCollection.verify(signed, as: TestPayload.self), payload)
     }
 
     func testGetPublicKeyPrimitives() async throws {
-        let publicKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: publicExponent)
+        let publicKey = try Insecure.RSA.PublicKey(modulus: self.modulus, exponent: self.publicExponent)
         let (keyModulus, exponent) = try publicKey.getKeyPrimitives()
-        XCTAssertEqual(keyModulus, modulus)
-        XCTAssertEqual(exponent, publicExponent)
+        XCTAssertEqual(keyModulus, self.modulus)
+        XCTAssertEqual(exponent, self.publicExponent)
     }
 
     func testGetPrivateKeyPrimitives() async throws {
-        let privateKey = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let privateKey = try Insecure.RSA.PrivateKey(modulus: self.modulus, exponent: self.publicExponent, privateExponent: self.privateExponent)
         let (keyModulus, exponent, keyPrivateExponent) = try privateKey.getKeyPrimitives()
-        XCTAssertEqual(keyModulus, modulus)
-        XCTAssertEqual(exponent, publicExponent)
-        XCTAssertEqual(keyPrivateExponent, privateExponent)
+        XCTAssertEqual(keyModulus, self.modulus)
+        XCTAssertEqual(exponent, self.publicExponent)
+        XCTAssertEqual(keyPrivateExponent, self.privateExponent)
     }
 
     func testGetPrivateKeyPrimitivesFromNonRawBuiltKey() async throws {
         let privateKey = try Insecure.RSA.PrivateKey(pem: """
-        -----BEGIN RSA PRIVATE KEY-----
-        MIIEowIBAAKCAQEAgWu7yhI35FScdKARYboJoAm+T7yJfJ9JTvAok/RKOJYcL8oL\nIRSeLqQX83PPZiWdKTdXaiGWntpDu6vW7VAb+HWPF6tNYSLKDSmR3sEu2488ibWi
-        jZtNTCKOSb/1iAKAI5BJ80LTqyQtqaKzT0XUBtMsde8vX1nKI05UxujfTX3kqUtk\nZgLv1Yk1ZDpUoLOWUTtCm68zpjtBrPiN8bU2jqCGFyMyyXys31xFRzz4MyJ5tREH
-        kQCzx0g7AvW0ge/sBTPQ2U6NSkcZvQyDbfDv27cMUHij1Sjx16SY9a2naTuOgamj\ntUzyClPLVpchX+McNyS0tjdxWY/yRL9MYuw4AQIDAQABAoIBAC+M9Lc+0FhNGhrj
-        gN9mKgkp60mCnQUzxQyCwnXx6J83z+1jD4m8+I1sbvxczZPbOA4frjdpVdzRltdK\nQLJ6n3w/PS7WGp0Y2iHR5y1vzxaOXxC9spbSu6jAfYTtSXoKaSgn6HO/VuPna/uK
-        stTqdAd56Tj/g2lGJTWpnw5iG0Ft9lCnic3RiJ/v68qwU+4UFuv7hy0tlRTz5NKz\nZDzymWKDWqhpydHmhRRfnRcIk4VyKT8/vncUwC/MWH9u+a4xvAvZYemsDnyUiHVz
-        FbkCE1n+thNJkkD0dvttfW0oTCq4g2HGC209wSRIDpEQQRxrh6PUeUzdvfGp8Wal\ndbuY7VECgYEA+kVqK0URfwbZGEnO8JnagCunkOKgqAqv+I44/lmZwmj/Z9uvFXRo
-        5TQNwpSNuYB9V5ujpoVgJaJ4BWUCnD/uwqNwlqcQydsXzB3u4GKI5jZrpCN8i7+s\nhP9UuV1pfU8+n3VuWkIhfrHEmSgn7+AhCkzETho2qPvfv7u8bxou4DUCgYEAhGIj
-        QyEZWORJI2FJ+APp146v/nndXwCGIbPCbp8rHFFL4dYQsgJI6tGQDMO9xcMoz0jt\n/lJTUu4hBIL7jm1S/bYez6JqlbjUhNpvSUp/M0SWlS36LLQqrc49IZ8H7AXjDiG5
-        az6zVHMtz8CJY0/YT5CUjDszhN8u56vdAEBHyh0CgYEAwwhVNGMev18Wz1a1bcp3\n/GoIq1/w0wOBHrG2uIAa0uYAI2+Pgai2Fef60SfzShxXkW44mgxWYP27initEBbC
-        eevkUYLgEm4qnWa2QSaIiN7gA4mkBUPZrctMuyeQjZaztpBM7wmaEKF4E+K3PLft\nB5nLYRIMhqPCOiiTMAG3hgECgYAyI00BnqaP8R32JWGzaiAFgMgNFDCQS42BdCh+
-        ZxAX0H5x0PZPxOfC742kF/pmzQxGvXNNr/ZY4VFl+Qm3Hpag+nne37+IZxEuI+Ck\nHG/iheaWJ2ypw66qVwL2GdoRPQWKk6E7Ces3X8wI8/3UvCfLspFgLwfLGhAUtBWm
-        g7HszQKBgEGa1OX9PQFrOojSizXK2jcalVJLiy01+cJZB1ZqIwFAYG9VTEOo3IrH\nhUGJzX0PZGGW8+r+S50ORYlJ7hl0xGZrcnAv4ftONtYN4GmB7t/QKheShWTX0Q+C
-        eGwWRyV8jo3G+nJDtGEb3MTHVXPK3hviJRXDHHGhw+sh+JdL49x4
+        -----BEGIN RSA PRIVATE KEY-----\n
+        MIIEogIBAAKCAQEAvTHHoCaR0tlYfvapRv94hUTMrdSymIrWIIZ5Kmv5bIYWtK0T\n
+        MX0icLkB0PzR2IDLj1L7hzBKUljBGzjf6ujfZwru5+odDZ344A6AhH5B5Zie1ALU\n
+        TnizD+8XtWcdOtv4aF5NwgRJns0YY+HVr/KKfPZurfMf7JI2wSCt0TRRUixkfJgy\n
+        pnLNZNMowcMiGD9GYdCb2mC43V8DKNpUIIIUJK/auxqAxdEnY6GwI4zYnQdCv8UL\n
+        ai/LcB2CQhj5gm9PeKI6K1qkKs5/F1N2+2y9srrSk7pYPU0xxrj5Ap5GsTaJJJhV\n
+        9QV1bgDiJaakWhh2m9jSs6SsufHCPT5RiCVh5QIDAQABAoIBAAdH1SDKmy38AzXP\n
+        lDARQLgQL7g4yS6pmRfjVOJXCWAtwM3vIx/yatLfq7w5HnIwcqTvUpKfPxzwIW5E\n
+        wAkwMPisKQlvrvKJM7ybkkKHAU4uk14hRb5HUsy4LLdkYnGTaXnKtz9SHusnhVrC\n
+        pBCDSuUILrYu9vmJnuXLtiSo2MBKt+3PeP4TXQ+Aj2O13m4HF3m/HZ6q+NPvllSG\n
+        8sUmJeblemUce70Bl8mcBXs4YKMmDIZKEbPPIrpE3jo7PzEX5k6/mpH2Juuz88Jt\n
+        Gwu4B1NGjUv2qZeygzXyDtjDhNdVg2CprpdVZh+jdJhGsXTmvzMOUtCZQfbM195Q\n
+        BHefm7kCgYEA/j0jjTdqOFbZWS/UlhwXp/sPo51ELp3yLn7aEVxkjFy3ON+J6pLY\n
+        N4VY0NnBzz2L/3QNN0OgFApqdSPpF2wpU7LBHX9EaRz4vsKzT7WcZJU1mDMZSIEY\n
+        wDEYrnRF5w30Zs6YZxJg8F1QaM53fal+K6hHeUkFAM60/39izsqaFH8CgYEAvoFK\n
+        8mvzwnEVvHWV0NEqGvdxP+yod65ubYWIJe2j0ZJwR3T0Lhrhtn8XOejEWgR2OIBw\n
+        +lRbfMlrikQAO8jQf95z9bzdGCaDldzChCtQI/8Us1I4Jge3F5peozCED8RQRdhu\n
+        CsxP6xNfCrm3zmuOtfWldfKiqN4pnA0/UG30h5sCgYBhu0z0Vy4M9E3e/AUDo07w\n
+        sxFC+wyfwvW7K+ZWMCcy0d1ZDo1s0AAv76HBv0PCj81GaO0/pk5eBdcAqspKx7hn\n
+        RVr5JNg+c/WnFx9o785r1/PfSx1YAtBp6TWssmPAu1uNPbPWQ3liTOzBLUU/2Cz5\n
+        SVoYZJp4wf1QDj8EcVujrwKBgGZJ2+kgp6jOuYIQjNmrhXUnSYquUqK4aRirazga\n
+        Siy7+UeU94tN6cXopZr1bYB8BtI9vOvcoab2K6T48DspjzIpSpA20WwnOd4cw+Dd\n
+        tNEvJHlIe1eIKvokbA4pfa9NlGB8XlGz9HFfXFfQ8m2GeQEgnbAgENClQShGQKm5\n
+        8GNjAoGAOexgb1yfHzPZZGBuEo6ekM/5MncsVxWqdZgW1QTv4sRiBvM3mqYdMfiO\n
+        cmtQ3YC4zoVYoNdAhSX1jDOZzjLiOdcJQfEtIed2HAQ+CwIiDSX/0DVxx65bvVnD\n
+        H0gSBnb518Nwp0nYSRvfzqAWYqE2yF00m2xxD8b26/inp5tircM=\n
         -----END RSA PRIVATE KEY-----
         """)
         let (keyModulus, exponent, keyPrivateExponent) = try privateKey.getKeyPrimitives()
-        XCTAssertEqual(keyModulus, modulus)
-        XCTAssertEqual(exponent, publicExponent)
-        XCTAssertEqual(keyPrivateExponent, privateExponent)
+        XCTAssertEqual(keyModulus, self.modulus)
+        XCTAssertEqual(exponent, self.publicExponent)
+        XCTAssertEqual(keyPrivateExponent, self.privateExponent)
     }
 
     func testRSACertificate() async throws {
@@ -136,8 +173,8 @@ final class RSATests: XCTestCase {
             exp: .init(value: .distantFuture)
         )
         let keyCollection = try await JWTKeyCollection()
-            .add(rsa: Insecure.RSA.PrivateKey(pem: certPrivateKey), digestAlgorithm: .sha256, kid: "private")
-            .add(rsa: Insecure.RSA.PublicKey(certificatePEM: cert), digestAlgorithm: .sha256, kid: "cert")
+            .add(rsa: Insecure.RSA.PrivateKey(pem: self.certPrivateKey), digestAlgorithm: .sha256, kid: "private")
+            .add(rsa: Insecure.RSA.PublicKey(certificatePEM: self.cert), digestAlgorithm: .sha256, kid: "cert")
 
         let jwt = try await keyCollection.sign(test, kid: "private")
         let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
@@ -145,7 +182,7 @@ final class RSATests: XCTestCase {
     }
 
     func testKeySizeTooSmall() async throws {
-        await XCTAssertThrowsErrorAsync(try await JWTKeyCollection().add(rsa: Insecure.RSA.PrivateKey(pem: _512BytesKey), digestAlgorithm: .sha256))
+        await XCTAssertThrowsErrorAsync(try await JWTKeyCollection().add(rsa: Insecure.RSA.PrivateKey(pem: self._512BytesKey), digestAlgorithm: .sha256))
     }
 
     func testRS256Verification() async throws {
@@ -159,21 +196,21 @@ final class RSATests: XCTestCase {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
         let keyCollection = try await JWTKeyCollection()
-            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey2), digestAlgorithm: .sha256, kid: "private")
-            .add(rsa: Insecure.RSA.PublicKey(pem: publicKey2), digestAlgorithm: .sha256, kid: "public")
+            .add(rsa: Insecure.RSA.PrivateKey(pem: self.privateKey2), digestAlgorithm: .sha256, kid: "private")
+            .add(rsa: Insecure.RSA.PublicKey(pem: self.publicKey2), digestAlgorithm: .sha256, kid: "public")
 
         let payload = try await keyCollection.verify(token, as: TestPayload.self)
         XCTAssertEqual(payload, testPayload)
     }
 
     func testExportPublicKeyAsPEM() async throws {
-        let key = try Insecure.RSA.PublicKey(pem: publicKey)
+        let key = try Insecure.RSA.PublicKey(pem: self.publicKey)
         let key2 = try Insecure.RSA.PublicKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
 
     func testExportPrivateKeyAsPEM() async throws {
-        let key = try Insecure.RSA.PrivateKey(pem: privateKey)
+        let key = try Insecure.RSA.PrivateKey(pem: self.privateKey)
         let key2 = try Insecure.RSA.PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
@@ -186,19 +223,27 @@ final class RSATests: XCTestCase {
     }
 
     func testExportKeyAsPEMWhenRawBuilt() async throws {
-        let key = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let key = try Insecure.RSA.PrivateKey(modulus: self.modulus, exponent: self.publicExponent, privateExponent: self.privateExponent)
         let key2 = try Insecure.RSA.PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
 
     let modulus = """
-    gWu7yhI35FScdKARYboJoAm-T7yJfJ9JTvAok_RKOJYcL8oLIRSeLqQX83PPZiWdKTdXaiGWntpDu6vW7VAb-HWPF6tNYSLKDSmR3sEu2488ibWijZtNTCKOSb_1iAKAI5BJ80LTqyQtqaKzT0XUBtMsde8vX1nKI05UxujfTX3kqUtkZgLv1Yk1ZDpUoLOWUTtCm68zpjtBrPiN8bU2jqCGFyMyyXys31xFRzz4MyJ5tREHkQCzx0g7AvW0ge_sBTPQ2U6NSkcZvQyDbfDv27cMUHij1Sjx16SY9a2naTuOgamjtUzyClPLVpchX-McNyS0tjdxWY_yRL9MYuw4AQ
+    vTHHoCaR0tlYfvapRv94hUTMrdSymIrWIIZ5Kmv5bIYWtK0TMX0icLkB0PzR2IDLj1L7hzBKUljBGzjf6ujfZwru5-odDZ344A6AhH5B5Zie1ALUTnizD-8XtWcdOtv4aF5NwgRJns0YY-HVr_KKfPZurfMf7JI2wSCt0TRRUixkfJgypnLNZNMowcMiGD9GYdCb2mC43V8DKNpUIIIUJK_auxqAxdEnY6GwI4zYnQdCv8ULai_LcB2CQhj5gm9PeKI6K1qkKs5_F1N2-2y9srrSk7pYPU0xxrj5Ap5GsTaJJJhV9QV1bgDiJaakWhh2m9jSs6SsufHCPT5RiCVh5Q
     """
 
     let publicExponent = "AQAB"
 
     let privateExponent = """
-    L4z0tz7QWE0aGuOA32YqCSnrSYKdBTPFDILCdfHonzfP7WMPibz4jWxu_FzNk9s4Dh-uN2lV3NGW10pAsnqffD89LtYanRjaIdHnLW_PFo5fEL2yltK7qMB9hO1JegppKCfoc79W4-dr-4qy1Op0B3npOP-DaUYlNamfDmIbQW32UKeJzdGIn-_ryrBT7hQW6_uHLS2VFPPk0rNkPPKZYoNaqGnJ0eaFFF-dFwiThXIpPz--dxTAL8xYf275rjG8C9lh6awOfJSIdXMVuQITWf62E0mSQPR2-219bShMKriDYcYLbT3BJEgOkRBBHGuHo9R5TN298anxZqV1u5jtUQ
+    B0fVIMqbLfwDNc-UMBFAuBAvuDjJLqmZF-NU4lcJYC3Aze8jH_Jq0t-rvDkecjBypO9Skp8_HPAhbkTACTAw-KwpCW-u8okzvJuSQocBTi6TXiFFvkdSzLgst2RicZNpecq3P1Ie6yeFWsKkEINK5Qguti72-Yme5cu2JKjYwEq37c94_hNdD4CPY7XebgcXeb8dnqr40--WVIbyxSYl5uV6ZRx7vQGXyZwFezhgoyYMhkoRs88iukTeOjs_MRfmTr-akfYm67Pzwm0bC7gHU0aNS_apl7KDNfIO2MOE11WDYKmul1VmH6N0mEaxdOa_Mw5S0JlB9szX3lAEd5-buQ
+    """
+
+    let prime1 = """
+    _j0jjTdqOFbZWS_UlhwXp_sPo51ELp3yLn7aEVxkjFy3ON-J6pLYN4VY0NnBzz2L_3QNN0OgFApqdSPpF2wpU7LBHX9EaRz4vsKzT7WcZJU1mDMZSIEYwDEYrnRF5w30Zs6YZxJg8F1QaM53fal-K6hHeUkFAM60_39izsqaFH8
+    """
+
+    let prime2 = """
+    voFK8mvzwnEVvHWV0NEqGvdxP-yod65ubYWIJe2j0ZJwR3T0Lhrhtn8XOejEWgR2OIBw-lRbfMlrikQAO8jQf95z9bzdGCaDldzChCtQI_8Us1I4Jge3F5peozCED8RQRdhuCsxP6xNfCrm3zmuOtfWldfKiqN4pnA0_UG30h5s
     """
 
     let publicKey = """
