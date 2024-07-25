@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:5.10
 import PackageDescription
 
 let package = Package(
@@ -27,6 +27,9 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "BigInt", package: "BigInt"),
                 .product(name: "Logging", package: "swift-log"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
             ]
         ),
         .testTarget(
@@ -37,8 +40,11 @@ let package = Package(
             resources: [
                 .copy("TestVectors"),
                 .copy("TestCertificates"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency"),
+                .enableUpcomingFeature("ConciseMagicFile"),
             ]
         ),
-    ],
-    swiftLanguageVersions: [.v6]
+    ]
 )
