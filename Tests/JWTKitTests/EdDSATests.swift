@@ -20,7 +20,7 @@ final class EdDSATests: XCTestCase {
     func testEdDSAPublicPrivate() async throws {
         let keys = try await JWTKeyCollection()
             .add(eddsa: EdDSA.PublicKey(x: eddsaPublicKeyBase64, curve: .ed25519), kid: "public")
-            .add(eddsa: EdDSA.PrivateKey(x: eddsaPublicKeyBase64, d: eddsaPrivateKeyBase64, curve: .ed25519), kid: "private")
+            .add(eddsa: EdDSA.PrivateKey(d: eddsaPrivateKeyBase64, curve: .ed25519), kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -47,7 +47,7 @@ final class EdDSATests: XCTestCase {
 
         // sign jwt
         let keyCollection = try await JWTKeyCollection()
-            .add(eddsa: EdDSA.PrivateKey(x: x, d: d, curve: .ed25519), kid: "vapor")
+            .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42))
 
@@ -84,7 +84,7 @@ final class EdDSATests: XCTestCase {
 
         // sign jwt
         let keyCollection = try await JWTKeyCollection()
-            .add(eddsa: EdDSA.PrivateKey(x: x, d: d, curve: .ed25519), kid: "vapor")
+            .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42))
 
@@ -121,7 +121,7 @@ final class EdDSATests: XCTestCase {
 
         // sign jwt
         let keyCollection = try await JWTKeyCollection()
-            .add(eddsa: EdDSA.PrivateKey(x: x, d: d, curve: .ed25519), kid: "vapor")
+            .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
