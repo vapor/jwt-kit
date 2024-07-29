@@ -5,9 +5,9 @@ let package = Package(
     name: "jwt-kit",
     platforms: [
         .macOS(.v13),
-        .iOS(.v16),
-        .tvOS(.v16),
-        .watchOS(.v9),
+        .iOS(.v15),
+        .tvOS(.v15),
+        .watchOS(.v8),
     ],
     products: [
         .library(name: "JWTKit", targets: ["JWTKit"]),
