@@ -13,7 +13,7 @@ public protocol ECDSAKey: Sendable {
 }
 
 public extension ECDSA {
-    struct PublicKey<Curve>: ECDSAKey where Curve: ECDSACurveType {
+    struct PublicKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
         typealias Signature = Curve.Signature
         typealias PublicKey = Curve.PrivateKey.PublicKey
 
@@ -107,11 +107,15 @@ public extension ECDSA {
         init(backing: PublicKey) {
             self.backing = backing
         }
+        
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+        }
     }
 }
 
 public extension ECDSA {
-    struct PrivateKey<Curve>: ECDSAKey where Curve: ECDSACurveType {
+    struct PrivateKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
         typealias PrivateKey = Curve.PrivateKey
         typealias Signature = PrivateKey.Signature
 
@@ -185,6 +189,10 @@ public extension ECDSA {
         /// - Returns: A new ``ECDSA.PrivateKey`` instance with the generated key.
         public init() {
             backing = PrivateKey()
+        }
+        
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
         }
     }
 }
