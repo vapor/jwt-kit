@@ -19,7 +19,7 @@ public extension Insecure.RSA {
     ///
     /// In JWT, RSA public keys are used to verify JWTs.
     /// They consist of a modulus and an exponent.
-    struct PublicKey: RSAKey {
+    struct PublicKey: RSAKey, Equatable {
         // Exports the current public key as a PEM encoded string.
         ///
         /// - Returns: A PEM encoded string representation of the key.
@@ -167,6 +167,10 @@ public extension Insecure.RSA {
         func isValidSignature<D: Digest>(_ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding) -> Bool {
             self.backing.isValidSignature(signature, for: digest, padding: padding)
         }
+        
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.derRepresentation == rhs.derRepresentation
+        }
     }
 }
 
@@ -175,7 +179,7 @@ public extension Insecure.RSA {
     ///
     /// In JWT, RSA private keys are used to sign JWTs.
     /// They consist of a modulus, an exponent, and a private exponent.
-    struct PrivateKey: RSAKey {
+    struct PrivateKey: RSAKey, Equatable {
         /// Exports the current private key as a PEM encoded string.
         ///
         /// - Throws: If the key is not a private key.
@@ -295,6 +299,10 @@ public extension Insecure.RSA {
 
         func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {
             try self.backing.signature(for: digest, padding: padding)
+        }
+        
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.derRepresentation == rhs.derRepresentation
         }
     }
 }

@@ -277,18 +277,6 @@ final class ECDSATests: XCTestCase {
     }
 }
 
-extension ECDSA.PublicKey: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
-    }
-}
-
-extension ECDSA.PrivateKey: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
-    }
-}
-
 let ecdsaPrivateKey = """
 -----BEGIN PRIVATE KEY-----
 MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg2sD+kukkA8GZUpmm
