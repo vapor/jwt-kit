@@ -70,7 +70,7 @@ public actor JWTKeyCollection: Sendable {
     /// - Throws: An error if the JSON string cannot be decoded into a `JWKS` instance.
     /// - Returns: Self for chaining.
     @discardableResult
-    public func use(jwksJSON json: String) throws -> Self {
+    public func add(jwksJSON json: String) throws -> Self {
         let jwks = try self.defaultJWTParser.jsonDecoder.decode(JWKS.self, from: Data(json.utf8))
         return try self.add(jwks: jwks)
     }

@@ -200,7 +200,7 @@ let json = """
 """
 
 // Create key collection and add JWKS
-let keys = try await JWTKeyCollection().use(jwksJSON: json)
+let keys = try await JWTKeyCollection().add(jwksJSON: json)
 ```
 
 You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.  

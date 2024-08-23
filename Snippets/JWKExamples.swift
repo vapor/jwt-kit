@@ -13,4 +13,4 @@ let json = """
 """
 
 // Create key collection and add JWKS
-let keys = try await JWTKeyCollection().use(jwksJSON: json)
+let keys = try await JWTKeyCollection().add(jwksJSON: json)

@@ -31,7 +31,7 @@ class JWTKitTests: XCTestCase {
             // Since we have an ExpirationClaim, we will
             // call its verify method.
             func verify(using _: some JWTAlgorithm) throws {
-                try expiration.verifyNotExpired()
+                try self.expiration.verifyNotExpired()
             }
         }
 
@@ -210,7 +210,7 @@ class JWTKitTests: XCTestCase {
         }
         """
 
-        let keyCollection = try await JWTKeyCollection().use(jwksJSON: json)
+        let keyCollection = try await JWTKeyCollection().add(jwksJSON: json)
 
         await XCTAssertNoThrowAsync(try await keyCollection.getKey())
         let a: JWTAlgorithm, b: JWTAlgorithm
@@ -238,8 +238,8 @@ class JWTKitTests: XCTestCase {
         struct Payload: JWTPayload {
             let foo: String
             func verify(using _: some JWTAlgorithm) throws {
-                guard foo == "bar" else {
-                    throw NotBar(foo: foo)
+                guard self.foo == "bar" else {
+                    throw NotBar(foo: self.foo)
                 }
             }
         }
@@ -295,13 +295,13 @@ class JWTKitTests: XCTestCase {
         }
         """
 
-        try await keyCollection.use(jwksJSON: jwksString)
+        try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
 
     func testMicrosoftJWKs() async throws {
-        await XCTAssertNoThrowAsync(try await JWTKeyCollection().use(jwksJSON: microsoftJWKS))
+        await XCTAssertNoThrowAsync(try await JWTKeyCollection().add(jwksJSON: microsoftJWKS))
     }
 
     func testFirebaseJWTAndCertificate() async throws {
@@ -351,9 +351,9 @@ class JWTKitTests: XCTestCase {
 
             func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
                 if header.b64?.asBool == true {
-                    try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
+                    try Data(self.jsonEncoder.encode(payload).base64URLEncodedBytes())
                 } else {
-                    try jsonEncoder.encode(payload)
+                    try self.jsonEncoder.encode(payload)
                 }
             }
         }
@@ -367,9 +367,9 @@ class JWTKitTests: XCTestCase {
                 let header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
 
                 let payload = if header.b64?.asBool ?? true {
-                    try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+                    try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
                 } else {
-                    try jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
+                    try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
                 }
 
                 let signature = Data(encodedSignature.base64URLDecodedBytes())
@@ -636,7 +636,7 @@ struct ExpirationPayload: JWTPayload {
     var exp: ExpirationClaim
 
     func verify(using _: some JWTAlgorithm) throws {
-        try exp.verifyNotExpired()
+        try self.exp.verifyNotExpired()
     }
 }
 
@@ -710,7 +710,7 @@ struct FirebasePayload: JWTPayload, Equatable {
     let expiration: ExpirationClaim
 
     func verify(using _: some JWTAlgorithm) throws {
-        try expiration.verifyNotExpired(currentDate: .distantPast)
+        try self.expiration.verifyNotExpired(currentDate: .distantPast)
     }
 }
 
