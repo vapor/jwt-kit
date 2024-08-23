@@ -18,18 +18,12 @@
 
 🔑 JSON Web Token signing and verification (HMAC, RSA, PSS, ECDSA, EdDSA) using SwiftCrypto.
 
-### Major Releases
-
-The table below shows a list of JWTKit major releases alongside their compatible Swift versions. 
-
-|Version|Swift|SPM|
-|---|---|---|
-|5.0|5.10+|`from: "5.0.0"`|
+### Getting Started
 
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-beta.4")
+.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-beta.rc")
 ```
 
 and add it to your target's dependencies:
