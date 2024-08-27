@@ -67,7 +67,7 @@ final class EdDSATests: XCTestCase {
         }
         """
 
-        try await keyCollection.use(jwksJSON: jwksString)
+        try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -104,7 +104,7 @@ final class EdDSATests: XCTestCase {
         }
         """
 
-        try await keyCollection.use(jwksJSON: jwksString)
+        try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -141,7 +141,7 @@ final class EdDSATests: XCTestCase {
         }
         """
 
-        try await keyCollection.use(jwksJSON: jwksString)
+        try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }

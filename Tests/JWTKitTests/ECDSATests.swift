@@ -111,7 +111,7 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        try await keys.use(jwksJSON: jwksString)
+        try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -150,7 +150,7 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        try await keys.use(jwksJSON: jwksString)
+        try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -189,7 +189,7 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        try await keys.use(jwksJSON: jwksString)
+        try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -201,8 +201,8 @@ final class ECDSATests: XCTestCase {
         struct Payload: JWTPayload {
             let foo: String
             func verify(using _: some JWTAlgorithm) throws {
-                guard foo == "bar" else {
-                    throw NotBar(foo: foo)
+                guard self.foo == "bar" else {
+                    throw NotBar(foo: self.foo)
                 }
             }
         }

@@ -18,18 +18,12 @@
 
 🔑 JSON Web Token signing and verification (HMAC, RSA, PSS, ECDSA, EdDSA) using SwiftCrypto.
 
-### Major Releases
-
-The table below shows a list of JWTKit major releases alongside their compatible Swift versions. 
-
-|Version|Swift|SPM|
-|---|---|---|
-|5.0|5.10+|`from: "5.0.0"`|
+### Getting Started
 
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-beta.4")
+.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-beta.rc")
 ```
 
 and add it to your target's dependencies:
@@ -200,7 +194,7 @@ let json = """
 """
 
 // Create key collection and add JWKS
-let keys = try await JWTKeyCollection().use(jwksJSON: json)
+let keys = try await JWTKeyCollection().add(jwksJSON: json)
 ```
 
 You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.  
