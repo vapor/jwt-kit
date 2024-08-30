@@ -455,6 +455,58 @@ class JWTKitTests: XCTestCase {
         )
     }
 
+    func testCommonHeaderFields() async throws {
+        let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        var commonFields = JWTHeader()
+        commonFields.alg = "alg"
+        commonFields.kid = "kid"
+        commonFields.typ = "typ"
+        commonFields.cty = "cty"
+        commonFields.crit = ["crit"]
+        commonFields.jku = "jku"
+        commonFields.jwk = [
+            "null": .null,
+            "bool": .bool(true),
+            "int": .int(21),
+            "decimal": .decimal(21.7),
+            "test": .string("test"),
+            "array": .array([.string("array_test")]),
+            "object": .object(["object_test": .string("object_test")]),
+        ]
+        //commonFields.x5c = ["x5c"]
+        commonFields.x5u = "x5u"
+        commonFields.x5t = "x5t"
+        commonFields.x5tS256 = "x5tS256"
+        let token = try await keyCollection.sign(payload, header: commonFields)
+
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+        XCTAssertEqual(parsed.header.alg, "alg")
+        XCTAssertEqual(parsed.header.kid, "kid")
+        XCTAssertEqual(parsed.header.typ, "typ")
+        XCTAssertEqual(parsed.header.cty, "cty")
+        XCTAssertEqual(parsed.header.crit, ["crit"])
+        XCTAssertEqual(parsed.header.jku, "jku")
+        XCTAssertEqual(parsed.header.jwk?["null"]?.isNull, true)
+        XCTAssertEqual(parsed.header.jwk?["bool"]?.asBool, true)
+        XCTAssertEqual(parsed.header.jwk?["int"]?.asInt, 21)
+        XCTAssertEqual(parsed.header.jwk?["decimal"]?.asDecimal, 21.7)
+        XCTAssertEqual(parsed.header.jwk?["test"]?.asString, "test")
+        XCTAssertEqual(parsed.header.jwk?["array"]?.asArray?.first?.asString, "array_test")
+        XCTAssertEqual(try parsed.header.jwk?["array"]?.asArray(of: String.self).first, "array_test")
+        XCTAssertEqual(parsed.header.jwk?["object"]?.asObject?["object_test"]?.asString, "object_test")
+        //XCTAssertEqual(parsed.header.x5c, ["x5c"])
+        XCTAssertEqual(parsed.header.x5u, "x5u")
+        XCTAssertEqual(parsed.header.x5t, "x5t")
+        XCTAssertEqual(parsed.header.x5tS256, "x5tS256")
+    }
+
     func testSampleOpenbankingHeader() async throws {
         let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
 
@@ -603,6 +655,66 @@ class JWTKitTests: XCTestCase {
         let unverified = try await keyCollection.unverified(token.bytes, as: TestPayload.self)
 
         XCTAssertEqual(unverified, payload)
+    }
+
+    enum DummyError: Error {
+        case dummy
+    }
+
+    func testJWTErrorDescription() {
+        XCTAssertEqual(
+            JWTError.claimVerificationFailure(failedClaim: ExpirationClaim(value: .init(timeIntervalSince1970: 1)), reason: "test").description,
+            "JWTKitError(errorType: claimVerificationFailure, failedClaim: JWTKit.ExpirationClaim(value: 1970-01-01 00:00:01 +0000), reason: \"test\")"
+        )
+        XCTAssertEqual(
+            JWTError.signingAlgorithmFailure(DummyError.dummy).description,
+            "JWTKitError(errorType: signingAlgorithmFailure, underlying: JWTKitTests.JWTKitTests.DummyError.dummy)"
+        )
+        XCTAssertEqual(
+            JWTError.malformedToken(reason: "test").description,
+            "JWTKitError(errorType: malformedToken, reason: \"test\")"
+        )
+        XCTAssertEqual(
+            JWTError.signatureVerificationFailed.description,
+            "JWTKitError(errorType: signatureVerificationFailed)"
+        )
+        XCTAssertEqual(
+            JWTError.missingKIDHeader.description,
+            "JWTKitError(errorType: missingKIDHeader)"
+        )
+        XCTAssertEqual(
+            JWTError.unknownKID("test").description,
+            "JWTKitError(errorType: unknownKID, kid: JWTKit.JWKIdentifier(string: \"test\"))"
+        )
+        XCTAssertEqual(
+            JWTError.invalidJWK(reason: "test").description,
+            "JWTKitError(errorType: invalidJWK, reason: \"test\")"
+        )
+        XCTAssertEqual(
+            JWTError.invalidBool("test").description,
+            "JWTKitError(errorType: invalidBool, name: \"test\")"
+        )
+        XCTAssertEqual(
+            JWTError.noKeyProvided.description,
+            "JWTKitError(errorType: noKeyProvided)"
+        )
+        XCTAssertEqual(
+            JWTError.missingX5CHeader.description,
+            "JWTKitError(errorType: missingX5CHeader)"
+        )
+        XCTAssertEqual(
+            JWTError.invalidX5CChain(reason: "test").description,
+            "JWTKitError(errorType: invalidX5CChain, reason: \"test\")"
+        )
+        XCTAssertEqual(
+            JWTError.invalidHeaderField(reason: "test").description,
+            "JWTKitError(errorType: invalidHeaderField, reason: \"test\")"
+        )
+        // Can't test `JWTError.unsupportedCurve`
+        XCTAssertEqual(
+            JWTError.generic(identifier: "id", reason: "test").description,
+            "JWTKitError(errorType: generic, reason: \"test\")"
+        )
     }
 }
 
