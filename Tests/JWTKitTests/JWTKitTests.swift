@@ -471,16 +471,13 @@ class JWTKitTests: XCTestCase {
         commonFields.cty = "cty"
         commonFields.crit = ["crit"]
         commonFields.jku = "jku"
-        commonFields.jwk = [
-            "null": .null,
-            "bool": .bool(true),
-            "int": .int(21),
-            "decimal": .decimal(21.7),
-            "test": .string("test"),
-            "array": .array([.string("array_test")]),
-            "object": .object(["object_test": .string("object_test")]),
-        ]
-        //commonFields.x5c = ["x5c"]
+        commonFields.null = .null
+        commonFields.bool = .bool(true)
+        commonFields.int = .int(21)
+        commonFields.decimal = .decimal(21.7)
+        commonFields.string = .string("test")
+        commonFields.array = .array([.string("array_test")])
+        commonFields.object = .object(["object_test": .string("object_test")])
         commonFields.x5u = "x5u"
         commonFields.x5t = "x5t"
         commonFields.x5tS256 = "x5tS256"
@@ -493,15 +490,14 @@ class JWTKitTests: XCTestCase {
         XCTAssertEqual(parsed.header.cty, "cty")
         XCTAssertEqual(parsed.header.crit, ["crit"])
         XCTAssertEqual(parsed.header.jku, "jku")
-        XCTAssertEqual(parsed.header.jwk?["null"]?.isNull, true)
-        XCTAssertEqual(parsed.header.jwk?["bool"]?.asBool, true)
-        XCTAssertEqual(parsed.header.jwk?["int"]?.asInt, 21)
-        XCTAssertEqual(parsed.header.jwk?["decimal"]?.asDecimal, 21.7)
-        XCTAssertEqual(parsed.header.jwk?["test"]?.asString, "test")
-        XCTAssertEqual(parsed.header.jwk?["array"]?.asArray?.first?.asString, "array_test")
-        XCTAssertEqual(try parsed.header.jwk?["array"]?.asArray(of: String.self).first, "array_test")
-        XCTAssertEqual(parsed.header.jwk?["object"]?.asObject?["object_test"]?.asString, "object_test")
-        //XCTAssertEqual(parsed.header.x5c, ["x5c"])
+        XCTAssertEqual(parsed.header.null?.isNull, true)
+        XCTAssertEqual(parsed.header.bool?.asBool, true)
+        XCTAssertEqual(parsed.header.int?.asInt, 21)
+        XCTAssertEqual(parsed.header.decimal?.asDecimal, 21.7)
+        XCTAssertEqual(parsed.header.string?.asString, "test")
+        XCTAssertEqual(parsed.header.array?.asArray?.first?.asString, "array_test")
+        XCTAssertEqual(try parsed.header.array?.asArray(of: String.self).first, "array_test")
+        XCTAssertEqual(parsed.header.object?.asObject?["object_test"]?.asString, "object_test")
         XCTAssertEqual(parsed.header.x5u, "x5u")
         XCTAssertEqual(parsed.header.x5t, "x5t")
         XCTAssertEqual(parsed.header.x5tS256, "x5tS256")
@@ -710,7 +706,6 @@ class JWTKitTests: XCTestCase {
             JWTError.invalidHeaderField(reason: "test").description,
             "JWTKitError(errorType: invalidHeaderField, reason: \"test\")"
         )
-        // Can't test `JWTError.unsupportedCurve`
         XCTAssertEqual(
             JWTError.generic(identifier: "id", reason: "test").description,
             "JWTKitError(errorType: generic, reason: \"test\")"
