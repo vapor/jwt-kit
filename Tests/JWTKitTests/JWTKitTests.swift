@@ -456,7 +456,7 @@ class JWTKitTests: XCTestCase {
     }
 
     func testCommonHeaderFields() async throws {
-        let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let keyCollection = await JWTKeyCollection().add(hmac: .init(key: .init(size: .bits256)), digestAlgorithm: .sha384)
 
         let payload = TestPayload(
             sub: "vapor",
@@ -471,13 +471,13 @@ class JWTKitTests: XCTestCase {
         commonFields.cty = "cty"
         commonFields.crit = ["crit"]
         commonFields.jku = "jku"
-        commonFields.null = .null
-        commonFields.bool = .bool(true)
-        commonFields.int = .int(21)
-        commonFields.decimal = .decimal(21.7)
-        commonFields.string = .string("test")
-        commonFields.array = .array([.string("array_test")])
-        commonFields.object = .object(["object_test": .string("object_test")])
+        commonFields.null = nil
+        commonFields.bool = true
+        commonFields.int = 21
+        commonFields.decimal = 21.7
+        commonFields.string = "test"
+        commonFields.array = [.string("array_test")]
+        commonFields.object = ["object_test": .string("object_test")]
         commonFields.x5u = "x5u"
         commonFields.x5t = "x5t"
         commonFields.x5tS256 = "x5tS256"
