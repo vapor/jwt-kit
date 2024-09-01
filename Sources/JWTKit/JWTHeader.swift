@@ -18,8 +18,8 @@ public struct JWTHeader: Sendable {
         }
     }
 
-    public mutating func removeField(_ key: String) {
-        self.fields.removeValue(forKey: key)
+    public mutating func remove(_ field: String) {
+        self.fields.removeValue(forKey: field)
     }
 }
 
