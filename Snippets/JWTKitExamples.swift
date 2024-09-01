@@ -100,8 +100,8 @@ do {
     // Add RSA with SHA-256 algorithm
     await keys.add(rsa: key, digestAlgorithm: .sha256)
 
-    // Add RSA with SHA-256 and PSS padding algorithm
-    await keys.add(pss: key, digestAlgorithm: .sha256)
+    // Add RSA with SHA-512 and PSS padding algorithm
+    await keys.add(pss: key, digestAlgorithm: .sha512)
     // snippet.end
 }
 
