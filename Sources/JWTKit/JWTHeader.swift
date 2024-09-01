@@ -8,21 +8,31 @@ public struct JWTHeader: Sendable {
     }
 
     public subscript(dynamicMember member: String) -> JWTHeaderField? {
-        get { fields[member] }
-        set { fields[member] = newValue }
+        get { self.fields[member] }
+        set {
+            if let newValue = newValue {
+                self.fields[member] = newValue
+            } else {
+                self.fields[member] = .null
+            }
+        }
+    }
+
+    public mutating func removeField(_ key: String) {
+        self.fields.removeValue(forKey: key)
     }
 }
 
 extension JWTHeader: ExpressibleByDictionaryLiteral {
-     public init(dictionaryLiteral elements: (String, JWTHeaderField)...) {
-         self.init(fields: Dictionary(uniqueKeysWithValues: elements))
-     }
- }
+    public init(dictionaryLiteral elements: (String, JWTHeaderField)...) {
+        self.init(fields: Dictionary(uniqueKeysWithValues: elements))
+    }
+}
 
 extension JWTHeader: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try fields.forEach { key, value in
+        try self.fields.forEach { key, value in
             try container.encode(value, forKey: .custom(name: key))
         }
     }
