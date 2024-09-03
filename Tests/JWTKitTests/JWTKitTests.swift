@@ -711,6 +711,22 @@ class JWTKitTests: XCTestCase {
             "JWTKitError(errorType: generic, reason: \"test\")"
         )
     }
+
+    func testRemoveHeaderField() {
+        var header = JWTHeader()
+
+        header.field1 = "value1"
+        header.field2 = "value2"
+
+        XCTAssertEqual(header.fields.count, 2)
+
+        header.remove("field1")
+
+        XCTAssertEqual(header.fields.count, 1)
+        XCTAssertNil(header.field1)
+        XCTAssertEqual(header.field2, .string("value2"))
+
+    }
 }
 
 struct AudiencePayload: Codable {
