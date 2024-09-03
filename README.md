@@ -131,7 +131,7 @@ Then, pass the payload to `JWTKeyCollection.sign`.
 
 ```swift
 // Sign the payload, returning the JWT as String
-let jwt = try await keys.sign(payload, header: ["kid": "my-key"])
+let jwt = try await keys.sign(payload, kid: "my-key")
 print(jwt)
 ```
 
@@ -289,21 +289,14 @@ let key = try Insecure.RSA.PublicKey(pem: rsaPublicKey)
 ```
 
 Use `Insecure.RSA.PrivateKey(pem:)` for loading private RSA pem keys and `Insecure.RSA.PublicKey(certificatePEM:)` for loading X.509 certificates.
-Once you have an RSA key, you can add to the key collection using the following methods depending on the digest and the padding:
-
-- `addRS256`: RSA with SHA-256 and PKCS1.5 padding
-- `addRS384`: RSA with SHA-384 and PKCS1.5 padding
-- `addRS512`: RSA with SHA-512 and PKCS1.5 padding
-- `addPS256`: RSA with SHA-256 and PSS padding
-- `addPS384`: RSA with SHA-384 and PSS padding
-- `addPS512`: RSA with SHA-512 and PSS padding
+Once you have an RSA key, you can add to the key collection using the dedicated methods depending on the digest and the padding:
 
 ```swift
 // Add RSA with SHA-256 algorithm 
 await keys.add(rsa: key, digestAlgorithm: .sha256)
 
-// Add RSA with SHA-256 and PSS padding algorithm
-await keys.add(pss: key, digestAlgorithm: .sha256)
+// Add RSA with SHA-512 and PSS padding algorithm
+await keys.add(pss: key, digestAlgorithm: .sha512)
 ```
 
 ## Claims
