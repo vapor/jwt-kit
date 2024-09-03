@@ -20,11 +20,16 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
         do { self = try .bool(container.decode(Bool.self)); return }
         catch DecodingError.typeMismatch {}
 
-        do { self = try .int(container.decode(Int.self)); return }
-        catch DecodingError.typeMismatch {}
-
-        do { self = try .decimal(container.decode(Double.self)); return }
-        catch DecodingError.typeMismatch {}
+        // This is a bit of a hack to correctly differentiate between integers and doubles
+        do {
+            let doubleValue = try container.decode(Double.self)
+            if doubleValue.truncatingRemainder(dividingBy: 1) == 0 {
+                self = .int(Int(doubleValue))
+            } else {
+                self = .decimal(doubleValue)
+            }
+            return
+        } catch DecodingError.typeMismatch {}
 
         do { self = try .string(container.decode(String.self)); return }
         catch DecodingError.typeMismatch {}
@@ -41,7 +46,7 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
-        case .null: break
+        case .null: try container.encodeNil()
         case let .bool(value): try container.encode(value)
         case let .int(value): try container.encode(value)
         case let .decimal(value): try container.encode(value)
