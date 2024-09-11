@@ -863,6 +863,6 @@ sb7NLsl7DkvjjxTz7I98xaGbfhofgYympeKT6UO+tmc=
 -----END CERTIFICATE-----
 """
 
-#if compiler(>=6.0) && compiler(<=6.0)
+#if compiler(>=6.0) && compiler(<6.1)
 extension XCTestCase: @retroactive @unchecked Sendable {}
 #endif
