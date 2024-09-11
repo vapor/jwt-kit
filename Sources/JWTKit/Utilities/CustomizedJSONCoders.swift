@@ -8,6 +8,9 @@ public protocol JWTJSONDecoder: Sendable {
 public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
+
+extension JSONDecoder: JWTJSONDecoder {}
+extension JSONEncoder: JWTJSONEncoder {}
 #else
 public protocol JWTJSONDecoder {
     func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
@@ -16,10 +19,10 @@ public protocol JWTJSONDecoder {
 public protocol JWTJSONEncoder {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
-#endif
 
-extension JSONDecoder: JWTJSONDecoder {}
-extension JSONEncoder: JWTJSONEncoder {}
+extension JSONDecoder: JWTJSONDecoder, @unchecked Sendable {}
+extension JSONEncoder: JWTJSONEncoder, @unchecked Sendable {}
+#endif
 
 public extension JSONDecoder.DateDecodingStrategy {
     static var integerSecondsSince1970: Self {
