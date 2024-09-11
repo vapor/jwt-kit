@@ -41,6 +41,7 @@ public protocol ECDSAPublicKey: Sendable {
     init(rawRepresentation: some ContiguousBytes) throws
     init(compactRepresentation: some ContiguousBytes) throws
     init(x963Representation: some ContiguousBytes) throws
+    @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
     init(compressedRepresentation: some ContiguousBytes) throws
     init(pemRepresentation: String) throws
     init<Bytes>(derRepresentation: Bytes) throws where Bytes: RandomAccessCollection, Bytes.Element == UInt8
@@ -48,6 +49,7 @@ public protocol ECDSAPublicKey: Sendable {
     var compactRepresentation: Data? { get }
     var rawRepresentation: Data { get }
     var x963Representation: Data { get }
+    @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
     var compressedRepresentation: Data { get }
     var derRepresentation: Data { get }
     var pemRepresentation: String { get }
