@@ -36,5 +36,7 @@ jobs:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: macos-latest
     steps:
-      - name: Run iOS Tests on iOS
+      - name: Check out JWTKit
+        uses: actions/checkout@v4
+      - name: Run iOS Tests
         run: xcodebuild -scheme jwt-kit -destination generic/platform=iOS
