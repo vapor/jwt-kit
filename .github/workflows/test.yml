@@ -37,4 +37,4 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Run iOS Tests on iOS
-        run: xcrun xcodebuild -scheme jwt-kit -destination generic/platform=iOS
+        run: xcodebuild -scheme jwt-kit -destination generic/platform=iOS
