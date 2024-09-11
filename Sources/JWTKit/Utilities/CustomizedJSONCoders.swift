@@ -1,6 +1,5 @@
 import Foundation
 
-#if canImport(Darwin)
 public protocol JWTJSONDecoder: Sendable {
     func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
 }
@@ -9,17 +8,10 @@ public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 
+#if canImport(Darwin)
 extension JSONDecoder: JWTJSONDecoder {}
 extension JSONEncoder: JWTJSONEncoder {}
 #else
-public protocol JWTJSONDecoder {
-    func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
-}
-
-public protocol JWTJSONEncoder {
-    func encode<T: Encodable>(_ value: T) throws -> Data
-}
-
 extension JSONDecoder: JWTJSONDecoder, @unchecked Sendable {}
 extension JSONEncoder: JWTJSONEncoder, @unchecked Sendable {}
 #endif
