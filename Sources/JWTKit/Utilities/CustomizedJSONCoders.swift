@@ -8,12 +8,12 @@ public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 
-#if canImport(Darwin)
-extension JSONDecoder: JWTJSONDecoder {}
-extension JSONEncoder: JWTJSONEncoder {}
-#else
+#if compiler(<6.0) && !canImport(Darwin)
 extension JSONDecoder: JWTJSONDecoder, @unchecked Sendable {}
 extension JSONEncoder: JWTJSONEncoder, @unchecked Sendable {}
+#else
+extension JSONDecoder: JWTJSONDecoder {}
+extension JSONEncoder: JWTJSONEncoder {}
 #endif
 
 public extension JSONDecoder.DateDecodingStrategy {
