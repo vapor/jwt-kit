@@ -1,8 +1,4 @@
-#if canImport(Darwin)
 import Foundation
-#else
-@preconcurrency import Foundation
-#endif
 
 #if canImport(Darwin)
 public protocol JWTJSONDecoder: Sendable {
@@ -13,11 +9,11 @@ public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 #else
-public protocol JWTJSONDecoder: @unchecked Sendable {
+public protocol JWTJSONDecoder {
     func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
 }
 
-public protocol JWTJSONEncoder: @unchecked Sendable {
+public protocol JWTJSONEncoder {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 #endif
