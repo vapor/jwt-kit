@@ -1,4 +1,8 @@
-import struct Foundation.Locale
+#if canImport(Darwin)
+import Foundation
+#else
+@preconcurrency import Foundation
+#endif
 
 public struct LocaleClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// See ``JWTClaim``.
@@ -22,6 +26,6 @@ public struct LocaleClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// See `Encodable`.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(value.identifier)
+        try container.encode(self.value.identifier)
     }
 }
