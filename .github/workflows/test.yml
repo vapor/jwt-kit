@@ -30,6 +30,7 @@ jobs:
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
     with:
       with_api_check: ${{ github.event_name == 'pull_request' }}
+      extra_flags: -Xswiftc -warnings-as-errors
     secrets: inherit
 
   ios-tests:
