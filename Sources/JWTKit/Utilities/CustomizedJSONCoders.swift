@@ -4,6 +4,7 @@ import Foundation
 @preconcurrency import Foundation
 #endif
 
+#if canImport(Darwin)
 public protocol JWTJSONDecoder: Sendable {
     func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
 }
@@ -11,9 +12,17 @@ public protocol JWTJSONDecoder: Sendable {
 public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
+#else
+public protocol JWTJSONDecoder: @unchecked Sendable {
+    func decode<T: Decodable>(_: T.Type, from string: Data) throws -> T
+}
+
+public protocol JWTJSONEncoder: @unchecked Sendable {
+    func encode<T: Encodable>(_ value: T) throws -> Data
+}
+#endif
 
 extension JSONDecoder: JWTJSONDecoder {}
-
 extension JSONEncoder: JWTJSONEncoder {}
 
 public extension JSONDecoder.DateDecodingStrategy {
