@@ -862,3 +862,7 @@ g/5ZupoI8k2foTq4OdXJH/hkq4N5AyLp9S/RSodW6X+gexxohtgJxGx0gojotMzX
 sb7NLsl7DkvjjxTz7I98xaGbfhofgYympeKT6UO+tmc=
 -----END CERTIFICATE-----
 """
+
+#if compiler(>=6.0) && compiler(<=6.0)
+extension XCTestCase: @retroactive @unchecked Sendable {}
+#endif
