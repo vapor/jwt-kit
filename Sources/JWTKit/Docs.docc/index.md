@@ -6,14 +6,6 @@
 
 🔑 JSON Web Token signing and verification (HMAC, RSA, PSS, ECDSA, EdDSA) using SwiftCrypto.
 
-### Major Releases
-
-The table below shows a list of JWTKit major releases alongside their compatible Swift versions.
-
-|Version|Swift|SPM|
-|---|---|---|
-|5.0|5.9+|`from: "5.0.0"`|
-
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
 ```swift
@@ -26,11 +18,9 @@ and add it to your target's dependencies:
 .product(name: "JWTKit", package: "jwt-kit")
 ```
 
-> Note: Prior to version 4.0, this package was part of [vapor/jwt](https://github.com/vapor/jwt).
-
 ### Supported Platforms
 
-JWTKit supports all platforms supported by Swift 5.9 and later, with the exception of Windows.
+JWTKit supports all platforms supported by Swift 5.10 and later, with the exception of Windows.
 
 ## Overview
 
@@ -188,14 +178,7 @@ You can also choose to load a PEM file:
 @Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA_FROM_PEM)
 
 Use `Insecure.RSA.PrivateKey(pem:)` for loading private RSA pem keys and `Insecure.RSA.PublicKey(certificatePEM:)` for loading X.509 certificates.
-Once you have an RSA key, you can add to the key collection using the following methods depending on the digest and the padding:
-
-- `addRS256`: RSA with SHA-256 and PKCS1.5 padding
-- `addRS384`: RSA with SHA-384 and PKCS1.5 padding
-- `addRS512`: RSA with SHA-512 and PKCS1.5 padding
-- `addPS256`: RSA with SHA-256 and PSS padding
-- `addPS384`: RSA with SHA-384 and PSS padding
-- `addPS512`: RSA with SHA-512 and PSS padding
+Once you have an RSA key, you can add to the key collection using the dedicated methods depending on the digest and the padding:
 
 @Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: RSA_ADD)
 

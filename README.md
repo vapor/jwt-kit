@@ -18,18 +18,12 @@
 
 🔑 JSON Web Token signing and verification (HMAC, RSA, PSS, ECDSA, EdDSA) using SwiftCrypto.
 
-### Major Releases
-
-The table below shows a list of JWTKit major releases alongside their compatible Swift versions. 
-
-|Version|Swift|SPM|
-|---|---|---|
-|5.0|5.10+|`from: "5.0.0"`|
+### Getting Started
 
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-beta.4")
+.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-beta.rc")
 ```
 
 and add it to your target's dependencies:
@@ -137,7 +131,7 @@ Then, pass the payload to `JWTKeyCollection.sign`.
 
 ```swift
 // Sign the payload, returning the JWT as String
-let jwt = try await keys.sign(payload, header: ["kid": "my-key"])
+let jwt = try await keys.sign(payload, kid: "my-key")
 print(jwt)
 ```
 
@@ -200,7 +194,7 @@ let json = """
 """
 
 // Create key collection and add JWKS
-let keys = try await JWTKeyCollection().use(jwksJSON: json)
+let keys = try await JWTKeyCollection().add(jwksJSON: json)
 ```
 
 You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.  
@@ -295,21 +289,14 @@ let key = try Insecure.RSA.PublicKey(pem: rsaPublicKey)
 ```
 
 Use `Insecure.RSA.PrivateKey(pem:)` for loading private RSA pem keys and `Insecure.RSA.PublicKey(certificatePEM:)` for loading X.509 certificates.
-Once you have an RSA key, you can add to the key collection using the following methods depending on the digest and the padding:
-
-- `addRS256`: RSA with SHA-256 and PKCS1.5 padding
-- `addRS384`: RSA with SHA-384 and PKCS1.5 padding
-- `addRS512`: RSA with SHA-512 and PKCS1.5 padding
-- `addPS256`: RSA with SHA-256 and PSS padding
-- `addPS384`: RSA with SHA-384 and PSS padding
-- `addPS512`: RSA with SHA-512 and PSS padding
+Once you have an RSA key, you can add to the key collection using the dedicated methods depending on the digest and the padding:
 
 ```swift
 // Add RSA with SHA-256 algorithm 
 await keys.add(rsa: key, digestAlgorithm: .sha256)
 
-// Add RSA with SHA-256 and PSS padding algorithm
-await keys.add(pss: key, digestAlgorithm: .sha256)
+// Add RSA with SHA-512 and PSS padding algorithm
+await keys.add(pss: key, digestAlgorithm: .sha512)
 ```
 
 ## Claims

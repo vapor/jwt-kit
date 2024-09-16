@@ -110,7 +110,7 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        try await keys.use(jwksJSON: jwksString)
+        try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -149,7 +149,7 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        try await keys.use(jwksJSON: jwksString)
+        try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -188,7 +188,7 @@ final class ECDSATests: XCTestCase {
         }
         """
 
-        try await keys.use(jwksJSON: jwksString)
+        try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
         XCTAssertEqual(foo.bar, 42)
     }
@@ -200,8 +200,8 @@ final class ECDSATests: XCTestCase {
         struct Payload: JWTPayload {
             let foo: String
             func verify(using _: some JWTAlgorithm) throws {
-                guard foo == "bar" else {
-                    throw NotBar(foo: foo)
+                guard self.foo == "bar" else {
+                    throw NotBar(foo: self.foo)
                 }
             }
         }
@@ -273,18 +273,6 @@ final class ECDSATests: XCTestCase {
         try await keys.add(ecdsa: ES512PublicKey(parameters: params), kid: "params")
         try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p521)
-    }
-}
-
-extension ECDSA.PublicKey: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
-    }
-}
-
-extension ECDSA.PrivateKey: Equatable {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
     }
 }
 
