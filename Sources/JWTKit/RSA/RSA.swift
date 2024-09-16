@@ -1,8 +1,6 @@
 import _CryptoExtras
-import BigInt
 import Crypto
 import Foundation
-import SwiftASN1
 import X509
 
 public extension Insecure {
@@ -164,6 +162,11 @@ public extension Insecure.RSA {
         func isValidSignature<D: Digest>(_ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding) -> Bool {
             self.backing.isValidSignature(signature, for: digest, padding: padding)
         }
+
+        public func getKeyPrimitives() throws -> (modulus: Data, publicExponent: Data) {
+            let primitives = try self.backing.getKeyPrimitives()
+            return (modulus: primitives.modulus, publicExponent: primitives.publicExponent)
+        }
     }
 }
 
@@ -280,18 +283,8 @@ public extension Insecure.RSA {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
             }
 
-            let (p, q) = try PrimeGenerator.calculatePrimeFactors(n: BigUInt(n), e: BigUInt(e), d: BigUInt(d))
-
-            let pArray = Array(p.serialize().drop(while: { $0 == 0 }))
-            let qArray = Array(q.serialize().drop(while: { $0 == 0 }))
-
-            let key = try _RSA.Signing.PrivateKey(n: n, e: e, d: d, p: pArray, q: qArray)
-
+            let key = try _RSA.Signing.PrivateKey._createFromNumbers(n: n, e: e, d: d)
             try self.init(backing: key)
-        }
-
-        func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {
-            try self.backing.signature(for: digest, padding: padding)
         }
 
         public init(
@@ -323,6 +316,10 @@ public extension Insecure.RSA {
 
             let key = try _RSA.Signing.PrivateKey(n: n, e: e, d: d, p: p, q: q)
             try self.init(backing: key)
+        }
+
+        func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {
+            try self.backing.signature(for: digest, padding: padding)
         }
     }
 }

@@ -1,15 +1,8 @@
 import _CryptoExtras
-import BigInt
 import JWTKit
 import XCTest
 
 final class RSATests: XCTestCase {
-    func testCalculatePrimeFactors() throws {
-        try wycheproof(fileName: "rsa_oaep_2048_sha1_mgf1sha1_test", testFunction: testPrimeFactors)
-        try wycheproof(fileName: "rsa_oaep_2048_sha224_mgf1sha1_test", testFunction: testPrimeFactors)
-        try wycheproof(fileName: "rsa_oaep_2048_sha256_mgf1sha256_test", testFunction: testPrimeFactors)
-    }
-
     func testRSADocs() async throws {
         await XCTAssertNoThrowAsync(try await JWTKeyCollection().add(rsa: Insecure.RSA.PublicKey(pem: self.publicKey), digestAlgorithm: .sha256))
     }
@@ -116,53 +109,9 @@ final class RSATests: XCTestCase {
 
     func testGetPublicKeyPrimitives() async throws {
         let publicKey = try Insecure.RSA.PublicKey(modulus: self.modulus, exponent: self.publicExponent)
-        let (keyModulus, exponent) = try publicKey.getKeyPrimitives()
-        XCTAssertEqual(keyModulus, self.modulus)
-        XCTAssertEqual(exponent, self.publicExponent)
-    }
-
-    func testGetPrivateKeyPrimitives() async throws {
-        let privateKey = try Insecure.RSA.PrivateKey(modulus: self.modulus, exponent: self.publicExponent, privateExponent: self.privateExponent)
-        let (keyModulus, exponent, keyPrivateExponent) = try privateKey.getKeyPrimitives()
-        XCTAssertEqual(keyModulus, self.modulus)
-        XCTAssertEqual(exponent, self.publicExponent)
-        XCTAssertEqual(keyPrivateExponent, self.privateExponent)
-    }
-
-    func testGetPrivateKeyPrimitivesFromNonRawBuiltKey() async throws {
-        let privateKey = try Insecure.RSA.PrivateKey(pem: """
-        -----BEGIN RSA PRIVATE KEY-----\n
-        MIIEogIBAAKCAQEAvTHHoCaR0tlYfvapRv94hUTMrdSymIrWIIZ5Kmv5bIYWtK0T\n
-        MX0icLkB0PzR2IDLj1L7hzBKUljBGzjf6ujfZwru5+odDZ344A6AhH5B5Zie1ALU\n
-        TnizD+8XtWcdOtv4aF5NwgRJns0YY+HVr/KKfPZurfMf7JI2wSCt0TRRUixkfJgy\n
-        pnLNZNMowcMiGD9GYdCb2mC43V8DKNpUIIIUJK/auxqAxdEnY6GwI4zYnQdCv8UL\n
-        ai/LcB2CQhj5gm9PeKI6K1qkKs5/F1N2+2y9srrSk7pYPU0xxrj5Ap5GsTaJJJhV\n
-        9QV1bgDiJaakWhh2m9jSs6SsufHCPT5RiCVh5QIDAQABAoIBAAdH1SDKmy38AzXP\n
-        lDARQLgQL7g4yS6pmRfjVOJXCWAtwM3vIx/yatLfq7w5HnIwcqTvUpKfPxzwIW5E\n
-        wAkwMPisKQlvrvKJM7ybkkKHAU4uk14hRb5HUsy4LLdkYnGTaXnKtz9SHusnhVrC\n
-        pBCDSuUILrYu9vmJnuXLtiSo2MBKt+3PeP4TXQ+Aj2O13m4HF3m/HZ6q+NPvllSG\n
-        8sUmJeblemUce70Bl8mcBXs4YKMmDIZKEbPPIrpE3jo7PzEX5k6/mpH2Juuz88Jt\n
-        Gwu4B1NGjUv2qZeygzXyDtjDhNdVg2CprpdVZh+jdJhGsXTmvzMOUtCZQfbM195Q\n
-        BHefm7kCgYEA/j0jjTdqOFbZWS/UlhwXp/sPo51ELp3yLn7aEVxkjFy3ON+J6pLY\n
-        N4VY0NnBzz2L/3QNN0OgFApqdSPpF2wpU7LBHX9EaRz4vsKzT7WcZJU1mDMZSIEY\n
-        wDEYrnRF5w30Zs6YZxJg8F1QaM53fal+K6hHeUkFAM60/39izsqaFH8CgYEAvoFK\n
-        8mvzwnEVvHWV0NEqGvdxP+yod65ubYWIJe2j0ZJwR3T0Lhrhtn8XOejEWgR2OIBw\n
-        +lRbfMlrikQAO8jQf95z9bzdGCaDldzChCtQI/8Us1I4Jge3F5peozCED8RQRdhu\n
-        CsxP6xNfCrm3zmuOtfWldfKiqN4pnA0/UG30h5sCgYBhu0z0Vy4M9E3e/AUDo07w\n
-        sxFC+wyfwvW7K+ZWMCcy0d1ZDo1s0AAv76HBv0PCj81GaO0/pk5eBdcAqspKx7hn\n
-        RVr5JNg+c/WnFx9o785r1/PfSx1YAtBp6TWssmPAu1uNPbPWQ3liTOzBLUU/2Cz5\n
-        SVoYZJp4wf1QDj8EcVujrwKBgGZJ2+kgp6jOuYIQjNmrhXUnSYquUqK4aRirazga\n
-        Siy7+UeU94tN6cXopZr1bYB8BtI9vOvcoab2K6T48DspjzIpSpA20WwnOd4cw+Dd\n
-        tNEvJHlIe1eIKvokbA4pfa9NlGB8XlGz9HFfXFfQ8m2GeQEgnbAgENClQShGQKm5\n
-        8GNjAoGAOexgb1yfHzPZZGBuEo6ekM/5MncsVxWqdZgW1QTv4sRiBvM3mqYdMfiO\n
-        cmtQ3YC4zoVYoNdAhSX1jDOZzjLiOdcJQfEtIed2HAQ+CwIiDSX/0DVxx65bvVnD\n
-        H0gSBnb518Nwp0nYSRvfzqAWYqE2yF00m2xxD8b26/inp5tircM=\n
-        -----END RSA PRIVATE KEY-----
-        """)
-        let (keyModulus, exponent, keyPrivateExponent) = try privateKey.getKeyPrimitives()
-        XCTAssertEqual(keyModulus, self.modulus)
-        XCTAssertEqual(exponent, self.publicExponent)
-        XCTAssertEqual(keyPrivateExponent, self.privateExponent)
+        let (modulus, exponent) = try publicKey.getKeyPrimitives()
+        XCTAssertEqual(modulus, self.modulus.base64URLDecodedData())
+        XCTAssertEqual(exponent, self.publicExponent.base64URLDecodedData())
     }
 
     func testRSACertificate() async throws {

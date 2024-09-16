@@ -1,6 +1,5 @@
 import Crypto
 import Foundation
-import SwiftASN1
 import X509
 
 public enum ECDSA: Sendable {}
@@ -21,8 +20,8 @@ public extension ECDSA {
 
         public var parameters: ECDSAParameters? {
             // 0x04 || x || y
-            let x = backing.x963Representation[Curve.byteRanges.x].base64EncodedString()
-            let y = backing.x963Representation[Curve.byteRanges.y].base64EncodedString()
+            let x = self.backing.x963Representation[Curve.byteRanges.x].base64EncodedString()
+            let y = self.backing.x963Representation[Curve.byteRanges.y].base64EncodedString()
             return (x, y)
         }
 
@@ -32,7 +31,7 @@ public extension ECDSA {
         ///
         /// - Returns: A PEM encoded string representation of the key.
         public var pemRepresentation: String {
-            backing.pemRepresentation
+            self.backing.pemRepresentation
         }
 
         /// Creates an ``ECDSA.PublicKey`` instance from SwiftCrypto PublicKey.
@@ -53,7 +52,7 @@ public extension ECDSA {
             guard let publicKey = PublicKey(certificate.publicKey) else {
                 throw ECDSAError.generateKeyFailure
             }
-            backing = publicKey
+            self.backing = publicKey
         }
 
         /// Creates an ``ECDSA.PublicKey`` instance from a PEM encoded certificate data.
@@ -71,7 +70,7 @@ public extension ECDSA {
         /// - Throws: If there is a problem parsing the public key.
         /// - Returns: A new ``ECDSA.PublicKey`` instance with the public key from the certificate.
         public init(pem string: String) throws {
-            backing = try PublicKey(pemRepresentation: string)
+            self.backing = try PublicKey(pemRepresentation: string)
         }
 
         /// Creates an ``ECDSA.PublicKey`` instance from a PEM encoded public key data.
@@ -101,7 +100,7 @@ public extension ECDSA {
             else {
                 throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x or y as base64 encoded data")
             }
-            backing = try PublicKey(x963Representation: [0x04] + x + y)
+            self.backing = try PublicKey(x963Representation: [0x04] + x + y)
         }
 
         init(backing: PublicKey) {
@@ -118,20 +117,20 @@ public extension ECDSA {
         public private(set) var curve: ECDSACurve = Curve.curve
 
         public var parameters: ECDSAParameters? {
-            publicKey.parameters
+            self.publicKey.parameters
         }
 
         var backing: PrivateKey
 
         public var publicKey: PublicKey<Curve> {
-            .init(backing: backing.publicKey)
+            .init(backing: self.backing.publicKey)
         }
 
         /// The current private key as a PEM encoded string.
         ///
         /// - Returns: A PEM encoded string representation of the key.
         public var pemRepresentation: String {
-            backing.pemRepresentation
+            self.backing.pemRepresentation
         }
 
         /// Creates an ``ECDSA.PrivateKey`` instance from SwiftCrypto PrivateKey.
@@ -148,7 +147,7 @@ public extension ECDSA {
         /// - Throws: If there is a problem parsing the private key.
         /// - Returns: A new ``ECDSA.PrivateKey`` instance with the private key.
         public init(pem string: String) throws {
-            backing = try PrivateKey(pemRepresentation: string)
+            self.backing = try PrivateKey(pemRepresentation: string)
         }
 
         /// Creates an ``ECDSA.PrivateKey`` instance from a PEM encoded private key data.
@@ -177,14 +176,14 @@ public extension ECDSA {
                 throw JWTError.generic(identifier: "ECDSAKey Creation", reason: "Unable to interpret private key data as base64URL")
             }
 
-            backing = try PrivateKey(rawRepresentation: [UInt8](keyData))
+            self.backing = try PrivateKey(rawRepresentation: [UInt8](keyData))
         }
 
         /// Generates a new ECDSA key.
         ///
         /// - Returns: A new ``ECDSA.PrivateKey`` instance with the generated key.
         public init() {
-            backing = PrivateKey()
+            self.backing = PrivateKey()
         }
     }
 }

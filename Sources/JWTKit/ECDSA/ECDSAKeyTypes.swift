@@ -1,6 +1,5 @@
 import Crypto
 import Foundation
-import SwiftASN1
 import X509
 
 /// A typealias representing the parameters of an ECDSA (Elliptic Curve Digital Signature Algorithm) key.
