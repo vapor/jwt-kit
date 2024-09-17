@@ -1,4 +1,3 @@
-import BigInt
 import Crypto
 import JWTKit
 import Testing
