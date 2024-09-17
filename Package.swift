@@ -39,6 +39,12 @@ let package = Package(
                 .copy("TestCertificates"),
             ]
         ),
+        .testTarget(
+            name: "JWTKitNewTests",
+            dependencies: [
+                "JWTKit",
+            ]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

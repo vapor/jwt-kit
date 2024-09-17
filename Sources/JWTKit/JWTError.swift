@@ -1,9 +1,9 @@
 import Foundation
 
 /// JWT error type.
-public struct JWTError: Error, Sendable {
-    public struct ErrorType: Sendable, Hashable, CustomStringConvertible {
-        enum Base: String, Sendable {
+public struct JWTError: Error, Sendable, Equatable {
+    public struct ErrorType: Sendable, Hashable, CustomStringConvertible, Equatable {
+        enum Base: String, Sendable, Equatable {
             case claimVerificationFailure
             case signingAlgorithmFailure
             case malformedToken
@@ -46,7 +46,7 @@ public struct JWTError: Error, Sendable {
         }
     }
 
-    private struct Backing: Sendable {
+    private struct Backing: Sendable, Equatable {
         fileprivate let errorType: ErrorType
         fileprivate let name: String?
         fileprivate let reason: String?
@@ -74,6 +74,10 @@ public struct JWTError: Error, Sendable {
             self.identifier = identifier
             self.failedClaim = failedClaim
             self.curve = curve
+        }
+        
+        static func == (lhs: JWTError.Backing, rhs: JWTError.Backing) -> Bool {
+            lhs.errorType == rhs.errorType
         }
     }
 
@@ -142,6 +146,10 @@ public struct JWTError: Error, Sendable {
 
     public static func generic(identifier: String, reason: String) -> Self {
         .init(backing: .init(errorType: .generic, reason: reason))
+    }
+    
+    public static func == (lhs: JWTError, rhs: JWTError) -> Bool {
+        lhs.backing == rhs.backing
     }
 }
 
