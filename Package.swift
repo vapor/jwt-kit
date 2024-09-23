@@ -39,16 +39,5 @@ let package = Package(
                 .copy("TestCertificates"),
             ]
         ),
-        .testTarget(
-            name: "JWTKitNewTests",
-            dependencies: [
-                "JWTKit"
-            ],
-            resources: [
-                .copy("TestVectors"),
-                .copy("TestCertificates"),
-            ]
-        ),
-    ],
-    swiftLanguageModes: [.v6]
+    ]
 )

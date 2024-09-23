@@ -1,8 +1,11 @@
 import JWTKit
-import XCTest
+import Testing
 
-final class EdDSATests: XCTestCase, @unchecked Sendable {
-    func testEdDSAGenerate() async throws {
+@Suite("EdDSA Tests")
+struct EdDSATests {
+
+    @Test("Test EdDSA Generate")
+    func edDSAGenerate() async throws {
         let payload = TestPayload(
             sub: "vapor",
             name: "Foo",
@@ -14,11 +17,12 @@ final class EdDSATests: XCTestCase, @unchecked Sendable {
             .add(eddsa: EdDSA.PrivateKey(curve: .ed25519))
 
         let token = try await keyCollection.sign(payload)
-        try await XCTAssertEqualAsync(
-            await keyCollection.verify(token, as: TestPayload.self), payload)
+        let verifiedPayload = try await keyCollection.verify(token, as: TestPayload.self)
+        #expect(verifiedPayload == payload)
     }
 
-    func testEdDSAPublicPrivate() async throws {
+    @Test("Test EdDSA Public and Private")
+    func edDSAPublicPrivate() async throws {
         let keys = try await JWTKeyCollection()
             .add(eddsa: EdDSA.PublicKey(x: eddsaPublicKeyBase64, curve: .ed25519), kid: "public")
             .add(eddsa: EdDSA.PrivateKey(d: eddsaPrivateKeyBase64, curve: .ed25519), kid: "private")
@@ -29,14 +33,17 @@ final class EdDSATests: XCTestCase, @unchecked Sendable {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
+        
         for _ in 0..<1000 {
             let token = try await keys.sign(payload, kid: "private")
             // test public signer decoding
-            try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
+            let verifiedPayload = try await keys.verify(token, as: TestPayload.self)
+            #expect(verifiedPayload == payload)
         }
     }
 
-    func testVerifyingEdDSAKeyUsingJWK() async throws {
+    @Test("Test Verifying EdDSA Key Using JWK")
+    func verifyingEdDSAKeyUsingJWK() async throws {
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: some JWTAlgorithm) throws {}
@@ -46,7 +53,7 @@ final class EdDSATests: XCTestCase, @unchecked Sendable {
         let x = eddsaPublicKeyBase64
         let d = eddsaPrivateKeyBase64
 
-        // sign jwt
+        // sign JWT
         let keyCollection = try await JWTKeyCollection()
             .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
 
@@ -54,63 +61,64 @@ final class EdDSATests: XCTestCase, @unchecked Sendable {
 
         // verify using jwks
         let jwksString = """
-            {
-                "keys": [
-                    {
-                        "kty": "OKP",
-                        "crv": "Ed25519",
-                        "use": "sig",
-                        "kid": "vapor",
-                        "x": "\(x)",
-                        "d": "\(d)"
-                    }
-                ]
-            }
-            """
+        {
+            "keys": [
+                {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "d": "\(d)"
+                }
+            ]
+        }
+        """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
-        XCTAssertEqual(foo.bar, 42)
+        #expect(foo.bar == 42)
     }
 
-    func testVerifyingEdDSAKeyUsingJWKBase64URL() async throws {
+    @Test("Test Verifying EdDSA Key Using JWK Base64URL")
+    func verifyingEdDSAKeyUsingJWKBase64URL() async throws {
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: some JWTAlgorithm) throws {}
         }
 
-        // eddsa key in base64url format
         let x = eddsaPublicKeyBase64Url
         let d = eddsaPrivateKeyBase64Url
 
-        // sign jwt
+        // sign JWT
         let keyCollection = try await JWTKeyCollection()
             .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42))
 
-        // verify using jwks without alg
+        // verify using jwks
         let jwksString = """
-            {
-                "keys": [
-                    {
-                        "kty": "OKP",
-                        "crv": "Ed25519",
-                        "use": "sig",
-                        "kid": "vapor",
-                        "x": "\(x)",
-                        "d": "\(d)"
-                    }
-                ]
-            }
-            """
+        {
+            "keys": [
+                {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "d": "\(d)"
+                }
+            ]
+        }
+        """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
-        XCTAssertEqual(foo.bar, 42)
+        #expect(foo.bar == 42)
     }
 
-    func testVerifyingEdDSAKeyUsingJWKWithMixedBase64Formats() async throws {
+    @Test("Test Verifying EdDSA Key Using JWK with Mixed Base64 Formats")
+    func verifyingEdDSAKeyUsingJWKWithMixedBase64Formats() async throws {
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: some JWTAlgorithm) throws {}
@@ -120,31 +128,31 @@ final class EdDSATests: XCTestCase, @unchecked Sendable {
         let x = eddsaPublicKeyBase64Url
         let d = eddsaPrivateKeyBase64
 
-        // sign jwt
+        // sign JWT
         let keyCollection = try await JWTKeyCollection()
             .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
-        // verify using jwks without alg
+        // verify using jwks
         let jwksString = """
-            {
-                "keys": [
-                    {
-                        "kty": "OKP",
-                        "crv": "Ed25519",
-                        "use": "sig",
-                        "kid": "vapor",
-                        "x": "\(x)",
-                        "d": "\(d)"
-                    }
-                ]
-            }
-            """
+        {
+            "keys": [
+                {
+                    "kty": "OKP",
+                    "crv": "Ed25519",
+                    "use": "sig",
+                    "kid": "vapor",
+                    "x": "\(x)",
+                    "d": "\(d)"
+                }
+            ]
+        }
+        """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
-        XCTAssertEqual(foo.bar, 42)
+        #expect(foo.bar == 42)
     }
 }
 
