@@ -12,7 +12,8 @@ struct PrimeGenerator {
             throw RSAError.keyInitializationFailure
         }
 
-        let t = k.trailingZeroBitCount, r = k >> t
+        let t = k.trailingZeroBitCount
+        let r = k >> t
 
         var y: BigUInt = 0
         var i = 1

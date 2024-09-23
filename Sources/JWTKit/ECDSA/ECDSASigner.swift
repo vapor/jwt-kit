@@ -29,7 +29,9 @@ struct ECDSASigner<Key: ECDSAKey>: JWTAlgorithm, CryptoSigner {
         return [UInt8](signature.rawRepresentation)
     }
 
-    public func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
+    public func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws
+        -> Bool
+    {
         let digest = try self.digest(plaintext)
         return try publicKey.backing.isValidSignature(signature, for: digest)
     }

@@ -10,7 +10,7 @@ let package = Package(
         .watchOS(.v8),
     ],
     products: [
-        .library(name: "JWTKit", targets: ["JWTKit"]),
+        .library(name: "JWTKit", targets: ["JWTKit"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.6.1"),
@@ -29,13 +29,13 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
             ],
             swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency"),
+                .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "JWTKitTests",
             dependencies: [
-                "JWTKit",
+                "JWTKit"
             ],
             resources: [
                 .copy("TestVectors"),

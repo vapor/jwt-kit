@@ -47,7 +47,9 @@ struct SubjectPublicKeyInfo: DERImplicitlyTaggable, Hashable {
         self.key = ASN1BitString(bytes: key[...])
     }
 
-    func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
+    func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier)
+        throws
+    {
         try coder.appendConstructedNode(identifier: identifier) { coder in
             try coder.serialize(self.algorithmIdentifier)
             try coder.serialize(self.key)
@@ -79,7 +81,9 @@ struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable {
         }
     }
 
-    func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
+    func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier)
+        throws
+    {
         try coder.appendConstructedNode(identifier: identifier) { coder in
             try coder.serialize(self.algorithm)
             if let parameters = self.parameters {

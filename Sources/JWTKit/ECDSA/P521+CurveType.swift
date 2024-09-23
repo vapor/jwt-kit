@@ -16,7 +16,7 @@ extension P521: ECDSACurveType {
     /// Thus:
     /// - The X coordinate spans bytes 1 through 66.
     /// - The Y coordinate spans bytes 67 through 132.
-    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 67, 67 ..< 133)
+    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1..<67, 67..<133)
 
     public enum SigningAlgorithm: ECDSASigningAlgorithm {
         public static let name = "ES512"
@@ -33,23 +33,25 @@ extension P521.Signing.PublicKey: ECDSAPublicKey {
     ///   - digest: The digest to verify the signature against.
     /// - Returns: True if the signature is valid for the given digest, false otherwise.
     /// - Throws: If there is a problem verifying the signature.
-    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool {
+    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws
+        -> Bool
+    {
         let signature = try P521.Signing.ECDSASignature(rawRepresentation: signature)
         return isValidSignature(signature, for: data)
     }
 }
 
 #if compiler(<6)
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
-extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
-extension P521.Signing.PublicKey: @unchecked Sendable {}
-extension P521: @unchecked Sendable {}
+    // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+    extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
+    extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
+    extension P521.Signing.PublicKey: @unchecked Sendable {}
+    extension P521: @unchecked Sendable {}
 #else
-extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
-extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
-extension P521.Signing.PublicKey: @unchecked @retroactive Sendable {}
-extension P521: @unchecked @retroactive Sendable {}
+    extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
+    extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
+    extension P521.Signing.PublicKey: @unchecked @retroactive Sendable {}
+    extension P521: @unchecked @retroactive Sendable {}
 #endif
 
 public typealias ES512PublicKey = ECDSA.PublicKey<P521>

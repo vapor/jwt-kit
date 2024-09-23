@@ -15,7 +15,7 @@ extension P384: ECDSACurveType {
     /// Thus:
     /// - The X coordinate spans bytes 1 through 48.
     /// - The Y coordinate spans bytes 49 through 96.
-    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 49, 49 ..< 97)
+    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1..<49, 49..<97)
 
     public enum SigningAlgorithm: ECDSASigningAlgorithm {
         public static let name = "ES384"
@@ -32,23 +32,25 @@ extension P384.Signing.PublicKey: ECDSAPublicKey {
     ///   - digest: The digest to verify the signature against.
     /// - Returns: True if the signature is valid for the given digest, false otherwise.
     /// - Throws: If there is a problem verifying the signature.
-    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool {
+    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws
+        -> Bool
+    {
         let signature = try P384.Signing.ECDSASignature(rawRepresentation: signature)
         return isValidSignature(signature, for: data)
     }
 }
 
 #if compiler(<6)
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
-extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
-extension P384.Signing.PublicKey: @unchecked Sendable {}
-extension P384: @unchecked Sendable {}
+    // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+    extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
+    extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
+    extension P384.Signing.PublicKey: @unchecked Sendable {}
+    extension P384: @unchecked Sendable {}
 #else
-extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
-extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
-extension P384.Signing.PublicKey: @unchecked @retroactive Sendable {}
-extension P384: @unchecked @retroactive Sendable {}
+    extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
+    extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
+    extension P384.Signing.PublicKey: @unchecked @retroactive Sendable {}
+    extension P384: @unchecked @retroactive Sendable {}
 #endif
 
 public typealias ES384PublicKey = ECDSA.PublicKey<P384>

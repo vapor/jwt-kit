@@ -58,13 +58,18 @@ extension Insecure.RSA.PrivateKey {
     ///
     /// - Returns: A tuple containing the modulus, public exponent, and private exponent as Base64 URL-encoded strings.
     /// - Throws: ``JWTError`` if the key is not a private RSA key or if there is an issue parsing the key.
-    public func getKeyPrimitives() throws -> (modulus: String, exponent: String, privateExponent: String) {
+    public func getKeyPrimitives() throws -> (
+        modulus: String, exponent: String, privateExponent: String
+    ) {
         let parsed = try DER.parse(Array(self.derRepresentation))
         let rsaPrivateKey = try ASN1(derEncoded: parsed)
 
-        let modulus = String(decoding: Data(rsaPrivateKey.modulus).base64URLEncodedBytes(), as: UTF8.self)
-        let publicExponent = String(decoding: Data(rsaPrivateKey.publicExponent).base64URLEncodedBytes(), as: UTF8.self)
-        let privateExponent = String(decoding: Data(rsaPrivateKey.privateExponent).base64URLEncodedBytes(), as: UTF8.self)
+        let modulus = String(
+            decoding: Data(rsaPrivateKey.modulus).base64URLEncodedBytes(), as: UTF8.self)
+        let publicExponent = String(
+            decoding: Data(rsaPrivateKey.publicExponent).base64URLEncodedBytes(), as: UTF8.self)
+        let privateExponent = String(
+            decoding: Data(rsaPrivateKey.privateExponent).base64URLEncodedBytes(), as: UTF8.self)
 
         return (modulus, publicExponent, privateExponent)
     }
@@ -104,7 +109,9 @@ extension Insecure.RSA.PrivateKey.ASN1: DERImplicitlyTaggable {
         }
     }
 
-    func serialize(into coder: inout DER.Serializer, withIdentifier identifier: SwiftASN1.ASN1Identifier) throws {
+    func serialize(
+        into coder: inout DER.Serializer, withIdentifier identifier: SwiftASN1.ASN1Identifier
+    ) throws {
         try coder.appendConstructedNode(identifier: identifier) { coder in
             try coder.serialize(self.version)
             try coder.serialize(self.modulus)

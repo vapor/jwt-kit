@@ -11,23 +11,23 @@ extension String {
     }
 }
 
-package extension DataProtocol {
-    func base64URLDecodedBytes() -> [UInt8] {
+extension DataProtocol {
+    package func base64URLDecodedBytes() -> [UInt8] {
         Data(base64Encoded: Data(copyBytes()).base64URLUnescaped())?.copyBytes() ?? []
     }
 
-    func base64URLEncodedBytes() -> [UInt8] {
+    package func base64URLEncodedBytes() -> [UInt8] {
         Data(copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
     }
 }
 
 // MARK: Data Escape
 
-private extension Data {
+extension Data {
     /// Converts base64-url encoded data to a base64 encoded data.
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
-    mutating func base64URLUnescape() {
+    fileprivate mutating func base64URLUnescape() {
         for idx in self.indices {
             switch self[idx] {
             case 0x2D /* - */: self[idx] = 0x2B /* + */
@@ -45,7 +45,7 @@ private extension Data {
     /// Converts base64 encoded data to a base64-url encoded data.
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
-    mutating func base64URLEscape() {
+    fileprivate mutating func base64URLEscape() {
         for idx in self.indices {
             switch self[idx] {
             case 0x2B /* + */: self[idx] = 0x2D /* - */
@@ -59,7 +59,7 @@ private extension Data {
     /// Converts base64-url encoded data to a base64 encoded data.
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
-    func base64URLUnescaped() -> Data {
+    fileprivate func base64URLUnescaped() -> Data {
         var data = self
         data.base64URLUnescape()
         return data
@@ -68,7 +68,7 @@ private extension Data {
     /// Converts base64 encoded data to a base64-url encoded data.
     ///
     /// https://tools.ietf.org/html/rfc4648#page-7
-    func base64URLEscaped() -> Data {
+    fileprivate func base64URLEscaped() -> Data {
         var data = self
         data.base64URLEscape()
         return data

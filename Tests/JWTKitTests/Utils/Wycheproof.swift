@@ -1,9 +1,11 @@
-@testable import JWTKit
 import BigInt
 import XCTest
 
+@testable import JWTKit
+
 func wycheproof(fileName: String, testFunction: (TestGroup) throws -> Void) throws {
-    let testsDirectory: String = URL(fileURLWithPath: "\(#filePath)").pathComponents.dropLast(2).joined(separator: "/")
+    let testsDirectory: String = URL(fileURLWithPath: "\(#filePath)").pathComponents.dropLast(2)
+        .joined(separator: "/")
     let path = "\(testsDirectory)/TestVectors/\(fileName).json"
     let fileHandle = try FileHandle(forReadingFrom: URL(fileURLWithPath: path))
 
@@ -23,13 +25,13 @@ func testPrimeFactors(_ testGroup: TestGroup) throws {
         let e = BigUInt(testGroup.e, radix: 16),
         let d = BigUInt(testGroup.d, radix: 16)
     else {
-        return XCTFail("Failed to extract or parse modulus 'n', public exponent 'e', or private exponent 'd'")
+        return XCTFail(
+            "Failed to extract or parse modulus 'n', public exponent 'e', or private exponent 'd'")
     }
 
     let (p, q) = try PrimeGenerator.calculatePrimeFactors(n: n, e: e, d: d)
     XCTAssertEqual(p * q, n, "The product of p and q should equal n; got \(p) * \(q) != \(n)")
 }
-
 
 struct TestGroup: Codable {
     let n: String

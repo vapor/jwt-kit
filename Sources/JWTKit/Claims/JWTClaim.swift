@@ -12,22 +12,22 @@ public protocol JWTClaim: Codable, Sendable {
     init(value: Value)
 }
 
-public extension JWTClaim where Value == String, Self: ExpressibleByStringLiteral {
+extension JWTClaim where Value == String, Self: ExpressibleByStringLiteral {
     /// See `ExpressibleByStringLiteral`.
-    init(stringLiteral string: String) {
+    public init(stringLiteral string: String) {
         self.init(value: string)
     }
 }
 
-public extension JWTClaim {
+extension JWTClaim {
     /// See `Decodable`.
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let single = try decoder.singleValueContainer()
         try self.init(value: single.decode(Value.self))
     }
 
     /// See `Encodable`.
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var single = encoder.singleValueContainer()
         try single.encode(value)
     }

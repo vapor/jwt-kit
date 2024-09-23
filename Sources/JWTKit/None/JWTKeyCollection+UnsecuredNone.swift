@@ -1,4 +1,4 @@
-public extension JWTKeyCollection {
+extension JWTKeyCollection {
     /// Adds a configuration for JWTs without a signature.
     ///
     /// This method configures JWT processing to accept tokens with the 'none' algorithm, indicating that the JWT
@@ -28,11 +28,13 @@ public extension JWTKeyCollection {
     /// requirements of your system. It is not recommended for scenarios where data integrity and authentication
     /// are critical.
     @discardableResult
-    func addUnsecuredNone(
+    public func addUnsecuredNone(
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(algorithm: UnsecuredNoneSigner(), parser: parser, serializer: serializer), for: kid)
+        add(
+            .init(algorithm: UnsecuredNoneSigner(), parser: parser, serializer: serializer),
+            for: kid)
     }
 }

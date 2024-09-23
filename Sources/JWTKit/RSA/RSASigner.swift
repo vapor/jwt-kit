@@ -1,5 +1,5 @@
-import _CryptoExtras
 import Foundation
+import _CryptoExtras
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
     let publicKey: Insecure.RSA.PublicKey
@@ -8,7 +8,8 @@ struct RSASigner: JWTAlgorithm, CryptoSigner {
     let name: String
     let padding: _RSA.Signing.Padding
 
-    init(key: some RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding) {
+    init(key: some RSAKey, algorithm: DigestAlgorithm, name: String, padding: _RSA.Signing.Padding)
+    {
         switch key {
         case let key as Insecure.RSA.PrivateKey:
             self.privateKey = key

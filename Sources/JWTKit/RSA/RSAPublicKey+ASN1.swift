@@ -32,8 +32,10 @@ extension Insecure.RSA.PublicKey {
         let parsedKey = try DER.parse(spki.key.bytes)
         let rsaPublicKey = try ASN1(derEncoded: parsedKey)
 
-        let modulus = String(decoding: Data(rsaPublicKey.modulus).base64URLEncodedBytes(), as: UTF8.self)
-        let exponent = String(decoding: Data(rsaPublicKey.publicExponent).base64URLEncodedBytes(), as: UTF8.self)
+        let modulus = String(
+            decoding: Data(rsaPublicKey.modulus).base64URLEncodedBytes(), as: UTF8.self)
+        let exponent = String(
+            decoding: Data(rsaPublicKey.publicExponent).base64URLEncodedBytes(), as: UTF8.self)
 
         return (modulus, exponent)
     }
@@ -44,7 +46,9 @@ extension Insecure.RSA.PublicKey.ASN1: DERImplicitlyTaggable {
         .sequence
     }
 
-    init(derEncoded rootNode: SwiftASN1.ASN1Node, withIdentifier identifier: SwiftASN1.ASN1Identifier) throws {
+    init(
+        derEncoded rootNode: SwiftASN1.ASN1Node, withIdentifier identifier: SwiftASN1.ASN1Identifier
+    ) throws {
         self = try DER.sequence(rootNode, identifier: identifier) { nodes in
             let modulus = try ArraySlice(derEncoded: &nodes)
             let publicExponent = try ArraySlice<UInt8>(derEncoded: &nodes)
@@ -53,7 +57,10 @@ extension Insecure.RSA.PublicKey.ASN1: DERImplicitlyTaggable {
         }
     }
 
-    func serialize(into coder: inout SwiftASN1.DER.Serializer, withIdentifier identifier: SwiftASN1.ASN1Identifier) throws {
+    func serialize(
+        into coder: inout SwiftASN1.DER.Serializer,
+        withIdentifier identifier: SwiftASN1.ASN1Identifier
+    ) throws {
         try coder.appendConstructedNode(identifier: identifier) { coder in
             try coder.serialize(self.modulus)
             try coder.serialize(self.publicExponent)

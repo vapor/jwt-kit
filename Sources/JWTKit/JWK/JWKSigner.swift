@@ -43,7 +43,8 @@ extension JWK {
 
             let rsaKey: RSAKey
             if let privateExponent = self.privateExponent {
-                rsaKey = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: exponent, privateExponent: privateExponent)
+                rsaKey = try Insecure.RSA.PrivateKey(
+                    modulus: modulus, exponent: exponent, privateExponent: privateExponent)
             } else {
                 rsaKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
             }
@@ -52,11 +53,14 @@ extension JWK {
 
             switch algorithm {
             case .rs256:
-                return RSASigner(key: rsaKey, algorithm: .sha256, name: "RS256", padding: .insecurePKCS1v1_5)
+                return RSASigner(
+                    key: rsaKey, algorithm: .sha256, name: "RS256", padding: .insecurePKCS1v1_5)
             case .rs384:
-                return RSASigner(key: rsaKey, algorithm: .sha384, name: "RS384", padding: .insecurePKCS1v1_5)
+                return RSASigner(
+                    key: rsaKey, algorithm: .sha384, name: "RS384", padding: .insecurePKCS1v1_5)
             case .rs512:
-                return RSASigner(key: rsaKey, algorithm: .sha512, name: "RS512", padding: .insecurePKCS1v1_5)
+                return RSASigner(
+                    key: rsaKey, algorithm: .sha512, name: "RS512", padding: .insecurePKCS1v1_5)
             case .ps256:
                 return RSASigner(key: rsaKey, algorithm: .sha256, name: "PS256", padding: .PSS)
             case .ps384:

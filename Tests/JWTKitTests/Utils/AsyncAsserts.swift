@@ -9,7 +9,8 @@ func XCTAssertNoThrowAsync<T>(
         _ = try await expression()
     } catch {
         let msg = error.localizedDescription
-        XCTFail("Expression did throw error\(msg.isEmpty ? "" : ": \(msg)")", file: file, line: line)
+        XCTFail(
+            "Expression did throw error\(msg.isEmpty ? "" : ": \(msg)")", file: file, line: line)
     }
 }
 
@@ -31,10 +32,12 @@ func XCTAssertEqualAsync<T>(
     line: UInt = #line
 ) async where T: Equatable {
     do {
-        let expr1 = try await expression1(), expr2 = try await expression2()
+        let expr1 = try await expression1()
+        let expr2 = try await expression2()
         return XCTAssertEqual(expr1, expr2, message(), file: file, line: line)
     } catch {
-        return XCTAssertEqual(try { () -> Bool in throw error }(), false, message(), file: file, line: line)
+        return XCTAssertEqual(
+            try { () -> Bool in throw error }(), false, message(), file: file, line: line)
     }
 }
 
@@ -46,10 +49,12 @@ func XCTAssertNotEqualAsync<T>(
     line: UInt = #line
 ) async where T: Equatable {
     do {
-        let expr1 = try await expression1(), expr2 = try await expression2()
+        let expr1 = try await expression1()
+        let expr2 = try await expression2()
         return XCTAssertNotEqual(expr1, expr2, message(), file: file, line: line)
     } catch {
-        return XCTAssertNotEqual(try { () -> Bool in throw error }(), true, message(), file: file, line: line)
+        return XCTAssertNotEqual(
+            try { () -> Bool in throw error }(), true, message(), file: file, line: line)
     }
 }
 
@@ -61,10 +66,12 @@ func XCTAssertEqualAsync<T>(
     file: StaticString = #filePath, line: UInt = #line
 ) async where T: Numeric {
     do {
-        let expr1 = try await expression1(), expr2 = try await expression2()
+        let expr1 = try await expression1()
+        let expr2 = try await expression2()
         return XCTAssertEqual(expr1, expr2, accuracy: accuracy, message(), file: file, line: line)
     } catch {
-        return XCTAssertEqual(try { () -> Bool in throw error }(), false, message(), file: file, line: line)
+        return XCTAssertEqual(
+            try { () -> Bool in throw error }(), false, message(), file: file, line: line)
     }
 }
 
@@ -76,10 +83,12 @@ func XCTAssertEqualAsync<T>(
     file: StaticString = #filePath, line: UInt = #line
 ) async where T: FloatingPoint {
     do {
-        let expr1 = try await expression1(), expr2 = try await expression2()
+        let expr1 = try await expression1()
+        let expr2 = try await expression2()
         return XCTAssertEqual(expr1, expr2, accuracy: accuracy, message(), file: file, line: line)
     } catch {
-        return XCTAssertEqual(try { () -> Bool in throw error }(), false, message(), file: file, line: line)
+        return XCTAssertEqual(
+            try { () -> Bool in throw error }(), false, message(), file: file, line: line)
     }
 }
 

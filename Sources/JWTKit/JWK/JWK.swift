@@ -49,7 +49,8 @@ public struct JWK: Codable, Sendable {
             } else if let eddsaCurve = try? container.decode(EdDSACurve.self) {
                 self = .eddsa(eddsaCurve)
             } else {
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Curve type not supported")
+                throw DecodingError.dataCorruptedError(
+                    in: container, debugDescription: "Curve type not supported")
             }
         }
 

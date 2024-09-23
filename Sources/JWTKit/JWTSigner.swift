@@ -7,7 +7,10 @@ final class JWTSigner: Sendable {
     let parser: any JWTParser
     let serializer: any JWTSerializer
 
-    init(algorithm: JWTAlgorithm, parser: any JWTParser = DefaultJWTParser(), serializer: any JWTSerializer = DefaultJWTSerializer()) {
+    init(
+        algorithm: JWTAlgorithm, parser: any JWTParser = DefaultJWTParser(),
+        serializer: any JWTSerializer = DefaultJWTSerializer()
+    ) {
         self.algorithm = algorithm
         self.parser = parser
         self.serializer = serializer
@@ -18,8 +21,7 @@ final class JWTSigner: Sendable {
     }
 
     func verify<Payload>(_ token: some DataProtocol) async throws -> Payload
-        where Payload: JWTPayload
-    {
+    where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try parser.getTokenParts(token)
         let data = encodedHeader + [.period] + encodedPayload
         let signature = encodedSignature.base64URLDecodedBytes()

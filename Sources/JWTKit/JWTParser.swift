@@ -2,12 +2,17 @@ import Foundation
 
 public protocol JWTParser: Sendable {
     var jsonDecoder: JWTJSONDecoder { get set }
-    func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload
+    func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (
+        header: JWTHeader, payload: Payload, signature: Data
+    ) where Payload: JWTPayload
 }
 
-public extension JWTParser {
-    func getTokenParts(_ token: some DataProtocol) throws -> (header: ArraySlice<UInt8>, payload: ArraySlice<UInt8>, signature: ArraySlice<UInt8>) {
-        let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
+extension JWTParser {
+    public func getTokenParts(_ token: some DataProtocol) throws -> (
+        header: ArraySlice<UInt8>, payload: ArraySlice<UInt8>, signature: ArraySlice<UInt8>
+    ) {
+        let tokenParts = token.copyBytes().split(
+            separator: .period, omittingEmptySubsequences: false)
 
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken(reason: "Token is not split in 3 parts")
@@ -19,16 +24,19 @@ public extension JWTParser {
 
 extension JWTParser {
     func parseHeader(_ token: some DataProtocol) throws -> JWTHeader {
-        let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
+        let tokenParts = token.copyBytes().split(
+            separator: .period, omittingEmptySubsequences: false)
 
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken(reason: "Token parts count is not 3.")
         }
 
         do {
-            return try jsonDecoder.decode(JWTHeader.self, from: .init(tokenParts[0].base64URLDecodedBytes()))
+            return try jsonDecoder.decode(
+                JWTHeader.self, from: .init(tokenParts[0].base64URLDecodedBytes()))
         } catch {
-            throw JWTError.malformedToken(reason: "Couldn't decode header from JWT with error: \(String(describing: error)).")
+            throw JWTError.malformedToken(
+                reason: "Couldn't decode header from JWT with error: \(String(describing: error)).")
         }
     }
 }
@@ -40,19 +48,24 @@ public struct DefaultJWTParser: JWTParser {
         self.jsonDecoder = jsonDecoder
     }
 
-    public func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (header: JWTHeader, payload: Payload, signature: Data)
-        where Payload: JWTPayload
-    {
+    public func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (
+        header: JWTHeader, payload: Payload, signature: Data
+    ) where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
-        let header: JWTHeader, payload: Payload, signature: Data
+        let header: JWTHeader
+        let payload: Payload
+        let signature: Data
 
         do {
-            header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
-            payload = try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+            header = try jsonDecoder.decode(
+                JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+            payload = try jsonDecoder.decode(
+                Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
             signature = Data(encodedSignature.base64URLDecodedBytes())
         } catch {
-            throw JWTError.malformedToken(reason: "Couldn't decode JWT with error: \(String(describing: error))")
+            throw JWTError.malformedToken(
+                reason: "Couldn't decode JWT with error: \(String(describing: error))")
         }
 
         return (header: header, payload: payload, signature: signature)

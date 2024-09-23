@@ -12,8 +12,8 @@ public protocol ECDSAKey: Sendable {
     var parameters: ECDSAParameters? { get }
 }
 
-public extension ECDSA {
-    struct PublicKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
+extension ECDSA {
+    public struct PublicKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
         typealias Signature = Curve.Signature
         typealias PublicKey = Curve.PrivateKey.PublicKey
 
@@ -99,7 +99,9 @@ public extension ECDSA {
                 let x = parameters.x.base64URLDecodedData(),
                 let y = parameters.y.base64URLDecodedData()
             else {
-                throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x or y as base64 encoded data")
+                throw JWTError.generic(
+                    identifier: "ecCoordinates",
+                    reason: "Unable to interpret x or y as base64 encoded data")
             }
             backing = try PublicKey(x963Representation: [0x04] + x + y)
         }
@@ -107,15 +109,15 @@ public extension ECDSA {
         init(backing: PublicKey) {
             self.backing = backing
         }
-        
+
         public static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
         }
     }
 }
 
-public extension ECDSA {
-    struct PrivateKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
+extension ECDSA {
+    public struct PrivateKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
         typealias PrivateKey = Curve.PrivateKey
         typealias Signature = PrivateKey.Signature
 
@@ -178,7 +180,9 @@ public extension ECDSA {
         ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
         public init(key: String) throws {
             guard let keyData = key.base64URLDecodedData() else {
-                throw JWTError.generic(identifier: "ECDSAKey Creation", reason: "Unable to interpret private key data as base64URL")
+                throw JWTError.generic(
+                    identifier: "ECDSAKey Creation",
+                    reason: "Unable to interpret private key data as base64URL")
             }
 
             backing = try PrivateKey(rawRepresentation: [UInt8](keyData))
@@ -190,7 +194,7 @@ public extension ECDSA {
         public init() {
             backing = PrivateKey()
         }
-        
+
         public static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
         }

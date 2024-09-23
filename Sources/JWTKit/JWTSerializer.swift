@@ -28,7 +28,9 @@ extension JWTSerializer {
         return newHeader
     }
 
-    func makeSigningInput(payload: some JWTPayload, header: JWTHeader, key: some JWTAlgorithm) async throws -> Data {
+    func makeSigningInput(payload: some JWTPayload, header: JWTHeader, key: some JWTAlgorithm)
+        async throws -> Data
+    {
         let header = try await self.makeHeader(from: header, key: key)
         let encodedHeader = try jsonEncoder.encode(header).base64URLEncodedBytes()
 
@@ -37,7 +39,10 @@ extension JWTSerializer {
         return encodedHeader + [.period] + encodedPayload
     }
 
-    func sign(_ payload: some JWTPayload, with header: JWTHeader = JWTHeader(), using key: some JWTAlgorithm) async throws -> String {
+    func sign(
+        _ payload: some JWTPayload, with header: JWTHeader = JWTHeader(),
+        using key: some JWTAlgorithm
+    ) async throws -> String {
         let signingInput = try await makeSigningInput(payload: payload, header: header, key: key)
 
         let signatureData = try key.sign(signingInput)
@@ -54,7 +59,9 @@ public struct DefaultJWTSerializer: JWTSerializer {
         self.jsonEncoder = jsonEncoder
     }
 
-    public func serialize(_ payload: some JWTPayload, header: JWTHeader = JWTHeader()) throws -> Data {
+    public func serialize(_ payload: some JWTPayload, header: JWTHeader = JWTHeader()) throws
+        -> Data
+    {
         try Data(jsonEncoder.encode(payload).base64URLEncodedBytes())
     }
 }

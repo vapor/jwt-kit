@@ -4,11 +4,11 @@ public protocol JWTMultiValueClaim: JWTClaim where Value: Collection, Value.Elem
     init(value: Value.Element)
 }
 
-public extension JWTMultiValueClaim {
+extension JWTMultiValueClaim {
     /// Single-element initializer. Uses the `CollectionOfOneDecoder` to work
     /// around the lack of an initializer on the `Collection` protocol. Not
     /// spectacularly efficient, but it works.
-    init(value: Value.Element) {
+    public init(value: Value.Element) {
         self.init(value: try! CollectionOfOneDecoder<Value>.decode(value))
     }
 
@@ -39,13 +39,14 @@ public extension JWTMultiValueClaim {
     ///   in a list of more than one. This implementation behaves according to
     ///   the semantics of the particular `Collection` type used as its value;
     ///   `Array` will preserve ordering and duplicates, `Set` will not.
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
 
         do {
             try self.init(value: container.decode(Value.Element.self))
         } catch let DecodingError.typeMismatch(type, context)
-            where type == Value.Element.self && context.codingPath.count == container.codingPath.count
+            where type == Value.Element.self
+            && context.codingPath.count == container.codingPath.count
         {
             // Unfortunately, `typeMismatch()` doesn't let us explicitly look for what type found,
             // only what type was expected, so we have to match the coding path depth instead.
@@ -65,7 +66,7 @@ public extension JWTMultiValueClaim {
     /// - Warning: If the claim has zero values, this implementation will encode
     ///   an inefficient zero-element representation. See the notes regarding
     ///   this on `init(from decoder:)` above.
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
 
         switch self.value.first {
@@ -83,7 +84,8 @@ public extension JWTMultiValueClaim {
 /// initializers for the single-value initializer of ``JWTMultiValueClaim``. The
 /// other workaround would be to require conformance to
 /// `ExpressibleByArrayLiteral`, but what fun would that be?
-private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer where T: Collection, T: Codable, T.Element: Codable {
+private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer
+where T: Collection, T: Codable, T.Element: Codable {
     static func decode(_ element: T.Element) throws -> T {
         return try T(from: self.init(value: element))
     }
@@ -112,11 +114,14 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
     /// ``Collection`` with a really weird `Decodable` conformance.
     mutating func decode<U>(_: U.Type) throws -> U where U: Decodable {
         guard !self.isAtEnd else {
-            throw DecodingError.valueNotFound(U.self, .init(codingPath: [], debugDescription: "Unkeyed container went past the end?"))
+            throw DecodingError.valueNotFound(
+                U.self,
+                .init(codingPath: [], debugDescription: "Unkeyed container went past the end?"))
         }
 
         guard U.self == T.Element.self else {
-            throw DecodingError.typeMismatch(U.self, .init(codingPath: [], debugDescription: "Asked for the wrong type!"))
+            throw DecodingError.typeMismatch(
+                U.self, .init(codingPath: [], debugDescription: "Asked for the wrong type!"))
         }
 
         self.currentIndex += 1
@@ -125,7 +130,9 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
 
     /// The error we throw for all operations we don't support (which is most of them).
     private var unsupportedError: DecodingError {
-        return DecodingError.typeMismatch(Any.self, .init(codingPath: [], debugDescription: "This decoder doesn't support most things."))
+        return DecodingError.typeMismatch(
+            Any.self,
+            .init(codingPath: [], debugDescription: "This decoder doesn't support most things."))
     }
 
     // ``Decoder`` and ``UnkeyedDecodingContainer`` conformance requirements. We don't bother tracking any coding path or
@@ -137,7 +144,8 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
     var isAtEnd: Bool { currentIndex != 0 }
     var count: Int? = 1
 
-    func container<Key>(keyedBy _: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
+    func container<Key>(keyedBy _: Key.Type) throws -> KeyedDecodingContainer<Key>
+    where Key: CodingKey {
         throw self.unsupportedError
     }
 
@@ -145,7 +153,8 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
         throw self.unsupportedError
     }
 
-    mutating func nestedContainer<N>(keyedBy _: N.Type) throws -> KeyedDecodingContainer<N> where N: CodingKey {
+    mutating func nestedContainer<N>(keyedBy _: N.Type) throws -> KeyedDecodingContainer<N>
+    where N: CodingKey {
         throw self.unsupportedError
     }
 
