@@ -1,7 +1,7 @@
 #if compiler(<6.0) && !canImport(Darwin)
-@preconcurrency import Foundation
+    @preconcurrency import Foundation
 #else
-import Foundation
+    import Foundation
 #endif
 
 public struct LocaleClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
@@ -26,6 +26,6 @@ public struct LocaleClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// See `Encodable`.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(self.value.identifier)
+        try container.encode(value.identifier)
     }
 }
