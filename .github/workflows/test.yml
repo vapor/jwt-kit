@@ -9,6 +9,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    container: swift:jammy
     steps:
       - name: Check out JWTKit
         uses: actions/checkout@v4
