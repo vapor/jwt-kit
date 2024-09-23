@@ -35,7 +35,8 @@ public struct X5CVerifier: Sendable {
         guard !rootCertificates.isEmpty else {
             throw JWTError.invalidX5CChain(reason: "No root certificates provided")
         }
-        try self.init(rootCertificates: rootCertificates.map { try X509.Certificate(pemEncoded: $0) })
+        try self.init(
+            rootCertificates: rootCertificates.map { try X509.Certificate(pemEncoded: $0) })
     }
 
     /// Create a new X5CVerifier trusting `rootCertificates`.
@@ -46,7 +47,9 @@ public struct X5CVerifier: Sendable {
         guard !rootCertificates.isEmpty else {
             throw JWTError.invalidX5CChain(reason: "No root certificates provided")
         }
-        try self.init(rootCertificates: rootCertificates.map { try X509.Certificate(derEncoded: [UInt8]($0)) })
+        try self.init(
+            rootCertificates: rootCertificates.map { try X509.Certificate(derEncoded: [UInt8]($0)) }
+        )
     }
 
     /// Verify a chain of certificates against the trusted root certificates.
@@ -69,11 +72,14 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [Certificate],
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = {
+            RFC5280Policy(validationTime: Date())
+        }
     ) async throws -> X509.VerificationResult {
         let untrustedChain = CertificateStore(certificates)
         var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
-        let result = await verifier.validate(leafCertificate: certificates[0], intermediates: untrustedChain)
+        let result = await verifier.validate(
+            leafCertificate: certificates[0], intermediates: untrustedChain)
         return result
     }
 
@@ -118,8 +124,7 @@ public struct X5CVerifier: Sendable {
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self
     ) async throws -> Payload
-        where Payload: JWTPayload
-    {
+    where Payload: JWTPayload {
         try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
     }
 
@@ -136,17 +141,19 @@ public struct X5CVerifier: Sendable {
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = {
+            RFC5280Policy(validationTime: Date())
+        }
     ) async throws -> Payload
-        where Payload: JWTPayload
-    {
+    where Payload: JWTPayload {
         // Parse the JWS header to get the header
         let parser = DefaultJWTParser(jsonDecoder: jsonDecoder)
         let (header, payload, _) = try parser.parse(token, as: Payload.self)
 
         // Ensure the algorithm used is ES256, as it's the only supported one (for now)
         guard let headerAlg = header.alg, headerAlg == "ES256" else {
-            throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: header.alg))")
+            throw JWTError.invalidX5CChain(
+                reason: "Unsupported algorithm: \(String(describing: header.alg))")
         }
 
         // Ensure the x5c header parameter is present and not empty
@@ -167,7 +174,7 @@ public struct X5CVerifier: Sendable {
         }
 
         // Setup an untrusted chain using the intermediate certificates
-        let untrustedChain = CertificateStore(certificates.dropFirst().dropLast())
+        let untrustedChain = CertificateStore(certificates.dropFirst())
 
         let date: Date
         // Some JWT implementations have the sign date in the payload.
@@ -179,13 +186,18 @@ public struct X5CVerifier: Sendable {
         }
 
         // Setup the verifier using the predefined trusted store
-        var verifier = try Verifier(rootCertificates: trustedStore, policy: {
-            try policy()
-            RFC5280Policy(validationTime: date)
-        })
+        var verifier = try Verifier(
+            rootCertificates: trustedStore,
+            policy: {
+                try policy()
+                RFC5280Policy(validationTime: date)
+            })
 
         // Validate the leaf certificate against the trusted store
-        let result = await verifier.validate(leafCertificate: certificates[0], intermediates: untrustedChain)
+        let result = await verifier.validate(
+            leafCertificate: certificates[0],
+            intermediates: untrustedChain
+        )
 
         if case let .couldNotValidate(failures) = result {
             throw JWTError.invalidX5CChain(reason: "\(failures)")
