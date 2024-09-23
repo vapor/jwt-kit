@@ -19,7 +19,7 @@ import XCTest
 /// Only tokens with an x5c chain that starts with "Leaf"
 /// and ends in either "Intermediate" or "Root" should
 /// successfully be verified.
-final class X5CTests: XCTestCase {
+final class X5CTests: XCTestCase, @unchecked Sendable {
     let verifier = try! X5CVerifier(rootCertificates: [
         // Trusted root:
         """

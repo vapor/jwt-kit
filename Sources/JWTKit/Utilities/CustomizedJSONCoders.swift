@@ -8,12 +8,16 @@ public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 
-extension JSONDecoder: JWTJSONDecoder {}
+#if compiler(<6.0) && !canImport(Darwin)
+    extension JSONDecoder: JWTJSONDecoder, @unchecked Sendable {}
+    extension JSONEncoder: JWTJSONEncoder, @unchecked Sendable {}
+#else
+    extension JSONDecoder: JWTJSONDecoder {}
+    extension JSONEncoder: JWTJSONEncoder {}
+#endif
 
-extension JSONEncoder: JWTJSONEncoder {}
-
-public extension JSONDecoder.DateDecodingStrategy {
-    static var integerSecondsSince1970: Self {
+extension JSONDecoder.DateDecodingStrategy {
+    public static var integerSecondsSince1970: Self {
         .custom { decoder in
             let container = try decoder.singleValueContainer()
             return try Date(timeIntervalSince1970: Double(container.decode(Int.self)))
@@ -21,8 +25,8 @@ public extension JSONDecoder.DateDecodingStrategy {
     }
 }
 
-public extension JSONEncoder.DateEncodingStrategy {
-    static var integerSecondsSince1970: Self {
+extension JSONEncoder.DateEncodingStrategy {
+    public static var integerSecondsSince1970: Self {
         .custom { date, encoder in
             var container = encoder.singleValueContainer()
             try container.encode(Int(date.timeIntervalSince1970.rounded(.towardZero)))
@@ -30,16 +34,16 @@ public extension JSONEncoder.DateEncodingStrategy {
     }
 }
 
-public extension JWTJSONEncoder where Self == JSONEncoder {
-    static var defaultForJWT: any JWTJSONEncoder {
+extension JWTJSONEncoder where Self == JSONEncoder {
+    public static var defaultForJWT: any JWTJSONEncoder {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .secondsSince1970
         return encoder
     }
 }
 
-public extension JWTJSONDecoder where Self == JSONDecoder {
-    static var defaultForJWT: any JWTJSONDecoder {
+extension JWTJSONDecoder where Self == JSONDecoder {
+    public static var defaultForJWT: any JWTJSONDecoder {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
         return decoder
