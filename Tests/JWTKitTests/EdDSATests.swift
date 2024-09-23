@@ -1,7 +1,7 @@
 import JWTKit
 import XCTest
 
-final class EdDSATests: XCTestCase {
+final class EdDSATests: XCTestCase, @unchecked Sendable {
     func testEdDSAGenerate() async throws {
         let payload = TestPayload(
             sub: "vapor",
@@ -14,7 +14,8 @@ final class EdDSATests: XCTestCase {
             .add(eddsa: EdDSA.PrivateKey(curve: .ed25519))
 
         let token = try await keyCollection.sign(payload)
-        try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(
+            await keyCollection.verify(token, as: TestPayload.self), payload)
     }
 
     func testEdDSAPublicPrivate() async throws {
@@ -28,7 +29,7 @@ final class EdDSATests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        for _ in 0 ..< 1000 {
+        for _ in 0..<1000 {
             let token = try await keys.sign(payload, kid: "private")
             // test public signer decoding
             try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
@@ -53,19 +54,19 @@ final class EdDSATests: XCTestCase {
 
         // verify using jwks
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "OKP",
-                    "crv": "Ed25519",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "d": "\(d)"
-                }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "OKP",
+                        "crv": "Ed25519",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "d": "\(d)"
+                    }
+                ]
+            }
+            """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
@@ -90,19 +91,19 @@ final class EdDSATests: XCTestCase {
 
         // verify using jwks without alg
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "OKP",
-                    "crv": "Ed25519",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "d": "\(d)"
-                }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "OKP",
+                        "crv": "Ed25519",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "d": "\(d)"
+                    }
+                ]
+            }
+            """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
@@ -127,19 +128,19 @@ final class EdDSATests: XCTestCase {
 
         // verify using jwks without alg
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "OKP",
-                    "crv": "Ed25519",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "d": "\(d)"
-                }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "OKP",
+                        "crv": "Ed25519",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "d": "\(d)"
+                    }
+                ]
+            }
+            """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
