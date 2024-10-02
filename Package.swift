@@ -10,10 +10,10 @@ let package = Package(
         .watchOS(.v8),
     ],
     products: [
-        .library(name: "JWTKit", targets: ["JWTKit"]),
+        .library(name: "JWTKit", targets: ["JWTKit"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-crypto.git", branch: "3.8.0"),
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],
@@ -30,7 +30,10 @@ let package = Package(
         .testTarget(
             name: "JWTKitTests",
             dependencies: [
-                "JWTKit",
+                "JWTKit"
+            ],
+            resources: [
+                .copy("TestCertificates")
             ]
         ),
     ],
