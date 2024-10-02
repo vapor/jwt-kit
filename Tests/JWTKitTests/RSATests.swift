@@ -2,7 +2,7 @@ import JWTKit
 import XCTest
 import _CryptoExtras
 
-final class RSATests: XCTestCase {
+final class RSATests: XCTestCase, @unchecked Sendable {
     func testRSADocs() async throws {
         await XCTAssertNoThrowAsync(
             try await JWTKeyCollection().add(
@@ -52,15 +52,10 @@ final class RSATests: XCTestCase {
     }
 
     func testSigning() async throws {
-        let keyCollection = try await JWTKeyCollection()
-            .add(
-                rsa: Insecure.RSA.PrivateKey(pem: self.privateKey), digestAlgorithm: .sha256,
-                kid: "private"
-            )
-            .add(
-                rsa: Insecure.RSA.PublicKey(pem: self.publicKey), digestAlgorithm: .sha256,
-                kid: "public"
-            )
+        let keyCollection = try await JWTKeyCollection().add(
+            rsa: Insecure.RSA.PrivateKey(pem: self.privateKey), digestAlgorithm: .sha256,
+            kid: "private"
+        )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -162,19 +157,17 @@ final class RSATests: XCTestCase {
             admin: true,
             exp: .init(value: .distantFuture)
         )
-        let signerCollection = try await JWTKeyCollection()
-            .add(
-                rsa: Insecure.RSA.PrivateKey(pem: self.certPrivateKey), digestAlgorithm: .sha256,
-                kid: "private"
-            )
+        let signerCollection = try await JWTKeyCollection().add(
+            rsa: Insecure.RSA.PrivateKey(pem: self.certPrivateKey), digestAlgorithm: .sha256,
+            kid: "private"
+        )
 
         let jwt = try await signerCollection.sign(test, kid: "private")
 
-        let verifierCollection = try await JWTKeyCollection()
-            .add(
-                rsa: Insecure.RSA.PublicKey(certificatePEM: self.cert), digestAlgorithm: .sha256,
-                kid: "cert"
-            )
+        let verifierCollection = try await JWTKeyCollection().add(
+            rsa: Insecure.RSA.PublicKey(certificatePEM: self.cert), digestAlgorithm: .sha256,
+            kid: "cert"
+        )
 
         let payload = try await verifierCollection.verify(jwt, as: TestPayload.self)
         XCTAssertEqual(payload, test)
@@ -231,7 +224,8 @@ final class RSATests: XCTestCase {
     func testExportKeyAsPEMWhenRawBuilt() async throws {
         let key = try Insecure.RSA.PrivateKey(
             modulus: self.modulus, exponent: self.publicExponent,
-            privateExponent: self.privateExponent)
+            privateExponent: self.privateExponent
+        )
         let key2 = try Insecure.RSA.PrivateKey(pem: key.pemRepresentation)
         XCTAssertEqual(key, key2)
     }
