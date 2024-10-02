@@ -9,7 +9,7 @@ public struct JWK: Codable, Sendable {
         let backing: Backing
 
         public var rawValue: String {
-            switch backing {
+            switch self.backing {
             case let .ecdsa(ecdsaCurve):
                 ecdsaCurve.rawValue
             case let .eddsa(eddsaCurve):
@@ -54,7 +54,7 @@ public struct JWK: Codable, Sendable {
         }
 
         public func encode(to encoder: any Encoder) throws {
-            switch backing {
+            switch self.backing {
             case let .ecdsa(ecdsaCurve):
                 try ecdsaCurve.encode(to: encoder)
             case let .eddsa(eddsaCurve):
@@ -70,7 +70,7 @@ public struct JWK: Codable, Sendable {
         let backing: Backing
 
         public var rawValue: String {
-            backing.rawValue
+            self.backing.rawValue
         }
 
         /// RSA
@@ -119,7 +119,7 @@ public struct JWK: Codable, Sendable {
         let backing: Backing
 
         public var rawValue: String {
-            backing.rawValue
+            self.backing.rawValue
         }
 
         /// RSA with SHA256
@@ -207,6 +207,12 @@ public struct JWK: Codable, Sendable {
     /// `d` Private exponent.
     public var privateExponent: String?
 
+    /// `p` First prime factor.
+    public var prime1: String?
+
+    /// `q` Second prime factor.
+    public var prime2: String?
+
     // ECDSA keys
     public var x: String?
 
@@ -221,6 +227,8 @@ public struct JWK: Codable, Sendable {
         case modulus = "n"
         case exponent = "e"
         case privateExponent = "d"
+        case prime1 = "p"
+        case prime2 = "q"
         case curve = "crv"
         case x
         case y
@@ -243,7 +251,9 @@ public struct JWK: Codable, Sendable {
             keyIdentifier: identifier,
             modulus: modulus,
             exponent: exponent,
-            privateExponent: privateExponent
+            privateExponent: privateExponent,
+            prime1: nil,
+            prime2: nil
         )
     }
 
@@ -291,6 +301,8 @@ public struct JWK: Codable, Sendable {
         modulus: String? = nil,
         exponent: String? = nil,
         privateExponent: String? = nil,
+        prime1: String? = nil,
+        prime2: String? = nil,
         x: String? = nil,
         y: String? = nil,
         curve: Curve? = nil
@@ -301,6 +313,8 @@ public struct JWK: Codable, Sendable {
         self.modulus = modulus
         self.exponent = exponent
         self.privateExponent = privateExponent
+        self.prime1 = prime1
+        self.prime2 = prime2
         self.x = x
         self.y = y
         self.curve = curve
