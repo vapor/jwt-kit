@@ -1,7 +1,7 @@
 import JWTKit
 import XCTest
 
-final class VendorTokenTests: XCTestCase {
+final class VendorTokenTests: XCTestCase, @unchecked Sendable {
     func testGoogleIDToken() async throws {
         let token = GoogleIdentityToken(
             issuer: "https://accounts.google.com",
@@ -53,7 +53,9 @@ final class VendorTokenTests: XCTestCase {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: GoogleIdentityToken.self)) { error in
+        await XCTAssertThrowsErrorAsync(
+            try await collection.verify(jwt, as: GoogleIdentityToken.self)
+        ) { error in
             guard let error = error as? JWTError else {
                 return XCTFail("Unexpected error: \(error)")
             }
@@ -86,7 +88,9 @@ final class VendorTokenTests: XCTestCase {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: GoogleIdentityToken.self)) { error in
+        await XCTAssertThrowsErrorAsync(
+            try await collection.verify(jwt, as: GoogleIdentityToken.self)
+        ) { error in
             guard let error = error as? JWTError else {
                 return XCTFail("Unexpected error: \(error)")
             }
@@ -136,7 +140,9 @@ final class VendorTokenTests: XCTestCase {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: AppleIdentityToken.self)) { error in
+        await XCTAssertThrowsErrorAsync(
+            try await collection.verify(jwt, as: AppleIdentityToken.self)
+        ) { error in
             guard let error = error as? JWTError else {
                 return XCTFail("Unexpected error: \(error)")
             }
@@ -172,7 +178,8 @@ final class VendorTokenTests: XCTestCase {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertNoThrowAsync(try await collection.verify(jwt, as: MicrosoftIdentityToken.self))
+        await XCTAssertNoThrowAsync(
+            try await collection.verify(jwt, as: MicrosoftIdentityToken.self))
     }
 
     func testMicrosoftIDTokenNotFromMicrosoft() async throws {
@@ -200,7 +207,9 @@ final class VendorTokenTests: XCTestCase {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: MicrosoftIdentityToken.self)) { error in
+        await XCTAssertThrowsErrorAsync(
+            try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
+        ) { error in
             guard let error = error as? JWTError else {
                 return XCTFail("Unexpected error: \(error)")
             }
@@ -234,7 +243,9 @@ final class VendorTokenTests: XCTestCase {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(try await collection.verify(jwt, as: MicrosoftIdentityToken.self)) { error in
+        await XCTAssertThrowsErrorAsync(
+            try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
+        ) { error in
             guard let error = error as? JWTError else {
                 return XCTFail("Unexpected error: \(error)")
             }

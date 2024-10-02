@@ -2,7 +2,7 @@ import Crypto
 import JWTKit
 import XCTest
 
-final class ECDSATests: XCTestCase {
+final class ECDSATests: XCTestCase, @unchecked Sendable {
     func testECDSADocs() async throws {
         XCTAssertNoThrow(try ES256PublicKey(pem: ecdsaPublicKey))
     }
@@ -54,7 +54,8 @@ final class ECDSATests: XCTestCase {
         let key = ES256PrivateKey()
         await keyCollection.add(ecdsa: key)
         let token = try await keyCollection.sign(payload)
-        try await XCTAssertEqualAsync(await keyCollection.verify(token, as: TestPayload.self), payload)
+        try await XCTAssertEqualAsync(
+            await keyCollection.verify(token, as: TestPayload.self), payload)
     }
 
     func testECDSAPublicPrivate() async throws {
@@ -68,7 +69,7 @@ final class ECDSATests: XCTestCase {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        for _ in 0 ..< 1000 {
+        for _ in 0..<1000 {
             let token = try await keys.sign(payload, kid: "private")
             // test private signer decoding
             try await XCTAssertEqualAsync(await keys.verify(token, as: TestPayload.self), payload)
@@ -97,18 +98,18 @@ final class ECDSATests: XCTestCase {
 
         // verify using jwks without alg
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "EC",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "y": "\(y)"
-                 }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "EC",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "y": "\(y)"
+                     }
+                ]
+            }
+            """
 
         try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
@@ -136,18 +137,18 @@ final class ECDSATests: XCTestCase {
 
         // verify using jwks without alg
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "EC",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "y": "\(y)"
-                 }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "EC",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "y": "\(y)"
+                     }
+                ]
+            }
+            """
 
         try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
@@ -175,18 +176,18 @@ final class ECDSATests: XCTestCase {
 
         // verify using jwks without alg
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "EC",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "y": "\(y)"
-                 }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "EC",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "y": "\(y)"
+                     }
+                ]
+            }
+            """
 
         try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
@@ -243,7 +244,8 @@ final class ECDSATests: XCTestCase {
 
         let params = ec.parameters!
         try await keys.add(ecdsa: ES256PublicKey(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        try await XCTAssertTrueAsync(
+            try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p256)
     }
 
@@ -257,7 +259,8 @@ final class ECDSATests: XCTestCase {
 
         let params = ec.parameters!
         try await keys.add(ecdsa: ES384PublicKey(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        try await XCTAssertTrueAsync(
+            try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p384)
     }
 
@@ -271,22 +274,23 @@ final class ECDSATests: XCTestCase {
 
         let params = ec.parameters!
         try await keys.add(ecdsa: ES512PublicKey(parameters: params), kid: "params")
-        try await XCTAssertTrueAsync(try await keys.getKey(for: "params").verify(signature, signs: message))
+        try await XCTAssertTrueAsync(
+            try await keys.getKey(for: "params").verify(signature, signs: message))
         XCTAssertEqual(ec.curve, .p521)
     }
 }
 
 let ecdsaPrivateKey = """
------BEGIN PRIVATE KEY-----
-MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg2sD+kukkA8GZUpmm
-jRa4fJ9Xa/JnIG4Hpi7tNO66+OGgCgYIKoZIzj0DAQehRANCAATZp0yt0btpR9kf
-ntp4oUUzTV0+eTELXxJxFvhnqmgwGAm1iVW132XLrdRG/ntlbQ1yzUuJkHtYBNve
-y+77Vzsd
------END PRIVATE KEY-----
-"""
+    -----BEGIN PRIVATE KEY-----
+    MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg2sD+kukkA8GZUpmm
+    jRa4fJ9Xa/JnIG4Hpi7tNO66+OGgCgYIKoZIzj0DAQehRANCAATZp0yt0btpR9kf
+    ntp4oUUzTV0+eTELXxJxFvhnqmgwGAm1iVW132XLrdRG/ntlbQ1yzUuJkHtYBNve
+    y+77Vzsd
+    -----END PRIVATE KEY-----
+    """
 let ecdsaPublicKey = """
------BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2adMrdG7aUfZH57aeKFFM01dPnkx
-C18ScRb4Z6poMBgJtYlVtd9ly63URv57ZW0Ncs1LiZB7WATb3svu+1c7HQ==
------END PUBLIC KEY-----
-"""
+    -----BEGIN PUBLIC KEY-----
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2adMrdG7aUfZH57aeKFFM01dPnkx
+    C18ScRb4Z6poMBgJtYlVtd9ly63URv57ZW0Ncs1LiZB7WATb3svu+1c7HQ==
+    -----END PUBLIC KEY-----
+    """

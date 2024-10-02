@@ -1,4 +1,8 @@
-import struct Foundation.Locale
+#if compiler(<6.0) && !canImport(Darwin)
+    @preconcurrency import Foundation
+#else
+    import Foundation
+#endif
 
 public struct LocaleClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// See ``JWTClaim``.
