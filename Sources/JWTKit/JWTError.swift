@@ -100,12 +100,8 @@ public struct JWTError: Error, Sendable, Equatable {
         self.backing = .init(errorType: errorType)
     }
 
-    public static func claimVerificationFailure(failedClaim: (any JWTClaim)?, reason: String)
-        -> Self
-    {
-        .init(
-            backing: .init(
-                errorType: .claimVerificationFailure, reason: reason, failedClaim: failedClaim))
+    public static func claimVerificationFailure(failedClaim: (any JWTClaim)?, reason: String) -> Self {
+        .init(backing: .init(errorType: .claimVerificationFailure, reason: reason, failedClaim: failedClaim))
     }
 
     public static func signingAlgorithmFailure(_ error: Error) -> Self {

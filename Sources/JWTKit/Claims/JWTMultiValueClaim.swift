@@ -84,8 +84,7 @@ extension JWTMultiValueClaim {
 /// initializers for the single-value initializer of ``JWTMultiValueClaim``. The
 /// other workaround would be to require conformance to
 /// `ExpressibleByArrayLiteral`, but what fun would that be?
-private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer
-where T: Collection, T: Codable, T.Element: Codable {
+private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer where T: Collection, T: Codable, T.Element: Codable {
     static func decode(_ element: T.Element) throws -> T {
         try T(from: self.init(value: element))
     }
@@ -114,14 +113,11 @@ where T: Collection, T: Codable, T.Element: Codable {
     /// ``Collection`` with a really weird `Decodable` conformance.
     mutating func decode<U>(_: U.Type) throws -> U where U: Decodable {
         guard !self.isAtEnd else {
-            throw DecodingError.valueNotFound(
-                U.self,
-                .init(codingPath: [], debugDescription: "Unkeyed container went past the end?"))
+            throw DecodingError.valueNotFound(U.self, .init(codingPath: [], debugDescription: "Unkeyed container went past the end?"))
         }
 
         guard U.self == T.Element.self else {
-            throw DecodingError.typeMismatch(
-                U.self, .init(codingPath: [], debugDescription: "Asked for the wrong type!"))
+            throw DecodingError.typeMismatch(U.self, .init(codingPath: [], debugDescription: "Asked for the wrong type!"))
         }
 
         self.currentIndex += 1
@@ -130,9 +126,7 @@ where T: Collection, T: Codable, T.Element: Codable {
 
     /// The error we throw for all operations we don't support (which is most of them).
     private var unsupportedError: DecodingError {
-        return DecodingError.typeMismatch(
-            Any.self,
-            .init(codingPath: [], debugDescription: "This decoder doesn't support most things."))
+        return DecodingError.typeMismatch(Any.self, .init(codingPath: [], debugDescription: "This decoder doesn't support most things."))
     }
 
     // ``Decoder`` and ``UnkeyedDecodingContainer`` conformance requirements. We don't bother tracking any coding path or
@@ -144,8 +138,7 @@ where T: Collection, T: Codable, T.Element: Codable {
     var isAtEnd: Bool { currentIndex != 0 }
     var count: Int? = 1
 
-    func container<Key>(keyedBy _: Key.Type) throws -> KeyedDecodingContainer<Key>
-    where Key: CodingKey {
+    func container<Key>(keyedBy _: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         throw self.unsupportedError
     }
 
@@ -153,8 +146,7 @@ where T: Collection, T: Codable, T.Element: Codable {
         throw self.unsupportedError
     }
 
-    mutating func nestedContainer<N>(keyedBy _: N.Type) throws -> KeyedDecodingContainer<N>
-    where N: CodingKey {
+    mutating func nestedContainer<N>(keyedBy _: N.Type) throws -> KeyedDecodingContainer<N> where N: CodingKey {
         throw self.unsupportedError
     }
 

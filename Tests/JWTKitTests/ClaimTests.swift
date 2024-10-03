@@ -36,9 +36,7 @@ struct ClaimTests {
         #expect(brazillianPortugese.locale.value.identifier == "pt-BR")
         #expect(nadizaDialectSlovenia.locale.value.identifier == "sl-nedis")
         #expect(germanSwissPost1996.locale.value.identifier == "de-CH-1996")
-        #expect(
-            chineseTraditionalTwoPrivate.locale.value.identifier == "zh-Hant-CN-x-private1-private2"
-        )
+        #expect(chineseTraditionalTwoPrivate.locale.value.identifier == "zh-Hant-CN-x-private1-private2")
 
         let encoded = try JSONEncoder().encode(brazillianPortugese)
         let string = String(bytes: encoded, encoding: .utf8)!
@@ -97,8 +95,8 @@ struct ClaimTests {
     func expirationEncoding() async throws {
         let exp = ExpirationClaim(value: Date(timeIntervalSince1970: 2_000_000_000))
         let parser = DefaultJWTParser()
-        let keyCollection = await JWTKeyCollection().add(
-            hmac: .init(from: "secret".bytes), digestAlgorithm: .sha256, parser: parser)
+        let keyCollection = await JWTKeyCollection()
+            .add(hmac: .init(from: "secret".bytes), digestAlgorithm: .sha256, parser: parser)
         let jwt = try await keyCollection.sign(ExpirationPayload(exp: exp))
         let parsed = try parser.parse(jwt.bytes, as: ExpirationPayload.self)
         let header = parsed.header

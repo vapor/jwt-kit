@@ -98,9 +98,7 @@ extension ECDSA {
                 let x = parameters.x.base64URLDecodedData(),
                 let y = parameters.y.base64URLDecodedData()
             else {
-                throw JWTError.generic(
-                    identifier: "ecCoordinates",
-                    reason: "Unable to interpret x or y as base64 encoded data")
+                throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x or y as base64 encoded data")
             }
             self.backing = try PublicKey(x963Representation: [0x04] + x + y)
         }

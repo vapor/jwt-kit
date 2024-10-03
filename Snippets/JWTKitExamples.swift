@@ -111,8 +111,7 @@ extension DataProtocol {
         let string = String(decoding: self, as: UTF8.self)
             .replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
-        let padding =
-            string.count % 4 == 0 ? "" : String(repeating: "=", count: 4 - string.count % 4)
+        let padding = string.count % 4 == 0 ? "" : String(repeating: "=", count: 4 - string.count % 4)
         return [UInt8](Data(base64Encoded: string + padding) ?? Data())
     }
 
@@ -152,8 +151,7 @@ struct CustomParser: JWTParser {
 
         let payload =
             if header.b64?.asBool ?? true {
-                try self.jsonDecoder.decode(
-                    Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+                try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
             } else {
                 try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
             }
@@ -169,12 +167,9 @@ struct CustomParser: JWTParser {
 do {
     // snippet.CUSTOM_SIGNING
     let keyCollection = await JWTKeyCollection()
-        .add(
-            hmac: "secret", digestAlgorithm: .sha256, parser: CustomParser(),
-            serializer: CustomSerializer())
+        .add(hmac: "secret", digestAlgorithm: .sha256, parser: CustomParser(), serializer: CustomSerializer())
 
-    let payload = ExamplePayload(
-        sub: "vapor", exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)), admin: false)
+    let payload = ExamplePayload(sub: "vapor", exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)), admin: false)
 
     let token = try await keyCollection.sign(payload, header: ["b64": true])
     // snippet.end

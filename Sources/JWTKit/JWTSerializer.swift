@@ -37,11 +37,7 @@ extension JWTSerializer {
         return encodedHeader + [.period] + encodedPayload
     }
 
-    func sign(
-        _ payload: some JWTPayload,
-        with header: JWTHeader = JWTHeader(),
-        using key: some JWTAlgorithm
-    ) async throws -> String {
+    func sign(_ payload: some JWTPayload, with header: JWTHeader = JWTHeader(), using key: some JWTAlgorithm) async throws -> String {
         let signingInput = try await makeSigningInput(payload: payload, header: header, key: key)
 
         let signatureData = try key.sign(signingInput)

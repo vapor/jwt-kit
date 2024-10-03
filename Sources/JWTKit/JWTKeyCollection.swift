@@ -27,8 +27,7 @@ public actor JWTKeyCollection: Sendable {
     public init(
         defaultJWTParser: some JWTParser = DefaultJWTParser(),
         defaultJWTSerializer: some JWTSerializer = DefaultJWTSerializer(),
-        logger: Logger = Logger(
-            label: "jwt_kit_do_not_log", factory: { _ in SwiftLogNoOpLogHandler() })
+        logger: Logger = Logger(label: "jwt_kit_do_not_log", factory: { _ in SwiftLogNoOpLogHandler() })
     ) {
         self.storage = [:]
         self.defaultJWTParser = defaultJWTParser
@@ -98,10 +97,7 @@ public actor JWTKeyCollection: Sendable {
     /// - Throws: ``JWTError/invalidJWK`` if the JWK cannot be added due to missing key identifier.
     /// - Returns: Self for chaining.
     @discardableResult
-    public func add(
-        jwk: JWK,
-        isDefault: Bool? = nil
-    ) throws -> Self {
+    public func add(jwk: JWK, isDefault: Bool? = nil) throws -> Self {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK(reason: "Missing KID")
         }
@@ -156,9 +152,7 @@ public actor JWTKeyCollection: Sendable {
     ///  - alg: An optional algorithm identifier.
     /// - Returns: A ``JWTKey`` if one is found; otherwise, `nil`.
     /// - Throws: ``JWTError/generic`` if the algorithm cannot be retrieved.
-    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws
-        -> JWTAlgorithm
-    {
+    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws -> any JWTAlgorithm {
         try await self.getSigner(for: kid, alg: alg).algorithm
     }
 

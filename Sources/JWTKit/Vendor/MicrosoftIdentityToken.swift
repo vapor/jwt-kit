@@ -148,13 +148,11 @@ public struct MicrosoftIdentityToken: JWTPayload {
 
     public func verify(using _: some JWTAlgorithm) throws {
         guard let tenantId = self.tenantId.value else {
-            throw JWTError.claimVerificationFailure(
-                failedClaim: tenantId, reason: "Token must contain tenant Id")
+            throw JWTError.claimVerificationFailure(failedClaim: tenantId, reason: "Token must contain tenant Id")
         }
 
         guard self.issuer.value == "https://login.microsoftonline.com/\(tenantId)/v2.0" else {
-            throw JWTError.claimVerificationFailure(
-                failedClaim: issuer, reason: "Token not provided by Microsoft")
+            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Microsoft")
         }
 
         try self.expires.verifyNotExpired()

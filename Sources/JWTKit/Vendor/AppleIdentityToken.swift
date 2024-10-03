@@ -84,8 +84,7 @@ public struct AppleIdentityToken: JWTPayload {
 
     public func verify(using _: some JWTAlgorithm) throws {
         guard self.issuer.value == "https://appleid.apple.com" else {
-            throw JWTError.claimVerificationFailure(
-                failedClaim: issuer, reason: "Token not provided by Apple")
+            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Apple")
         }
 
         try self.expires.verifyNotExpired()
@@ -134,8 +133,7 @@ extension AppleIdentityToken {
             case .unknown: try container.encode(Status.unknown)
             case .likelyReal: try container.encode(Status.likelyReal)
             default:
-                let context = EncodingError.Context(
-                    codingPath: encoder.codingPath, debugDescription: "Invalid enum value: \(self)")
+                let context = EncodingError.Context(codingPath: encoder.codingPath, debugDescription: "Invalid enum value: \(self)")
                 throw EncodingError.invalidValue(self, context)
             }
         }

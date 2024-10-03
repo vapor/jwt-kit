@@ -9,8 +9,7 @@ public struct GoogleHostedDomainClaim: JWTClaim, Equatable, ExpressibleByStringL
 
     public func verify(domain: String) throws {
         guard value == domain else {
-            throw JWTError.claimVerificationFailure(
-                failedClaim: self, reason: "\(value) is invalid")
+            throw JWTError.claimVerificationFailure(failedClaim: self, reason: "\(value) is invalid")
         }
     }
 }

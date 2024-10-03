@@ -30,6 +30,7 @@ extension JWTKeyCollection {
                 algorithm: ECDSASigner(key: key),
                 parser: parser,
                 serializer: serializer
-            ), for: kid)
+            ), for: kid
+        )
     }
 }
