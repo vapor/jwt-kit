@@ -142,9 +142,8 @@ public actor JWTKeyCollection: Sendable {
             } else {
                 guard let alg, let jwkAlg = JWK.Algorithm(rawValue: alg) else {
                     throw JWTError.generic(
-                        identifier: "Algorithm",
-                        reason:
-                            "Invalid algorithm or unable to create signer with provided algorithm.")
+                        identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm."
+                    )
                 }
                 return try await jwk.makeSigner(for: jwkAlg)
             }

@@ -211,9 +211,7 @@ struct VendorTokenTests {
         let jwt = try await collection.sign(token)
 
         await #expect(
-            throws: JWTError.claimVerificationFailure(
-                failedClaim: token.issuer, reason: "Token not provided by Microsoft"
-            )
+            throws: JWTError.claimVerificationFailure(failedClaim: token.issuer, reason: "Token not provided by Microsoft")
         ) {
             try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
         }

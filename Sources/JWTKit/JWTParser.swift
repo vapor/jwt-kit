@@ -24,19 +24,16 @@ extension JWTParser {
 
 extension JWTParser {
     func parseHeader(_ token: some DataProtocol) throws -> JWTHeader {
-        let tokenParts = token.copyBytes().split(
-            separator: .period, omittingEmptySubsequences: false)
+        let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
 
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken(reason: "Token parts count is not 3.")
         }
 
         do {
-            return try jsonDecoder.decode(
-                JWTHeader.self, from: .init(tokenParts[0].base64URLDecodedBytes()))
+            return try jsonDecoder.decode(JWTHeader.self, from: .init(tokenParts[0].base64URLDecodedBytes()))
         } catch {
-            throw JWTError.malformedToken(
-                reason: "Couldn't decode header from JWT with error: \(String(describing: error)).")
+            throw JWTError.malformedToken(reason: "Couldn't decode header from JWT with error: \(String(describing: error)).")
         }
     }
 }
@@ -58,14 +55,11 @@ public struct DefaultJWTParser: JWTParser {
         let signature: Data
 
         do {
-            header = try jsonDecoder.decode(
-                JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
-            payload = try jsonDecoder.decode(
-                Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+            header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+            payload = try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
             signature = Data(encodedSignature.base64URLDecodedBytes())
         } catch {
-            throw JWTError.malformedToken(
-                reason: "Couldn't decode JWT with error: \(String(describing: error))")
+            throw JWTError.malformedToken(reason: "Couldn't decode JWT with error: \(String(describing: error))")
         }
 
         return (header: header, payload: payload, signature: signature)

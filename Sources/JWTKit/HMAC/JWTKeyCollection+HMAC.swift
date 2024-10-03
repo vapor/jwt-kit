@@ -28,22 +28,15 @@ extension JWTKeyCollection {
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        switch digestAlgorithm.backing {
-        case .sha256:
-            add(
-                .init(
-                    algorithm: HMACSigner<SHA256>(key: key.key, name: "HS256"), parser: parser,
-                    serializer: serializer), for: kid)
-        case .sha384:
-            add(
-                .init(
-                    algorithm: HMACSigner<SHA384>(key: key.key, name: "HS384"), parser: parser,
-                    serializer: serializer), for: kid)
-        case .sha512:
-            add(
-                .init(
-                    algorithm: HMACSigner<SHA512>(key: key.key, name: "HS512"), parser: parser,
-                    serializer: serializer), for: kid)
-        }
+        let signer: any JWTAlgorithm =
+            switch digestAlgorithm.backing {
+            case .sha256:
+                HMACSigner<SHA256>(key: key.key)
+            case .sha384:
+                HMACSigner<SHA384>(key: key.key)
+            case .sha512:
+                HMACSigner<SHA512>(key: key.key)
+            }
+        return add(.init(algorithm: signer, parser: parser, serializer: serializer), for: kid)
     }
 }

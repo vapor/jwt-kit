@@ -152,8 +152,7 @@ public struct X5CVerifier: Sendable {
 
         // Ensure the algorithm used is ES256, as it's the only supported one (for now)
         guard let headerAlg = header.alg, headerAlg == "ES256" else {
-            throw JWTError.invalidX5CChain(
-                reason: "Unsupported algorithm: \(String(describing: header.alg))")
+            throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: header.alg))")
         }
 
         // Ensure the x5c header parameter is present and not empty

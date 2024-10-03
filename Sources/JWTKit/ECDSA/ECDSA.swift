@@ -179,9 +179,7 @@ extension ECDSA {
         ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
         public init(key: String) throws {
             guard let keyData = key.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "ECDSAKey Creation",
-                    reason: "Unable to interpret private key data as base64URL")
+                throw JWTError.generic(identifier: "ECDSAKey Creation", reason: "Unable to interpret private key data as base64URL")
             }
 
             self.backing = try PrivateKey(rawRepresentation: [UInt8](keyData))

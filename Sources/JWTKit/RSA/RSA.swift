@@ -148,22 +148,18 @@ extension Insecure.RSA {
             exponent: String
         ) throws {
             guard let n = modulus.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url modulus")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
             }
 
             guard let e = exponent.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url exponent")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
             }
 
             let key = try _RSA.Signing.PublicKey(n: n, e: e)
             try self.init(backing: key)
         }
 
-        func isValidSignature<D: Digest>(
-            _ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding
-        ) -> Bool {
+        func isValidSignature<D: Digest>(_ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding) -> Bool {
             self.backing.isValidSignature(signature, for: digest, padding: padding)
         }
 
@@ -280,18 +276,15 @@ extension Insecure.RSA {
             privateExponent: String
         ) throws {
             guard let n = modulus.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url modulus")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
             }
 
             guard let e = exponent.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url exponent")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
             }
 
             guard let d = privateExponent.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
             }
 
             let key = try _RSA.Signing.PrivateKey._createFromNumbers(n: n, e: e, d: d)
@@ -306,18 +299,15 @@ extension Insecure.RSA {
             prime2: String
         ) throws {
             guard let n = modulus.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url modulus")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
             }
 
             guard let e = exponent.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url exponent")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
             }
 
             guard let d = privateExponent.base64URLDecodedData() else {
-                throw JWTError.generic(
-                    identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
             }
 
             guard let p = prime1.base64URLDecodedData() else {
@@ -332,9 +322,7 @@ extension Insecure.RSA {
             try self.init(backing: key)
         }
 
-        func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws
-            -> _RSA.Signing.RSASignature
-        {
+        func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {
             try self.backing.signature(for: digest, padding: padding)
         }
 

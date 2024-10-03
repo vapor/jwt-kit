@@ -137,11 +137,6 @@ extension EdDSA {
     }
 }
 
-#if compiler(<6)
-    // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-    extension Curve25519.Signing.PublicKey: @unchecked Sendable {}
-    extension Curve25519.Signing.PrivateKey: @unchecked Sendable {}
-#else
-    extension Curve25519.Signing.PublicKey: @unchecked @retroactive Sendable {}
-    extension Curve25519.Signing.PrivateKey: @unchecked @retroactive Sendable {}
-#endif
+// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+extension Curve25519.Signing.PublicKey: @unchecked @retroactive Sendable {}
+extension Curve25519.Signing.PrivateKey: @unchecked @retroactive Sendable {}

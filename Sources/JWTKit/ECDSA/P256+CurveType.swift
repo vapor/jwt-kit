@@ -32,26 +32,17 @@ extension P256.Signing.PublicKey: ECDSAPublicKey {
     ///   - digest: The digest to verify the signature against.
     /// - Returns: True if the signature is valid for the given digest, false otherwise.
     /// - Throws: If there is a problem verifying the signature.
-    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws
-        -> Bool
-    {
+    public func isValidSignature(_ signature: some DataProtocol, for data: some Digest) throws -> Bool {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
         return isValidSignature(signature, for: data)
     }
 }
 
-#if compiler(<6)
-    // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-    extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
-    extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
-    extension P256.Signing.PublicKey: @unchecked Sendable {}
-    extension P256: @unchecked Sendable {}
-#else
-    extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
-    extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
-    extension P256.Signing.PublicKey: @unchecked @retroactive Sendable {}
-    extension P256: @unchecked @retroactive Sendable {}
-#endif
+// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
+extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
+extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
+extension P256.Signing.PublicKey: @unchecked @retroactive Sendable {}
+extension P256: @unchecked @retroactive Sendable {}
 
 public typealias ES256PublicKey = ECDSA.PublicKey<P256>
 public typealias ES256PrivateKey = ECDSA.PrivateKey<P256>

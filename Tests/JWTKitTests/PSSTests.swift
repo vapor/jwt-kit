@@ -16,13 +16,7 @@ struct PSSTests {
     @Test("Test Signing with Private Key")
     func signing() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .add(
-                pss: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256,
-                kid: "private"
-            )
-            .add(
-                pss: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public"
-            )
+            .add(pss: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256, kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -39,9 +33,7 @@ struct PSSTests {
     @Test("Test Signing with Public Key Should Fail")
     func signingWithPublic() async throws {
         let keyCollection = try await JWTKeyCollection()
-            .add(
-                pss: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public"
-            )
+            .add(pss: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -71,13 +63,7 @@ struct PSSTests {
         }
 
         let keyCollection = try await JWTKeyCollection()
-            .add(
-                pss: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256,
-                kid: "private"
-            )
-            .add(
-                pss: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public"
-            )
+            .add(pss: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256, kid: "private")
 
         // Case where foo is not "bar"
         await #expect(
@@ -128,9 +114,7 @@ struct PSSTests {
             "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.dCaprjSiEw1w_cS2JzjWlp1mxdF9MV86VMylKiEZf6gM8NZhNo3hgnI3Gg7G_WL_bSzys9Z0QtNpWZeW1Mooa29qDqZolQLKbzyjiIMDFBslz_Hei-tI5318UdFLKIlMT0VyDThwFjyPCiVEvOkKokWSXXGZCHArGXouTWvaTND9C0gOMwSkE8cHU7e0u-_pDEfdv9MRQiGy1Wj-9T_ZN6a0g8yFMQcOU6voo-WSY-m98oylYOifiOighitlD0xNScDnxBH5Qp7yyU81m-s2-xoYVQJhGduvi8mxbo_bU48WIJfmdAYX3aAUh_xpvgcd55bdeMT55G_qnkDBDSLvbQ"
 
         let keyCollection = try await JWTKeyCollection()
-            .add(
-                pss: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public"
-            )
+            .add(pss: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = try await keyCollection.verify(token, as: TestPayload.self)
         #expect(payload.sub.value == "1234567890")

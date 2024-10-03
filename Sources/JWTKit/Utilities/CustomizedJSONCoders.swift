@@ -8,13 +8,8 @@ public protocol JWTJSONEncoder: Sendable {
     func encode<T: Encodable>(_ value: T) throws -> Data
 }
 
-#if compiler(<6.0) && !canImport(Darwin)
-    extension JSONDecoder: JWTJSONDecoder, @unchecked Sendable {}
-    extension JSONEncoder: JWTJSONEncoder, @unchecked Sendable {}
-#else
-    extension JSONDecoder: JWTJSONDecoder {}
-    extension JSONEncoder: JWTJSONEncoder {}
-#endif
+extension JSONDecoder: JWTJSONDecoder {}
+extension JSONEncoder: JWTJSONEncoder {}
 
 extension JSONDecoder.DateDecodingStrategy {
     public static var integerSecondsSince1970: Self {

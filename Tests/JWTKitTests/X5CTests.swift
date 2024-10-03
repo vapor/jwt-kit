@@ -65,8 +65,7 @@ struct X5CTests {
     /// Should fail validation.
     @Test("Test missing intermediate certificate")
     func verifyMissingIntermediate() async throws {
-        await #expect(throws: (any Error).self, "Missing intermediate cert should throw an error.")
-        {
+        await #expect(throws: (any Error).self, "Missing intermediate cert should throw an error.") {
             try await check(token: missingIntermediateToken)
         }
     }
@@ -106,9 +105,7 @@ struct X5CTests {
     /// Should fail validation.
     @Test("Test missing leaf and intermediate certificates")
     func verifyMissingLeafAndIntermediate() async throws {
-        await #expect(
-            throws: (any Error).self, "Missing leaf/intermediate cert should throw an error."
-        ) {
+        await #expect(throws: (any Error).self, "Missing leaf/intermediate cert should throw an error.") {
             try await check(token: missingLeafAndIntermediateToken)
         }
     }
@@ -118,9 +115,7 @@ struct X5CTests {
     /// Should fail validation.
     @Test("Test missing intermediate and root certificates")
     func verifyMissingIntermediateAndRoot() async throws {
-        await #expect(
-            throws: (any Error).self, "Missing intermediate/root cert should throw an error."
-        ) {
+        await #expect(throws: (any Error).self, "Missing intermediate/root cert should throw an error.") {
             try await check(token: missingIntermediateAndRootToken)
         }
     }
@@ -189,8 +184,7 @@ struct X5CTests {
 
         var payload: StoreKitPayload?
         do {
-            payload = try await verifier.verifyJWS(
-                token, as: StoreKitPayload.self, jsonDecoder: jsonDecoder)
+            payload = try await verifier.verifyJWS(token, as: StoreKitPayload.self, jsonDecoder: jsonDecoder)
         } catch {
             Issue.record("Failed with error: \(error.localizedDescription)")
         }
@@ -218,8 +212,7 @@ struct X5CTests {
         let result = try await verifier.verifyChain(
             certificates: [leaf, intermediate],
             policy: {
-                RFC5280Policy(
-                    validationTime: Date(timeIntervalSince1970: TimeInterval(1_681_312_846)))
+                RFC5280Policy(validationTime: Date(timeIntervalSince1970: TimeInterval(1_681_312_846)))
             })
 
         switch result {
@@ -237,8 +230,7 @@ struct X5CTests {
         let result = try await verifier.verifyChain(
             certificates: [leaf, intermediate],
             policy: {
-                RFC5280Policy(
-                    validationTime: Date(timeIntervalSince1970: TimeInterval(2_280_946_846)))
+                RFC5280Policy(validationTime: Date(timeIntervalSince1970: TimeInterval(2_280_946_846)))
             })
 
         switch result {
@@ -312,9 +304,7 @@ struct X5CTests {
         pemLines.append("-----BEGIN CERTIFICATE-----")
 
         while encoded.count > 0 {
-            let prefixIndex =
-                encoded.index(encoded.startIndex, offsetBy: 64, limitedBy: encoded.endIndex)
-                ?? encoded.endIndex
+            let prefixIndex = encoded.index(encoded.startIndex, offsetBy: 64, limitedBy: encoded.endIndex) ?? encoded.endIndex
             pemLines.append(encoded[..<prefixIndex])
             encoded = encoded[prefixIndex...]
         }
