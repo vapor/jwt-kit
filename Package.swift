@@ -36,6 +36,5 @@ let package = Package(
                 .copy("TestCertificates")
             ]
         ),
-    ],
-    swiftLanguageModes: [.v6]
+    ]
 )

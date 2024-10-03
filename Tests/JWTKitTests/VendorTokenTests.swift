@@ -1,8 +1,11 @@
+import Foundation
 import JWTKit
-import XCTest
+import Testing
 
-final class VendorTokenTests: XCTestCase, @unchecked Sendable {
-    func testGoogleIDToken() async throws {
+@Suite("VendorTokenTests")
+struct VendorTokenTests {
+    @Test("Test Google ID Token")
+    func verifyGoogleIDToken() async throws {
         let token = GoogleIdentityToken(
             issuer: "https://accounts.google.com",
             subject: "1234567890",
@@ -26,7 +29,9 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertNoThrowAsync(try await collection.verify(jwt, as: GoogleIdentityToken.self))
+        await #expect(throws: Never.self) {
+            try await collection.verify(jwt, as: GoogleIdentityToken.self)
+        }
     }
 
     func testGoogleIDTokenNotFromGoogle() async throws {
@@ -53,14 +58,12 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(
+        await #expect(
+            throws: JWTError.claimVerificationFailure(
+                failedClaim: token.issuer, reason: "Token not provided by Google"
+            )
+        ) {
             try await collection.verify(jwt, as: GoogleIdentityToken.self)
-        ) { error in
-            guard let error = error as? JWTError else {
-                return XCTFail("Unexpected error: \(error)")
-            }
-            XCTAssertEqual(error.errorType, .claimVerificationFailure)
-            XCTAssertEqual(error.reason, "Token not provided by Google")
         }
     }
 
@@ -88,14 +91,13 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(
+        await #expect(
+            throws: JWTError.claimVerificationFailure(
+                failedClaim: token.subject,
+                reason: "Subject claim beyond 255 ASCII characters long."
+            )
+        ) {
             try await collection.verify(jwt, as: GoogleIdentityToken.self)
-        ) { error in
-            guard let error = error as? JWTError else {
-                return XCTFail("Unexpected error: \(error)")
-            }
-            XCTAssertEqual(error.errorType, .claimVerificationFailure)
-            XCTAssertEqual(error.reason, "Subject claim beyond 255 ASCII characters long.")
         }
     }
 
@@ -118,7 +120,9 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertNoThrowAsync(try await collection.verify(jwt, as: AppleIdentityToken.self))
+        await #expect(throws: Never.self) {
+            try await collection.verify(jwt, as: AppleIdentityToken.self)
+        }
     }
 
     func testAppleIDTokenNotFromApple() async throws {
@@ -140,14 +144,12 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(
+        await #expect(
+            throws: JWTError.claimVerificationFailure(
+                failedClaim: token.issuer, reason: "Token not provided by Apple"
+            )
+        ) {
             try await collection.verify(jwt, as: AppleIdentityToken.self)
-        ) { error in
-            guard let error = error as? JWTError else {
-                return XCTFail("Unexpected error: \(error)")
-            }
-            XCTAssertEqual(error.errorType, .claimVerificationFailure)
-            XCTAssertEqual(error.reason, "Token not provided by Apple")
         }
     }
 
@@ -178,8 +180,9 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertNoThrowAsync(
-            try await collection.verify(jwt, as: MicrosoftIdentityToken.self))
+        await #expect(throws: Never.self) {
+            try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
+        }
     }
 
     func testMicrosoftIDTokenNotFromMicrosoft() async throws {
@@ -207,14 +210,12 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(
+        await #expect(
+            throws: JWTError.claimVerificationFailure(
+                failedClaim: token.issuer, reason: "Token not provided by Microsoft"
+            )
+        ) {
             try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
-        ) { error in
-            guard let error = error as? JWTError else {
-                return XCTFail("Unexpected error: \(error)")
-            }
-            XCTAssertEqual(error.errorType, .claimVerificationFailure)
-            XCTAssertEqual(error.reason, "Token not provided by Microsoft")
         }
     }
 
@@ -243,14 +244,12 @@ final class VendorTokenTests: XCTestCase, @unchecked Sendable {
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
-        await XCTAssertThrowsErrorAsync(
+        await #expect(
+            throws: JWTError.claimVerificationFailure(
+                failedClaim: nil, reason: "Token must contain tenant Id"
+            )
+        ) {
             try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
-        ) { error in
-            guard let error = error as? JWTError else {
-                return XCTFail("Unexpected error: \(error)")
-            }
-            XCTAssertEqual(error.errorType, .claimVerificationFailure)
-            XCTAssertEqual(error.reason, "Token must contain tenant Id")
         }
     }
 }

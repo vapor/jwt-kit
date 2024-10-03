@@ -1,9 +1,13 @@
+import Foundation
 import JWTKit
+import Testing
 import X509
 import XCTest
 
-final class JWTKitTests: XCTestCase, @unchecked Sendable {
-    func testGettingStarted() async throws {
+@Suite("JWTKit Tests")
+struct JWTKitTests {
+    @Test("Test Getting Started")
+    func gettingStarted() async throws {
         // JWT payload structure.
         struct TestPayload: JWTPayload, Equatable {
             // Maps the longer Swift property names to the
@@ -42,7 +46,7 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
             let jwt =
                 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo"
             let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
-            XCTAssertEqual(payload.admin, true)
+            #expect(payload.admin == true)
         }
 
         do {
@@ -51,23 +55,27 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
                 expiration: .init(value: .distantFuture),
                 admin: true
             )
-            await XCTAssertNoThrowAsync(try await keyCollection.sign(payload))
+            await #expect(throws: Never.self) {
+                try await keyCollection.sign(payload)
+            }
         }
     }
 
-    func testParse() async throws {
+    @Test("Test Parsing")
+    func parse() async throws {
         let data =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
 
         let test = try await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
             .verify(data, as: TestPayload.self)
 
-        XCTAssertEqual(test.name, "John Doe")
-        XCTAssertEqual(test.sub.value, "1234567890")
-        XCTAssertEqual(test.admin, true)
+        #expect(test.name == "John Doe")
+        #expect(test.sub.value == "1234567890")
+        #expect(test.admin == true)
     }
 
-    func testExpired() async throws {
+    @Test("Test Expiration")
+    func expired() async throws {
         let data =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MX0.-x_DAYIg4R4R9oZssqgWyJP_oWO1ESj8DgKrGCk7i5o"
 
@@ -75,32 +83,37 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
             _ = try await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
                 .verify(data, as: TestPayload.self)
         } catch let error as JWTError {
-            XCTAssertEqual(error.errorType, .claimVerificationFailure)
-            XCTAssert(error.failedClaim is ExpirationClaim)
-            XCTAssertEqual(
-                (error.failedClaim as? ExpirationClaim)?.value, Date(timeIntervalSince1970: 1))
+            #expect(error.errorType == .claimVerificationFailure)
+            #expect(error.failedClaim is ExpirationClaim)
+            #expect(
+                (error.failedClaim as? ExpirationClaim)?.value == Date(timeIntervalSince1970: 1)
+            )
         }
     }
 
-    func testExpirationDecoding() async throws {
+    @Test("Test Expiration Decoding")
+    func expirationDecoding() async throws {
         let data =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwMDAwMDAwMDB9.JgCO_GqUQnbS0z2hCxJLE9Tpt5SMoZObHBxzGBWuTYQ"
 
         let test = try await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
             .verify(data, as: ExpirationPayload.self)
-        XCTAssertEqual(test.exp.value, Date(timeIntervalSince1970: 2_000_000_000))
+        #expect(test.exp.value == Date(timeIntervalSince1970: 2_000_000_000))
     }
 
-    func testSigners() async throws {
+    @Test("Test Signing")
+    func sign() async throws {
         let data =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZvbyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5OTl9.Gf7leJ8i30LmMI7GBTpWDMXV60y1wkTOCOBudP9v9ms"
         let keyCollection = await JWTKeyCollection().add(
-            hmac: "bar", digestAlgorithm: .sha256, kid: "foo")
+            hmac: "bar", digestAlgorithm: .sha256, kid: "foo"
+        )
         let payload = try await keyCollection.verify(data, as: TestPayload.self)
-        XCTAssertEqual(payload.name, "John Doe")
+        #expect(payload.name == "John Doe")
     }
 
-    func testUnsecuredNone() async throws {
+    @Test("Test Unsecured None Signing")
+    func signUnsecuredNone() async throws {
         let data =
             "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJleHAiOjIwMDAwMDAwMDAsImFkbWluIjpmYWxzZSwibmFtZSI6IkZvbyIsInN1YiI6InZhcG9yIn0."
         let payload = TestPayload(
@@ -112,14 +125,13 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
 
         let keyCollection = await JWTKeyCollection().addUnsecuredNone()
         let token = try await keyCollection.sign(payload)
-        try await XCTAssertEqualAsync(
-            await keyCollection.verify(token.bytes, as: TestPayload.self), payload)
-        try await XCTAssertEqualAsync(
-            await keyCollection.verify(data.bytes, as: TestPayload.self), payload)
-        XCTAssertTrue(token.hasSuffix("."))
+        #expect(try await keyCollection.verify(token.bytes, as: TestPayload.self) == payload)
+        #expect(try await keyCollection.verify(data.bytes, as: TestPayload.self) == payload)
+        #expect(token.hasSuffix("."))
     }
 
-    func testJWTioExample() async throws {
+    @Test("Test JWT.io Example")
+    func jwtioExample() async throws {
         let token =
             "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.tyh-VfuzIxCyGYDlkBA7DfyjrqmSHu6pQ2hoZuFqUSLPNY2N0mpHb3nk5K17HWP_3cYHBw7AhHale5wky6-sVA"
         let corruptedToken =
@@ -155,21 +167,22 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
 
         // decode jwt and test payload contents
         let jwt = try await keyCollection.verify(token, as: JWTioPayload.self)
-        XCTAssertEqual(jwt.sub, "1234567890")
-        XCTAssertEqual(jwt.name, "John Doe")
-        XCTAssertEqual(jwt.admin, true)
-        XCTAssertEqual(jwt.iat.value, .init(timeIntervalSince1970: 1_516_239_022))
+        #expect(jwt.sub == "1234567890")
+        #expect(jwt.name == "John Doe")
+        #expect(jwt.admin == true)
+        #expect(jwt.iat.value == .init(timeIntervalSince1970: 1_516_239_022))
 
         // test corrupted token
         // this should fail
         do {
             _ = try await keyCollection.verify(corruptedToken, as: JWTioPayload.self)
         } catch let error as JWTError {
-            XCTAssert(error.errorType == .signatureVerificationFailed)
+            #expect(error.errorType == .signatureVerificationFailed)
         }
     }
 
-    func testJWKSigner() async throws {
+    @Test("Test JWK Signer")
+    func jwkSigner() async throws {
         let privateKey = """
             {
                 "alg" : "RS256",
@@ -198,11 +211,10 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         )
         let data = try await keyCollection.sign(payload, kid: "1234")
 
-        try await XCTAssertEqualAsync(
-            await keyCollection.verify(data, as: TestPayload.self), payload
-        )
+        #expect(try await keyCollection.verify(data, as: TestPayload.self) == payload)
     }
 
+    @Test("Test JWK Set")
     func testJWKS() async throws {
         let json = """
             {
@@ -215,27 +227,33 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
 
         let keyCollection = try await JWTKeyCollection().add(jwksJSON: json)
 
-        await XCTAssertNoThrowAsync(try await keyCollection.getKey())
+        await #expect(throws: Never.self) {
+            try await keyCollection.getKey()
+        }
+
         let a: JWTAlgorithm
         let b: JWTAlgorithm
+
         do {
             a = try await keyCollection.getKey(for: "a")
         } catch {
-            XCTFail("expected signer a, but encountered error: \(error)")
+            Issue.record("Failed to get key a: \(error)")
             return
         }
+
         do {
             b = try await keyCollection.getKey(for: "b")
         } catch {
-            XCTFail("expected signer b, but encountered error: \(error)")
+            Issue.record("Failed to get key b: \(error)")
             return
         }
 
-        XCTAssertEqual(a.name, "RS256")
-        XCTAssertEqual(b.name, "RS512")
+        #expect(a.name == "RS256")
+        #expect(b.name == "RS512")
     }
 
-    func testJWTPayloadVerification() async throws {
+    @Test("Test Verification")
+    func testVerification() async throws {
         struct NotBar: Error {
             let foo: String
         }
@@ -249,20 +267,18 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         }
 
         let keyCollection = await JWTKeyCollection().add(ecdsa: ES256PrivateKey())
+        let token = try await keyCollection.sign(Payload(foo: "qux"))
+
         do {
-            let token = try await keyCollection.sign(Payload(foo: "qux"))
-            _ = try await keyCollection.verify(token, as: Payload.self)
-        } catch let error as NotBar {
-            XCTAssertEqual(error.foo, "qux")
-        }
-        do {
-            let token = try await keyCollection.sign(Payload(foo: "bar"))
             let payload = try await keyCollection.verify(token, as: Payload.self)
-            XCTAssertEqual(payload.foo, "bar")
+            #expect(payload.foo == "qux")
+        } catch let error as NotBar {
+            #expect(error.foo == "qux")
         }
     }
 
-    func testAlgorithmInJWTHeaderOnly() async throws {
+    @Test("Test JWK Set Verification without Alg field")
+    func verifyWithJWKsWithoutAlg() async throws {
         // rsa key
         let modulus =
             "mSfWGBcXRBPgnwnL_ymDCkBaL6vcMcLpBEomzf-wZPajcQFiq4n4MHScyo85Te6GU-YuErVvHKK0D72JhMNWAQXbiF5Hh7swSYX9QsycWwHBgOBNfp51Fm_HTU7ikDBEdSonrmSep8wNqi_PX2_jVBsoxYNeiCQyDLFLHOAAcbIE4Y6lpJy76GpdHJscMO2RsUznjv5VPOQVa_BlQRIIZ0YoSsq9EEZna9O370wZy8jnOthQIXoegQ7sItS1JMKk4X5DdoRenIfbfWLy88XxKOPlIHA5ekT8TyzeI2Uqkg3YMETTDPrSROVO1Qdl2W1uMdfIZ94DgKpZN2VW-w0fLw"
@@ -296,30 +312,35 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
                         "kid": "vapor",
                         "n": "\(modulus)",
                         "e": "\(exponent)"
-                     }
+                    }
                 ]
             }
             """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
-        XCTAssertEqual(foo.bar, 42)
+        #expect(foo.bar == 42)
     }
 
-    func testMicrosoftJWKs() async throws {
-        await XCTAssertNoThrowAsync(try await JWTKeyCollection().add(jwksJSON: microsoftJWKS))
+    @Test("Test Microsoft JWKS")
+    func addMicrosoftJWKS() async throws {
+        await #expect(throws: Never.self) {
+            try await JWTKeyCollection().add(jwksJSON: microsoftJWKS)
+        }
     }
 
-    func testFirebaseJWTAndCertificate() async throws {
+    @Test("Test Firebase JWT and Certificate")
+    func addFirebaseJWTAndCertificate() async throws {
         let payload = try await JWTKeyCollection()
             .add(
                 rsa: Insecure.RSA.PublicKey(certificatePEM: firebaseCert), digestAlgorithm: .sha256
             )
             .verify(firebaseJWT, as: FirebasePayload.self)
-        XCTAssertEqual(payload.userID, "y8wiKThXGKM88xxrQWDZzKnBuqv2")
+        #expect(payload.userID == "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
 
-    func testCustomJSONCoders() async throws {
+    @Test("Test Custom JSON Coders")
+    func customJSONCoders() async throws {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         let decoder = JSONDecoder()
@@ -335,20 +356,20 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         )
         let keyCollection = await JWTKeyCollection().addUnsecuredNone(
             parser: DefaultJWTParser(jsonDecoder: decoder),
-            serializer: DefaultJWTSerializer(jsonEncoder: encoder))
+            serializer: DefaultJWTSerializer(jsonEncoder: encoder)
+        )
         let token = try await keyCollection.sign(payload)
-        XCTAssert(
+        #expect(
             (token.split(separator: ".").dropFirst(1).first.map {
                 String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self)
             } ?? "").contains(#""exp":""#))
-        try await XCTAssertEqualAsync(
-            await keyCollection.verify(token.bytes, as: TestPayload.self), payload)
-        try await XCTAssertEqualAsync(
-            await keyCollection.verify(data.bytes, as: TestPayload.self), payload)
-        XCTAssertTrue(token.hasSuffix("."))
+        try await #expect(keyCollection.verify(token.bytes, as: TestPayload.self) == payload)
+        try await #expect(keyCollection.verify(data.bytes, as: TestPayload.self) == payload)
+        #expect(token.hasSuffix("."))
     }
 
-    func testNoKeyProvided() async throws {
+    @Test("Test no key provided")
+    func noKeyProvided() async throws {
         let keyCollection = JWTKeyCollection()
         let payload = TestPayload(
             sub: "vapor",
@@ -356,13 +377,13 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        await XCTAssertThrowsErrorAsync(_ = try await keyCollection.sign(payload)) {
-            guard let error = $0 as? JWTError else { return }
-            XCTAssertEqual(error.errorType, .noKeyProvided)
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keyCollection.sign(payload)
         }
     }
 
-    func testCustomSerialisingWithB64Header() async throws {
+    @Test("Test B64 Custom Serialising")
+    func customSerialisingWithB64Header() async throws {
         struct CustomSerializer: JWTSerializer {
             var jsonEncoder: JWTJSONEncoder = .defaultForJWT
 
@@ -384,12 +405,14 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
                 let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
                 let header = try jsonDecoder.decode(
-                    JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
+                    JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes())
+                )
 
                 let payload =
                     if header.b64?.asBool ?? true {
                         try self.jsonDecoder.decode(
-                            Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+                            Payload.self, from: .init(encodedPayload.base64URLDecodedBytes())
+                        )
                     } else {
                         try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
                     }
@@ -403,25 +426,29 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         let keyCollection = await JWTKeyCollection()
             .add(
                 hmac: "secret", digestAlgorithm: .sha256, parser: CustomParser(),
-                serializer: CustomSerializer())
+                serializer: CustomSerializer()
+            )
 
         let payload = TestPayload(
             sub: "vapor", name: "Foo", admin: false,
-            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)))
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
 
         let token = try await keyCollection.sign(payload, header: ["b64": true])
         let verified = try await keyCollection.verify(token, as: TestPayload.self)
-        XCTAssertEqual(verified, payload)
+        #expect(verified == payload)
     }
 
-    func testJWKEncoding() async throws {
+    @Test("Test JWK Encoding")
+    func jwkEncoding() async throws {
         let jwkIdentifier = JWKIdentifier(string: "vapor")
         let data = try JSONEncoder().encode(jwkIdentifier)
         let string = String(data: data, encoding: .utf8)!
-        XCTAssertEqual(string, "\"vapor\"")
+        #expect(string == "\"vapor\"")
     }
 
-    func testParserWithWrongToken() async throws {
+    @Test("Test parsing with wrong token")
+    func parseWrongToken() async throws {
         let keyCollection = await JWTKeyCollection().addUnsecuredNone()
 
         let payload = TestPayload(
@@ -433,17 +460,18 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
 
         let token = try await keyCollection.sign(payload)
         let parser = DefaultJWTParser()
-        XCTAssertNoThrow(try parser.parse(token.bytes, as: TestPayload.self))
+        #expect(throws: Never.self) {
+            try parser.parse(token.bytes, as: TestPayload.self)
+        }
 
         // remove last "." from token
         let corruptedToken = String(token.dropLast())
-        XCTAssertThrowsError(try parser.parse(corruptedToken.bytes, as: TestPayload.self)) {
-            error in
-            guard let error = error as? JWTError else {
-                XCTFail("Unexpected error: \(error)")
-                return
-            }
-            XCTAssertEqual(error.errorType, .malformedToken)
+        #expect(
+            throws: JWTError.malformedToken(
+                reason: "Couldn't decode JWT with error: \"Token is not split in 3 parts\""
+            )
+        ) {
+            try parser.parse(corruptedToken.bytes, as: TestPayload.self)
         }
     }
 
@@ -462,8 +490,8 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let foo = try XCTUnwrap(parsed.header.foo?.asString)
         let baz = try XCTUnwrap(parsed.header.baz?.asInt)
-        XCTAssertEqual(foo, "bar")
-        XCTAssertEqual(baz, 42)
+        #expect(foo == "bar")
+        #expect(baz == 42)
 
         let encodedHeader = try JSONEncoder().encode(parsed.header)
         let jsonFields = """
@@ -479,13 +507,16 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(
             try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
             try jsonDecoder.decode(
-                [String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!)
+                [String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!
+            )
         )
     }
 
-    func testCommonHeaderFields() async throws {
+    @Test("Test Custom Header Fields")
+    func customHeaderFields() async throws {
         let keyCollection = await JWTKeyCollection().add(
-            hmac: .init(key: .init(size: .bits256)), digestAlgorithm: .sha384)
+            hmac: .init(key: .init(size: .bits256)), digestAlgorithm: .sha384
+        )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -513,26 +544,27 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         let token = try await keyCollection.sign(payload, header: commonFields)
 
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
-        XCTAssertEqual(parsed.header.alg, "alg")
-        XCTAssertEqual(parsed.header.kid, "kid")
-        XCTAssertEqual(parsed.header.typ, "typ")
-        XCTAssertEqual(parsed.header.cty, "cty")
-        XCTAssertEqual(parsed.header.crit, ["crit"])
-        XCTAssertEqual(parsed.header.jku, "jku")
-        XCTAssertEqual(parsed.header.null?.isNull, true)
-        XCTAssertEqual(parsed.header.bool?.asBool, true)
-        XCTAssertEqual(parsed.header.int?.asInt, 21)
-        XCTAssertEqual(parsed.header.decimal?.asDecimal, 21.7)
-        XCTAssertEqual(parsed.header.string?.asString, "test")
-        XCTAssertEqual(parsed.header.array?.asArray?.first?.asString, "array_test")
-        XCTAssertEqual(try parsed.header.array?.asArray(of: String.self).first, "array_test")
-        XCTAssertEqual(parsed.header.object?.asObject?["object_test"]?.asString, "object_test")
-        XCTAssertEqual(parsed.header.x5u, "x5u")
-        XCTAssertEqual(parsed.header.x5t, "x5t")
-        XCTAssertEqual(parsed.header.x5tS256, "x5tS256")
+        #expect(parsed.header.alg == "alg")
+        #expect(parsed.header.kid == "kid")
+        #expect(parsed.header.typ == "typ")
+        #expect(parsed.header.cty == "cty")
+        #expect(parsed.header.crit == ["crit"])
+        #expect(parsed.header.jku == "jku")
+        #expect(parsed.header.null?.isNull == true)
+        #expect(parsed.header.bool?.asBool == true)
+        #expect(parsed.header.int?.asInt == 21)
+        #expect(parsed.header.decimal?.asDecimal == 21.7)
+        #expect(parsed.header.string?.asString == "test")
+        #expect(parsed.header.array?.asArray?.first?.asString == "array_test")
+        #expect(try parsed.header.array?.asArray(of: String.self).first == "array_test")
+        #expect(parsed.header.object?.asObject?["object_test"]?.asString == "object_test")
+        #expect(parsed.header.x5u == "x5u")
+        #expect(parsed.header.x5t == "x5t")
+        #expect(parsed.header.x5tS256 == "x5tS256")
     }
 
-    func testSampleOpenbankingHeader() async throws {
+    @Test("Test Custom Openbanking Header Fields")
+    func sampleOpenbankingHeader() async throws {
         let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
 
         // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
@@ -560,21 +592,21 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
 
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let iat = parsed.header[dynamicMember: "http://openbanking.org.uk/iat"]?.asInt
-        XCTAssertEqual(iat, 1_501_497_671)
+        #expect(iat == 1_501_497_671)
         let iss = parsed.header[dynamicMember: "http://openbanking.org.uk/iss"]?.asString
-        XCTAssertEqual(iss, "C=UK, ST=England, L=London, O=Acme Ltd.")
+        #expect(iss == "C=UK, ST=England, L=London, O=Acme Ltd.")
         let tan = parsed.header[dynamicMember: "http://openbanking.org.uk/tan"]?.asString
-        XCTAssertEqual(tan, "openbanking.org.uk")
-        XCTAssertEqual(
-            parsed.header.crit,
-            [
+        #expect(tan == "openbanking.org.uk")
+        #expect(
+            parsed.header.crit == [
                 "b64", "http://openbanking.org.uk/iat", "http://openbanking.org.uk/iss",
                 "http://openbanking.org.uk/tan",
             ])
-        XCTAssertEqual(parsed.header.kid, "90210ABAD")
+        #expect(parsed.header.kid == "90210ABAD")
     }
 
-    func testSigningWithKidInHeader() async throws {
+    @Test("Test Signing with KID in Header")
+    func signingWithKidInHeader() async throws {
         let key = ES256PrivateKey()
 
         let keyCollection = await JWTKeyCollection()
@@ -587,18 +619,23 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
-        let _ = try await keyCollection.sign(payload, header: ["kid": "private"])
-        await XCTAssertThrowsErrorAsync(
-            try await keyCollection.sign(payload, header: ["kid": "public"]))
-        let _ = try await keyCollection.sign(payload, kid: "private")
-        await XCTAssertThrowsErrorAsync(try await keyCollection.sign(payload, kid: "public"))
+        _ = try await keyCollection.sign(payload, header: ["kid": "private"])
+        await #expect(throws: JWTError.self) {
+            try await keyCollection.sign(payload, header: ["kid": "public"])
+        }
+        _ = try await keyCollection.sign(payload, kid: "private")
+        await #expect(throws: JWTError.self) {
+            try await keyCollection.sign(payload, kid: "public")
+        }
 
-        let _ = try await keyCollection.sign(payload, kid: "private", header: ["kid": "public"])
-        await XCTAssertThrowsErrorAsync(
-            try await keyCollection.sign(payload, kid: "public", header: ["kid": "private"]))
+        _ = try await keyCollection.sign(payload, kid: "private", header: ["kid": "public"])
+        await #expect(throws: JWTError.self) {
+            try await keyCollection.sign(payload, kid: "public", header: ["kid": "private"])
+        }
     }
 
-    func testCustomObjectHeader() async throws {
+    @Test("Test Custom Object Header")
+    func customObjectHeader() async throws {
         let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let customFields: JWTHeader = [
             "kid": "some-kid",
@@ -616,9 +653,10 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
 
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
         let foo = try parsed.header.foo?.asObject(of: String.self)
-        XCTAssertEqual(foo, ["bar": "baz"])
+        #expect(foo == ["bar": "baz"])
     }
 
+    @Test("Test signing with iterating keys key collection")
     func testKeyCollectionIteration() async throws {
         let hmacToken = """
             eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.GW-OvOyauZXQeFuzFHRFL7saTXJrudGQ_qHtpbVWW9Y
@@ -641,28 +679,28 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
             .add(ecdsa: ecdsaPrivateKey, kid: "ecdsa")
 
         let hmacVerified = try await keyCollection.verify(hmacToken, as: TestPayload.self)
-        XCTAssertEqual(hmacVerified.sub, "1234567890")
+        #expect(hmacVerified.sub == "1234567890")
 
         // The tokens don't have a KID, which means, since we're not iterating
         // over all the keys in the key collection, only the default (first added)
         // signer will be used.
-        await XCTAssertThrowsErrorAsync(
+        await #expect(throws: JWTError.signatureVerificationFailed) {
             try await keyCollection.verify(ecdsaToken, as: TestPayload.self)
-        ) {
-            guard let error = $0 as? JWTError else { return }
-            XCTAssertEqual(error.errorType, .signatureVerificationFailed)
         }
 
         let hmacIteratinglyVerified = try await keyCollection.verify(
-            hmacToken, as: TestPayload.self, iteratingKeys: true)
-        XCTAssertEqual(hmacIteratinglyVerified.sub, "1234567890")
+            hmacToken, as: TestPayload.self, iteratingKeys: true
+        )
+        #expect(hmacIteratinglyVerified.sub == "1234567890")
 
         let ecdsaIteratinglyVerified = try await keyCollection.verify(
-            ecdsaToken, as: TestPayload.self, iteratingKeys: true)
-        XCTAssertEqual(ecdsaIteratinglyVerified.sub, "1234567890")
+            ecdsaToken, as: TestPayload.self, iteratingKeys: true
+        )
+        #expect(ecdsaIteratinglyVerified.sub == "1234567890")
     }
 
-    func testUnverifiedString() async throws {
+    @Test("Test unverified string")
+    func unverifiedString() async throws {
         let keyCollection = await JWTKeyCollection().addUnsecuredNone()
 
         let payload = TestPayload(
@@ -675,10 +713,11 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         let token = try await keyCollection.sign(payload)
         let unverified = try await keyCollection.unverified(token, as: TestPayload.self)
 
-        XCTAssertEqual(unverified, payload)
+        #expect(unverified == payload)
     }
 
-    func testUnverifiedData() async throws {
+    @Test("Test unverified data")
+    func unverifiedData() async throws {
         let keyCollection = await JWTKeyCollection().addUnsecuredNone()
 
         let payload = TestPayload(
@@ -691,63 +730,61 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         let token = try await keyCollection.sign(payload)
         let unverified = try await keyCollection.unverified(token.bytes, as: TestPayload.self)
 
-        XCTAssertEqual(unverified, payload)
+        #expect(unverified == payload)
     }
 
     enum DummyError: Error {
         case dummy
     }
 
-    func testJWTErrorDescription() {
+    @Test("Test JWT Error Description")
+    func jwtErrorDescription() {
         XCTAssertEqual(
             JWTError.claimVerificationFailure(
                 failedClaim: ExpirationClaim(value: .init(timeIntervalSince1970: 1)), reason: "test"
             ).description,
             "JWTKitError(errorType: claimVerificationFailure, failedClaim: JWTKit.ExpirationClaim(value: 1970-01-01 00:00:01 +0000), reason: \"test\")"
         )
-        XCTAssertEqual(
-            JWTError.signingAlgorithmFailure(DummyError.dummy).description,
-            "JWTKitError(errorType: signingAlgorithmFailure, underlying: JWTKitTests.JWTKitTests.DummyError.dummy)"
+        #expect(
+            JWTError.signingAlgorithmFailure(DummyError.dummy).description
+                == "JWTKitError(errorType: signingAlgorithmFailure, underlying: JWTKitTests.JWTKitTests.DummyError.dummy)"
         )
-        XCTAssertEqual(
-            JWTError.malformedToken(reason: "test").description,
-            "JWTKitError(errorType: malformedToken, reason: \"test\")"
+        #expect(
+            JWTError.malformedToken(reason: "test").description
+                == "JWTKitError(errorType: malformedToken, reason: \"test\")"
         )
-        XCTAssertEqual(
-            JWTError.signatureVerificationFailed.description,
-            "JWTKitError(errorType: signatureVerificationFailed)"
+        #expect(
+            JWTError.signatureVerificationFailed.description
+                == "JWTKitError(errorType: signatureVerificationFailed)"
         )
-        XCTAssertEqual(
-            JWTError.missingKIDHeader.description,
-            "JWTKitError(errorType: missingKIDHeader)"
+        #expect(
+            JWTError.missingKIDHeader.description == "JWTKitError(errorType: missingKIDHeader)"
         )
-        XCTAssertEqual(
-            JWTError.unknownKID("test").description,
-            "JWTKitError(errorType: unknownKID, kid: JWTKit.JWKIdentifier(string: \"test\"))"
+        #expect(
+            JWTError.unknownKID("test").description
+                == "JWTKitError(errorType: unknownKID, kid: JWTKit.JWKIdentifier(string: \"test\"))"
         )
-        XCTAssertEqual(
-            JWTError.invalidJWK(reason: "test").description,
-            "JWTKitError(errorType: invalidJWK, reason: \"test\")"
+        #expect(
+            JWTError.invalidJWK(reason: "test").description
+                == "JWTKitError(errorType: invalidJWK, reason: \"test\")"
         )
-        XCTAssertEqual(
-            JWTError.invalidBool("test").description,
-            "JWTKitError(errorType: invalidBool, name: \"test\")"
+        #expect(
+            JWTError.invalidBool("test").description
+                == "JWTKitError(errorType: invalidBool, name: \"test\")"
         )
-        XCTAssertEqual(
-            JWTError.noKeyProvided.description,
-            "JWTKitError(errorType: noKeyProvided)"
+        #expect(
+            JWTError.noKeyProvided.description == "JWTKitError(errorType: noKeyProvided)"
         )
-        XCTAssertEqual(
-            JWTError.missingX5CHeader.description,
-            "JWTKitError(errorType: missingX5CHeader)"
+        #expect(
+            JWTError.missingX5CHeader.description == "JWTKitError(errorType: missingX5CHeader)"
         )
-        XCTAssertEqual(
-            JWTError.invalidX5CChain(reason: "test").description,
-            "JWTKitError(errorType: invalidX5CChain, reason: \"test\")"
+        #expect(
+            JWTError.invalidX5CChain(reason: "test").description
+                == "JWTKitError(errorType: invalidX5CChain, reason: \"test\")"
         )
-        XCTAssertEqual(
-            JWTError.invalidHeaderField(reason: "test").description,
-            "JWTKitError(errorType: invalidHeaderField, reason: \"test\")"
+        #expect(
+            JWTError.invalidHeaderField(reason: "test").description
+                == "JWTKitError(errorType: invalidHeaderField, reason: \"test\")"
         )
         XCTAssertEqual(
             JWTError.generic(identifier: "id", reason: "test").description,
@@ -755,54 +792,20 @@ final class JWTKitTests: XCTestCase, @unchecked Sendable {
         )
     }
 
-    func testRemoveHeaderField() {
+    @Test("Test removed header fields")
+    func removeHeaderField() {
         var header = JWTHeader()
 
         header.field1 = "value1"
         header.field2 = "value2"
 
-        XCTAssertEqual(header.fields.count, 2)
+        #expect(header.fields.count == 2)
 
         header.remove("field1")
 
-        XCTAssertEqual(header.fields.count, 1)
+        #expect(header.fields.count == 1)
         XCTAssertNil(header.field1)
-        XCTAssertEqual(header.field2, .string("value2"))
-
-    }
-}
-
-struct AudiencePayload: Codable {
-    var audience: AudienceClaim
-}
-
-struct LocalePayload: Codable {
-    var locale: LocaleClaim
-}
-
-extension LocalePayload {
-    static func from(_ string: String) throws -> LocalePayload {
-        let data = string.data(using: .utf8)!
-        return try JSONDecoder().decode(LocalePayload.self, from: data)
-    }
-}
-
-struct BoolPayload: Decodable {
-    var trueStr: BoolClaim
-    var trueBool: BoolClaim
-    var falseStr: BoolClaim
-    var falseBool: BoolClaim
-}
-
-struct BadBoolPayload: Decodable {
-    var bad: BoolClaim
-}
-
-struct ExpirationPayload: JWTPayload {
-    var exp: ExpirationClaim
-
-    func verify(using _: some JWTAlgorithm) throws {
-        try self.exp.verifyNotExpired()
+        #expect(header.field2 == .string("value2"))
     }
 }
 
