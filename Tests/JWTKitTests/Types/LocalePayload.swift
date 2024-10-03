@@ -1,5 +1,5 @@
-import JWTKit
 import Foundation
+import JWTKit
 
 struct LocalePayload: Codable {
     var locale: LocaleClaim

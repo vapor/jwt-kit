@@ -16,7 +16,7 @@ extension P521: ECDSACurveType {
     /// Thus:
     /// - The X coordinate spans bytes 1 through 66.
     /// - The Y coordinate spans bytes 67 through 132.
-    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 67, 67 ..< 133)
+    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1..<67, 67..<133)
 
     public enum SigningAlgorithm: ECDSASigningAlgorithm {
         public static let name = "ES512"
@@ -39,18 +39,10 @@ extension P521.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-#if compiler(<6)
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
-extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
-extension P521.Signing.PublicKey: @unchecked Sendable {}
-extension P521: @unchecked Sendable {}
-#else
 extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
 extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
 extension P521.Signing.PublicKey: @unchecked @retroactive Sendable {}
 extension P521: @unchecked @retroactive Sendable {}
-#endif
 
 public typealias ES512PublicKey = ECDSA.PublicKey<P521>
 public typealias ES512PrivateKey = ECDSA.PrivateKey<P521>

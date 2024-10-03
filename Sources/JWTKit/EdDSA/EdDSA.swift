@@ -9,12 +9,12 @@ public enum EdDSA: Sendable {}
 /// Both ``EdDSA.PublicKey`` and ``EdDSA.PrivateKey`` conform to this protocol.
 public protocol EdDSAKey: Sendable {}
 
-public extension EdDSA {
+extension EdDSA {
     /// A struct representing a public key used in EdDSA (Edwards-curve Digital Signature Algorithm).
     ///
     /// In JWT, EdDSA public keys are represented as a single x-coordinate and are used for verifying signatures.
     /// Currently, only the ``EdDSACurve/ed25519`` curve is supported.
-    struct PublicKey: EdDSAKey {
+    public struct PublicKey: EdDSAKey {
         let backing: Curve25519.Signing.PublicKey
         let curve: EdDSACurve
 
@@ -47,10 +47,11 @@ public extension EdDSA {
                 throw EdDSAError.publicKeyMissing
             }
 
-            let key = switch curve.backing {
-            case .ed25519:
-                try Curve25519.Signing.PublicKey(rawRepresentation: xData)
-            }
+            let key =
+                switch curve.backing {
+                case .ed25519:
+                    try Curve25519.Signing.PublicKey(rawRepresentation: xData)
+                }
 
             self.init(backing: key)
         }
@@ -61,12 +62,12 @@ public extension EdDSA {
     }
 }
 
-public extension EdDSA {
+extension EdDSA {
     /// A struct representing a private key used in EdDSA (Edwards-curve Digital Signature Algorithm).
     ///
     /// In JWT, EdDSA private keys are represented as a pair of x-coordinate and private key (d) and are used for signing.
     /// Currently, only the ``Curve/ed25519`` curve is supported.
-    struct PrivateKey: EdDSAKey {
+    public struct PrivateKey: EdDSAKey {
         let backing: Curve25519.Signing.PrivateKey
         let curve: EdDSACurve
 
@@ -79,10 +80,11 @@ public extension EdDSA {
         /// - Throws: An error if key generation fails.
         /// - Returns: A new ``EdDSA.PrivateKey`` instance with a freshly generated key pair.
         public init(curve: EdDSACurve = .ed25519) throws {
-            let key = switch curve.backing {
-            case .ed25519:
-                Curve25519.Signing.PrivateKey()
-            }
+            let key =
+                switch curve.backing {
+                case .ed25519:
+                    Curve25519.Signing.PrivateKey()
+                }
 
             self.init(backing: key)
         }
@@ -116,10 +118,11 @@ public extension EdDSA {
                 throw EdDSAError.privateKeyMissing
             }
 
-            let key = switch curve.backing {
-            case .ed25519:
-                try Curve25519.Signing.PrivateKey(rawRepresentation: dData)
-            }
+            let key =
+                switch curve.backing {
+                case .ed25519:
+                    try Curve25519.Signing.PrivateKey(rawRepresentation: dData)
+                }
 
             self.init(backing: key)
         }
@@ -134,11 +137,6 @@ public extension EdDSA {
     }
 }
 
-#if compiler(<6)
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension Curve25519.Signing.PublicKey: @unchecked Sendable {}
-extension Curve25519.Signing.PrivateKey: @unchecked Sendable {}
-#else
 extension Curve25519.Signing.PublicKey: @unchecked @retroactive Sendable {}
 extension Curve25519.Signing.PrivateKey: @unchecked @retroactive Sendable {}
-#endif

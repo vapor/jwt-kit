@@ -45,7 +45,8 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: Self for chaining.
     @discardableResult
     func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
-        let signer = JWTSigner(algorithm: signer.algorithm, parser: signer.parser, serializer: signer.serializer)
+        let signer = JWTSigner(
+            algorithm: signer.algorithm, parser: signer.parser, serializer: signer.serializer)
 
         if let kid {
             if self.storage[kid] != nil {
@@ -82,7 +83,9 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: Self for chaining.
     @discardableResult
     public func add(jwks: JWKS) throws -> Self {
-        try jwks.keys.forEach { try self.add(jwk: $0) }
+        for jwk in jwks.keys {
+            try self.add(jwk: jwk)
+        }
         return self
     }
 
@@ -94,14 +97,12 @@ public actor JWTKeyCollection: Sendable {
     /// - Throws: ``JWTError/invalidJWK`` if the JWK cannot be added due to missing key identifier.
     /// - Returns: Self for chaining.
     @discardableResult
-    public func add(
-        jwk: JWK,
-        isDefault: Bool? = nil
-    ) throws -> Self {
+    public func add(jwk: JWK, isDefault: Bool? = nil) throws -> Self {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK(reason: "Missing KID")
         }
-        let signer = try JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
+        let signer = try JWKSigner(
+            jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
 
         self.storage[kid] = .jwk(signer)
         switch (self.default, isDefault) {
@@ -129,14 +130,16 @@ public actor JWTKeyCollection: Sendable {
         }
 
         switch signer {
-        case let .jwt(jwt):
+        case .jwt(let jwt):
             return jwt
-        case let .jwk(jwk):
+        case .jwk(let jwk):
             if let signer = await jwk.signer {
                 return signer
             } else {
                 guard let alg, let jwkAlg = JWK.Algorithm(rawValue: alg) else {
-                    throw JWTError.generic(identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm.")
+                    throw JWTError.generic(
+                        identifier: "Algorithm", reason: "Invalid algorithm or unable to create signer with provided algorithm."
+                    )
                 }
                 return try await jwk.makeSigner(for: jwkAlg)
             }
@@ -149,7 +152,7 @@ public actor JWTKeyCollection: Sendable {
     ///  - alg: An optional algorithm identifier.
     /// - Returns: A ``JWTKey`` if one is found; otherwise, `nil`.
     /// - Throws: ``JWTError/generic`` if the algorithm cannot be retrieved.
-    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws -> JWTAlgorithm {
+    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws -> any JWTAlgorithm {
         try await self.getSigner(for: kid, alg: alg).algorithm
     }
 
@@ -166,8 +169,7 @@ public actor JWTKeyCollection: Sendable {
         as _: Payload.Type = Payload.self,
         parser: (any JWTParser)? = nil
     ) throws -> Payload
-        where Payload: JWTPayload
-    {
+    where Payload: JWTPayload {
         try self.unverified([UInt8](token.utf8), parser: parser)
     }
 
@@ -184,8 +186,7 @@ public actor JWTKeyCollection: Sendable {
         as _: Payload.Type = Payload.self,
         parser: (any JWTParser)? = nil
     ) throws -> Payload
-        where Payload: JWTPayload
-    {
+    where Payload: JWTPayload {
         try (parser ?? self.defaultJWTParser).parse(token, as: Payload.self).payload
     }
 
@@ -202,8 +203,7 @@ public actor JWTKeyCollection: Sendable {
         as _: Payload.Type = Payload.self,
         iteratingKeys: Bool = false
     ) async throws -> Payload
-        where Payload: JWTPayload
-    {
+    where Payload: JWTPayload {
         try await self.verify([UInt8](token.utf8), as: Payload.self, iteratingKeys: iteratingKeys)
     }
 
@@ -220,8 +220,7 @@ public actor JWTKeyCollection: Sendable {
         as _: Payload.Type = Payload.self,
         iteratingKeys: Bool = false
     ) async throws -> Payload
-        where Payload: JWTPayload
-    {
+    where Payload: JWTPayload {
         let header = try defaultJWTParser.parseHeader(token)
         let kid = header.kid.flatMap { JWKIdentifier(string: $0) }
         var signer = try await self.getSigner(for: kid, alg: header.alg)

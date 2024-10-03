@@ -1,7 +1,7 @@
 import Foundation
 
-public extension DataProtocol {
-    func copyBytes() -> [UInt8] {
+extension DataProtocol {
+    public func copyBytes() -> [UInt8] {
         if let array = self.withContiguousStorageIfAvailable({ buffer in
             [UInt8](buffer)
         }) {

@@ -91,10 +91,10 @@ public struct AppleIdentityToken: JWTPayload {
     }
 }
 
-public extension AppleIdentityToken {
+extension AppleIdentityToken {
     /// Taken from https://developer.apple.com/documentation/authenticationservices/asuserdetectionstatus
     /// With slight modification to make adding new cases non-breaking.
-    struct UserDetectionStatus: OptionSet, Codable, Sendable {
+    public struct UserDetectionStatus: OptionSet, Codable, Sendable {
         /// Used for decoding/encoding
         private enum Status: Int, Codable {
             case unsupported
@@ -103,7 +103,7 @@ public extension AppleIdentityToken {
         }
 
         /// Not supported on current platform, ignore the value
-        public static let unsupported = UserDetectionStatus([]) // 0 was giving a warning
+        public static let unsupported = UserDetectionStatus([])  // 0 was giving a warning
 
         /// We could not determine the value.  New users in the ecosystem will get this value as well, so you should not block these users, but instead treat them as any new user through standard email sign up flows
         public static let unknown = UserDetectionStatus(rawValue: 1)

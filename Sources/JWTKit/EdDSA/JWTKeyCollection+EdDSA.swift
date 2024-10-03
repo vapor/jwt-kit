@@ -1,7 +1,7 @@
 import Crypto
 import Foundation
 
-public extension JWTKeyCollection {
+extension JWTKeyCollection {
     /// Adds an EdDSA key to the collection using an ``EdDSAKey``.
     ///
     /// This method incorporates an EdDSA (Edwards-curve Digital Signature Algorithm) signer into the collection.
@@ -23,16 +23,17 @@ public extension JWTKeyCollection {
     ///          a default decoder is used for decoding JWT payloads.
     /// - Returns: The same instance of the collection (`Self`), useful for chaining multiple configuration calls.
     @discardableResult
-    func add(
+    public func add(
         eddsa key: some EdDSAKey,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(
-            algorithm: EdDSASigner(key: key),
-            parser: parser,
-            serializer: serializer
-        ), for: kid)
+        add(
+            .init(
+                algorithm: EdDSASigner(key: key),
+                parser: parser,
+                serializer: serializer
+            ), for: kid)
     }
 }

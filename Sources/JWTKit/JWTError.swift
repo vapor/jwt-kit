@@ -75,7 +75,7 @@ public struct JWTError: Error, Sendable, Equatable {
             self.failedClaim = failedClaim
             self.curve = curve
         }
-        
+
         static func == (lhs: JWTError.Backing, rhs: JWTError.Backing) -> Bool {
             lhs.errorType == rhs.errorType
         }
@@ -147,7 +147,7 @@ public struct JWTError: Error, Sendable, Equatable {
     public static func generic(identifier: String, reason: String) -> Self {
         .init(backing: .init(errorType: .generic, reason: reason))
     }
-    
+
     public static func == (lhs: JWTError, rhs: JWTError) -> Bool {
         lhs.backing == rhs.backing
     }

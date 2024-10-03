@@ -10,9 +10,9 @@ public struct JWK: Codable, Sendable {
 
         public var rawValue: String {
             switch self.backing {
-            case let .ecdsa(ecdsaCurve):
+            case .ecdsa(let ecdsaCurve):
                 ecdsaCurve.rawValue
-            case let .eddsa(eddsaCurve):
+            case .eddsa(let eddsaCurve):
                 eddsaCurve.rawValue
             }
         }
@@ -49,15 +49,16 @@ public struct JWK: Codable, Sendable {
             } else if let eddsaCurve = try? container.decode(EdDSACurve.self) {
                 self = .eddsa(eddsaCurve)
             } else {
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Curve type not supported")
+                throw DecodingError.dataCorruptedError(
+                    in: container, debugDescription: "Curve type not supported")
             }
         }
 
         public func encode(to encoder: any Encoder) throws {
             switch self.backing {
-            case let .ecdsa(ecdsaCurve):
+            case .ecdsa(let ecdsaCurve):
                 try ecdsaCurve.encode(to: encoder)
-            case let .eddsa(eddsaCurve):
+            case .eddsa(let eddsaCurve):
                 try eddsaCurve.encode(to: encoder)
             }
         }

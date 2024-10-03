@@ -4,11 +4,11 @@ public protocol JWTMultiValueClaim: JWTClaim where Value: Collection, Value.Elem
     init(value: Value.Element)
 }
 
-public extension JWTMultiValueClaim {
+extension JWTMultiValueClaim {
     /// Single-element initializer. Uses the `CollectionOfOneDecoder` to work
     /// around the lack of an initializer on the `Collection` protocol. Not
     /// spectacularly efficient, but it works.
-    init(value: Value.Element) {
+    public init(value: Value.Element) {
         self.init(value: try! CollectionOfOneDecoder<Value>.decode(value))
     }
 
@@ -39,13 +39,14 @@ public extension JWTMultiValueClaim {
     ///   in a list of more than one. This implementation behaves according to
     ///   the semantics of the particular `Collection` type used as its value;
     ///   `Array` will preserve ordering and duplicates, `Set` will not.
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
 
         do {
             try self.init(value: container.decode(Value.Element.self))
-        } catch let DecodingError.typeMismatch(type, context)
-            where type == Value.Element.self && context.codingPath.count == container.codingPath.count
+        } catch DecodingError.typeMismatch(let type, let context)
+            where type == Value.Element.self
+            && context.codingPath.count == container.codingPath.count
         {
             // Unfortunately, `typeMismatch()` doesn't let us explicitly look for what type found,
             // only what type was expected, so we have to match the coding path depth instead.
@@ -65,11 +66,11 @@ public extension JWTMultiValueClaim {
     /// - Warning: If the claim has zero values, this implementation will encode
     ///   an inefficient zero-element representation. See the notes regarding
     ///   this on `init(from decoder:)` above.
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
 
         switch self.value.first {
-        case let .some(value) where self.value.count == 1:
+        case .some(let value) where self.value.count == 1:
             try container.encode(value)
         default:
             try container.encode(self.value)
@@ -85,7 +86,7 @@ public extension JWTMultiValueClaim {
 /// `ExpressibleByArrayLiteral`, but what fun would that be?
 private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer where T: Collection, T: Codable, T.Element: Codable {
     static func decode(_ element: T.Element) throws -> T {
-        return try T(from: self.init(value: element))
+        try T(from: self.init(value: element))
     }
 
     /// The single value we're returning.

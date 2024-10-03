@@ -1,6 +1,6 @@
 import _CryptoExtras
 
-public extension JWTKeyCollection {
+extension JWTKeyCollection {
     /// Adds an RSA key to the collection.
     ///
     /// This method configures and adds an RSA key to the collection. The key is used for signing JWTs
@@ -21,28 +21,31 @@ public extension JWTKeyCollection {
     ///       If `nil`, a default decoder is used.
     ///   - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
-    func add(
+    public func add(
         rsa key: some RSAKey,
         digestAlgorithm: DigestAlgorithm,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        let name = switch digestAlgorithm.backing {
-        case .sha256:
-            "RS256"
-        case .sha384:
-            "RS384"
-        case .sha512:
-            "RS512"
-        }
+        let name =
+            switch digestAlgorithm.backing {
+            case .sha256:
+                "RS256"
+            case .sha384:
+                "RS384"
+            case .sha512:
+                "RS512"
+            }
 
-        return add(.init(
-            algorithm: RSASigner(key: key, algorithm: digestAlgorithm, name: name, padding: .insecurePKCS1v1_5),
-            parser: parser,
-            serializer: serializer
-        ),
-        for: kid)
+        return add(
+            .init(
+                algorithm: RSASigner(
+                    key: key, algorithm: digestAlgorithm, name: name, padding: .insecurePKCS1v1_5),
+                parser: parser,
+                serializer: serializer
+            ),
+            for: kid)
     }
 
     /// Adds a PSS key to the collection.
@@ -67,27 +70,30 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), enabling method chaining.
     @discardableResult
-    func add(
+    public func add(
         pss key: some RSAKey,
         digestAlgorithm: DigestAlgorithm,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        let name = switch digestAlgorithm.backing {
-        case .sha256:
-            "PS256"
-        case .sha384:
-            "PS384"
-        case .sha512:
-            "PS512"
-        }
+        let name =
+            switch digestAlgorithm.backing {
+            case .sha256:
+                "PS256"
+            case .sha384:
+                "PS384"
+            case .sha512:
+                "PS512"
+            }
 
-        return add(.init(
-            algorithm: RSASigner(key: key, algorithm: digestAlgorithm, name: name, padding: .PSS),
-            parser: parser,
-            serializer: serializer
-        ),
-        for: kid)
+        return add(
+            .init(
+                algorithm: RSASigner(
+                    key: key, algorithm: digestAlgorithm, name: name, padding: .PSS),
+                parser: parser,
+                serializer: serializer
+            ),
+            for: kid)
     }
 }

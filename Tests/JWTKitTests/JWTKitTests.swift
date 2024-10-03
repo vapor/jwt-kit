@@ -332,9 +332,7 @@ struct JWTKitTests {
     @Test("Test Firebase JWT and Certificate")
     func addFirebaseJWTAndCertificate() async throws {
         let payload = try await JWTKeyCollection()
-            .add(
-                rsa: Insecure.RSA.PublicKey(certificatePEM: firebaseCert), digestAlgorithm: .sha256
-            )
+            .add(rsa: Insecure.RSA.PublicKey(certificatePEM: firebaseCert), digestAlgorithm: .sha256)
             .verify(firebaseJWT, as: FirebasePayload.self)
         #expect(payload.userID == "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }

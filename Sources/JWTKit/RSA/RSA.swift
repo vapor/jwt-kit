@@ -1,24 +1,24 @@
-import _CryptoExtras
 import Crypto
 import Foundation
 import X509
+import _CryptoExtras
 
-public extension Insecure {
+extension Insecure {
     /// Namespace encompassing functionality related to the RSA (Rivest–Shamir–Adleman) cryptographic algorithm.
     /// Relatively to other algorithms such as ECDSA and EdDSA, RSA is considered slow and should be avoided when possible.
-    enum RSA: Sendable {}
+    public enum RSA: Sendable {}
 }
 
 /// The `RSAKey` protocol defines the common interface for both public and private RSA keys.
 /// Implementers of this protocol can represent keys used for cryptographic operations in the RSA algorithm.
 public protocol RSAKey: Sendable {}
 
-public extension Insecure.RSA {
+extension Insecure.RSA {
     /// A structure representing a public RSA key.
     ///
     /// In JWT, RSA public keys are used to verify JWTs.
     /// They consist of a modulus and an exponent.
-    struct PublicKey: RSAKey, Equatable {
+    public struct PublicKey: RSAKey, Equatable {
         // Exports the current public key as a PEM encoded string.
         ///
         /// - Returns: A PEM encoded string representation of the key.
@@ -167,19 +167,19 @@ public extension Insecure.RSA {
             let primitives = try self.backing.getKeyPrimitives()
             return (modulus: primitives.modulus, publicExponent: primitives.publicExponent)
         }
-        
+
         public static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.derRepresentation == rhs.derRepresentation
         }
     }
 }
 
-public extension Insecure.RSA {
+extension Insecure.RSA {
     /// A structure representing a private RSA key.
     ///
     /// In JWT, RSA private keys are used to sign JWTs.
     /// They consist of a modulus, an exponent, and a private exponent.
-    struct PrivateKey: RSAKey, Equatable {
+    public struct PrivateKey: RSAKey, Equatable {
         /// Exports the current private key as a PEM encoded string.
         ///
         /// - Throws: If the key is not a private key.
@@ -325,7 +325,7 @@ public extension Insecure.RSA {
         func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws -> _RSA.Signing.RSASignature {
             try self.backing.signature(for: digest, padding: padding)
         }
-        
+
         public static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.derRepresentation == rhs.derRepresentation
         }

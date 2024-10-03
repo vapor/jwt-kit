@@ -15,7 +15,7 @@ extension P384: ECDSACurveType {
     /// Thus:
     /// - The X coordinate spans bytes 1 through 48.
     /// - The Y coordinate spans bytes 49 through 96.
-    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 49, 49 ..< 97)
+    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1..<49, 49..<97)
 
     public enum SigningAlgorithm: ECDSASigningAlgorithm {
         public static let name = "ES384"
@@ -38,18 +38,11 @@ extension P384.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-#if compiler(<6)
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
-extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
-extension P384.Signing.PublicKey: @unchecked Sendable {}
-extension P384: @unchecked Sendable {}
-#else
 extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
 extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
 extension P384.Signing.PublicKey: @unchecked @retroactive Sendable {}
 extension P384: @unchecked @retroactive Sendable {}
-#endif
 
 public typealias ES384PublicKey = ECDSA.PublicKey<P384>
 public typealias ES384PrivateKey = ECDSA.PrivateKey<P384>

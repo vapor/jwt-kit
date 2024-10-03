@@ -7,16 +7,14 @@ struct RSATests {
     @Test("Test RSA docs")
     func rsaDocs() async throws {
         await #expect(throws: Never.self) {
-            try await JWTKeyCollection().add(
-                rsa: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256)
+            try await JWTKeyCollection().add(rsa: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256)
         }
     }
 
     @Test("Test private key init")
     func privateKeyInit() async throws {
         #expect(throws: Never.self) {
-            try Insecure.RSA.PrivateKey(
-                modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+            try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
         }
     }
 
@@ -55,10 +53,8 @@ struct RSATests {
 
     @Test("Test Signing with Private Key")
     func sign() async throws {
-        let keyCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256,
-            kid: "private"
-        )
+        let keyCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey), digestAlgorithm: .sha256, kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -74,9 +70,8 @@ struct RSATests {
 
     @Test("Test Signing with Public Key Should Fail")
     func signWithPublic() async throws {
-        let keyCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public"
-        )
+        let keyCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256, kid: "public")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -96,10 +91,8 @@ struct RSATests {
             modulus: modulus, exponent: publicExponent, privateExponent: privateExponent
         )
 
-        let keyCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation),
-            digestAlgorithm: .sha256, kid: "private"
-        )
+        let keyCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation), digestAlgorithm: .sha256, kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -120,10 +113,8 @@ struct RSATests {
             prime1: prime1, prime2: prime2
         )
 
-        let keyCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation),
-            digestAlgorithm: .sha256, kid: "private"
-        )
+        let keyCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation), digestAlgorithm: .sha256, kid: "private")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -139,9 +130,7 @@ struct RSATests {
 
     @Test("Test get public key primitives")
     func getPublicKeyPrimitives() async throws {
-        let publicKey = try Insecure.RSA.PublicKey(
-            modulus: modulus, exponent: publicExponent
-        )
+        let publicKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: publicExponent)
         let (keyModulus, keyExponent) = try publicKey.getKeyPrimitives()
         #expect(keyModulus == modulus.base64URLDecodedData())
         #expect(keyExponent == publicExponent.base64URLDecodedData())
@@ -155,17 +144,13 @@ struct RSATests {
             admin: true,
             exp: .init(value: .distantFuture)
         )
-        let signerCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PrivateKey(pem: certPrivateKey), digestAlgorithm: .sha256,
-            kid: "private"
-        )
+        let signerCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PrivateKey(pem: certPrivateKey), digestAlgorithm: .sha256, kid: "private")
 
         let jwt = try await signerCollection.sign(test, kid: "private")
 
-        let verifierCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PublicKey(certificatePEM: cert), digestAlgorithm: .sha256,
-            kid: "cert"
-        )
+        let verifierCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PublicKey(certificatePEM: cert), digestAlgorithm: .sha256, kid: "cert")
 
         let payload = try await verifierCollection.verify(jwt, as: TestPayload.self)
         #expect(payload == test)
@@ -174,9 +159,7 @@ struct RSATests {
     @Test("Test adding a too small key")
     func addTooSmallKey() async throws {
         await #expect(throws: (any Error).self) {
-            try await JWTKeyCollection().add(
-                rsa: Insecure.RSA.PrivateKey(pem: _512BytesKey), digestAlgorithm: .sha256
-            )
+            try await JWTKeyCollection().add(rsa: Insecure.RSA.PrivateKey(pem: _512BytesKey), digestAlgorithm: .sha256)
         }
     }
 
@@ -191,10 +174,8 @@ struct RSATests {
             admin: true,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let keyCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PublicKey(pem: publicKey2), digestAlgorithm: .sha256,
-            kid: "public"
-        )
+        let keyCollection = try await JWTKeyCollection()
+            .add(rsa: Insecure.RSA.PublicKey(pem: publicKey2), digestAlgorithm: .sha256, kid: "public")
 
         let payload = try await keyCollection.verify(token, as: TestPayload.self)
         #expect(payload == testPayload)
@@ -217,18 +198,14 @@ struct RSATests {
     @Test("Test exporting public key from private key")
     func exportPublicKeyWhenKeyIsPrivate() async throws {
         let privateKey = try Insecure.RSA.PrivateKey(pem: privateKey)
-        let publicKeyFromPrivate = try Insecure.RSA.PublicKey(
-            pem: privateKey.publicKey.pemRepresentation
-        )
+        let publicKeyFromPrivate = try Insecure.RSA.PublicKey(pem: privateKey.publicKey.pemRepresentation)
         let publicKey = try Insecure.RSA.PublicKey(pem: publicKey)
         #expect(publicKeyFromPrivate == publicKey)
     }
 
     @Test("Test exporting raw built private key as PEM")
     func exportKeyAsPEMWhenRawBuilt() async throws {
-        let key = try Insecure.RSA.PrivateKey(
-            modulus: modulus, exponent: publicExponent, privateExponent: privateExponent
-        )
+        let key = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
         let key2 = try Insecure.RSA.PrivateKey(pem: key.pemRepresentation)
         #expect(key == key2)
     }

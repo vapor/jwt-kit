@@ -1,5 +1,5 @@
-import _CryptoExtras
 import Foundation
+import _CryptoExtras
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
     let publicKey: Insecure.RSA.PublicKey

@@ -11,8 +11,8 @@ public protocol ECDSAKey: Sendable {
     var parameters: ECDSAParameters? { get }
 }
 
-public extension ECDSA {
-    struct PublicKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
+extension ECDSA {
+    public struct PublicKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
         typealias Signature = Curve.Signature
         typealias PublicKey = Curve.PrivateKey.PublicKey
 
@@ -106,15 +106,15 @@ public extension ECDSA {
         init(backing: PublicKey) {
             self.backing = backing
         }
-        
+
         public static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
         }
     }
 }
 
-public extension ECDSA {
-    struct PrivateKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
+extension ECDSA {
+    public struct PrivateKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
         typealias PrivateKey = Curve.PrivateKey
         typealias Signature = PrivateKey.Signature
 
@@ -189,7 +189,7 @@ public extension ECDSA {
         public init() {
             self.backing = PrivateKey()
         }
-        
+
         public static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
         }

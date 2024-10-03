@@ -7,6 +7,15 @@ on:
   push: { branches: [ main ] }
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container: swift:jammy
+    steps:
+      - name: Check out JWTKit
+        uses: actions/checkout@v4
+      - name: Run format lint check
+        run:  swift format lint --strict --recursive --parallel .
+  
   linux-integration:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest

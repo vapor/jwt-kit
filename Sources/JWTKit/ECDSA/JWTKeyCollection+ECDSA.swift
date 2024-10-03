@@ -1,6 +1,6 @@
 import Crypto
 
-public extension JWTKeyCollection {
+extension JWTKeyCollection {
     /// Adds an ECDSA key to the collection.
     ///
     /// Example Usage:
@@ -19,16 +19,18 @@ public extension JWTKeyCollection {
     ///          If `nil`, a default decoder is used.
     /// - Returns: The same instance of the collection (`Self`), which allows for method chaining.
     @discardableResult
-    func add(
+    public func add(
         ecdsa key: some ECDSAKey,
         kid: JWKIdentifier? = nil,
         parser: some JWTParser = DefaultJWTParser(),
         serializer: some JWTSerializer = DefaultJWTSerializer()
     ) -> Self {
-        add(.init(
-            algorithm: ECDSASigner(key: key),
-            parser: parser,
-            serializer: serializer
-        ), for: kid)
+        add(
+            .init(
+                algorithm: ECDSASigner(key: key),
+                parser: parser,
+                serializer: serializer
+            ), for: kid
+        )
     }
 }

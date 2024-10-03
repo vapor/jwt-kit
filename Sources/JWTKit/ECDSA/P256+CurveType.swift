@@ -15,7 +15,7 @@ extension P256: ECDSACurveType {
     /// Thus:
     /// - The X coordinate spans bytes 1 through 32 (byte 0 is for the prefix).
     /// - The Y coordinate spans bytes 33 through 64.
-    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1 ..< 33, 33 ..< 65)
+    public static let byteRanges: (x: Range<Int>, y: Range<Int>) = (1..<33, 33..<65)
 
     public struct SigningAlgorithm: ECDSASigningAlgorithm {
         public static let name = "ES256"
@@ -38,18 +38,11 @@ extension P256.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-#if compiler(<6)
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked Sendable {}
-extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked Sendable {}
-extension P256.Signing.PublicKey: @unchecked Sendable {}
-extension P256: @unchecked Sendable {}
-#else
 extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
 extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
 extension P256.Signing.PublicKey: @unchecked @retroactive Sendable {}
 extension P256: @unchecked @retroactive Sendable {}
-#endif
 
 public typealias ES256PublicKey = ECDSA.PublicKey<P256>
 public typealias ES256PrivateKey = ECDSA.PrivateKey<P256>
