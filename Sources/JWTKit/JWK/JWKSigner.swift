@@ -41,13 +41,26 @@ extension JWK {
                 throw JWTError.invalidJWK(reason: "Missing RSA primitives")
             }
 
-            let rsaKey: RSAKey
-            if let privateExponent = self.privateExponent {
-                rsaKey = try Insecure.RSA.PrivateKey(
-                    modulus: modulus, exponent: exponent, privateExponent: privateExponent)
-            } else {
-                rsaKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
-            }
+            let rsaKey: RSAKey =
+                if let privateExponent = self.privateExponent {
+                    if let prime1, let prime2 {
+                        try Insecure.RSA.PrivateKey(
+                            modulus: modulus,
+                            exponent: exponent,
+                            privateExponent: privateExponent,
+                            prime1: prime1,
+                            prime2: prime2
+                        )
+                    } else {
+                        try Insecure.RSA.PrivateKey(
+                            modulus: modulus,
+                            exponent: exponent,
+                            privateExponent: privateExponent
+                        )
+                    }
+                } else {
+                    try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
+                }
 
             let algorithm = alg ?? self.algorithm
 

@@ -1,6 +1,5 @@
 import Crypto
 import Foundation
-import SwiftASN1
 import X509
 import _CryptoExtras
 
@@ -24,14 +23,14 @@ extension Insecure.RSA {
         ///
         /// - Returns: A PEM encoded string representation of the key.
         public var pemRepresentation: String {
-            backing.pemRepresentation
+            self.backing.pemRepresentation
         }
 
         /// Exports the current public key as a DER encoded data.
         ///
         /// - Returns: A DER encoded data representation of the key.
         public var derRepresentation: Data {
-            backing.derRepresentation
+            self.backing.derRepresentation
         }
 
         private let backing: _RSA.Signing.PublicKey
@@ -158,19 +157,19 @@ extension Insecure.RSA {
                     identifier: "RSAKey", reason: "Unable to decode base64url exponent")
             }
 
-            var serializer = DER.Serializer()
-
-            let publicKeyDER = try Insecure.RSA.calculateDER(n: n, e: e)
-            try publicKeyDER.serialize(into: &serializer)
-            let publicKey = try _RSA.Signing.PublicKey(
-                derRepresentation: serializer.serializedBytes)
-            try self.init(backing: publicKey)
+            let key = try _RSA.Signing.PublicKey(n: n, e: e)
+            try self.init(backing: key)
         }
 
         func isValidSignature<D: Digest>(
             _ signature: _RSA.Signing.RSASignature, for digest: D, padding: _RSA.Signing.Padding
         ) -> Bool {
             self.backing.isValidSignature(signature, for: digest, padding: padding)
+        }
+
+        public func getKeyPrimitives() throws -> (modulus: Data, publicExponent: Data) {
+            let primitives = try self.backing.getKeyPrimitives()
+            return (modulus: primitives.modulus, publicExponent: primitives.publicExponent)
         }
 
         public static func == (lhs: Self, rhs: Self) -> Bool {
@@ -190,14 +189,14 @@ extension Insecure.RSA {
         /// - Throws: If the key is not a private key.
         /// - Returns: A PEM encoded string representation of the key.
         public var pemRepresentation: String {
-            backing.pemRepresentation
+            self.backing.pemRepresentation
         }
 
         /// Exports the current private key as a DER encoded data.
         ///
         /// - Returns: A DER encoded data representation of the key.
         public var derRepresentation: Data {
-            backing.derRepresentation
+            self.backing.derRepresentation
         }
 
         private let backing: _RSA.Signing.PrivateKey
@@ -295,15 +294,42 @@ extension Insecure.RSA {
                     identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
             }
 
-            var serializer = DER.Serializer()
+            let key = try _RSA.Signing.PrivateKey._createFromNumbers(n: n, e: e, d: d)
+            try self.init(backing: key)
+        }
 
-            guard let privateKeyDER = try Insecure.RSA.calculatePrivateDER(n: n, e: e, d: d) else {
-                throw RSAError.keyInitializationFailure
+        public init(
+            modulus: String,
+            exponent: String,
+            privateExponent: String,
+            prime1: String,
+            prime2: String
+        ) throws {
+            guard let n = modulus.base64URLDecodedData() else {
+                throw JWTError.generic(
+                    identifier: "RSAKey", reason: "Unable to decode base64url modulus")
             }
-            try privateKeyDER.serialize(into: &serializer)
-            let privateKey = try _RSA.Signing.PrivateKey(
-                derRepresentation: serializer.serializedBytes)
-            try self.init(backing: privateKey)
+
+            guard let e = exponent.base64URLDecodedData() else {
+                throw JWTError.generic(
+                    identifier: "RSAKey", reason: "Unable to decode base64url exponent")
+            }
+
+            guard let d = privateExponent.base64URLDecodedData() else {
+                throw JWTError.generic(
+                    identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
+            }
+
+            guard let p = prime1.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url p")
+            }
+
+            guard let q = prime2.base64URLDecodedData() else {
+                throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url q")
+            }
+
+            let key = try _RSA.Signing.PrivateKey(n: n, e: e, d: d, p: p, q: q)
+            try self.init(backing: key)
         }
 
         func signature<D: Digest>(for digest: D, padding: _RSA.Signing.Padding) throws
