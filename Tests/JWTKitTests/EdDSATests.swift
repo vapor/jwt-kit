@@ -33,7 +33,7 @@ struct EdDSATests {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        
+
         for _ in 0..<1000 {
             let token = try await keys.sign(payload, kid: "private")
             // test public signer decoding
@@ -61,19 +61,19 @@ struct EdDSATests {
 
         // verify using jwks
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "OKP",
-                    "crv": "Ed25519",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "d": "\(d)"
-                }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "OKP",
+                        "crv": "Ed25519",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "d": "\(d)"
+                    }
+                ]
+            }
+            """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
@@ -98,19 +98,19 @@ struct EdDSATests {
 
         // verify using jwks
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "OKP",
-                    "crv": "Ed25519",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "d": "\(d)"
-                }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "OKP",
+                        "crv": "Ed25519",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "d": "\(d)"
+                    }
+                ]
+            }
+            """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)
@@ -136,19 +136,19 @@ struct EdDSATests {
 
         // verify using jwks
         let jwksString = """
-        {
-            "keys": [
-                {
-                    "kty": "OKP",
-                    "crv": "Ed25519",
-                    "use": "sig",
-                    "kid": "vapor",
-                    "x": "\(x)",
-                    "d": "\(d)"
-                }
-            ]
-        }
-        """
+            {
+                "keys": [
+                    {
+                        "kty": "OKP",
+                        "crv": "Ed25519",
+                        "use": "sig",
+                        "kid": "vapor",
+                        "x": "\(x)",
+                        "d": "\(d)"
+                    }
+                ]
+            }
+            """
 
         try await keyCollection.add(jwksJSON: jwksString)
         let foo = try await keyCollection.verify(jwt, as: Foo.self)

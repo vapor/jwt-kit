@@ -44,7 +44,7 @@ extension JWTMultiValueClaim {
 
         do {
             try self.init(value: container.decode(Value.Element.self))
-        } catch let DecodingError.typeMismatch(type, context)
+        } catch DecodingError.typeMismatch(let type, let context)
             where type == Value.Element.self
             && context.codingPath.count == container.codingPath.count
         {
@@ -70,7 +70,7 @@ extension JWTMultiValueClaim {
         var container = encoder.singleValueContainer()
 
         switch self.value.first {
-        case let .some(value) where self.value.count == 1:
+        case .some(let value) where self.value.count == 1:
             try container.encode(value)
         default:
             try container.encode(self.value)
@@ -87,7 +87,7 @@ extension JWTMultiValueClaim {
 private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer
 where T: Collection, T: Codable, T.Element: Codable {
     static func decode(_ element: T.Element) throws -> T {
-        return try T(from: self.init(value: element))
+        try T(from: self.init(value: element))
     }
 
     /// The single value we're returning.

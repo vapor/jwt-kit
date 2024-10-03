@@ -63,24 +63,24 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
         var container = encoder.singleValueContainer()
         switch self {
         case .null: try container.encodeNil()
-        case let .bool(value): try container.encode(value)
-        case let .int(value): try container.encode(value)
-        case let .decimal(value): try container.encode(value)
-        case let .string(value): try container.encode(value)
-        case let .array(value): try container.encode(value)
-        case let .object(value): try container.encode(value)
+        case .bool(let value): try container.encode(value)
+        case .int(let value): try container.encode(value)
+        case .decimal(let value): try container.encode(value)
+        case .string(let value): try container.encode(value)
+        case .array(let value): try container.encode(value)
+        case .object(let value): try container.encode(value)
         }
     }
 }
 
 extension JWTHeaderField {
     public var isNull: Bool { if case .null = self { true } else { false } }
-    public var asBool: Bool? { if case let .bool(b) = self { b } else { nil } }
-    public var asInt: Int? { if case let .int(i) = self { i } else { nil } }
-    public var asDecimal: Double? { if case let .decimal(d) = self { d } else { nil } }
-    public var asString: String? { if case let .string(s) = self { s } else { nil } }
-    public var asArray: [Self]? { if case let .array(a) = self { a } else { nil } }
-    public var asObject: [String: Self]? { if case let .object(o) = self { o } else { nil } }
+    public var asBool: Bool? { if case .bool(let b) = self { b } else { nil } }
+    public var asInt: Int? { if case .int(let i) = self { i } else { nil } }
+    public var asDecimal: Double? { if case .decimal(let d) = self { d } else { nil } }
+    public var asString: String? { if case .string(let s) = self { s } else { nil } }
+    public var asArray: [Self]? { if case .array(let a) = self { a } else { nil } }
+    public var asObject: [String: Self]? { if case .object(let o) = self { o } else { nil } }
 }
 
 extension JWTHeaderField {

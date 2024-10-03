@@ -32,7 +32,7 @@ extension JWTHeader: ExpressibleByDictionaryLiteral {
 extension JWTHeader: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try self.fields.forEach { key, value in
+        for (key, value) in self.fields {
             try container.encode(value, forKey: .custom(name: key))
         }
     }
@@ -51,7 +51,7 @@ extension JWTHeader: Codable {
 
         var stringValue: String {
             switch self {
-            case let .custom(name):
+            case .custom(let name):
                 return name
             }
         }

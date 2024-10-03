@@ -84,7 +84,9 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: Self for chaining.
     @discardableResult
     public func add(jwks: JWKS) throws -> Self {
-        try jwks.keys.forEach { try self.add(jwk: $0) }
+        for jwk in jwks.keys {
+            try self.add(jwk: jwk)
+        }
         return self
     }
 
@@ -132,9 +134,9 @@ public actor JWTKeyCollection: Sendable {
         }
 
         switch signer {
-        case let .jwt(jwt):
+        case .jwt(let jwt):
             return jwt
-        case let .jwk(jwk):
+        case .jwk(let jwk):
             if let signer = await jwk.signer {
                 return signer
             } else {

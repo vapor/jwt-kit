@@ -10,9 +10,9 @@ public struct JWK: Codable, Sendable {
 
         public var rawValue: String {
             switch self.backing {
-            case let .ecdsa(ecdsaCurve):
+            case .ecdsa(let ecdsaCurve):
                 ecdsaCurve.rawValue
-            case let .eddsa(eddsaCurve):
+            case .eddsa(let eddsaCurve):
                 eddsaCurve.rawValue
             }
         }
@@ -56,9 +56,9 @@ public struct JWK: Codable, Sendable {
 
         public func encode(to encoder: any Encoder) throws {
             switch self.backing {
-            case let .ecdsa(ecdsaCurve):
+            case .ecdsa(let ecdsaCurve):
                 try ecdsaCurve.encode(to: encoder)
-            case let .eddsa(eddsaCurve):
+            case .eddsa(let eddsaCurve):
                 try eddsaCurve.encode(to: encoder)
             }
         }

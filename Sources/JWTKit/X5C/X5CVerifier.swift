@@ -199,7 +199,7 @@ public struct X5CVerifier: Sendable {
             intermediates: untrustedChain
         )
 
-        if case let .couldNotValidate(failures) = result {
+        if case .couldNotValidate(let failures) = result {
             throw JWTError.invalidX5CChain(reason: "\(failures)")
         }
 

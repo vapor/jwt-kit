@@ -223,7 +223,7 @@ struct X5CTests {
             })
 
         switch result {
-        case let .couldNotValidate(failures):
+        case .couldNotValidate(let failures):
             Issue.record("Failed to validate: \(failures)")
         case .validCertificate:
             break

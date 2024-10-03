@@ -31,7 +31,7 @@ extension JWTHeader {
     /// are being used and must be understood and processed.
     public var crit: [String]? {
         get {
-            if case let .array(array) = self[dynamicMember: "crit"] {
+            if case .array(let array) = self[dynamicMember: "crit"] {
                 return array.compactMap { $0.asString }
             }
             return nil
@@ -60,7 +60,7 @@ extension JWTHeader {
     /// Each string in the array is a base64-encoded (Section 4 of [RFC4648] - not base64url-encoded) DER [ITU.X690.1994] PKIX certificate value.
     public var x5c: [String]? {
         get {
-            if case let .array(array) = self[dynamicMember: "x5c"] {
+            if case .array(let array) = self[dynamicMember: "x5c"] {
                 return array.compactMap { $0.asString }
             }
             return nil

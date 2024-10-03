@@ -129,11 +129,11 @@ extension JWK {
             let algorithm = alg ?? self.algorithm
 
             switch (algorithm, self.x, self.privateExponent) {
-            case let (.eddsa, .some(_), .some(d)):
+            case (.eddsa, .some(_), .some(let d)):
                 let key = try EdDSA.PrivateKey(d: d, curve: curve)
                 return EdDSASigner(key: key)
 
-            case let (.eddsa, .some(x), .none):
+            case (.eddsa, .some(let x), .none):
                 let key = try EdDSA.PublicKey(x: x, curve: curve)
                 return EdDSASigner(key: key)
 

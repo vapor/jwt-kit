@@ -1,7 +1,7 @@
 import Foundation
 
-package extension String {
-    func base64URLDecodedData() -> Data? {
+extension String {
+    package func base64URLDecodedData() -> Data? {
         var base64URL = replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
 
@@ -30,8 +30,10 @@ extension Data {
     fileprivate mutating func base64URLUnescape() {
         for idx in self.indices {
             switch self[idx] {
-            case 0x2D /* - */: self[idx] = 0x2B /* + */
-            case 0x5F /* _ */: self[idx] = 0x2F /* / */
+            case 0x2D:  // -
+                self[idx] = 0x2B  // +
+            case 0x5F:  // _
+                self[idx] = 0x2F  // /
             default: break
             }
         }
@@ -48,8 +50,10 @@ extension Data {
     fileprivate mutating func base64URLEscape() {
         for idx in self.indices {
             switch self[idx] {
-            case 0x2B /* + */: self[idx] = 0x2D /* - */
-            case 0x2F /* / */: self[idx] = 0x5F /* _ */
+            case 0x2B:  // +
+                self[idx] = 0x2D  // -
+            case 0x2F:  // /
+                self[idx] = 0x5F  // _
             default: break
             }
         }
