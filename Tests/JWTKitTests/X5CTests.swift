@@ -1,6 +1,7 @@
+import Foundation
 import JWTKit
+import Testing
 import X509
-import XCTest
 
 /// Test the x5c verification abilities of JWTSigners.
 ///
@@ -19,7 +20,8 @@ import XCTest
 /// Only tokens with an x5c chain that starts with "Leaf"
 /// and ends in either "Intermediate" or "Root" should
 /// successfully be verified.
-final class X5CTests: XCTestCase, @unchecked Sendable {
+@Suite("X5CTests")
+struct X5CTests {
     let verifier = try! X5CVerifier(rootCertificates: [
         // Trusted root:
         """
@@ -51,18 +53,22 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
     /// x5c: [leaf, intermediate, root]
     ///
     /// Should pass validation.
-    func testValidChain() async throws {
-        await XCTAssertNoThrowAsync(
-            try await check(token: validToken), "Valid certificate chain was not verified.")
+    @Test("Test valid certificate chain")
+    func verifyValidChain() async throws {
+        await #expect(throws: Never.self, "Valid certificate chain was not verified.") {
+            try await check(token: validToken)
+        }
     }
 
     /// x5c: [leaf, root]
     ///
     /// Should fail validation.
-    func testMissingIntermediate() async throws {
-        await XCTAssertThrowsErrorAsync(
-            try await check(token: missingIntermediateToken),
-            "Missing intermediate cert should throw an error.")
+    @Test("Test missing intermediate certificate")
+    func verifyMissingIntermediate() async throws {
+        await #expect(throws: (any Error).self, "Missing intermediate cert should throw an error.")
+        {
+            try await check(token: missingIntermediateToken)
+        }
     }
 
     /// x5c: [leaf, intermediate]
@@ -78,42 +84,55 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
     /// Some providers do include the root certificate as
     /// the final element in the chain, but the above RFC
     /// seems to say it's not necessary.
-    func testMissingRoot() async throws {
-        await XCTAssertNoThrowAsync(try await check(token: validToken))
+    @Test("Test missing root certificate")
+    func verifyMissingRoot() async throws {
+        await #expect(throws: Never.self, "Missing root cert should not throw an error.") {
+            try await check(token: missingRootToken)
+        }
     }
 
     /// x5c: [intermediate, root]
     ///
     /// Should fail validation.
-    func testMissingLeaf() async throws {
-        await XCTAssertThrowsErrorAsync(
-            try await check(token: missingLeafToken), "Missing leaf cert should throw an error.")
+    @Test("Test missing leaf certificate")
+    func verifyMissingLeaf() async throws {
+        await #expect(throws: (any Error).self, "Missing leaf cert should throw an error.") {
+            try await check(token: missingLeafToken)
+        }
     }
 
     /// x5c: [root]
     ///
     /// Should fail validation.
-    func testMissingLeafAndIntermediate() async throws {
-        await XCTAssertThrowsErrorAsync(
-            try await check(token: missingLeafAndIntermediateToken),
-            "Missing leaf/intermediate cert should throw an error.")
+    @Test("Test missing leaf and intermediate certificates")
+    func verifyMissingLeafAndIntermediate() async throws {
+        await #expect(
+            throws: (any Error).self, "Missing leaf/intermediate cert should throw an error."
+        ) {
+            try await check(token: missingLeafAndIntermediateToken)
+        }
     }
 
     /// x5c: [leaf]
     ///
     /// Should fail validation.
-    func testMissingIntermediateAndRoot() async throws {
-        await XCTAssertThrowsErrorAsync(
-            try await check(token: missingIntermediateAndRootToken),
-            "Missing intermediate/root cert should throw an error.")
+    @Test("Test missing intermediate and root certificates")
+    func verifyMissingIntermediateAndRoot() async throws {
+        await #expect(
+            throws: (any Error).self, "Missing intermediate/root cert should throw an error."
+        ) {
+            try await check(token: missingIntermediateAndRootToken)
+        }
     }
 
     /// x5c: [expired_leaf, intermediate, root]
     ///
     /// Should fail validation because leaf is epxired.
-    func testExpiredLeaf() async throws {
-        await XCTAssertThrowsErrorAsync(
-            try await check(token: expiredLeafToken), "Expired leaf token is invalid.")
+    @Test("Test expired leaf certificate")
+    func verifyExpiredLeaf() async throws {
+        await #expect(throws: (any Error).self, "Expired leaf cert should throw an error.") {
+            try await check(token: expiredLeafToken)
+        }
     }
 
     /// x5c: [leaf, intermediate, root]
@@ -122,13 +141,15 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
     ///
     /// This is a test to make sure that the claims actually
     /// get verified.
-    func testValidButNotCool() async throws {
-        await XCTAssertThrowsErrorAsync(
-            try await check(token: validButNotCoolToken),
-            "Token isn't cool. Claims weren't verified.")
+    @Test("Test valid but not cool")
+    func verifyValidButNotCool() async throws {
+        await #expect(throws: (any Error).self, "Token isn't cool. Claims weren't verified.") {
+            try await check(token: validButNotCoolToken)
+        }
     }
 
-    func testAppStoreJWT() async throws {
+    @Test("Test App Store JWT")
+    func verifyAppStoreJWT() async throws {
         let cert = """
             -----BEGIN CERTIFICATE-----
             MIIBXDCCAQICCQCfjTUGLDnR9jAKBggqhkjOPQQDAzA2MQswCQYDVQQGEwJVUzET
@@ -171,25 +192,27 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
             payload = try await verifier.verifyJWS(
                 token, as: StoreKitPayload.self, jsonDecoder: jsonDecoder)
         } catch {
-            XCTFail("Failed with error: \(error.localizedDescription)")
+            Issue.record("Failed with error: \(error.localizedDescription)")
         }
 
-        let data = try XCTUnwrap(payload).data
-        XCTAssertEqual(data.appAppleId, 1234)
-        XCTAssertEqual(data.environment, "Sandbox")
+        let data = try #require(payload).data
+        #expect(data.appAppleId == 1234)
+        #expect(data.environment == "Sandbox")
     }
 
-    func testDERInit() async throws {
+    @Test("Test init from DER")
+    func initFromDER() async throws {
         let testsDirectory: String = URL(fileURLWithPath: "\(#filePath)").pathComponents.dropLast(1)
             .joined(separator: "/")
         let path = "\(testsDirectory)/TestCertificates/testCA.der"
         let fileHandle = try FileHandle(forReadingFrom: URL(fileURLWithPath: path))
         let data = fileHandle.readDataToEndOfFile()
         fileHandle.closeFile()
-        XCTAssertNoThrow(try! X5CVerifier(rootCertificates: [data]))
+        #expect(throws: Never.self) { try! X5CVerifier(rootCertificates: [data]) }
     }
 
-    func testValidCerts() async throws {
+    @Test("Test valid certs")
+    func verifyValidCerts() async throws {
         let verifier = try X5CVerifier(rootCertificates: [rootCA])
 
         let result = try await verifier.verifyChain(
@@ -201,13 +224,14 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
 
         switch result {
         case let .couldNotValidate(failures):
-            XCTFail("Failed to validate: \(failures)")
+            Issue.record("Failed to validate: \(failures)")
         case .validCertificate:
             break
         }
     }
 
-    func testValidCertsWithExpiredValidationTime() async throws {
+    @Test("Test valid certs with expired validation time")
+    func verifyValidCertsWithExpiredValidationTime() async throws {
         let verifier = try X5CVerifier(rootCertificates: [rootCA])
 
         let result = try await verifier.verifyChain(
@@ -221,11 +245,12 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
         case .couldNotValidate:
             break
         case .validCertificate:
-            XCTFail("Should not have validated")
+            Issue.record("Should not have validated")
         }
     }
 
-    func testSigningWithX5CChain() async throws {
+    @Test("Test signing with x5c chain")
+    func signWithX5CChain() async throws {
         let keyCollection = try await JWTKeyCollection().add(
             ecdsa: ES256PrivateKey(pem: x5cLeafCertKey))
 
@@ -239,14 +264,17 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
         let token = try await keyCollection.sign(payload, header: header)
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
 
-        let x5c = try XCTUnwrap(parsed.header.x5c)
+        let x5c = try #require(parsed.header.x5c)
         let pemCerts = try x5c.map(getPEMString)
-        XCTAssertEqual(pemCerts, x5cCerts)
+        #expect(pemCerts == x5cCerts)
         let verifier = try X5CVerifier(rootCertificates: [x5cCerts.last!])
-        await XCTAssertNoThrowAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
+        await #expect(throws: Never.self) {
+            try await verifier.verifyJWS(token, as: TestPayload.self)
+        }
     }
 
-    func testSigningWithInvalidX5CChain() async throws {
+    @Test("Test signing with invalid x5c chain")
+    func signWithInvalidX5CChain() async throws {
         let keyCollection = try await JWTKeyCollection().add(
             ecdsa: ES256PrivateKey(pem: x5cLeafCertKey))
 
@@ -264,11 +292,13 @@ final class X5CTests: XCTestCase, @unchecked Sendable {
         let token = try await keyCollection.sign(payload, header: header)
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
 
-        let x5c = try XCTUnwrap(parsed.header.x5c)
+        let x5c = try #require(parsed.header.x5c)
         let pemCerts = try x5c.map(getPEMString)
-        XCTAssertEqual(pemCerts, certs)
+        #expect(pemCerts == certs)
         let verifier = try X5CVerifier(rootCertificates: [certs.last!])
-        await XCTAssertThrowsErrorAsync(try await verifier.verifyJWS(token, as: TestPayload.self))
+        await #expect(throws: (any Error).self) {
+            try await verifier.verifyJWS(token, as: TestPayload.self)
+        }
     }
 
     // MARK: Private

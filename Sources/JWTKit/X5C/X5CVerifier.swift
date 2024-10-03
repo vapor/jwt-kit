@@ -174,7 +174,7 @@ public struct X5CVerifier: Sendable {
         }
 
         // Setup an untrusted chain using the intermediate certificates
-        let untrustedChain = CertificateStore(certificates.dropFirst().dropLast())
+        let untrustedChain = CertificateStore(certificates.dropFirst())
 
         let date: Date
         // Some JWT implementations have the sign date in the payload.
@@ -195,7 +195,9 @@ public struct X5CVerifier: Sendable {
 
         // Validate the leaf certificate against the trusted store
         let result = await verifier.validate(
-            leafCertificate: certificates[0], intermediates: untrustedChain)
+            leafCertificate: certificates[0],
+            intermediates: untrustedChain
+        )
 
         if case let .couldNotValidate(failures) = result {
             throw JWTError.invalidX5CChain(reason: "\(failures)")

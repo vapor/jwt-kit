@@ -20,7 +20,7 @@ and add it to your target's dependencies:
 
 ### Supported Platforms
 
-JWTKit supports all platforms supported by Swift 5.10 and later, with the exception of Windows.
+JWTKit supports all platforms supported by Swift 6 and later, with the exception of Windows.
 
 ## Overview
 
