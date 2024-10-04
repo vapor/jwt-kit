@@ -40,21 +40,18 @@ public struct X5CVerifier: Sendable {
         guard !rootCertificates.isEmpty else {
             throw JWTError.invalidX5CChain(reason: "No root certificates provided")
         }
-        try self.init(
-            rootCertificates: rootCertificates.map { try X509.Certificate(pemEncoded: $0) })
+        try self.init(rootCertificates: rootCertificates.map { try X509.Certificate(pemEncoded: $0) })
     }
 
     /// Create a new X5CVerifier trusting `rootCertificates`.
     ///
     /// - Parameter rootCertificates: The root certificates to be trusted.
     /// - Throws: ``JWTError/invalidX5CChain(reason:)`` if no root certificates are provided.
-    public init(rootCertificates: [Data]) throws {
+    public init(rootCertificates: [some DataProtocol]) throws {
         guard !rootCertificates.isEmpty else {
             throw JWTError.invalidX5CChain(reason: "No root certificates provided")
         }
-        try self.init(
-            rootCertificates: rootCertificates.map { try X509.Certificate(derEncoded: [UInt8]($0)) }
-        )
+        try self.init(rootCertificates: rootCertificates.map { try X509.Certificate(derEncoded: [UInt8]($0)) })
     }
 
     /// Verify a chain of certificates against the trusted root certificates.
@@ -77,9 +74,7 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [Certificate],
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = {
-            RFC5280Policy(validationTime: Date())
-        }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
     ) async throws -> X509.VerificationResult {
         let untrustedChain = CertificateStore(certificates)
         var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
@@ -146,9 +141,7 @@ public struct X5CVerifier: Sendable {
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = {
-            RFC5280Policy(validationTime: Date())
-        }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
     ) async throws -> Payload
     where Payload: JWTPayload {
         // Parse the JWS header to get the header
