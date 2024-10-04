@@ -23,7 +23,7 @@
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-rc")
+.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0")
 ```
 
 and add it to your target's dependencies:
