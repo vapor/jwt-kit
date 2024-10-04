@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public struct LocaleClaim: JWTClaim, Equatable, ExpressibleByStringLiteral {
     /// See ``JWTClaim``.

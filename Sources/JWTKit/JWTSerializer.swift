@@ -1,5 +1,10 @@
-import Foundation
 import X509
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public protocol JWTSerializer: Sendable {
     var jsonEncoder: any JWTJSONEncoder { get }

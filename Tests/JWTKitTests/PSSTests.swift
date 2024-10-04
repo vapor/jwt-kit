@@ -1,6 +1,11 @@
-import Foundation
 import JWTKit
 import Testing
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("PSS Tests")
 struct PSSTests {

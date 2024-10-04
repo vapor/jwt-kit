@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// The "exp" (expiration time) claim identifies the expiration time on
 /// or after which the JWT MUST NOT be accepted for processing.  The

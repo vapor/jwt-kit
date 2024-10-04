@@ -1,7 +1,12 @@
 import Crypto
-import Foundation
 import JWTKit
 import Testing
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("ECDSA Tests")
 struct ECDSATests {

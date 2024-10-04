@@ -179,7 +179,11 @@ A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) data structure that 
 You can add this JSON Web Key Set (JWKS) to your `JWTSigners`: 
 
 ```swift
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 import JWTKit
 
 let rsaModulus = "..."

@@ -1,8 +1,13 @@
-import Foundation
 import JWTKit
 import Testing
 import X509
 import XCTest
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 @Suite("JWTKit Tests")
 struct JWTKitTests {

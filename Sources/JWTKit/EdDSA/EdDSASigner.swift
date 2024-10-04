@@ -1,5 +1,10 @@
 import Crypto
-import Foundation
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 struct EdDSASigner: JWTAlgorithm, Sendable {
     let publicKey: EdDSA.PublicKey

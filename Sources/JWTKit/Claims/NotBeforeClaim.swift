@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// The "nbf" (not before) claim identifies the time before which the JWT
 /// MUST NOT be accepted for processing. The processing of the "nbf"

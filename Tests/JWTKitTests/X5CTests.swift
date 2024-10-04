@@ -1,7 +1,12 @@
-import Foundation
 import JWTKit
 import Testing
 import X509
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// Test the x5c verification abilities of JWTSigners.
 ///
