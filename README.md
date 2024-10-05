@@ -408,7 +408,3 @@ let keyCollection = await JWTKeyCollection().add(
     serializer: serializer
 )
 ```
-
----
-
-_This package was originally authored by the wonderful [@siemensikkema](https://github.com/siemensikkema)._
