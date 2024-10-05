@@ -6,7 +6,7 @@
 </picture> 
 <br>
 <br>
-<a href="https://docs.vapor.codes/4.0/"><img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation"></a>
+<a href="https://docs.vapor.codes/security/jwt"><img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation"></a>
 <a href="https://discord.gg/vapor"><img src="https://design.vapor.codes/images/discordchat.svg" alt="Team Chat"></a>
 <a href="LICENSE"><img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License"></a>
 <a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/vapor/jwt-kit/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration"></a>
@@ -18,7 +18,11 @@
 
 🔑 JSON Web Token signing and verification (HMAC, RSA, PSS, ECDSA, EdDSA) using SwiftCrypto.
 
-### Getting Started
+### Supported Platforms
+
+JWTKit supports all platforms supported by Swift 6 and later, with the exception of Windows.
+
+### Installation
 
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
@@ -31,12 +35,6 @@ and add it to your target's dependencies:
 ```swift
 .product(name: "JWTKit", package: "jwt-kit")
 ```
-
-> Note: Prior to version 4.0, this package was part of [vapor/jwt](https://github.com/vapor/jwt). 
-
-### Supported Platforms
-
-JWTKit supports all platforms supported by Swift 6 and later, with the exception of Windows.
 
 ## Overview
 
@@ -154,7 +152,7 @@ You can inspect the contents of this token by visiting [jwt.io](https://jwt.io) 
 To verify a token, the format of the payload must be known. In this case, we know that the payload is of type `ExamplePayload`. Using this payload, the `JWTKeyCollection` object can process and verify the example JWT, returning its payload on success:
 
 ```swift
-// Parse the JWT, verifies its signature, and decodes its content
+// Parse the JWT, verify its signature and decode its content
 let payload = try await keys.verify(exampleJWT, as: ExamplePayload.self)
 print(payload)
 ```
@@ -395,8 +393,10 @@ let token = try await keyCollection.sign(payload, header: ["b64": true])
 If you don't need to specify custom parsing and serializing but you do need to use a custom JSON Encoder or Decoder, you can use the the `DefaultJWTParser` and `DefaultJWTSerializer` types to create a `JWTKeyCollection` with a custom JSON Encoder and Decoder.
 
 ```swift
-let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
-let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+let encoder = JSONEncoder()
+encoder.dateEncodingStrategy = .iso8601
+let decoder = JSONDecoder() 
+decoder.dateDecodingStrategy = .iso8601
 
 let parser = DefaultJWTParser(jsonDecoder: decoder)
 let serializer = DefaultJWTSerializer(jsonEncoder: encoder)
@@ -408,7 +408,3 @@ let keyCollection = await JWTKeyCollection().add(
     serializer: serializer
 )
 ```
-
----
-
-_This package was originally authored by the wonderful [@siemensikkema](https://github.com/siemensikkema)._
