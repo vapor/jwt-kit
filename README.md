@@ -23,7 +23,7 @@
 Use the SPM string to easily include the dependendency in your `Package.swift` file
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0-rc")
+.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0")
 ```
 
 and add it to your target's dependencies:
@@ -179,7 +179,11 @@ A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) data structure that 
 You can add this JSON Web Key Set (JWKS) to your `JWTSigners`: 
 
 ```swift
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 import JWTKit
 
 let rsaModulus = "..."

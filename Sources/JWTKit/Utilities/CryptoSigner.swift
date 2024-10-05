@@ -1,5 +1,10 @@
 import Crypto
-import Foundation
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public struct DigestAlgorithm: Sendable, Equatable {
     enum Backing {

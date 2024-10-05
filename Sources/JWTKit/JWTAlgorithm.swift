@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// A protocol defining the necessary functionality for a JWT (JSON Web Token) algorithm.
 /// All algorithms conform to ``JWTAlgorithm`` to provide custom signing and verification logic for JWT tokens.

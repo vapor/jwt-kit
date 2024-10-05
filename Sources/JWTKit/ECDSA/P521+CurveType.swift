@@ -1,5 +1,10 @@
 import Crypto
-import Foundation
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P521: ECDSACurveType {

@@ -1,6 +1,11 @@
 import Crypto
-import Foundation
 import X509
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public enum ECDSA: Sendable {}
 

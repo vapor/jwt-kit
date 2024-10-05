@@ -1,5 +1,10 @@
-import Foundation
 import JWTKit
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 let rsaModulus = "..."
 

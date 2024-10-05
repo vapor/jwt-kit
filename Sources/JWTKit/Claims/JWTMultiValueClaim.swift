@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public protocol JWTMultiValueClaim: JWTClaim where Value: Collection, Value.Element: Codable {
     init(value: Value.Element)

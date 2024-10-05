@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public protocol JWTParser: Sendable {
     var jsonDecoder: JWTJSONDecoder { get set }

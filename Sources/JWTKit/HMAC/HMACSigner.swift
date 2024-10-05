@@ -1,5 +1,10 @@
 @preconcurrency import Crypto
-import Foundation
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {
     let key: SymmetricKey

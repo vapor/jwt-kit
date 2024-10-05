@@ -1,6 +1,11 @@
-import Foundation
 // snippet.KEY_COLLECTION
 import JWTKit
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 // Signs and verifies JWTs
 let keys = JWTKeyCollection()
