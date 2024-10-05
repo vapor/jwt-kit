@@ -6,7 +6,7 @@
 </picture> 
 <br>
 <br>
-<a href="https://docs.vapor.codes/4.0/"><img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation"></a>
+<a href="https://docs.vapor.codes/security/jwt"><img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation"></a>
 <a href="https://discord.gg/vapor"><img src="https://design.vapor.codes/images/discordchat.svg" alt="Team Chat"></a>
 <a href="LICENSE"><img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License"></a>
 <a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/vapor/jwt-kit/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration"></a>
