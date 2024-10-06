@@ -6,16 +6,7 @@ on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
   push: { branches: [ main ] }
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    container: swift:jammy
-    steps:
-      - name: Check out JWTKit
-        uses: actions/checkout@v4
-      - name: Run format lint check
-        run:  swift format lint --strict --recursive --parallel .
-  
+jobs:  
   linux-integration:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
@@ -40,6 +31,8 @@ jobs:
     with:
       with_api_check: ${{ github.event_name == 'pull_request' }}
       warnings_as_errors: true
+      with_linting: true
+      with_windows: true
     secrets: inherit
 
   ios-tests:
