@@ -20,7 +20,7 @@
 
 ### Supported Platforms
 
-JWTKit supports all platforms supported by Swift 6 and later, with the exception of Windows.
+JWTKit supports all platforms supported by Swift 6 and later.
 
 ### Installation
 
