@@ -1,5 +1,10 @@
 import Crypto
-import Foundation
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension JWTKeyCollection {
     /// Adds an EdDSA key to the collection using an ``EdDSAKey``.

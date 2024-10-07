@@ -1,5 +1,10 @@
-import Foundation
 import _CryptoExtras
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {
     let publicKey: Insecure.RSA.PublicKey

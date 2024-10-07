@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 struct UnsecuredNoneSigner: JWTAlgorithm {
     var name: String {

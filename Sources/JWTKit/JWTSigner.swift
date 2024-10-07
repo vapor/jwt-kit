@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 /// A JWT signer.
 final class JWTSigner: Sendable {

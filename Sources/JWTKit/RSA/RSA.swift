@@ -1,7 +1,12 @@
 import Crypto
-import Foundation
 import X509
 import _CryptoExtras
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension Insecure {
     /// Namespace encompassing functionality related to the RSA (Rivest–Shamir–Adleman) cryptographic algorithm.

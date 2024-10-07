@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 struct ECDSASigner<Key: ECDSAKey>: JWTAlgorithm, CryptoSigner {
     let privateKey: ECDSA.PrivateKey<Key.Curve>?

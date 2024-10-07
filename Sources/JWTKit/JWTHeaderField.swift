@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
     case null

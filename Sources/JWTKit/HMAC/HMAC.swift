@@ -1,5 +1,10 @@
 @preconcurrency import Crypto
-import Foundation
+
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 public struct HMACKey: Sendable {
     let key: SymmetricKey

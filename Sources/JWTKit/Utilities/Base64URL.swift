@@ -1,4 +1,8 @@
-import Foundation
+#if !canImport(Darwin)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
 
 extension String {
     package func base64URLDecodedData() -> Data? {

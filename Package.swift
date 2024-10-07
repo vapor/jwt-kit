@@ -31,9 +31,6 @@ let package = Package(
             name: "JWTKitTests",
             dependencies: [
                 "JWTKit"
-            ],
-            resources: [
-                .copy("TestCertificates")
             ]
         ),
     ]
