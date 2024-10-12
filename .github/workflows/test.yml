@@ -33,6 +33,7 @@ jobs:
       warnings_as_errors: true
       with_linting: true
       with_windows: true
+      with_musl: true
     secrets: inherit
 
   ios-tests:
