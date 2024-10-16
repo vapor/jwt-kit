@@ -120,7 +120,7 @@ public struct FirebaseAuthIdentityToken: JWTPayload {
     public func verify(using _: some JWTAlgorithm) throws {
 
         guard let projectId = self.audience.value.first else {
-            throw JWTError.claimVerificationFailure(failedClaim: issuer, reason: "Token not provided by Firebase")
+            throw JWTError.claimVerificationFailure(failedClaim: audience, reason: "Token not provided by Firebase")
         }
         
         guard self.issuer.value == "https://securetoken.google.com/\(projectId)" else {
