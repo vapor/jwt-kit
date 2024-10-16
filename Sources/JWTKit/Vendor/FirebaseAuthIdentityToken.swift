@@ -4,7 +4,7 @@
     import Foundation
 #endif
 
-public struct FirebaseIdentityToken: JWTPayload {
+public struct FirebaseAuthIdentityToken: JWTPayload {
 
     /// Additional Firebase-specific claims
     public struct Firebase: Codable, Sendable {
@@ -15,6 +15,18 @@ public struct FirebaseIdentityToken: JWTPayload {
             case signInSecondFactor = "sign_in_second_factor"
             case secondFactorIdentifier = "second_factor_identifier"
             case tenant
+        }
+        
+        public init(identities: [String : [String]],
+                    signInProvider: String,
+                    signInSecondFactor: String? = nil,
+                    secondFactorIdentifier: String? = nil,
+                    tenant: String? = nil) {
+            self.identities = identities
+            self.signInProvider = signInProvider
+            self.signInSecondFactor = signInSecondFactor
+            self.secondFactorIdentifier = secondFactorIdentifier
+            self.tenant = tenant
         }
         
         public let identities: [String: [String]]
@@ -76,6 +88,34 @@ public struct FirebaseIdentityToken: JWTPayload {
     public let firebase: Firebase?
     
     // TODO: support custom claims
+    
+    public init(issuer: IssuerClaim,
+                subject: SubjectClaim,
+                audience: AudienceClaim,
+                issuedAt: IssuedAtClaim,
+                expires: ExpirationClaim,
+                authTime: Date? = nil,
+                userID: String,
+                email: String? = nil,
+                emailVerified: Bool? = nil,
+                phoneNumber: String? = nil,
+                name: String? = nil,
+                picture: String? = nil,
+                firebase: FirebaseAuthIdentityToken.Firebase? = nil) {
+        self.issuer = issuer
+        self.issuedAt = issuedAt
+        self.expires = expires
+        self.audience = audience
+        self.subject = subject
+        self.authTime = authTime
+        self.userID = userID
+        self.email = email
+        self.picture = picture
+        self.name = name
+        self.emailVerified = emailVerified
+        self.phoneNumber = phoneNumber
+        self.firebase = firebase
+    }
 
     public func verify(using _: some JWTAlgorithm) throws {
 
