@@ -39,7 +39,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Google ID Token that is not from Google (invalid issuer)")
     func testGoogleIDTokenNotFromGoogle() async throws {
         let token = GoogleIdentityToken(
             issuer: "https://example.com",
@@ -73,7 +73,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Google ID Token with subject claim that's too big")
     func testGoogleIDTokenWithBigSubjectClaim() async throws {
         let token = GoogleIdentityToken(
             issuer: "https://accounts.google.com",
@@ -108,7 +108,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Apple ID Token")
     func testAppleIDToken() async throws {
         let token = AppleIdentityToken(
             issuer: "https://appleid.apple.com",
@@ -133,7 +133,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Apple ID Token that is not from Apple (invalid issuer)")
     func testAppleIDTokenNotFromApple() async throws {
         let token = AppleIdentityToken(
             issuer: "https://example.com",
@@ -162,7 +162,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Microsoft ID Token")
     func testMicrosoftIDToken() async throws {
         let tenantID = "some-id"
 
@@ -195,7 +195,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Microsoft ID Token that is not from Microsoft (invalid issuer)")
     func testMicrosoftIDTokenNotFromMicrosoft() async throws {
         let token = MicrosoftIdentityToken(
             audience: "your-app-client-id",
@@ -228,7 +228,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Microsoft ID Token with missing tenant ID claim")
     func testMicrosoftIDTokenWithMissingTenantIDClaim() async throws {
         let token = MicrosoftIdentityToken(
             audience: "your-app-client-id",
@@ -263,7 +263,7 @@ struct VendorTokenTests {
         }
     }
 
-    @Test
+    @Test("Test Firebase ID Token")
     func testFirebaseIDToken() async throws {
 
         let token = FirebaseAuthIdentityToken(
@@ -287,10 +287,10 @@ struct VendorTokenTests {
             try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self)
         }
     }
-    
-    @Test
+
+    @Test("Test Firebase ID Token that is not from Google (invalid issuer)")
     func testFirebaseIDTokenNotFromGoogle() async throws {
-        
+
         let token = FirebaseAuthIdentityToken(
             issuer: "https://example.com",
             subject: "1234567890",
@@ -316,8 +316,8 @@ struct VendorTokenTests {
             try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self)
         }
     }
-    
-    @Test
+
+    @Test("Test Firebase ID Token with subject claim that's too big")
     func testFirebaseIDTokenWithBigSubjectClaim() async throws {
         let token = FirebaseAuthIdentityToken(
             issuer: "https://securetoken.google.com/firprojectname-12345",
