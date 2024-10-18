@@ -5,10 +5,8 @@
 #endif
 
 public struct FirebaseAuthIdentityToken: JWTPayload {
-
     /// Additional Firebase-specific claims
     public struct Firebase: Codable, Sendable {
-
         enum CodingKeys: String, CodingKey {
             case identities
             case signInProvider = "sign_in_provider"
@@ -122,7 +120,6 @@ public struct FirebaseAuthIdentityToken: JWTPayload {
     }
 
     public func verify(using _: some JWTAlgorithm) throws {
-
         guard let projectId = self.audience.value.first else {
             throw JWTError.claimVerificationFailure(failedClaim: audience, reason: "Token not provided by Firebase")
         }

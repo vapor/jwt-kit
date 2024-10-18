@@ -265,7 +265,6 @@ struct VendorTokenTests {
 
     @Test("Test Firebase ID Token")
     func testFirebaseIDToken() async throws {
-
         let token = FirebaseAuthIdentityToken(
             issuer: "https://securetoken.google.com/firprojectname-12345",
             subject: "1234567890",
@@ -290,7 +289,6 @@ struct VendorTokenTests {
 
     @Test("Test Firebase ID Token that is not from Google (invalid issuer)")
     func testFirebaseIDTokenNotFromGoogle() async throws {
-
         let token = FirebaseAuthIdentityToken(
             issuer: "https://example.com",
             subject: "1234567890",
