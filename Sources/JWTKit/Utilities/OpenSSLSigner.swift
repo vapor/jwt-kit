@@ -1,5 +1,5 @@
-import Foundation
 @_implementationOnly import CJWTKitBoringSSL
+import Foundation
 
 protocol OpenSSLSigner {
     var algorithm: OpaquePointer { get }
@@ -33,23 +33,25 @@ extension OpenSSLSigner {
         guard CJWTKitBoringSSL_EVP_DigestFinal_ex(context, &digest, &digestLength) == 1 else {
             throw JWTError.signingAlgorithmFailure(OpenSSLError.digestFinalizationFailure)
         }
-        return .init(digest[0..<Int(digestLength)])
+        return .init(digest[0 ..< Int(digestLength)])
     }
 }
 
-protocol OpenSSLKey { }
+protocol OpenSSLKey {}
 
 extension OpenSSLKey {
     static func load<Data, T>(pem data: Data, _ closure: (UnsafeMutablePointer<BIO>) -> (T?)) throws -> T
         where Data: DataProtocol
     {
-        let bytes = data.copyBytes()
-        let bio = CJWTKitBoringSSL_BIO_new_mem_buf(bytes, numericCast(bytes.count))
-        defer { CJWTKitBoringSSL_BIO_free(bio) }
-        
-        guard let bioPtr = bio, let c = closure(bioPtr) else {
-            throw JWTError.signingAlgorithmFailure(OpenSSLError.bioConversionFailure)
+        try data.copyBytes().withUnsafeBytes { (bytes: UnsafeRawBufferPointer) in
+            let bio = CJWTKitBoringSSL_BIO_new_mem_buf(bytes.baseAddress, numericCast(bytes.count))
+
+            defer { CJWTKitBoringSSL_BIO_free(bio) }
+
+            guard let bioPtr = bio, let c = closure(bioPtr) else {
+                throw JWTError.signingAlgorithmFailure(OpenSSLError.bioConversionFailure)
+            }
+            return c
         }
-        return c
     }
 }
