@@ -408,3 +408,28 @@ let keyCollection = await JWTKeyCollection().add(
     serializer: serializer
 )
 ```
+
+## Installation
+
+Run the following commands on your package using SwiftPM, replacing `MyTarget` with the name of your target:
+
+```swift
+cd path/to/project/root/directory
+swift package add-dependency https://github.com/vapor/jwt-kit.git --from 5.0.0
+swift package add-target-dependency JWTKit MyTarget
+```
+
+Or manually add the following to your `Package.swift` file:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0")
+],
+targets: [
+  .target(
+    name: "MyTarget",
+    dependencies: [
+        .target(name: "JWTKit"),
+    ]),
+]
+```
