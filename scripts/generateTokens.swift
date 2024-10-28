@@ -9,6 +9,10 @@
 ///   - the new tokens, printed in Swift, which means you
 ///     just need to copy and paste them replacing the old ones;
 ///   - the root certificate, which you have to replace too.
+/// After creating the tokens, the script will delete certificates.
+/// If you want to keep them for some reason, just add `--keep-certs`
+/// to the script execution. They will be stored in the `x5c_test_certs`.
+/// This directory is in the `.gitignore` so that it doesn't get committed.
 import Foundation
 
 enum ScriptError: Error {
@@ -18,7 +22,7 @@ enum ScriptError: Error {
 }
 
 struct JWTGenerator {
-    let certificateDirectory = "jwt_x5c_certs"
+    let certificateDirectory = "x5c_test_certs"
     let leafKeyFileName = "leaf_key.pem"
     let leafCertFileName = "leaf_cert.pem"
     let expiredLeafCertFileName = "expired_leaf_cert.pem"
