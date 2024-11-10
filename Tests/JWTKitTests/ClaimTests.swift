@@ -113,4 +113,42 @@ struct ClaimTests {
         #expect(parsed.payload.exp == exp)
         _ = try await keyCollection.verify(jwt, as: ExpirationPayload.self)
     }
+    
+    @Test("Test Authorized Party Claim")
+    func authorizedPartyClaim() async throws {
+        let clientId = UUID().uuidString
+        let authorizedParty = AuthorizedPartyClaim(value: clientId)
+        
+        #expect(throws: Never.self) {
+            try authorizedParty.verify(clientId: clientId)
+        }
+        
+        #expect {
+            try authorizedParty.verify(clientId: UUID().uuidString)
+        } throws: { error in
+            guard let jwtError = error as? JWTError else { return false }
+            return jwtError.errorType == .claimVerificationFailure
+                && jwtError.failedClaim is AuthorizedPartyClaim
+                && (jwtError.failedClaim as? AuthorizedPartyClaim)?.value == clientId
+        }
+    }
+    
+    @Test("Test Auth Time Claim")
+    func authTimeClaim() async throws {
+        let now = Date()
+        let authTime = AuthTimeClaim(value: now)
+        
+        #expect(throws: Never.self) {
+            try authTime.verifyAuthTime(within: 60)
+        }
+        
+        let pastAuthTime = AuthTimeClaim(value: now.addingTimeInterval(-120))
+        #expect {
+            try pastAuthTime.verifyAuthTime(within: 60)
+        } throws: { error in
+            guard let jwtError = error as? JWTError else { return false }
+            return jwtError.errorType == .claimVerificationFailure
+                && jwtError.failedClaim is AuthTimeClaim
+        }
+    }
 }
