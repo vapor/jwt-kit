@@ -1,7 +1,6 @@
 import JWTKit
 import Testing
 import X509
-import XCTest
 
 #if !canImport(Darwin)
     import FoundationEssentials
@@ -77,6 +76,24 @@ struct JWTKitTests {
         #expect(test.name == "John Doe")
         #expect(test.sub.value == "1234567890")
         #expect(test.admin == true)
+    }
+
+    // https://github.com/vapor/jwt-kit/issues/213
+    @Test("Parse corrupt tokens")
+    func parseCorruptToken() throws {
+        let parser = DefaultJWTParser()
+
+        // This token was created on jwt.io and is non-UTF-8 but still valid
+        let corruptParsableToken =
+            "eyJhbGciOiJIUzI1NiIsInR577-9IjoiSldUIn0.eyJleHAiOjE3MzExMDkyNzkuNDIwMDM3LCJzdWIiOiJoZWxsbyIsIm5hbWUiOiJCb2IiLCJhZG1pbiI6dHJ1ZX0.vvz-_LD_uz1K_BrxzbOWfzpOiS4hRvDztSbGiGlVujs"
+        _ = try parser.parse([UInt8](corruptParsableToken.utf8), as: TestPayload.self)
+
+        // This token was created by us but has been tampered with, so it's non-UTF-8 and invalid
+        let corruptCrashyToken =
+            "eyJhbGciOiJIUzI1NiIsInR5xCI6IkpXVCJ9.eyJleHAiOjE3MzExMDkyNzkuNDIwMDM3LCJmbGFnIjp0cnVlLCJzdWIiOiJoZWxsbyJ9.iFOMv8ms0ONccGisQlzEYVe90goc3TwVD_QyztGwdCE"
+        #expect(throws: JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded")) {
+            _ = try parser.parse([UInt8](corruptCrashyToken.utf8), as: TestPayload.self)
+        }
     }
 
     @Test("Test Expiration")
@@ -491,8 +508,8 @@ struct JWTKitTests {
         let token = try await keyCollection.sign(payload, header: customFields)
 
         let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
-        let foo = try XCTUnwrap(parsed.header.foo?.asString)
-        let baz = try XCTUnwrap(parsed.header.baz?.asInt)
+        let foo = try #require(parsed.header.foo?.asString)
+        let baz = try #require(parsed.header.baz?.asInt)
         #expect(foo == "bar")
         #expect(baz == 42)
 
@@ -507,12 +524,11 @@ struct JWTKitTests {
             """
 
         let jsonDecoder = JSONDecoder()
-        XCTAssertEqual(
-            try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader),
-            try jsonDecoder.decode(
-                [String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!
-            )
+        let decodedFields = try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader)
+        let decodedJsonFields = try jsonDecoder.decode(
+            [String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!
         )
+        #expect(decodedFields == decodedJsonFields)
     }
 
     @Test("Test Custom Header Fields")
@@ -742,11 +758,11 @@ struct JWTKitTests {
 
     @Test("Test JWT Error Description")
     func jwtErrorDescription() {
-        XCTAssertEqual(
+        #expect(
             JWTError.claimVerificationFailure(
                 failedClaim: ExpirationClaim(value: .init(timeIntervalSince1970: 1)), reason: "test"
-            ).description,
-            "JWTKitError(errorType: claimVerificationFailure, failedClaim: JWTKit.ExpirationClaim(value: 1970-01-01 00:00:01 +0000), reason: \"test\")"
+            ).description
+                == "JWTKitError(errorType: claimVerificationFailure, failedClaim: JWTKit.ExpirationClaim(value: 1970-01-01 00:00:01 +0000), reason: \"test\")"
         )
         #expect(
             JWTError.signingAlgorithmFailure(DummyError.dummy).description
@@ -789,9 +805,9 @@ struct JWTKitTests {
             JWTError.invalidHeaderField(reason: "test").description
                 == "JWTKitError(errorType: invalidHeaderField, reason: \"test\")"
         )
-        XCTAssertEqual(
-            JWTError.generic(identifier: "id", reason: "test").description,
-            "JWTKitError(errorType: generic, reason: \"test\")"
+        #expect(
+            JWTError.generic(identifier: "id", reason: "test").description
+                == "JWTKitError(errorType: generic, reason: \"test\")"
         )
     }
 
@@ -807,7 +823,7 @@ struct JWTKitTests {
         header.remove("field1")
 
         #expect(header.fields.count == 1)
-        XCTAssertNil(header.field1)
+        #expect(header.field1 == nil)
         #expect(header.field2 == .string("value2"))
     }
 }
