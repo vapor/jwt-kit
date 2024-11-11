@@ -273,9 +273,8 @@ struct ECDSATests {
         // Sign the message with the initial private key
         let signature = try await keys.getKey(for: "initial").sign(message)
 
-        // Extract the EC parameters and create a public key from it
-        let params = ec.parameters!
-        try await keys.add(ecdsa: ES256PublicKey(parameters: params), kid: "params")
+        // Extract the EC coordinates and create a public key from them
+        try await keys.add(ecdsa: ES256PublicKey(coordinates: ec.coordinates), kid: "params")
 
         // Verify the signature using the public key created from the parameters
         #expect(try await keys.getKey(for: "params").verify(signature, signs: message))
@@ -295,9 +294,8 @@ struct ECDSATests {
         // Sign the message with the initial private key
         let signature = try await keys.getKey(for: "initial").sign(message)
 
-        // Extract the EC parameters and create a public key from it
-        let params = ec.parameters!
-        try await keys.add(ecdsa: ES384PublicKey(parameters: params), kid: "params")
+        // Extract the EC coordinates and create a public key from them
+        try await keys.add(ecdsa: ES384PublicKey(coordinates: ec.coordinates), kid: "params")
 
         // Verify the signature using the public key created from the parameters
         #expect(try await keys.getKey(for: "params").verify(signature, signs: message))
@@ -317,15 +315,36 @@ struct ECDSATests {
         // Sign the message with the initial private key
         let signature = try await keys.getKey(for: "initial").sign(message)
 
-        // Extract the EC parameters and create a public key from it
-        let params = ec.parameters!
-        try await keys.add(ecdsa: ES512PublicKey(parameters: params), kid: "params")
+        // Extract the EC coordinates and create a public key from them
+        try await keys.add(ecdsa: ES512PublicKey(coordinates: ec.coordinates), kid: "params")
 
         // Verify the signature using the public key created from the parameters
         #expect(try await keys.getKey(for: "params").verify(signature, signs: message))
 
         // Ensure the curve is p521
         #expect(ec.curve == .p521)
+    }
+
+    @Test("Generate JWK from ECDSA Public Key")
+    func generateJWKFromECDSAPublicKey() async throws {
+        let key = try ES256PublicKey(pem: ecdsaPublicKey)
+        let jwkString = try key.toJWKRepresentation().toJSONString()
+        
+        let dict = try JSONSerialization.jsonObject(with: jwkString.data(using: .utf8)!, options: []) as! [String: Any]
+        #expect(dict["kty"] as? String == "EC")
+        #expect(dict["crv"] as? String == "P-256")
+        #expect(dict["alg"] as? String == "ES256")
+        #expect(dict["x"] as? String == key.coordinates.x)
+        #expect(dict["y"] as? String == key.coordinates.y)
+        
+        let jwkData = try key.toJWKRepresentation().toJSONData()
+        let dict2 = try JSONSerialization.jsonObject(with: jwkData, options: []) as! [String: Any]
+        
+        #expect(dict2["kty"] as? String == "EC")
+        #expect(dict2["crv"] as? String == "P-256")
+        #expect(dict2["alg"] as? String == "ES256")
+        #expect(dict2["x"] as? String == key.coordinates.x)
+        #expect(dict2["y"] as? String == key.coordinates.y)
     }
 }
 
