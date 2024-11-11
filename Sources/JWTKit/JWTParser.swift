@@ -60,7 +60,7 @@ public struct DefaultJWTParser: JWTParser {
         let signature: Data
 
         func isUTF8(_ bytes: [UInt8]) -> Bool {
-            bytes.allSatisfy { $0 < 128 }
+            String(bytes: bytes, encoding: .utf8) != nil
         }
 
         let headerBytes = encodedHeader.base64URLDecodedBytes()
