@@ -16,7 +16,8 @@ extension JWTParser {
         header: ArraySlice<UInt8>, payload: ArraySlice<UInt8>, signature: ArraySlice<UInt8>
     ) {
         let tokenParts = token.copyBytes().split(
-            separator: .period, omittingEmptySubsequences: false)
+            separator: .period, omittingEmptySubsequences: false
+        )
 
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken(reason: "Token is not split in 3 parts")
@@ -58,9 +59,20 @@ public struct DefaultJWTParser: JWTParser {
         let payload: Payload
         let signature: Data
 
+        func isUTF8(_ bytes: [UInt8]) -> Bool {
+            bytes.allSatisfy { $0 < 128 }
+        }
+
+        let headerBytes = encodedHeader.base64URLDecodedBytes()
+        let payloadBytes = encodedPayload.base64URLDecodedBytes()
+
+        guard isUTF8(headerBytes) && isUTF8(payloadBytes) else {
+            throw JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded.")
+        }
+
         do {
-            header = try jsonDecoder.decode(JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes()))
-            payload = try jsonDecoder.decode(Payload.self, from: .init(encodedPayload.base64URLDecodedBytes()))
+            header = try jsonDecoder.decode(JWTHeader.self, from: .init(headerBytes))
+            payload = try jsonDecoder.decode(Payload.self, from: .init(payloadBytes))
             signature = Data(encodedSignature.base64URLDecodedBytes())
         } catch {
             throw JWTError.malformedToken(reason: "Couldn't decode JWT with error: \(String(describing: error))")

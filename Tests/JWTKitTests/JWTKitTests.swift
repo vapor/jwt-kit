@@ -79,6 +79,27 @@ struct JWTKitTests {
         #expect(test.admin == true)
     }
 
+    // https://github.com/vapor/jwt-kit/issues/213
+    @Test("Parse corrupt tokens")
+    func parseCorruptToken() throws {
+        // This token was created on jwt.io and is non-UTF-8 but still valid
+        let corruptParsableToken =
+            "eyJhbGciOiJIUzI1NiIsInR577-9IjoiSldUIn0.eyJleHAiOjE3MzExMDkyNzkuNDIwMDM3LCJzdWIiOiJoZWxsbyIsIm5hbWUiOiJCb2IiLCJhZG1pbiI6dHJ1ZX0.vvz-_LD_uz1K_BrxzbOWfzpOiS4hRvDztSbGiGlVujs"
+
+        let parser = DefaultJWTParser()
+        #expect(throws: JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded")) {
+            _ = try parser.parse([UInt8](corruptParsableToken.utf8), as: TestPayload.self)
+        }
+
+        // This token was created by us but has been tampered with, so it's non-UTF-8 and invalid
+        let corruptCrashyToken =
+            "eyJhbGciOiJIUzI1NiIsInR5xCI6IkpXVCJ9.eyJleHAiOjE3MzExMDkyNzkuNDIwMDM3LCJmbGFnIjp0cnVlLCJzdWIiOiJoZWxsbyJ9.iFOMv8ms0ONccGisQlzEYVe90goc3TwVD_QyztGwdCE"
+
+        #expect(throws: JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded")) {
+            _ = try parser.parse([UInt8](corruptCrashyToken.utf8), as: TestPayload.self)
+        }
+    }
+
     @Test("Test Expiration")
     func expired() async throws {
         let data =
@@ -736,12 +757,12 @@ struct JWTKitTests {
         #expect(unverified == payload)
     }
 
-    enum DummyError: Error {
-        case dummy
-    }
-
     @Test("Test JWT Error Description")
     func jwtErrorDescription() {
+        enum DummyError: Error {
+            case dummy
+        }
+
         XCTAssertEqual(
             JWTError.claimVerificationFailure(
                 failedClaim: ExpirationClaim(value: .init(timeIntervalSince1970: 1)), reason: "test"
