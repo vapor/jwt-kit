@@ -22,12 +22,12 @@ jobs:
       - name: Run benchmarks for PR branch
         continue-on-error: true
         run: |
-          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update pull_request
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update pull_request --no-progress --quiet
       - name: Run benchmarks for 'main' branch
         run: |
           git stash
           git checkout main
-          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update main
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update main --no-progress --quiet
       - name: Compare benchmarks
         continue-on-error: true
         run: |
