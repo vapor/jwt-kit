@@ -2,18 +2,8 @@ import Benchmark
 import Foundation
 import JWTKit
 
-let customThresholds = BenchmarkThresholds(
-    relative: [.p25: 15.0, .p50: 15.0, .p75: 15.0, .p90: 15.0, .p99: 15.0],
-    absolute: [:]
-)
-
 let benchmarks = {
-    Benchmark(
-        "ES256",
-        configuration: .init(
-            thresholds: [.peakMemoryResident: customThresholds]
-        )
-    ) { benchmark in
+    Benchmark("ES256") { benchmark in
         let key = ES256PrivateKey()
         let keyCollection = JWTKeyCollection()
         keyCollection.add(ecdsa: key)
@@ -22,12 +12,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark(
-        "RSA",
-        configuration: .init(
-            thresholds: [.peakMemoryResident: customThresholds]
-        )
-    ) { benchmark in
+    Benchmark("RSA") { benchmark in
         let key = try Insecure.RSA.PrivateKey(pem: rsaPrivateKey)
         let keyCollection = JWTKeyCollection()
         keyCollection.add(rsa: key, digestAlgorithm: .sha256)
@@ -36,12 +21,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark(
-        "EdDSA",
-        configuration: .init(
-            thresholds: [.peakMemoryResident: customThresholds]
-        )
-    ) { benchmark in
+    Benchmark("EdDSA") { benchmark in
         let key = try EdDSA.PrivateKey()
         let keyCollection = JWTKeyCollection()
         keyCollection.add(eddsa: key)
