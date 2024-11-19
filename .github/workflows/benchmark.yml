@@ -10,7 +10,7 @@ on:
 
 jobs:
   benchmark-delta-linux:
-    if: github.event.review.state == 'approved' || github.event_name == 'push'
+    if: github.event.review.state == 'approved'
     runs-on:
       - runs-on=${{ github.run_id }}
       - runner=2cpu-linux-arm64
