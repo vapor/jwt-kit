@@ -1,5 +1,6 @@
 import Foundation
 @_implementationOnly import CJWTKitBoringSSL
+import Crypto
 
 public final class ECDSAKey: OpenSSLKey {
     
@@ -11,6 +12,7 @@ public final class ECDSAKey: OpenSSLKey {
         case ed448 = "Ed448"
     }
     
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PrivateKey(), ES384PrivateKey(), or ES512PrivateKey() instead.")
     public static func generate(curve: Curve = .p521) throws -> ECDSAKey {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
@@ -34,6 +36,7 @@ public final class ECDSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PublicKey(certificate:), ES384PublicKey(certificate:), or ES512PublicKey(certificate:) instead. Note that more interfaces for importing keys is available once you update fully to v5.")
     public static func certificate(pem string: String) throws -> ECDSAKey {
         try self.certificate(pem: [UInt8](string.utf8))
     }
@@ -52,6 +55,7 @@ public final class ECDSAKey: OpenSSLKey {
     ///
     /// - parameters:
     ///     - pem: Contents of pem file.
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PublicKey(certificate:), ES384PublicKey(certificate:), or ES512PublicKey(certificate:) instead. Note that more interfaces for importing keys is available once you update fully to v5.")
     public static func certificate<Data>(pem data: Data) throws -> ECDSAKey
         where Data: DataProtocol
     {
@@ -68,10 +72,12 @@ public final class ECDSAKey: OpenSSLKey {
         return self.init(c)
     }
     
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PublicKey(pem:), ES384PublicKey(pem:), or ES512PublicKey(pem:) instead. Note that more interfaces for importing keys is available once you update fully to v5.")
     public static func `public`(pem string: String) throws -> ECDSAKey {
         try .public(pem: [UInt8](string.utf8))
     }
 
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PublicKey(pem:), ES384PublicKey(pem:), or ES512PublicKey(pem:) instead. Note that more interfaces for importing keys is available once you update fully to v5.")
     public static func `public`<Data>(pem data: Data) throws -> ECDSAKey
         where Data: DataProtocol
     {
@@ -81,10 +87,12 @@ public final class ECDSAKey: OpenSSLKey {
         return self.init(c)
     }
 
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PrivateKey(pem:), ES384PrivateKey(pem:), or ES512PrivateKey(pem:) instead. Note that more interfaces for importing keys is available once you update fully to v5.")
     public static func `private`(pem string: String) throws -> ECDSAKey {
         try .private(pem: [UInt8](string.utf8))
     }
 
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PrivateKey(pem:), ES384PrivateKey(pem:), or ES512PrivateKey(pem:) instead. Note that more interfaces for importing keys is available once you update fully to v5.")
     public static func `private`<Data>(pem data: Data) throws -> ECDSAKey
         where Data: DataProtocol
     {
@@ -100,6 +108,7 @@ public final class ECDSAKey: OpenSSLKey {
         self.c = c
     }
     
+    @available(*, deprecated, message: "Unavailable in v5. Please use ES256PublicKey(parameters:), ES384PublicKey(parameters:), or ES512PublicKey(parameters:) instead. Note that more interfaces for importing private keys is available once you update fully to v5.")
     public convenience init(parameters: Parameters, curve: Curve = .p521, privateKey: String? = nil) throws {
         guard let c = CJWTKitBoringSSL_EC_KEY_new_by_curve_name(curve.cName) else {
             throw JWTError.signingAlgorithmFailure(ECDSAError.newKeyByCurveFailure)
@@ -188,5 +197,220 @@ extension ECDSAKey.Curve {
         default:
             return nil
         }
+    }
+}
+
+#if compiler(>=6)
+public protocol ECDSACurveType: Sendable {
+    static var curve: ECDSAKey.Curve { get }
+}
+
+extension P256: ECDSACurveType, @unchecked @retroactive Sendable {
+    static public var curve: ECDSAKey.Curve { .p256 }
+}
+
+extension P384: ECDSACurveType, @unchecked @retroactive Sendable {
+    static public var curve: ECDSAKey.Curve { .p384 }
+}
+
+extension P521: ECDSACurveType, @unchecked @retroactive Sendable {
+    static public var curve: ECDSAKey.Curve { .p521 }
+}
+#else
+public protocol ECDSACurveType {
+    static var curve: ECDSAKey.Curve { get }
+}
+
+extension P256: ECDSACurveType {
+    static public var curve: ECDSAKey.Curve { .p256 }
+}
+
+extension P384: ECDSACurveType {
+    static public var curve: ECDSAKey.Curve { .p384 }
+}
+
+extension P521: ECDSACurveType {
+    static public var curve: ECDSAKey.Curve { .p521 }
+}
+#endif
+
+public typealias ES256PublicKey = ECDSA.PublicKey<P256>
+public typealias ES256PrivateKey = ECDSA.PrivateKey<P256>
+
+public typealias ES384PublicKey = ECDSA.PublicKey<P384>
+public typealias ES384PrivateKey = ECDSA.PrivateKey<P384>
+
+public typealias ES512PublicKey = ECDSA.PublicKey<P521>
+public typealias ES512PrivateKey = ECDSA.PrivateKey<P521>
+
+public enum ECDSA {
+    /// ECDSA.PublicKey was introduced in v5 and replaces ``ECDSAKey``.
+    ///
+    /// - Note: Please migrate over to ``ECDSA/PublicKey`` before updating to v5, though if you plan on remaining on v4, ``ECDSAKey`` can continue to be used.
+    public struct PublicKey<Curve: ECDSACurveType> {
+        let key: ECDSAKey
+        init(key: ECDSAKey) { self.key = key }
+        
+        public var curve: ECDSAKey.Curve? { key.curve }
+        public var parameters: ECDSAKey.Parameters? { key.parameters }
+
+        /// Creates an ``ECDSA.PublicKey`` instance from a PEM encoded certificate string.
+        ///
+        /// - Parameter pem: The PEM encoded certificate string.
+        /// - Throws: If there is a problem parsing the certificate or deriving the public key.
+        /// - Returns: A new ``ECDSAKey`` instance with the public key from the certificate.
+        public init(certificate pem: String) throws {
+            key = try ECDSAKey.certificate(pem: pem)
+        }
+
+        /// Creates an ``ECDSA.PublicKey`` instance from a PEM encoded certificate data.
+        ///
+        /// - Parameter pem: The PEM encoded certificate data.
+        /// - Throws: If there is a problem parsing the certificate or deriving the public key.
+        /// - Returns: A new ``ECDSA.PublicKey`` instance with the public key from the certificate.
+        public init<Data: DataProtocol>(certificate pem: Data) throws {
+            key = try ECDSAKey.certificate(pem: pem)
+        }
+
+        /// Creates an ``ECDSA.PublicKey`` instance from a PEM encoded public key string.
+        ///
+        /// - Parameter pem: The PEM encoded public key string.
+        /// - Throws: If there is a problem parsing the public key.
+        /// - Returns: A new ``ECDSA.PublicKey`` instance with the public key from the certificate.
+        public init(pem string: String) throws {
+            key = try ECDSAKey.public(pem: string)
+        }
+
+        /// Creates an ``ECDSA.PublicKey`` instance from a PEM encoded public key data.
+        ///
+        /// - Parameter pem: The PEM encoded public key data.
+        /// - Throws: If there is a problem parsing the public key.
+        /// - Returns: A new ``ECDSA.PublicKey`` instance with the public key from the certificate.
+        public init<Data: DataProtocol>(pem data: Data) throws {
+            key = try ECDSAKey.public(pem: data)
+        }
+
+        /// Initializes a new ``ECDSA.PublicKey` with ECDSA parameters.
+        ///
+        /// - Parameters:
+        ///   - parameters: The ``ECDSAParameters`` tuple containing the x and y coordinates of the public key. These coordinates should be base64 URL encoded strings.
+        ///
+        /// - Throws:
+        ///   - ``JWTError/generic`` with the identifier `ecCoordinates` if the x and y coordinates from `parameters` cannot be interpreted as base64 encoded data.
+        ///   - ``JWTError/generic`` with the identifier `ecPrivateKey` if the provided `privateKey` is non-nil but cannot be interpreted as a valid `PrivateKey`.
+        ///
+        /// - Note:
+        ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
+        public init(parameters: ECDSAKey.Parameters) throws {
+            key = try ECDSAKey(parameters: parameters, curve: Curve.curve, privateKey: nil)
+        }
+    }
+
+    /// ECDSA.PrivateKey was introduced in v5 and replaces ``ECDSAKey``.
+    ///
+    /// - Note: Please migrate over to ``ECDSA/PrivateKey`` before updating to v5, though if you plan on remaining on v4, ``ECDSAKey`` can continue to be used.
+    public struct PrivateKey<Curve: ECDSACurveType> {
+        let key: ECDSAKey
+        init(key: ECDSAKey) { self.key = key }
+        
+        public var curve: ECDSAKey.Curve? { key.curve }
+        public var parameters: ECDSAKey.Parameters? { key.parameters }
+
+        /// Creates an ``ECDSA.PrivateKey`` instance from a PEM encoded private key string.
+        ///
+        /// - Parameter pem: The PEM encoded private key string.
+        /// - Throws: If there is a problem parsing the private key.
+        /// - Returns: A new ``ECDSA.PrivateKey`` instance with the private key.
+        public init(pem string: String) throws {
+            key = try ECDSAKey.public(pem: string)
+        }
+
+        /// Creates an ``ECDSA.PrivateKey`` instance from a PEM encoded private key data.
+        ///
+        /// - Parameter pem: The PEM encoded private key data.
+        /// - Throws: If there is a problem parsing the private key.
+        /// - Returns: A new ``ECDSA.PrivateKey`` instance with the private key.
+        public init<Data: DataProtocol>(pem data: Data) throws {
+            key = try ECDSAKey.public(pem: data)
+        }
+
+        /// Generates a new ECDSA key.
+        ///
+        /// - Returns: A new ``ECDSA.PrivateKey`` instance with the generated key.
+        public init() {
+            key = try! ECDSAKey.generate(curve: Curve.curve)
+        }
+    }
+}
+
+extension ECDSA.PublicKey<P256> {
+    public init(backing: Curve.Signing.PublicKey) throws {
+        let representation = backing.rawRepresentation
+        try self.init(parameters: ECDSAKey.Parameters(
+            x: representation.prefix(representation.count/2).base64URLEncodedString(),
+            y: representation.suffix(representation.count/2).base64URLEncodedString()
+        ))
+    }
+}
+
+extension ECDSA.PublicKey<P384> {
+    public init(backing: Curve.Signing.PublicKey) throws {
+        let representation = backing.rawRepresentation
+        try self.init(parameters: ECDSAKey.Parameters(
+            x: representation.prefix(representation.count/2).base64URLEncodedString(),
+            y: representation.suffix(representation.count/2).base64URLEncodedString()
+        ))
+    }
+}
+
+extension ECDSA.PublicKey where Curve == P521 {
+    public init(backing: Curve.Signing.PublicKey) throws {
+        let representation = backing.rawRepresentation
+        try self.init(parameters: ECDSAKey.Parameters(
+            x: representation.prefix(representation.count/2).base64URLEncodedString(),
+            y: representation.suffix(representation.count/2).base64URLEncodedString()
+        ))
+    }
+}
+
+extension ECDSA.PrivateKey<P256> {
+    public init(backing: Curve.Signing.PrivateKey) throws {
+        let representation = backing.publicKey.rawRepresentation
+        try self.init(key: ECDSAKey(
+            parameters: ECDSAKey.Parameters(
+                x: representation.prefix(representation.count/2).base64URLEncodedString(),
+                y: representation.suffix(representation.count/2).base64URLEncodedString()
+            ),
+            curve: Curve.curve,
+            privateKey: backing.rawRepresentation.base64URLEncodedString()
+        ))
+    }
+}
+
+extension ECDSA.PrivateKey<P384> {
+    public init(backing: Curve.Signing.PrivateKey) throws {
+        let representation = backing.publicKey.rawRepresentation
+        try self.init(key: ECDSAKey(
+            parameters: ECDSAKey.Parameters(
+                x: representation.prefix(representation.count/2).base64URLEncodedString(),
+                y: representation.suffix(representation.count/2).base64URLEncodedString()
+            ),
+            curve: Curve.curve,
+            privateKey: backing.rawRepresentation.base64URLEncodedString()
+        ))
+    }
+}
+
+extension ECDSA.PrivateKey<P521> {
+    public init(backing: Curve.Signing.PrivateKey) throws {
+        let representation = backing.publicKey.rawRepresentation
+        try self.init(key: ECDSAKey(
+            parameters: ECDSAKey.Parameters(
+                x: representation.prefix(representation.count/2).base64URLEncodedString(),
+                y: representation.suffix(representation.count/2).base64URLEncodedString()
+            ),
+            curve: Curve.curve,
+            privateKey: backing.rawRepresentation.base64URLEncodedString()
+        ))
     }
 }

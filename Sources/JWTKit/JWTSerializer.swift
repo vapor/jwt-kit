@@ -9,7 +9,7 @@ struct JWTSerializer {
         cty: String? = nil,
         jsonEncoder: any JWTJSONEncoder
     ) throws -> String
-        where Payload: JWTPayload
+        where Payload: Encodable
     {
         // encode header, copying header struct to mutate alg
         var header = JWTHeader()

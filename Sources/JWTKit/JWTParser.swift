@@ -30,6 +30,13 @@ struct JWTParser {
             .decode(Payload.self, from: .init(self.encodedPayload.base64URLDecodedBytes()))
     }
 
+    func payload<Payload>(as payload: Payload.Type, jsonDecoder: any JWTJSONDecoder) throws -> Payload
+        where Payload: AsyncJWTPayload
+    {
+        try jsonDecoder
+            .decode(Payload.self, from: .init(self.encodedPayload.base64URLDecodedBytes()))
+    }
+
     func verify(using signer: JWTSigner) throws {
         guard try signer.algorithm.verify(self.signature, signs: self.message) else {
             throw JWTError.signatureVerifictionFailed

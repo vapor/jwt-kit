@@ -8,6 +8,10 @@ extension DataProtocol {
     func base64URLEncodedBytes() -> [UInt8] {
         return Data(self.copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
     }
+    
+    func base64URLEncodedString() -> String {
+        String(decoding: Data(self.copyBytes()).base64EncodedData().base64URLEscaped(), as: UTF8.self)
+    }
 }
 
 /// MARK: Data Escape
