@@ -7,7 +7,8 @@ on:
     branches: [ main ]
     types: [synchronize]
     paths:
-      - '**/*.swift'
+      - 'Sources/*.swift'
+      - .github/workflows/benchmark.yml 
 
 jobs:
   benchmark-delta-linux:
