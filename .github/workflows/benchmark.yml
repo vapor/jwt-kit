@@ -43,7 +43,7 @@ jobs:
       - name: Get formatted date
         id: get-date
         run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
-      - uses: thollander/actions-comment-pull-request@v2
+      - uses: thollander/actions-comment-pull-request@v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: ${{ format('[PR benchmark comparison with main on ubuntu-latest run at {0}]({1}/{2}/actions/runs/{3})', steps.get-date.outputs.date, github.server_url, github.repository, github.run_id) }}
