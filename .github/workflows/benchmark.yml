@@ -1,0 +1,50 @@
+name: Benchmark PR vs main
+on:
+  workflow_dispatch:
+  pull_request_review:
+    types: [submitted]
+  pull_request:
+    branches: [ main ]
+    types: [synchronize]
+    paths:
+      - 'Sources/*.swift'
+      - .github/workflows/benchmark.yml 
+
+jobs:
+  benchmark-delta-linux:
+    if: github.event.review.state == 'approved'
+    runs-on:
+      - runs-on=${{ github.run_id }}
+      - runner=2cpu-linux-arm64
+    container: swift:jammy
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: jemalloc dependency
+        run: apt-get update && apt-get install -y libjemalloc-dev
+      - name: Fix Git config
+        run: |
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+      - name: Run benchmarks for PR branch
+        continue-on-error: true
+        run: |
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update pull_request --no-progress --quiet
+      - name: Run benchmarks for 'main' branch
+        run: |
+          git stash
+          git checkout main
+          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update main --no-progress --quiet
+      - name: Compare benchmarks
+        continue-on-error: true
+        run: |
+          date >> "${GITHUB_STEP_SUMMARY}"
+          swift package -c release --package-path Benchmarks benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
+      - name: Get formatted date
+        id: get-date
+        run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+      - uses: thollander/actions-comment-pull-request@v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ format('[PR benchmark comparison with main on ubuntu-latest run at {0}]({1}/{2}/actions/runs/{3})', steps.get-date.outputs.date, github.server_url, github.repository, github.run_id) }}
+          comment_tag: 'PR benchmark comparison Linux'
