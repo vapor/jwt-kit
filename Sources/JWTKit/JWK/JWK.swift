@@ -17,7 +17,31 @@ public struct JWK: Codable, Sendable {
     /// The `kid` (key ID) parameter is used to identify a specific key,
     /// often in a set of keys.
     public var keyIdentifier: JWKIdentifier?
-
+    
+    /// The `use` parameter identifies the intended use of the key.
+    public var use: Usage?
+    
+    /// The `key_ops` (key operations) parameter identifies the operation(s)
+    /// for which the key is intended to be used.
+    public var keyOperations: [KeyOperation]?
+    
+    /// The `x5u` (X.509 URL) parameter is a URI that refers to a resource
+    /// for an X.509 public key certificate or certificate chain.
+    public var x509URL: String?
+    
+    /// The `x5c` (X.509 certificate chain) parameter contains a chain of one
+    /// or more PKIX certificates.
+    public var x509CertificateChain: [String]?
+    
+    /// The `x5t` (X.509 certificate SHA-1 thumbprint) parameter is a base64url-encoded
+    /// SHA-1 thumbprint (a.k.a. digest) of the DER encoding of an X.509 certificate.
+    public var x509CertificateSHA1Thumbprint: String?
+    
+    /// The `x5t#S256` (X.509 certificate SHA-256 thumbprint) parameter is a
+    /// base64url-encoded SHA-256 thumbprint (a.k.a. digest) of the DER encoding
+    /// of an X.509 certificate.
+    public var x509CertificateSHA256Thumbprint: String?
+    
     // MARK: RSA keys
 
     // RSA modulus as a Base64 URL encoded string.
@@ -58,6 +82,12 @@ public struct JWK: Codable, Sendable {
         case curve = "crv"
         case x
         case y
+        case use = "use"
+        case keyOperations = "key_ops"
+        case x509URL = "x5u"
+        case x509CertificateChain = "x5c"
+        case x509CertificateSHA1Thumbprint = "x5t"
+        case x509CertificateSHA256Thumbprint = "x5t#S256"
     }
 
     public static func rsa(
@@ -118,10 +148,16 @@ public struct JWK: Codable, Sendable {
         self = try JSONDecoder().decode(JWK.self, from: Data(json.utf8))
     }
 
-    private init(
+    init(
         keyType: KeyType,
         algorithm: Algorithm? = nil,
         keyIdentifier: JWKIdentifier? = nil,
+        use: JWK.Usage? = nil,
+        keyOperations: [JWK.KeyOperation]? = nil,
+        x509URL: String? = nil,
+        x509CertificateChain: [String]? = nil,
+        x509CertificateSHA1Thumbprint: String? = nil,
+        x509CertificateSHA256Thumbprint: String? = nil,
         modulus: String? = nil,
         exponent: String? = nil,
         privateExponent: String? = nil,
@@ -134,6 +170,12 @@ public struct JWK: Codable, Sendable {
         self.keyType = keyType
         self.algorithm = algorithm
         self.keyIdentifier = keyIdentifier
+        self.use = use
+        self.keyOperations = keyOperations
+        self.x509URL = x509URL
+        self.x509CertificateChain = x509CertificateChain
+        self.x509CertificateSHA1Thumbprint = x509CertificateSHA1Thumbprint
+        self.x509CertificateSHA256Thumbprint = x509CertificateSHA256Thumbprint
         self.modulus = modulus
         self.exponent = exponent
         self.privateExponent = privateExponent
@@ -142,90 +184,6 @@ public struct JWK: Codable, Sendable {
         self.x = x
         self.y = y
         self.curve = curve
-    }
-}
-
-extension JWK {
-    /// Supported `kty` key types.
-    public struct KeyType: Codable, RawRepresentable, Equatable, Sendable {
-        enum Backing: String, Codable {
-            case rsa = "RSA"
-            case ecdsa = "EC"
-            case octetKeyPair = "OKP"
-        }
-
-        let backing: Backing
-
-        public var rawValue: String { self.backing.rawValue }
-
-        public static let rsa = Self(backing: .rsa)
-        public static let ecdsa = Self(backing: .ecdsa)
-        public static let octetKeyPair = Self(backing: .octetKeyPair)
-
-        init(backing: Backing) {
-            self.backing = backing
-        }
-
-        public init?(rawValue: String) {
-            guard let backing = Backing(rawValue: rawValue) else {
-                return nil
-            }
-            self.init(backing: backing)
-        }
-    }
-}
-
-extension JWK {
-    /// Supported `alg` algorithms
-    public struct Algorithm: Codable, RawRepresentable, Equatable, Sendable {
-        enum Backing: String, Codable {
-            case rs256 = "RS256"
-            case rs384 = "RS384"
-            case rs512 = "RS512"
-            case ps256 = "PS256"
-            case ps384 = "PS384"
-            case ps512 = "PS512"
-            case es256 = "ES256"
-            case es384 = "ES384"
-            case es512 = "ES512"
-            case eddsa = "EdDSA"
-        }
-
-        let backing: Backing
-
-        public var rawValue: String { self.backing.rawValue }
-
-        /// RSA with SHA256
-        public static let rs256 = Self(backing: .rs256)
-        /// RSA with SHA384
-        public static let rs384 = Self(backing: .rs384)
-        /// RSA with SHA512
-        public static let rs512 = Self(backing: .rs512)
-        /// RSA-PSS with SHA256
-        public static let ps256 = Self(backing: .ps256)
-        /// RSA-PSS with SHA384
-        public static let ps384 = Self(backing: .ps384)
-        /// RSA-PSS with SHA512
-        public static let ps512 = Self(backing: .ps512)
-        /// EC with SHA256
-        public static let es256 = Self(backing: .es256)
-        /// EC with SHA384
-        public static let es384 = Self(backing: .es384)
-        /// EC with SHA512
-        public static let es512 = Self(backing: .es512)
-        /// EdDSA
-        public static let eddsa = Self(backing: .eddsa)
-
-        init(backing: Backing) {
-            self.backing = backing
-        }
-
-        public init?(rawValue: String) {
-            guard let backing = Backing(rawValue: rawValue) else {
-                return nil
-            }
-            self.init(backing: backing)
-        }
     }
 }
 
@@ -246,10 +204,12 @@ extension JWK {
         }
 
         /// Represents an ECDSA curve.
-        public static func ecdsa(_ curve: ECDSACurve) -> Self { .init(.ecdsa(curve)) }
+        public static func ecdsa(_ curve: ECDSACurve) -> Self { .init(.ecdsa(curve))
+        }
 
         /// Represents an EdDSA curve.
-        public static func eddsa(_ curve: EdDSACurve) -> Self { .init(.eddsa(curve)) }
+        public static func eddsa(_ curve: EdDSACurve) -> Self { .init(.eddsa(curve))
+        }
 
         init(_ backing: Backing) {
             self.backing = backing
@@ -286,4 +246,3 @@ extension JWK {
         }
     }
 }
-    

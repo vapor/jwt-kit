@@ -1,6 +1,6 @@
 import Crypto
 
-extension ECDSA.PublicKey: JWKRepresentable {
+extension EdDSA.PublicKey: JWKRepresentable {
     public func toJWKRepresentation(
         keyIdentifier: JWKIdentifier? = nil,
         use: JWK.Usage? = nil,
@@ -10,16 +10,9 @@ extension ECDSA.PublicKey: JWKRepresentable {
         x509SHA1Thumbprint: String? = nil,
         x509SHA256Thumbprint: String? = nil
     ) -> JWK {
-        let algorithm: JWK.Algorithm =
-            switch self.curve {
-            case .p256: .es256
-            case .p384: .es384
-            case .p521: .es512
-            default: fatalError("Unsupported curve")
-            }
-        return .init(
-            keyType: .ecdsa,
-            algorithm: algorithm,
+        .init(
+            keyType: .octetKeyPair,
+            algorithm: .eddsa,
             keyIdentifier: keyIdentifier,
             use: use,
             keyOperations: keyOperations,
@@ -27,9 +20,8 @@ extension ECDSA.PublicKey: JWKRepresentable {
             x509CertificateChain: x509CertificateChain,
             x509CertificateSHA1Thumbprint: x509SHA1Thumbprint,
             x509CertificateSHA256Thumbprint: x509SHA256Thumbprint,
-            x: self.coordinates.x,
-            y: self.coordinates.y,
-            curve: .ecdsa(self.curve)
+            x: self.rawRepresentation.base64EncodedString(),
+            curve: .eddsa(self.curve)
         )
     }
 }

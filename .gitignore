@@ -10,3 +10,4 @@ Tests/LinuxMain.swift
 .benchmarkBaselines/
 Benchmarks/.benchmarkBaselines/
 x5c_test_certs
+.swift-format

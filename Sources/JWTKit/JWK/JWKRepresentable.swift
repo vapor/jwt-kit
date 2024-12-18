@@ -5,7 +5,15 @@
 #endif
 
 public protocol JWKRepresentable {
-    func toJWKRepresentation(kid: String?) -> JWK
+    func toJWKRepresentation(
+        keyIdentifier: JWKIdentifier?,
+        use: JWK.Usage?,
+        keyOperations: [JWK.KeyOperation]?,
+        x509URL: String?,
+        x509CertificateChain: [String]?,
+        x509SHA1Thumbprint: String?,
+        x509SHA256Thumbprint: String?
+    ) -> JWK
 }
 
 extension JWK {
