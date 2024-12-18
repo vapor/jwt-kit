@@ -101,19 +101,19 @@ extension JWK {
                 if let privateExponent = self.privateExponent {
                     return try ECDSASigner(key: ES256PrivateKey(key: privateExponent))
                 } else {
-                    return try ECDSASigner(key: ES256PublicKey(parameters: (x, y)))
+                    return try ECDSASigner(key: ES256PublicKey(coordinates: (x, y)))
                 }
             case .es384:
                 if let privateExponent = self.privateExponent {
                     return try ECDSASigner(key: ES384PrivateKey(key: privateExponent))
                 } else {
-                    return try ECDSASigner(key: ES384PublicKey(parameters: (x, y)))
+                    return try ECDSASigner(key: ES384PublicKey(coordinates: (x, y)))
                 }
             case .es512:
                 if let privateExponent = self.privateExponent {
                     return try ECDSASigner(key: ES512PrivateKey(key: privateExponent))
                 } else {
-                    return try ECDSASigner(key: ES512PublicKey(parameters: (x, y)))
+                    return try ECDSASigner(key: ES512PublicKey(coordinates: (x, y)))
                 }
             default:
                 return nil
