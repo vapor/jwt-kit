@@ -8,6 +8,7 @@ on:
     types: [synchronize]
     paths:
       - Sources/*.swift
+      - Benchmarks/*.swift
       - .github/workflows/benchmark.yml
 
 jobs:
