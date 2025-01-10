@@ -7,12 +7,13 @@ on:
     branches: [main]
     types: [synchronize]
     paths:
-      - "Sources/*.swift"
+      - Sources/*.swift
       - .github/workflows/benchmark.yml
 
 jobs:
   benchmark-vs-thresholds:
-    if: github.event_name == 'workflow_dispatch' || github.event.review.state == 'approved'
+    # Run the job only if it's a manual workflow dispatch, or if this event is a pull-request approval event, or if someone has rerun the job.
+    if: github.event_name == 'workflow_dispatch' || github.event.review.state == 'approved' || github.run_attempt > 1
 
     # https://runs-on.com/features/custom-runners/
     runs-on:
@@ -44,6 +45,7 @@ jobs:
       - name: Install jemalloc, curl, jq and zstd
         run: |
           set -eu
+
           apt-get update -y
           apt-get install -y libjemalloc-dev curl jq zstd
 
@@ -62,10 +64,11 @@ jobs:
             benchmark baseline update \
             '${{ github.head_ref || github.ref_name }}'
 
-      - name: Read Benchmark Result
+      - name: Read benchmark result
         id: read-benchmark
         run: |
           set -eu
+
           swift package -c release --disable-sandbox \
             --package-path Benchmarks \
             benchmark baseline read \
@@ -167,10 +170,7 @@ jobs:
           echo 'EOF' >> "${GITHUB_ENV}"
 
       - name: Output the comment as job summary
-        run: |
-          set -eu
-
-          echo '${{ env.PR_COMMENT }}' >> "${GITHUB_STEP_SUMMARY}"
+        run: echo '${{ env.PR_COMMENT }}' >> "${GITHUB_STEP_SUMMARY}"
 
       # There is a '<!-- benchmark ci tag. exit code: {some_number} -->' comment at the beginning of the benchamrk report comment.
       # The number in that comment is the exit code of the last benchmark run.
@@ -253,10 +253,8 @@ jobs:
             -d "$BODY_JSON" \
             "$ENDPOINT"
 
-      - name: Exit With Correct Status
+      - name: Exit with correct status
         run: |
-          set -eu
-
           EXIT_CODE='${{ steps.compare-benchmark.outputs.exit-status }}'
           echo "Previous exit code was: $EXIT_CODE"
           exit $EXIT_CODE
