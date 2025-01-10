@@ -11,8 +11,8 @@ ORGANIZATION="Vapor"
 ORGANIZATIONAL_UNIT="Engineering"
 EMAIL="admin@vapor.example.com"
 
-mkdir -p jwt_x5c_certs
-pushd jwt_x5c_certs
+mkdir -p x5c_test_certs
+pushd x5c_test_certs
 
 # Function to generate subject string
 generate_subject() {
@@ -59,7 +59,9 @@ openssl req -new -key expired_leaf_key.pem -out expired_leaf_csr.pem \
 openssl x509 -req -in expired_leaf_csr.pem \
     -CA intermediate_cert.pem -CAkey intermediate_key.pem \
     -CAcreateserial \
-    -out expired_leaf_cert.pem -days -1
+    -out expired_leaf_cert.pem \
+    -not_before 200101010000Z \
+    -not_after 200102010000Z
 
 rm -f intermediate_ext.txt
 popd
