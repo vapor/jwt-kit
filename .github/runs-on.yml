@@ -1,0 +1,2 @@
+# Use the runs-on.yml file in the vapor/ci repo.
+_extends: ci
