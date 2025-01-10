@@ -1,50 +1,261 @@
-name: Benchmark PR vs main
+name: benchmark
 on:
   workflow_dispatch:
   pull_request_review:
     types: [submitted]
   pull_request:
-    branches: [ main ]
+    branches: [main]
     types: [synchronize]
     paths:
-      - 'Sources/*.swift'
-      - .github/workflows/benchmark.yml 
+      - Sources/*.swift
+      - Benchmarks/*.swift
+      - .github/workflows/benchmark.yml
 
 jobs:
-  benchmark-delta-linux:
-    if: github.event.review.state == 'approved'
+  benchmark-vs-thresholds:
+    # Run the job only if it's a manual workflow dispatch, or if this event is a pull-request approval event, or if someone has rerun the job.
+    if: github.event_name == 'workflow_dispatch' || github.event.review.state == 'approved' || github.run_attempt > 1
+
+    # https://runs-on.com/features/custom-runners/
     runs-on:
-      - runs-on=${{ github.run_id }}
-      - runner=2cpu-linux-arm64
-    container: swift:jammy
+      labels:
+        - runs-on
+        - runner=2cpu-4ram
+        - run-id=${{ github.run_id }}
+
+    container: swift:noble
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      PR_COMMENT: null # will be populated later
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: jemalloc dependency
-        run: apt-get update && apt-get install -y libjemalloc-dev
-      - name: Fix Git config
+
+      - name: Configure git
+        run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
+      # jemalloc is a dependency of the Benchmarking package
+      # actions/cache will detect zstd and will become much faster.
+      - name: Install jemalloc, curl, jq and zstd
         run: |
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
-      - name: Run benchmarks for PR branch
-        continue-on-error: true
-        run: |
-          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update pull_request --no-progress --quiet
-      - name: Run benchmarks for 'main' branch
-        run: |
-          git stash
-          git checkout main
-          swift package -c release --package-path Benchmarks --disable-sandbox benchmark baseline update main --no-progress --quiet
-      - name: Compare benchmarks
-        continue-on-error: true
-        run: |
-          date >> "${GITHUB_STEP_SUMMARY}"
-          swift package -c release --package-path Benchmarks benchmark baseline check main pull_request --format markdown >> "${GITHUB_STEP_SUMMARY}"
-      - name: Get formatted date
-        id: get-date
-        run: echo "date=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
-      - uses: thollander/actions-comment-pull-request@v3
+          set -eu
+
+          apt-get update -y
+          apt-get install -y libjemalloc-dev curl jq zstd
+
+      - name: Restore .build
+        id: restore-cache
+        uses: runs-on/cache/restore@v4
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: ${{ format('[PR benchmark comparison with main on ubuntu-latest run at {0}]({1}/{2}/actions/runs/{3})', steps.get-date.outputs.date, github.server_url, github.repository, github.run_id) }}
-          comment_tag: 'PR benchmark comparison Linux'
+          path: Benchmarks/.build
+          key: "swiftpm-benchmark-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
+          restore-keys: "swiftpm-benchmark-build-${{ runner.os }}-"
+
+      - name: Run benchmarks for branch ${{ github.head_ref || github.ref_name }}
+        run: |
+          swift package -c release --disable-sandbox \
+            --package-path Benchmarks \
+            benchmark baseline update \
+            '${{ github.head_ref || github.ref_name }}'
+
+      - name: Read benchmark result
+        id: read-benchmark
+        run: |
+          set -eu
+
+          swift package -c release --disable-sandbox \
+            --package-path Benchmarks \
+            benchmark baseline read \
+            '${{ github.head_ref || github.ref_name }}' \
+            --no-progress \
+            --format markdown \
+            >> result.text
+
+          # Read the result to the output of the step
+          echo 'result<<EOF' >> $GITHUB_OUTPUT
+          cat result.text >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Compare branch ${{ github.head_ref || github.ref_name }} against thresholds
+        id: compare-benchmark
+        run: |
+          set -eu
+
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          ENCODED_TIMESTAMP=$(date -u +"%Y-%m-%dT%H%%3A%M%%3A%SZ")
+          TIMESTAMP_LINK="https://www.timeanddate.com/worldclock/fixedtime.html?iso=$ENCODED_TIMESTAMP"
+          echo "## Benchmark check running at [$TIMESTAMP]($TIMESTAMP_LINK)" >> summary.text
+
+          # Disable 'set -e' to prevent the script from exiting on non-zero exit codes
+          set +e
+          swift package -c release --disable-sandbox \
+            --package-path Benchmarks \
+            benchmark thresholds check \
+            '${{ github.head_ref || github.ref_name }}' \
+            --path "$PWD/Benchmarks/Thresholds/" \
+            --no-progress \
+            --format markdown \
+            >> summary.text
+          echo "exit-status=$?" >> "${GITHUB_OUTPUT}"
+          set -e
+
+          echo 'summary<<EOF' >> $GITHUB_OUTPUT
+          cat summary.text >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Cache .build
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        uses: runs-on/cache/save@v4
+        with:
+          path: Benchmarks/.build
+          key: "swiftpm-benchmark-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
+
+      - name: Construct comment
+        run: |
+          set -eu
+
+          EXIT_CODE='${{ steps.compare-benchmark.outputs.exit-status }}'
+
+          echo 'PR_COMMENT<<EOF' >> "${GITHUB_ENV}"
+
+          # The fact that the comment starts with <!-- benchmark ci tag. exit code: ' is used
+          # in a other steps to find this comment again.
+          # Be wary of that when changing this line.
+          echo "<!-- benchmark ci tag. exit code: $EXIT_CODE -->" >> "${GITHUB_ENV}"
+
+          echo "" >> "${GITHUB_ENV}"
+
+          echo '## [Benchmark](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) Report' >> "${GITHUB_ENV}"
+
+          case "${EXIT_CODE}" in
+              0)
+                  echo '**✅ Pull request has no significant performance differences ✅**' >> "${GITHUB_ENV}"
+                  ;;
+              1)
+                  echo '**❌ Pull request has significant performance differences 📊**' >> "${GITHUB_ENV}"
+                  ;;
+              2)
+                  echo '**❌ Pull request has significant performance regressions 📉**' >> "${GITHUB_ENV}"
+                  ;;
+              4)
+                  echo '**❌ Pull request has significant performance improvements 📈**' >> "${GITHUB_ENV}"
+                  ;;
+              *)
+                  echo '**❌ Benchmark comparison failed to complete properly with exit code $EXIT_CODE ❌**' >> "${GITHUB_ENV}"
+                  ;;
+          esac
+
+          echo '<details>' >> "${GITHUB_ENV}"
+          echo '  <summary> Click to expand comparison result </summary>' >> "${GITHUB_ENV}"
+          echo '' >> "${GITHUB_ENV}"
+          echo '${{ steps.compare-benchmark.outputs.summary }}' >> "${GITHUB_ENV}"
+          echo '' >> "${GITHUB_ENV}"
+          echo '</details>' >> "${GITHUB_ENV}"
+
+          echo '' >> "${GITHUB_ENV}"
+
+          echo '<details>' >> "${GITHUB_ENV}"
+          echo '  <summary> Click to expand benchmark result </summary>' >> "${GITHUB_ENV}"
+          echo '' >> "${GITHUB_ENV}"
+          echo '${{ steps.read-benchmark.outputs.result }}' >> "${GITHUB_ENV}"
+          echo '' >> "${GITHUB_ENV}"
+          echo '</details>' >> "${GITHUB_ENV}"
+
+          echo 'EOF' >> "${GITHUB_ENV}"
+
+      - name: Output the comment as job summary
+        run: echo '${{ env.PR_COMMENT }}' >> "${GITHUB_STEP_SUMMARY}"
+
+      # There is a '<!-- benchmark ci tag. exit code: {some_number} -->' comment at the beginning of the benchamrk report comment.
+      # The number in that comment is the exit code of the last benchmark run.
+      - name: Find existing comment ID
+        if: github.event_name == 'pull_request'
+        id: existing-comment
+        run: |
+          set -eu
+
+          # Known limitation: This only fetches the first 100 comments. This should not
+          # matter much because a benchmark comment should have been sent early in the PR.
+          curl -sL \
+            -X GET \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'Authorization: BEARER ${{ secrets.GITHUB_TOKEN }}' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            -o result.json \
+            'https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments?per_page=100'
+
+          # Get the last comment that has a body that starts with '<!-- benchmark ci tag. exit code: '.
+          # If available, we can just update this comment instead of creating new ones.
+          EXISTING_COMMENT=$(
+            cat result.json |
+              jq '
+                [
+                  .[] |
+                    select(.body | startswith("<!-- benchmark ci tag. exit code: "))
+                ][-1]
+              '
+          )
+
+          # Check if EXISTING_COMMENT is empty or null
+          if [ "$EXISTING_COMMENT" = "null" ] || [ -z "$EXISTING_COMMENT" ]; then
+            ID=""
+            BODY=""
+            PARSED_EXIT_CODE=""
+          else
+            ID="$(echo "$EXISTING_COMMENT" | jq '.id')"
+            BODY="$(echo "$EXISTING_COMMENT" | jq -r '.body')"
+            PARSED_EXIT_CODE="$(echo "$BODY" | head -n 1 | grep -o 'exit code: [0-9]\+' | grep -o '[0-9]\+')"
+
+            if [ "$ID" = "null" ]; then
+              echo "Comment ID was null? something is wrong"
+              echo "Comment: $EXISTING_COMMENT"
+              exit 111
+            fi
+          fi
+
+          # Output the results to GITHUB_OUTPUT
+          {
+            echo "id=$ID"
+            echo "exit-code=$PARSED_EXIT_CODE"
+            echo "body<<EOF"
+            echo "$BODY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment in PR
+        if: github.event_name == 'pull_request'
+        run: |
+          set -eu
+
+          EXISTING_COMMENT_ID="${{ steps.existing-comment.outputs.id }}"
+          # Need to provide the argument in a way that anything in the comment itself is not evaluated.
+          BODY_JSON="$(jq -n -c --arg COMMENT "$(echo '${{ env.PR_COMMENT }}')" '{"body": $COMMENT}')"
+
+          if [ -n "$EXISTING_COMMENT_ID" ]; then
+            echo "Will update a comment: $EXISTING_COMMENT_ID"
+            ENDPOINT="https://api.github.com/repos/${{ github.repository }}/issues/comments/$EXISTING_COMMENT_ID"
+          else
+            echo "Will create a new comment"
+            ENDPOINT="https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
+          fi
+
+          curl -sL \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: BEARER ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d "$BODY_JSON" \
+            "$ENDPOINT"
+
+      - name: Exit with correct status
+        run: |
+          EXIT_CODE='${{ steps.compare-benchmark.outputs.exit-status }}'
+          echo "Previous exit code was: $EXIT_CODE"
+          exit $EXIT_CODE
