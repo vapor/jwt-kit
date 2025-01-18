@@ -7,6 +7,9 @@ import X509
     import Foundation
 #endif
 
+@available(*, deprecated, renamed: "ECDSACoordinates")
+public typealias ECDSAParameters = (x: String, y: String)
+
 /// A typealias representing the parameters of an ECDSA (Elliptic Curve Digital Signature Algorithm) key.
 ///
 /// This tuple consists of two strings representing the x and y coordinates on the elliptic curve.
@@ -19,7 +22,7 @@ import X509
 /// - Parameters:
 ///   - x: A `String` representing the x-coordinate on the elliptic curve.
 ///   - y: A `String` representing the y-coordinate on the elliptic curve.
-public typealias ECDSAParameters = (x: String, y: String)
+public typealias ECDSACoordinates = (x: String, y: String)
 
 public protocol ECDSASignature: Sendable {
     var rawRepresentation: Data { get set }

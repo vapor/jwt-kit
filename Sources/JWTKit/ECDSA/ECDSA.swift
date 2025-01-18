@@ -13,7 +13,10 @@ public protocol ECDSAKey: Sendable {
     associatedtype Curve: ECDSACurveType
 
     var curve: ECDSACurve { get }
+    
+    @available(*, deprecated, renamed: "coordinates")
     var parameters: ECDSAParameters? { get }
+    var coordinates: ECDSACoordinates { get }
 }
 
 extension ECDSA {
@@ -23,7 +26,15 @@ extension ECDSA {
 
         public private(set) var curve: ECDSACurve = Curve.curve
 
+        @available(*, deprecated, renamed: "coordinates")
         public var parameters: ECDSAParameters? {
+            // 0x04 || x || y
+            let x = self.backing.x963Representation[Curve.byteRanges.x].base64EncodedString()
+            let y = self.backing.x963Representation[Curve.byteRanges.y].base64EncodedString()
+            return (x, y)
+        }
+        
+        public var coordinates: ECDSACoordinates {
             // 0x04 || x || y
             let x = self.backing.x963Representation[Curve.byteRanges.x].base64EncodedString()
             let y = self.backing.x963Representation[Curve.byteRanges.y].base64EncodedString()
@@ -87,7 +98,7 @@ extension ECDSA {
             try self.init(pem: String(decoding: data, as: UTF8.self))
         }
 
-        /// Initializes a new ``ECDSA.PublicKey` with ECDSA parameters.
+        /// Initializes a new ``ECDSA.PublicKey`` with ECDSA parameters.
         ///
         /// - Parameters:
         ///   - parameters: The ``ECDSAParameters`` tuple containing the x and y coordinates of the public key. These coordinates should be base64 URL encoded strings.
@@ -98,10 +109,32 @@ extension ECDSA {
         ///
         /// - Note:
         ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
+        @available(*, deprecated, renamed: "init(coordinates:)")
         public init(parameters: ECDSAParameters) throws {
             guard
                 let x = parameters.x.base64URLDecodedData(),
                 let y = parameters.y.base64URLDecodedData()
+            else {
+                throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x or y as base64 encoded data")
+            }
+            self.backing = try PublicKey(x963Representation: [0x04] + x + y)
+        }
+        
+        /// Initializes a new ``ECDSA.PublicKey`` with ECDSA coordinates.
+        ///
+        /// - Parameters:
+        ///   - parameters: The ``ECDSACoordinates`` tuple containing the x and y coordinates of the public key. These coordinates should be base64 URL encoded strings.
+        ///
+        /// - Throws:
+        ///   - ``JWTError/generic`` with the identifier `ecCoordinates` if the x and y coordinates from `parameters` cannot be interpreted as base64 encoded data.
+        ///   - ``JWTError/generic`` with the identifier `ecPrivateKey` if the provided `privateKey` is non-nil but cannot be interpreted as a valid `PrivateKey`.
+        ///
+        /// - Note:
+        ///   The ``ECDSACoordinates`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
+        public init(coordinates: ECDSACoordinates) throws {
+            guard
+                let x = coordinates.x.base64URLDecodedData(),
+                let y = coordinates.y.base64URLDecodedData()
             else {
                 throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x or y as base64 encoded data")
             }
@@ -113,7 +146,7 @@ extension ECDSA {
         }
 
         public static func == (lhs: Self, rhs: Self) -> Bool {
-            lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+            lhs.coordinates.x == rhs.coordinates.x && lhs.coordinates.y == rhs.coordinates.y
         }
     }
 }
@@ -125,8 +158,13 @@ extension ECDSA {
 
         public private(set) var curve: ECDSACurve = Curve.curve
 
+        @available(*, deprecated, renamed: "coordinates")
         public var parameters: ECDSAParameters? {
             self.publicKey.parameters
+        }
+        
+        public var coordinates: ECDSACoordinates {
+            self.publicKey.coordinates
         }
 
         var backing: PrivateKey
@@ -196,7 +234,7 @@ extension ECDSA {
         }
 
         public static func == (lhs: Self, rhs: Self) -> Bool {
-            lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+            lhs.coordinates.x == rhs.coordinates.x && lhs.coordinates.y == rhs.coordinates.y
         }
     }
 }
