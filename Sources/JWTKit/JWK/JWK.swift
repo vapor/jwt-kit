@@ -143,6 +143,8 @@ public struct JWK: Codable, Sendable {
         public static let es512 = Self(backing: .es512)
         /// EdDSA
         public static let eddsa = Self(backing: .eddsa)
+        /// RSA with OAEP
+        public static let rsaOAEP = Self(backing: .rsaOAEP)
 
         enum Backing: String, Codable {
             case rs256 = "RS256"
@@ -155,6 +157,7 @@ public struct JWK: Codable, Sendable {
             case es384 = "ES384"
             case es512 = "ES512"
             case eddsa = "EdDSA"
+            case rsaOAEP = "RSA-OAEP"
         }
 
         init(backing: Backing) {
