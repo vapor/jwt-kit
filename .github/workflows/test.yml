@@ -4,14 +4,14 @@ concurrency:
   cancel-in-progress: true
 on:
   pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
-  push: { branches: [ main ] }
+  push: { branches: [main] }
 
-jobs:  
+jobs:
   linux-integration:
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
     container: swift:jammy
-    steps: 
+    steps:
       - name: Check out JWTKit
         uses: actions/checkout@v4
         with:
@@ -34,5 +34,6 @@ jobs:
       with_linting: true
       with_windows: true
       with_musl: true
+      with_android: true
       ios_scheme_name: jwt-kit
     secrets: inherit
