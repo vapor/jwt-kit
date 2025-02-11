@@ -18,7 +18,7 @@ let package = Package(
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "JWTKit", package: "jwt-kit"),
             ],
-            path: "Benchmarks/Signing",
+            path: "Signing",
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
@@ -29,7 +29,7 @@ let package = Package(
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "JWTKit", package: "jwt-kit"),
             ],
-            path: "Benchmarks/Verifying",
+            path: "Verifying",
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
@@ -40,7 +40,7 @@ let package = Package(
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "JWTKit", package: "jwt-kit"),
             ],
-            path: "Benchmarks/TokenLifecycle",
+            path: "TokenLifecycle",
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
