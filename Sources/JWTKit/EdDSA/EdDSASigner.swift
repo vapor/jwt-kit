@@ -1,9 +1,9 @@
 import Crypto
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 struct EdDSASigner: JWTAlgorithm, Sendable {

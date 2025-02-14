@@ -1,10 +1,11 @@
-import JWTKit
+#if canImport(Testing)
 import Testing
+import JWTKit
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("VendorTokenTests")
@@ -66,7 +67,8 @@ struct VendorTokenTests {
 
         await #expect(
             throws: JWTError.claimVerificationFailure(
-                failedClaim: token.issuer, reason: "Token not provided by Google"
+                failedClaim: token.issuer,
+                reason: "Token not provided by Google"
             )
         ) {
             try await collection.verify(jwt, as: GoogleIdentityToken.self)
@@ -155,7 +157,8 @@ struct VendorTokenTests {
 
         await #expect(
             throws: JWTError.claimVerificationFailure(
-                failedClaim: token.issuer, reason: "Token not provided by Apple"
+                failedClaim: token.issuer,
+                reason: "Token not provided by Apple"
             )
         ) {
             try await collection.verify(jwt, as: AppleIdentityToken.self)
@@ -222,7 +225,10 @@ struct VendorTokenTests {
         let jwt = try await collection.sign(token)
 
         await #expect(
-            throws: JWTError.claimVerificationFailure(failedClaim: token.issuer, reason: "Token not provided by Microsoft")
+            throws: JWTError.claimVerificationFailure(
+                failedClaim: token.issuer,
+                reason: "Token not provided by Microsoft"
+            )
         ) {
             try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
         }
@@ -256,7 +262,8 @@ struct VendorTokenTests {
 
         await #expect(
             throws: JWTError.claimVerificationFailure(
-                failedClaim: nil, reason: "Token must contain tenant Id"
+                failedClaim: nil,
+                reason: "Token must contain tenant Id"
             )
         ) {
             try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
@@ -269,7 +276,8 @@ struct VendorTokenTests {
             issuer: "https://securetoken.google.com/firprojectname-12345",
             subject: "1234567890",
             audience: .init(value: ["firprojectname-12345"]),
-            issuedAt: .init(value: .now), expires: .init(value: .now + 3600),
+            issuedAt: .init(value: .now),
+            expires: .init(value: .now + 3600),
             authTime: .now,
             userID: "1234567890",
             email: "user@example.com",
@@ -277,7 +285,11 @@ struct VendorTokenTests {
             phoneNumber: nil,
             name: "John Doe",
             picture: "https://example.com/johndoe.png",
-            firebase: .init(identities: ["google.com": ["9876543210"], "email": ["user@example.com"]], signInProvider: "google.com"))
+            firebase: .init(
+                identities: ["google.com": ["9876543210"], "email": ["user@example.com"]],
+                signInProvider: "google.com"
+            )
+        )
 
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
@@ -293,7 +305,8 @@ struct VendorTokenTests {
             issuer: "https://example.com",
             subject: "1234567890",
             audience: .init(value: ["firprojectname-12345"]),
-            issuedAt: .init(value: .now), expires: .init(value: .now + 3600),
+            issuedAt: .init(value: .now),
+            expires: .init(value: .now + 3600),
             authTime: .now,
             userID: "1234567890",
             email: "user@example.com",
@@ -301,14 +314,19 @@ struct VendorTokenTests {
             phoneNumber: nil,
             name: "John Doe",
             picture: "https://example.com/johndoe.png",
-            firebase: .init(identities: ["google.com": ["9876543210"], "email": ["user@example.com"]], signInProvider: "google.com"))
+            firebase: .init(
+                identities: ["google.com": ["9876543210"], "email": ["user@example.com"]],
+                signInProvider: "google.com"
+            )
+        )
 
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
             throws: JWTError.claimVerificationFailure(
-                failedClaim: token.issuer, reason: "Token not provided by Google"
+                failedClaim: token.issuer,
+                reason: "Token not provided by Google"
             )
         ) {
             try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self)
@@ -321,7 +339,8 @@ struct VendorTokenTests {
             issuer: "https://securetoken.google.com/firprojectname-12345",
             subject: .init(stringLiteral: String(repeating: "A", count: 1000)),
             audience: .init(value: ["firprojectname-12345"]),
-            issuedAt: .init(value: .now), expires: .init(value: .now + 3600),
+            issuedAt: .init(value: .now),
+            expires: .init(value: .now + 3600),
             authTime: .now,
             userID: "1234567890",
             email: "user@example.com",
@@ -329,7 +348,11 @@ struct VendorTokenTests {
             phoneNumber: nil,
             name: "John Doe",
             picture: "https://example.com/johndoe.png",
-            firebase: .init(identities: ["google.com": ["9876543210"], "email": ["user@example.com"]], signInProvider: "google.com"))
+            firebase: .init(
+                identities: ["google.com": ["9876543210"], "email": ["user@example.com"]],
+                signInProvider: "google.com"
+            )
+        )
 
         let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
@@ -344,3 +367,4 @@ struct VendorTokenTests {
         }
     }
 }
+#endif  // canImport(Testing)

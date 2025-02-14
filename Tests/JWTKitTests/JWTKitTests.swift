@@ -1,11 +1,12 @@
-import JWTKit
+#if canImport(Testing)
 import Testing
+import JWTKit
 import X509
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("JWTKit Tests")
@@ -127,9 +128,12 @@ struct JWTKitTests {
     func sign() async throws {
         let data =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZvbyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5OTl9.Gf7leJ8i30LmMI7GBTpWDMXV60y1wkTOCOBudP9v9ms"
-        let keyCollection = await JWTKeyCollection().add(
-            hmac: "bar", digestAlgorithm: .sha256, kid: "foo"
-        )
+        let keyCollection = await JWTKeyCollection()
+            .add(
+                hmac: "bar",
+                digestAlgorithm: .sha256,
+                kid: "foo"
+            )
         let payload = try await keyCollection.verify(data, as: TestPayload.self)
         #expect(payload.name == "John Doe")
     }
@@ -309,15 +313,16 @@ struct JWTKitTests {
             "awDmF9aqLqokmXjiydda8mKboArWwP2Ih7K3Ad3Og_u9nUp2gZrXiCMxGGSQiN5Jg3yiW_ffNYaHfyfRWKyQ_g31n4UfPLmPtw6iL3V9GChV5ZDRE9HpxE88U8r1h__xFFrrdnBeWKW8NldI70jg7vY6uiRae4uuXCfSbs4iAUxmRVKWCnV7JE6sObQKUV_EJkBcyND5Y97xsmWD0nPmXCnloQ84gF-eTErJoZBvQhJ4BhmBeUlREHmDKssaxVOCK4l335DKHD1vbuPk9e49M71BK7r2y4Atqk3TEetnwzMs3u-L9RqHaGIBw5u324uGweY7QeD7HFdAUtpjOq_MQQ"
 
         // sign jwt
-        let keyCollection = try await JWTKeyCollection().add(
-            rsa: Insecure.RSA.PrivateKey(
-                modulus: modulus,
-                exponent: exponent,
-                privateExponent: privateExponent
-            ),
-            digestAlgorithm: .sha256,
-            kid: "vapor"
-        )
+        let keyCollection = try await JWTKeyCollection()
+            .add(
+                rsa: Insecure.RSA.PrivateKey(
+                    modulus: modulus,
+                    exponent: exponent,
+                    privateExponent: privateExponent
+                ),
+                digestAlgorithm: .sha256,
+                kid: "vapor"
+            )
         struct Foo: JWTPayload {
             var bar: Int
             func verify(using _: some JWTAlgorithm) throws {}
@@ -374,15 +379,19 @@ struct JWTKitTests {
             admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
-        let keyCollection = await JWTKeyCollection().addUnsecuredNone(
-            parser: DefaultJWTParser(jsonDecoder: decoder),
-            serializer: DefaultJWTSerializer(jsonEncoder: encoder)
-        )
+        let keyCollection = await JWTKeyCollection()
+            .addUnsecuredNone(
+                parser: DefaultJWTParser(jsonDecoder: decoder),
+                serializer: DefaultJWTSerializer(jsonEncoder: encoder)
+            )
         let token = try await keyCollection.sign(payload)
         #expect(
-            (token.split(separator: ".").dropFirst(1).first.map {
-                String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self)
-            } ?? "").contains(#""exp":""#))
+            (token.split(separator: ".").dropFirst(1).first
+                .map {
+                    String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self)
+                } ?? "")
+                .contains(#""exp":""#)
+        )
         try await #expect(keyCollection.verify(token.bytes, as: TestPayload.self) == payload)
         try await #expect(keyCollection.verify(data.bytes, as: TestPayload.self) == payload)
         #expect(token.hasSuffix("."))
@@ -425,13 +434,15 @@ struct JWTKitTests {
                 let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
                 let header = try jsonDecoder.decode(
-                    JWTHeader.self, from: .init(encodedHeader.base64URLDecodedBytes())
+                    JWTHeader.self,
+                    from: .init(encodedHeader.base64URLDecodedBytes())
                 )
 
                 let payload =
                     if header.b64?.asBool ?? true {
                         try self.jsonDecoder.decode(
-                            Payload.self, from: .init(encodedPayload.base64URLDecodedBytes())
+                            Payload.self,
+                            from: .init(encodedPayload.base64URLDecodedBytes())
                         )
                     } else {
                         try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
@@ -445,12 +456,16 @@ struct JWTKitTests {
 
         let keyCollection = await JWTKeyCollection()
             .add(
-                hmac: "secret", digestAlgorithm: .sha256, parser: CustomParser(),
+                hmac: "secret",
+                digestAlgorithm: .sha256,
+                parser: CustomParser(),
                 serializer: CustomSerializer()
             )
 
         let payload = TestPayload(
-            sub: "vapor", name: "Foo", admin: false,
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
             exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
         )
 
@@ -526,16 +541,19 @@ struct JWTKitTests {
         let jsonDecoder = JSONDecoder()
         let decodedFields = try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader)
         let decodedJsonFields = try jsonDecoder.decode(
-            [String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!
+            [String: JWTHeaderField].self,
+            from: jsonFields.data(using: .utf8)!
         )
         #expect(decodedFields == decodedJsonFields)
     }
 
     @Test("Test Custom Header Fields")
     func customHeaderFields() async throws {
-        let keyCollection = await JWTKeyCollection().add(
-            hmac: .init(key: .init(size: .bits256)), digestAlgorithm: .sha384
-        )
+        let keyCollection = await JWTKeyCollection()
+            .add(
+                hmac: .init(key: .init(size: .bits256)),
+                digestAlgorithm: .sha384
+            )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -620,7 +638,8 @@ struct JWTKitTests {
             parsed.header.crit == [
                 "b64", "http://openbanking.org.uk/iat", "http://openbanking.org.uk/iss",
                 "http://openbanking.org.uk/tan",
-            ])
+            ]
+        )
         #expect(parsed.header.kid == "90210ABAD")
     }
 
@@ -691,7 +710,8 @@ struct JWTKitTests {
                 OF/2NxApJCzGCEDdfSp6VQO30hyhRANCAAQRWz+jn65BtOMvdyHKcvjBeBSDZH2r
                 1RTwjmYSi9R/zpBnuQ4EiMnCqfMPWiZqB4QdbAd0E7oH50VpuZ1P087G
                 -----END PRIVATE KEY-----
-                """)
+                """
+        )
 
         let keyCollection = await JWTKeyCollection()
             .add(hmac: "secret", digestAlgorithm: .sha256, kid: "hmac")
@@ -708,12 +728,16 @@ struct JWTKitTests {
         }
 
         let hmacIteratinglyVerified = try await keyCollection.verify(
-            hmacToken, as: TestPayload.self, iteratingKeys: true
+            hmacToken,
+            as: TestPayload.self,
+            iteratingKeys: true
         )
         #expect(hmacIteratinglyVerified.sub == "1234567890")
 
         let ecdsaIteratinglyVerified = try await keyCollection.verify(
-            ecdsaToken, as: TestPayload.self, iteratingKeys: true
+            ecdsaToken,
+            as: TestPayload.self,
+            iteratingKeys: true
         )
         #expect(ecdsaIteratinglyVerified.sub == "1234567890")
     }
@@ -760,8 +784,10 @@ struct JWTKitTests {
     func jwtErrorDescription() {
         #expect(
             JWTError.claimVerificationFailure(
-                failedClaim: ExpirationClaim(value: .init(timeIntervalSince1970: 1)), reason: "test"
-            ).description
+                failedClaim: ExpirationClaim(value: .init(timeIntervalSince1970: 1)),
+                reason: "test"
+            )
+            .description
                 == "JWTKitError(errorType: claimVerificationFailure, failedClaim: JWTKit.ExpirationClaim(value: 1970-01-01 00:00:01 +0000), reason: \"test\")"
         )
         #expect(
@@ -927,3 +953,4 @@ let firebaseCert = """
     sb7NLsl7DkvjjxTz7I98xaGbfhofgYympeKT6UO+tmc=
     -----END CERTIFICATE-----
     """
+#endif  // canImport(Testing)
