@@ -1,7 +1,7 @@
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 public protocol JWTUnixEpochClaim: JWTClaim where Value == Date {}
