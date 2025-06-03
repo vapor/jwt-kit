@@ -24,16 +24,27 @@ JWTKit supports all platforms supported by Swift 6 and later.
 
 ### Installation
 
-Use the SPM string to easily include the dependendency in your `Package.swift` file
+Manually add the following to your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0")
+dependencies: [
+    .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0")
+],
+targets: [
+    .target(
+        name: "MyTarget",
+        dependencies: [
+            .product(name: "JWTKit", package: "jwt-kit"),
+        ]),
+]
 ```
 
-and add it to your target's dependencies:
+Or run the following commands on your package using SwiftPM, replacing `MyTarget` with the name of your target:
 
-```swift
-.product(name: "JWTKit", package: "jwt-kit")
+```sh
+cd /path/to/project/root/directory
+swift package add-dependency https://github.com/vapor/jwt-kit.git --from 5.0.0
+swift package add-target-dependency JWTKit MyTarget --package jwt-kit
 ```
 
 ## Overview
@@ -407,29 +418,4 @@ let keyCollection = await JWTKeyCollection().add(
     parser: parser, 
     serializer: serializer
 )
-```
-
-## Installation
-
-Run the following commands on your package using SwiftPM, replacing `MyTarget` with the name of your target:
-
-```swift
-cd /path/to/project/root/directory
-swift package add-dependency https://github.com/vapor/jwt-kit.git --from 5.0.0
-swift package add-target-dependency JWTKit MyTarget
-```
-
-Or manually add the following to your `Package.swift` file:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0")
-],
-targets: [
-  .target(
-    name: "MyTarget",
-    dependencies: [
-        .target(name: "JWTKit"),
-    ]),
-]
 ```
