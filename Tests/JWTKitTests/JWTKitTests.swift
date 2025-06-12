@@ -91,8 +91,7 @@ struct JWTKitTests {
         // This token was created by us but has been tampered with, so it's non-UTF-8 and invalid
         let corruptCrashyToken =
             "eyJhbGciOiJIUzI1NiIsInR5xCI6IkpXVCJ9.eyJleHAiOjE3MzExMDkyNzkuNDIwMDM3LCJmbGFnIjp0cnVlLCJzdWIiOiJoZWxsbyJ9.iFOMv8ms0ONccGisQlzEYVe90goc3TwVD_QyztGwdCE"
-        #expect(throws: JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded"))
-        {
+        #expect(throws: JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded")) {
             _ = try parser.parse([UInt8](corruptCrashyToken.utf8), as: TestPayload.self)
         }
     }
@@ -355,9 +354,7 @@ struct JWTKitTests {
     @Test("Test Firebase JWT and Certificate")
     func addFirebaseJWTAndCertificate() async throws {
         let payload = try await JWTKeyCollection()
-            .add(
-                rsa: Insecure.RSA.PublicKey(certificatePEM: firebaseCert), digestAlgorithm: .sha256
-            )
+            .add(rsa: Insecure.RSA.PublicKey(certificatePEM: firebaseCert), digestAlgorithm: .sha256)
             .verify(firebaseJWT, as: FirebasePayload.self)
         #expect(payload.userID == "y8wiKThXGKM88xxrQWDZzKnBuqv2")
     }
@@ -527,8 +524,7 @@ struct JWTKitTests {
             """
 
         let jsonDecoder = JSONDecoder()
-        let decodedFields = try jsonDecoder.decode(
-            [String: JWTHeaderField].self, from: encodedHeader)
+        let decodedFields = try jsonDecoder.decode([String: JWTHeaderField].self, from: encodedHeader)
         let decodedJsonFields = try jsonDecoder.decode(
             [String: JWTHeaderField].self, from: jsonFields.data(using: .utf8)!
         )
