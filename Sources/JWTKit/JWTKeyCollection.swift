@@ -155,9 +155,7 @@ public actor JWTKeyCollection: Sendable {
     ///  - alg: An optional algorithm identifier.
     /// - Returns: A ``JWTKey`` if one is found; otherwise, `nil`.
     /// - Throws: ``JWTError/generic`` if the algorithm cannot be retrieved.
-    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws
-        -> any JWTAlgorithm
-    {
+    public func getKey(for kid: JWKIdentifier? = nil, alg: String? = nil) async throws -> any JWTAlgorithm {
         try await self.getSigner(for: kid, alg: alg).algorithm
     }
 
