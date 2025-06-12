@@ -5,13 +5,13 @@
 #endif
 
 /// A JWT signer.
-final class JWTSigner: Sendable {
+package final class JWTSigner: Sendable {
     let algorithm: JWTAlgorithm
 
     let parser: any JWTParser
     let serializer: any JWTSerializer
 
-    init(
+    package init(
         algorithm: some JWTAlgorithm,
         parser: any JWTParser = DefaultJWTParser(),
         serializer: any JWTSerializer = DefaultJWTSerializer()
@@ -25,7 +25,8 @@ final class JWTSigner: Sendable {
         try await serializer.sign(payload, with: header, using: self.algorithm)
     }
 
-    func verify<Payload>(_ token: some DataProtocol) async throws -> Payload where Payload: JWTPayload {
+    func verify<Payload>(_ token: some DataProtocol) async throws -> Payload
+    where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try parser.getTokenParts(token)
         let data = encodedHeader + [.period] + encodedPayload
         let signature = encodedSignature.base64URLDecodedBytes()
