@@ -6,7 +6,7 @@ import _CryptoExtras
     import Foundation
 #endif
 
-public enum MLDSA: Sendable {}
+@_spi(PostQuantum) public enum MLDSA: Sendable {}
 
 extension MLDSA {
     public struct PublicKey<KeyType>: MLDSAKey where KeyType: MLDSAType {

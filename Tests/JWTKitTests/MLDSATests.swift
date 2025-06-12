@@ -1,8 +1,7 @@
 import Crypto
 import Foundation
-import JWTKit
+@_spi(PostQuantum) import JWTKit
 import Testing
-import _QuantumJWTKit
 
 @Suite("MLDSA Tests")
 struct MLDSATests {

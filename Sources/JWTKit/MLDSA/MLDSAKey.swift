@@ -4,10 +4,12 @@
     import Foundation
 #endif
 
+@_spi(PostQuantum)
 public protocol MLDSAKey: Sendable {
-    associatedtype MLDSAType: _QuantumJWTKit.MLDSAType
+    associatedtype MLDSAType: JWTKit.MLDSAType
 }
 
+@_spi(PostQuantum)
 public protocol MLDSAPublicKey: Sendable {
     associatedtype MLDSAType
 
@@ -19,6 +21,7 @@ public protocol MLDSAPublicKey: Sendable {
     ) -> Bool
 }
 
+@_spi(PostQuantum)
 public protocol MLDSAPrivateKey: Sendable {
     associatedtype MLDSAType
     associatedtype PublicKey: MLDSAPublicKey

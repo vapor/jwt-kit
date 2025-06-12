@@ -1,4 +1,3 @@
-import JWTKit
 import _CryptoExtras
 
 #if canImport(FoundationEssentials)

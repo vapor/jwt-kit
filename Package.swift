@@ -27,25 +27,10 @@ let package = Package(
                 .product(name: "Logging", package: "swift-log"),
             ]
         ),
-        .target(
-            name: "_QuantumJWTKit",
-            dependencies: [
-                "JWTKit",
-                .product(name: "Crypto", package: "swift-crypto"),
-                .product(name: "_CryptoExtras", package: "swift-crypto"),
-            ]
-        ),
         .testTarget(
             name: "JWTKitTests",
             dependencies: [
                 "JWTKit"
-            ]
-        ),
-        .testTarget(
-            name: "_QuantumJWTKitTests",
-            dependencies: [
-                "JWTKit",
-                "_QuantumJWTKit",
             ]
         ),
     ]

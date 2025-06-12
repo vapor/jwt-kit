@@ -5,13 +5,13 @@
 #endif
 
 /// A JWT signer.
-package final class JWTSigner: Sendable {
+final class JWTSigner: Sendable {
     let algorithm: JWTAlgorithm
 
     let parser: any JWTParser
     let serializer: any JWTSerializer
 
-    package init(
+    init(
         algorithm: some JWTAlgorithm,
         parser: any JWTParser = DefaultJWTParser(),
         serializer: any JWTSerializer = DefaultJWTSerializer()

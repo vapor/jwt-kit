@@ -49,7 +49,7 @@ public actor JWTKeyCollection: Sendable {
     ///   - kid: An optional ``JWKIdentifier`` to associate with the signer.
     /// - Returns: Self for chaining.
     @discardableResult
-    package func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
+    func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
         let signer = JWTSigner(algorithm: signer.algorithm, parser: signer.parser, serializer: signer.serializer)
 
         if let kid {

@@ -1,6 +1,5 @@
-import JWTKit
-
 extension JWTKeyCollection {
+    @_spi(PostQuantum)
     @discardableResult
     public func add(
         mldsa key: some MLDSAKey,
