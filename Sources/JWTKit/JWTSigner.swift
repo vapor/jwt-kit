@@ -25,8 +25,7 @@ package final class JWTSigner: Sendable {
         try await serializer.sign(payload, with: header, using: self.algorithm)
     }
 
-    func verify<Payload>(_ token: some DataProtocol) async throws -> Payload
-    where Payload: JWTPayload {
+    func verify<Payload>(_ token: some DataProtocol) async throws -> Payload where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try parser.getTokenParts(token)
         let data = encodedHeader + [.period] + encodedPayload
         let signature = encodedSignature.base64URLDecodedBytes()
