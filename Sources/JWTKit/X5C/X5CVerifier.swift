@@ -74,7 +74,7 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [Certificate],
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { EmptyPolicy() }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
     ) async throws -> X509.VerificationResult {
         let untrustedChain = CertificateStore(certificates)
         var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
@@ -141,7 +141,7 @@ public struct X5CVerifier: Sendable {
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { EmptyPolicy() }
     ) async throws -> Payload
     where Payload: JWTPayload {
         // Parse the JWS header to get the header
