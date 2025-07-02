@@ -74,7 +74,7 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [Certificate],
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { EmptyPolicy() }
     ) async throws -> X509.VerificationResult {
         let untrustedChain = CertificateStore(certificates)
         var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
