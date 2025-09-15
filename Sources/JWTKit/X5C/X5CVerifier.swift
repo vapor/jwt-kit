@@ -60,7 +60,7 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [String],
-        policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+        policy: () throws -> some VerifierPolicy = { RFC5280Policy(fixedValidationTime: Date()) }
     ) async throws -> X509.VerificationResult {
         let certificates = try certificates.map { try Certificate(pemEncoded: $0) }
         return try await verifyChain(certificates: certificates, policy: policy)
@@ -74,7 +74,7 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [Certificate],
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(fixedValidationTime: Date()) }
     ) async throws -> X509.VerificationResult {
         let untrustedChain = CertificateStore(certificates)
         var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
@@ -187,7 +187,7 @@ public struct X5CVerifier: Sendable {
             rootCertificates: trustedStore,
             policy: {
                 try policy()
-                RFC5280Policy(validationTime: date)
+                RFC5280Policy(fixedValidationTime: date)
             })
 
         // Validate the leaf certificate against the trusted store
