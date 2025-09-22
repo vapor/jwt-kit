@@ -1,5 +1,5 @@
-import X509
 import SwiftASN1
+import X509
 
 /// This Policy acts as a placeholder. Its result is always positive.
 public struct EmptyPolicy: VerifierPolicy {
