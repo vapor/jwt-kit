@@ -1,9 +1,9 @@
 import Crypto
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Namespace for the EdDSA (Edwards-curve Digital Signature Algorithm) signing algorithm.
@@ -61,7 +61,7 @@ extension EdDSA {
             self.init(backing: key)
         }
 
-        var rawRepresentation: Data {
+        public var rawRepresentation: Data {
             self.backing.rawRepresentation
         }
     }
@@ -132,11 +132,11 @@ extension EdDSA {
             self.init(backing: key)
         }
 
-        var publicKey: PublicKey {
+        public var publicKey: PublicKey {
             .init(backing: self.backing.publicKey)
         }
 
-        var rawRepresentation: Data {
+        public var rawRepresentation: Data {
             self.backing.rawRepresentation
         }
     }

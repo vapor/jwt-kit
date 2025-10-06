@@ -1,7 +1,7 @@
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 struct ECDSASigner<Key: ECDSAKey>: JWTAlgorithm, CryptoSigner {

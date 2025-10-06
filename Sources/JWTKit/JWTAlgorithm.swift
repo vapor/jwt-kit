@@ -1,7 +1,7 @@
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// A protocol defining the necessary functionality for a JWT (JSON Web Token) algorithm.

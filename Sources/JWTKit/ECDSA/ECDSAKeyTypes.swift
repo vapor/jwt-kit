@@ -2,9 +2,9 @@ import Crypto
 import X509
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// A typealias representing the parameters of an ECDSA (Elliptic Curve Digital Signature Algorithm) key.

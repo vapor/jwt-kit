@@ -1,9 +1,9 @@
 import X509
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// An object for verifying JWS tokens that contain the `x5c` header parameter

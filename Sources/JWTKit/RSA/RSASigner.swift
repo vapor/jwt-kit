@@ -1,9 +1,9 @@
 import _CryptoExtras
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 struct RSASigner: JWTAlgorithm, CryptoSigner {

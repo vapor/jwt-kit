@@ -1,9 +1,9 @@
 import Crypto
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 // TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
