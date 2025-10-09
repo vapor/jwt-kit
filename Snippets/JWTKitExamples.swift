@@ -2,9 +2,9 @@
 import JWTKit
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 // Signs and verifies JWTs

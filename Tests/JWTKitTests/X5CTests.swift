@@ -1,11 +1,12 @@
-import JWTKit
+#if canImport(Testing)
 import Testing
+import JWTKit
 import X509
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 /// Test the x5c verification abilities of JWTSigners.
@@ -277,8 +278,10 @@ struct X5CTests {
 
     @Test("Test signing with x5c chain")
     func signWithX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().add(
-            ecdsa: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection()
+            .add(
+                ecdsa: ES256PrivateKey(pem: x5cLeafCertKey)
+            )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -301,8 +304,10 @@ struct X5CTests {
 
     @Test("Test signing with invalid x5c chain")
     func signWithInvalidX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().add(
-            ecdsa: ES256PrivateKey(pem: x5cLeafCertKey))
+        let keyCollection = try await JWTKeyCollection()
+            .add(
+                ecdsa: ES256PrivateKey(pem: x5cLeafCertKey)
+            )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -338,7 +343,8 @@ struct X5CTests {
         pemLines.append("-----BEGIN CERTIFICATE-----")
 
         while encoded.count > 0 {
-            let prefixIndex = encoded.index(encoded.startIndex, offsetBy: 64, limitedBy: encoded.endIndex) ?? encoded.endIndex
+            let prefixIndex =
+                encoded.index(encoded.startIndex, offsetBy: 64, limitedBy: encoded.endIndex) ?? encoded.endIndex
             pemLines.append(encoded[..<prefixIndex])
             encoded = encoded[prefixIndex...]
         }
@@ -444,19 +450,25 @@ let rootCA = try! Certificate(
         Data(
             base64Encoded:
                 "MIIBgjCCASmgAwIBAgIJALUc5ALiH5pbMAoGCCqGSM49BAMDMDYxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRIwEAYDVQQHDAlDdXBlcnRpbm8wHhcNMjMwMTA1MjEzMDIyWhcNMzMwMTAyMjEzMDIyWjA2MQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTESMBAGA1UEBwwJQ3VwZXJ0aW5vMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEc+/Bl+gospo6tf9Z7io5tdKdrlN1YdVnqEhEDXDShzdAJPQijamXIMHf8xWWTa1zgoYTxOKpbuJtDplz1XriTaMgMB4wDAYDVR0TBAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwCgYIKoZIzj0EAwMDRwAwRAIgemWQXnMAdTad2JDJWng9U4uBBL5mA7WI05H7oH7c6iQCIHiRqMjNfzUAyiu9h6rOU/K+iTR0I/3Y/NSWsXHX+acc"
-        )!))
+        )!
+    )
+)
 let leaf = try! Certificate(
     derEncoded: Array(
         Data(
             base64Encoded:
                 "MIIBoDCCAUagAwIBAgIBDDAKBggqhkjOPQQDAzBFMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExEjAQBgNVBAcMCUN1cGVydGlubzEVMBMGA1UECgwMSW50ZXJtZWRpYXRlMB4XDTIzMDEwNTIxMzEzNFoXDTMzMDEwMTIxMzEzNFowPTELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMRIwEAYDVQQHDAlDdXBlcnRpbm8xDTALBgNVBAoMBExlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAATitYHEaYVuc8g9AjTOwErMvGyPykPa+puvTI8hJTHZZDLGas2qX1+ErxgQTJgVXv76nmLhhRJH+j25AiAI8iGsoy8wLTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIHgDAQBgoqhkiG92NkBgsBBAIFADAKBggqhkjOPQQDAwNIADBFAiBX4c+T0Fp5nJ5QRClRfu5PSByRvNPtuaTsk0vPB3WAIAIhANgaauAj/YP9s0AkEhyJhxQO/6Q2zouZ+H1CIOehnMzQ"
-        )!))
+        )!
+    )
+)
 let intermediate = try! Certificate(
     derEncoded: Array(
         Data(
             base64Encoded:
                 "MIIBnzCCAUWgAwIBAgIBCzAKBggqhkjOPQQDAzA2MQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTESMBAGA1UEBwwJQ3VwZXJ0aW5vMB4XDTIzMDEwNTIxMzEwNVoXDTMzMDEwMTIxMzEwNVowRTELMAkGA1UEBhMCVVMxCzAJBgNVBAgMAkNBMRIwEAYDVQQHDAlDdXBlcnRpbm8xFTATBgNVBAoMDEludGVybWVkaWF0ZTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABBUN5V9rKjfRiMAIojEA0Av5Mp0oF+O0cL4gzrTF178inUHugj7Et46NrkQ7hKgMVnjogq45Q1rMs+cMHVNILWqjNTAzMA8GA1UdEwQIMAYBAf8CAQAwDgYDVR0PAQH/BAQDAgEGMBAGCiqGSIb3Y2QGAgEEAgUAMAoGCCqGSM49BAMDA0gAMEUCIQCmsIKYs41ullssHX4rVveUT0Z7Is5/hLK1lFPTtun3hAIgc2+2RG5+gNcFVcs+XJeEl4GZ+ojl3ROOmll+ye7dynQ="
-        )!))
+        )!
+    )
+)
 
 /// Each token has the following payload:
 ///
@@ -472,3 +484,4 @@ private struct TokenPayload: JWTPayload {
         }
     }
 }
+#endif  // canImport(Testing)

@@ -1,5 +1,6 @@
-import JWTKit
+#if canImport(Testing)
 import Testing
+import JWTKit
 import _CryptoExtras
 
 @Suite("RSA Tests")
@@ -29,8 +30,11 @@ struct RSATests {
     func privateKeyInitFromPrimes() async throws {
         #expect(throws: Never.self) {
             try Insecure.RSA.PrivateKey(
-                modulus: modulus, exponent: publicExponent,
-                privateExponent: privateExponent, prime1: prime1, prime2: prime2
+                modulus: modulus,
+                exponent: publicExponent,
+                privateExponent: privateExponent,
+                prime1: prime1,
+                prime2: prime2
             )
         }
     }
@@ -88,11 +92,17 @@ struct RSATests {
     @Test("Test signing with raw built private key")
     func signWithRawPrivateKey() async throws {
         let privateKey = try Insecure.RSA.PrivateKey(
-            modulus: modulus, exponent: publicExponent, privateExponent: privateExponent
+            modulus: modulus,
+            exponent: publicExponent,
+            privateExponent: privateExponent
         )
 
         let keyCollection = try await JWTKeyCollection()
-            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation), digestAlgorithm: .sha256, kid: "private")
+            .add(
+                rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation),
+                digestAlgorithm: .sha256,
+                kid: "private"
+            )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -109,12 +119,19 @@ struct RSATests {
     @Test("Test signing with raw built private key with primes")
     func signWithRawPrivateKeyWithPrimes() async throws {
         let privateKey = try Insecure.RSA.PrivateKey(
-            modulus: modulus, exponent: publicExponent, privateExponent: privateExponent,
-            prime1: prime1, prime2: prime2
+            modulus: modulus,
+            exponent: publicExponent,
+            privateExponent: privateExponent,
+            prime1: prime1,
+            prime2: prime2
         )
 
         let keyCollection = try await JWTKeyCollection()
-            .add(rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation), digestAlgorithm: .sha256, kid: "private")
+            .add(
+                rsa: Insecure.RSA.PrivateKey(pem: privateKey.pemRepresentation),
+                digestAlgorithm: .sha256,
+                kid: "private"
+            )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -205,7 +222,11 @@ struct RSATests {
 
     @Test("Test exporting raw built private key as PEM")
     func exportKeyAsPEMWhenRawBuilt() async throws {
-        let key = try Insecure.RSA.PrivateKey(modulus: modulus, exponent: publicExponent, privateExponent: privateExponent)
+        let key = try Insecure.RSA.PrivateKey(
+            modulus: modulus,
+            exponent: publicExponent,
+            privateExponent: privateExponent
+        )
         let key2 = try Insecure.RSA.PrivateKey(pem: key.pemRepresentation)
         #expect(key == key2)
     }
@@ -377,3 +398,4 @@ let publicKey2 = """
     mwIDAQAB
     -----END PUBLIC KEY-----
     """
+#endif  // canImport(Testing)

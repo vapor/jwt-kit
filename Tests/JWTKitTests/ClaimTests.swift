@@ -1,10 +1,11 @@
-import JWTKit
+#if canImport(Testing)
 import Testing
+import JWTKit
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("Claim Tests")
@@ -35,7 +36,8 @@ struct ClaimTests {
         let nadizaDialectSlovenia = try LocalePayload.from(#"{"locale":"sl-nedis"}"#)
         let germanSwissPost1996 = try LocalePayload.from(#"{"locale":"de-CH-1996"}"#)
         let chineseTraditionalTwoPrivate = try LocalePayload.from(
-            #"{"locale":"zh-Hant-CN-x-private1-private2"}"#)
+            #"{"locale":"zh-Hant-CN-x-private1-private2"}"#
+        )
 
         #expect(plainEnglish.locale.value.identifier == "en")
         #expect(brazillianPortugese.locale.value.identifier == "pt-BR")
@@ -114,3 +116,4 @@ struct ClaimTests {
         _ = try await keyCollection.verify(jwt, as: ExpirationPayload.self)
     }
 }
+#endif  // canImport(Testing)

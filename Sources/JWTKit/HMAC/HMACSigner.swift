@@ -1,9 +1,9 @@
 @preconcurrency import Crypto
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {

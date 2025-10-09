@@ -1,20 +1,17 @@
 name: benchmark
 on:
   workflow_dispatch:
+    inputs:
+      sha:
+        type: string
+        required: true
+        description: "The commit SHA to run the benchmarks against."
   push:
     branches: [main]
-  pull_request_review:
-    types: [submitted]
-  pull_request:
-    branches: [main]
-    types: [synchronize]
-    paths:
-      - Sources/*.swift
-      - Benchmarks/
-      - .github/workflows/benchmark.yml
 
 jobs:
   benchmark:
-    if: github.run_attempt > 1 || github.event.review.state == 'approved' || startsWith(github.event_name, 'pull_request') != true
     uses: vapor/ci/.github/workflows/run-benchmark.yml@main
+    with:
+      sha: ${{ inputs.sha }}
     secrets: inherit

@@ -1,11 +1,12 @@
+#if canImport(Testing)
+import Testing
 import Crypto
 import JWTKit
-import Testing
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("ECDSA Tests")
@@ -240,7 +241,8 @@ struct ECDSATests {
                     return false
                 }
                 return error.foo == "qux"
-            })
+            }
+        )
 
         // Second test: "bar" payload should pass verification
         let token = try await keys.sign(Payload(foo: "bar"))
@@ -343,3 +345,4 @@ let ecdsaPublicKey = """
     C18ScRb4Z6poMBgJtYlVtd9ly63URv57ZW0Ncs1LiZB7WATb3svu+1c7HQ==
     -----END PUBLIC KEY-----
     """
+#endif  // canImport(Testing)

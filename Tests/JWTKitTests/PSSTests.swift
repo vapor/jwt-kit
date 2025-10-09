@@ -1,10 +1,11 @@
-import JWTKit
+#if canImport(Testing)
 import Testing
+import JWTKit
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
 @Suite("PSS Tests")
@@ -13,8 +14,11 @@ struct PSSTests {
     @Test("Test PSS Docs")
     func pssDocs() async throws {
         await #expect(throws: Never.self) {
-            try await JWTKeyCollection().add(
-                pss: Insecure.RSA.PublicKey(pem: publicKey), digestAlgorithm: .sha256)
+            try await JWTKeyCollection()
+                .add(
+                    pss: Insecure.RSA.PublicKey(pem: publicKey),
+                    digestAlgorithm: .sha256
+                )
         }
     }
 
@@ -74,7 +78,9 @@ struct PSSTests {
         await #expect(
             performing: {
                 let token = try await keyCollection.sign(
-                    Payload(foo: "qux"), header: ["kid": "private"])
+                    Payload(foo: "qux"),
+                    header: ["kid": "private"]
+                )
                 _ = try await keyCollection.verify(token, as: Payload.self)
             },
             throws: { error in
@@ -82,7 +88,8 @@ struct PSSTests {
                     return false
                 }
                 return notBarError.foo == "qux"
-            })
+            }
+        )
 
         // Case where foo is "bar"
         let token = try await keyCollection.sign(Payload(foo: "bar"))
@@ -108,7 +115,8 @@ struct PSSTests {
     func exportPublicKeyWhenKeyIsPrivate() async throws {
         let privateKey = try Insecure.RSA.PrivateKey(pem: privateKey)
         let publicKeyFromPrivate = try Insecure.RSA.PublicKey(
-            pem: privateKey.publicKey.pemRepresentation)
+            pem: privateKey.publicKey.pemRepresentation
+        )
         let publicKey = try Insecure.RSA.PublicKey(pem: publicKey)
         #expect(publicKeyFromPrivate == publicKey)
     }
@@ -224,3 +232,4 @@ struct PSSTests {
         L4z0tz7QWE0aGuOA32YqCSnrSYKdBTPFDILCdfHonzfP7WMPibz4jWxu_FzNk9s4Dh-uN2lV3NGW10pAsnqffD89LtYanRjaIdHnLW_PFo5fEL2yltK7qMB9hO1JegppKCfoc79W4-dr-4qy1Op0B3npOP-DaUYlNamfDmIbQW32UKeJzdGIn-_ryrBT7hQW6_uHLS2VFPPk0rNkPPKZYoNaqGnJ0eaFFF-dFwiThXIpPz--dxTAL8xYf275rjG8C9lh6awOfJSIdXMVuQITWf62E0mSQPR2-219bShMKriDYcYLbT3BJEgOkRBBHGuHo9R5TN298anxZqV1u5jtUQ
         """
 }
+#endif  // canImport(Testing)
