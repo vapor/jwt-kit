@@ -141,7 +141,3 @@ extension EdDSA {
         }
     }
 }
-
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension Curve25519.Signing.PublicKey: @unchecked @retroactive Sendable {}
-extension Curve25519.Signing.PrivateKey: @unchecked @retroactive Sendable {}

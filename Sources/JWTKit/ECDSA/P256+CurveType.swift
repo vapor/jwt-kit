@@ -43,11 +43,8 @@ extension P256.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
-extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
-extension P256.Signing.PublicKey: @unchecked @retroactive Sendable {}
-extension P256: @unchecked @retroactive Sendable {}
+extension P256.Signing.PrivateKey: ECDSAPrivateKey {}
+extension P256.Signing.ECDSASignature: ECDSASignature {}
 
 public typealias ES256PublicKey = ECDSA.PublicKey<P256>
 public typealias ES256PrivateKey = ECDSA.PrivateKey<P256>

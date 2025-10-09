@@ -44,10 +44,8 @@ extension P521.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-extension P521.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
-extension P521.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
-extension P521.Signing.PublicKey: @unchecked @retroactive Sendable {}
-extension P521: @unchecked @retroactive Sendable {}
+extension P521.Signing.PrivateKey: ECDSAPrivateKey {}
+extension P521.Signing.ECDSASignature: ECDSASignature {}
 
 public typealias ES512PublicKey = ECDSA.PublicKey<P521>
 public typealias ES512PrivateKey = ECDSA.PrivateKey<P521>
