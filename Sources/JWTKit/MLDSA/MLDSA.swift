@@ -1,13 +1,16 @@
 import _CryptoExtras
 
 #if !canImport(Darwin)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
-@_spi(PostQuantum) public enum MLDSA: Sendable {}
+@_spi(PostQuantum)
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+public enum MLDSA: Sendable {}
 
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLDSA {
     public struct PublicKey<KeyType>: MLDSAKey where KeyType: MLDSAType {
         public typealias MLDSAType = KeyType
@@ -26,6 +29,7 @@ extension MLDSA {
     }
 }
 
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLDSA {
     public struct PrivateKey<KeyType>: MLDSAKey where KeyType: MLDSAType {
         public typealias MLDSAType = KeyType
@@ -42,8 +46,8 @@ extension MLDSA {
             self.backing = backing
         }
 
-        public init(seedRepresentation: some DataProtocol) throws {
-            self.backing = try PrivateKey(seedRepresentation: seedRepresentation)
+        public init(seedRepresentation: some DataProtocol, publicKey: KeyType.PrivateKey.PublicKey? = nil) throws {
+            self.backing = try PrivateKey(seedRepresentation: seedRepresentation, publicKey: publicKey)
         }
     }
 }

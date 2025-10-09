@@ -1,11 +1,12 @@
 import _CryptoExtras
 
 #if canImport(FoundationEssentials)
-    import FoundationEssentials
+import FoundationEssentials
 #else
-    import Foundation
+import Foundation
 #endif
 
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 struct MLDSASigner<Key: MLDSAKey>: JWTAlgorithm, Sendable {
     let privateKey: MLDSA.PrivateKey<Key.MLDSAType>?
     let publicKey: MLDSA.PublicKey<Key.MLDSAType>
