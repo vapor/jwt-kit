@@ -34,7 +34,7 @@ struct MLDSATests {
         }
 
         let key = try MLDSA87PrivateKey(
-            seedRepresentation: Data(fromHexEncodedString: mldsa65PrivateKeySeedRepresentation)!)
+            seedRepresentation: Data(fromHexEncodedString: mldsa87PrivateKeySeedRepresentation)!)
 
         let keyCollection = JWTKeyCollection()
         await keyCollection.add(mldsa: key)
