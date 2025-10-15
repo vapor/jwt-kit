@@ -6,7 +6,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P384: ECDSACurveType {
     public typealias Signature = P384.Signing.ECDSASignature
     public typealias PrivateKey = P384.Signing.PrivateKey
@@ -28,7 +27,6 @@ extension P384: ECDSACurveType {
     }
 }
 
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P384.Signing.PublicKey: ECDSAPublicKey {
     /// Verifies that the P384 key signature is valid for the given digest.
     ///
@@ -43,11 +41,8 @@ extension P384.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P384.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
-extension P384.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
-extension P384.Signing.PublicKey: @unchecked @retroactive Sendable {}
-extension P384: @unchecked @retroactive Sendable {}
+extension P384.Signing.PrivateKey: ECDSAPrivateKey {}
+extension P384.Signing.ECDSASignature: ECDSASignature {}
 
 public typealias ES384PublicKey = ECDSA.PublicKey<P384>
 public typealias ES384PrivateKey = ECDSA.PrivateKey<P384>

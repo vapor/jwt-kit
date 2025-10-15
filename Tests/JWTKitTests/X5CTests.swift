@@ -1,7 +1,7 @@
 #if canImport(Testing)
 import Testing
 import JWTKit
-import X509
+@_spi(FixedExpiryValidationTime) import X509
 
 #if !canImport(Darwin)
 import FoundationEssentials
@@ -245,7 +245,7 @@ struct X5CTests {
         let result = try await verifier.verifyChain(
             certificates: [leaf, intermediate],
             policy: {
-                RFC5280Policy(validationTime: Date(timeIntervalSince1970: TimeInterval(1_681_312_846)))
+                RFC5280Policy(fixedExpiryValidationTime: Date(timeIntervalSince1970: TimeInterval(1_681_312_846)))
             }
         )
 
@@ -264,7 +264,7 @@ struct X5CTests {
         let result = try await verifier.verifyChain(
             certificates: [leaf, intermediate],
             policy: {
-                RFC5280Policy(validationTime: Date(timeIntervalSince1970: TimeInterval(2_280_946_846)))
+                RFC5280Policy(fixedExpiryValidationTime: Date(timeIntervalSince1970: TimeInterval(2_280_946_846)))
             }
         )
 
