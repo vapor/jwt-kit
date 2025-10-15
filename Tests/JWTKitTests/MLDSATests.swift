@@ -43,8 +43,6 @@ struct MLDSATests {
         let verified = try await keyCollection.verify(jwt, as: Foo.self)
 
         #expect(verified.bar == 42)
-
-        print(jwt)
     }
 }
 
