@@ -6,7 +6,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P256: ECDSACurveType {
     public typealias Signature = P256.Signing.ECDSASignature
     public typealias PrivateKey = P256.Signing.PrivateKey
@@ -28,7 +27,6 @@ extension P256: ECDSACurveType {
     }
 }
 
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
 extension P256.Signing.PublicKey: ECDSAPublicKey {
     /// Verifies that the P256 key signature is valid for the given digest.
     ///
@@ -43,11 +41,8 @@ extension P256.Signing.PublicKey: ECDSAPublicKey {
     }
 }
 
-// TODO: Remove @unchecked Sendable when Crypto is updated to use Sendable
-extension P256.Signing.PrivateKey: ECDSAPrivateKey, @unchecked @retroactive Sendable {}
-extension P256.Signing.ECDSASignature: ECDSASignature, @unchecked @retroactive Sendable {}
-extension P256.Signing.PublicKey: @unchecked @retroactive Sendable {}
-extension P256: @unchecked @retroactive Sendable {}
+extension P256.Signing.PrivateKey: ECDSAPrivateKey {}
+extension P256.Signing.ECDSASignature: ECDSASignature {}
 
 public typealias ES256PublicKey = ECDSA.PublicKey<P256>
 public typealias ES256PrivateKey = ECDSA.PrivateKey<P256>
