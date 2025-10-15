@@ -1,4 +1,4 @@
-import _CryptoExtras
+import CryptoExtras
 
 extension JWTKeyCollection {
     /// Adds an RSA key to the collection.

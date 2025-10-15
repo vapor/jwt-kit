@@ -1,4 +1,4 @@
-import X509
+@_spi(FixedExpiryValidationTime) import X509
 
 #if !canImport(Darwin)
 import FoundationEssentials
@@ -60,8 +60,8 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [String],
-        policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
-    ) async throws -> X509.VerificationResult {
+        policy: () throws -> some VerifierPolicy = { RFC5280Policy() }
+    ) async throws -> X509.CertificateValidationResult {
         let certificates = try certificates.map { try Certificate(pemEncoded: $0) }
         return try await verifyChain(certificates: certificates, policy: policy)
     }
@@ -74,12 +74,12 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [Certificate],
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
-    ) async throws -> X509.VerificationResult {
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy() }
+    ) async throws -> X509.CertificateValidationResult {
         let untrustedChain = CertificateStore(certificates)
         var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
         let result = await verifier.validate(
-            leafCertificate: certificates[0], intermediates: untrustedChain)
+            leaf: certificates[0], intermediates: untrustedChain)
         return result
     }
 
@@ -141,7 +141,7 @@ public struct X5CVerifier: Sendable {
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy(validationTime: Date()) }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy() }
     ) async throws -> Payload
     where Payload: JWTPayload {
         // Parse the JWS header to get the header
@@ -187,12 +187,12 @@ public struct X5CVerifier: Sendable {
             rootCertificates: trustedStore,
             policy: {
                 try policy()
-                RFC5280Policy(validationTime: date)
+                RFC5280Policy(fixedExpiryValidationTime: date)
             })
 
         // Validate the leaf certificate against the trusted store
         let result = await verifier.validate(
-            leafCertificate: certificates[0],
+            leaf: certificates[0],
             intermediates: untrustedChain
         )
 

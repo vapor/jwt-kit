@@ -1,7 +1,7 @@
 #if canImport(Testing)
 import Testing
 import JWTKit
-import _CryptoExtras
+import CryptoExtras
 
 @Suite("RSA Tests")
 struct RSATests {
