@@ -1,6 +1,6 @@
 import Crypto
 import X509
-import _CryptoExtras
+import CryptoExtras
 
 #if !canImport(Darwin)
 import FoundationEssentials
