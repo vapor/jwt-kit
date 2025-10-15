@@ -3,12 +3,15 @@ on:
   push:
     branches:
       - main
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build-and-deploy:
-     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml@main
-     secrets: inherit
-     with:
-       package_name: jwt-kit
-       modules: JWTKit
-       pathsToInvalidate: /jwtkit/*
+    uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml@main
+    secrets: inherit
+    with:
+      package_name: jwt-kit
+      modules: JWTKit
+      pathsToInvalidate: /jwtkit/*
