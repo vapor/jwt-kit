@@ -141,7 +141,7 @@ public struct X5CVerifier: Sendable {
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy() }
+        @PolicyBuilder policy: () throws -> some VerifierPolicy = { EmptyPolicy() }
     ) async throws -> Payload
     where Payload: JWTPayload {
         // Parse the JWS header to get the header
