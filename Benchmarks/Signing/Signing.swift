@@ -24,7 +24,7 @@ let benchmarks = {
     Benchmark("ES256") { benchmark in
         let key = ES256PrivateKey()
         let keyCollection = JWTKeyCollection()
-        keyCollection.add(ecdsa: key)
+        await keyCollection.add(ecdsa: key)
         for _ in benchmark.scaledIterations {
             _ = try await keyCollection.sign(payload)
         }
@@ -33,7 +33,7 @@ let benchmarks = {
     Benchmark("RSA") { benchmark in
         let key = try Insecure.RSA.PrivateKey(pem: rsaPrivateKey)
         let keyCollection = JWTKeyCollection()
-        keyCollection.add(rsa: key, digestAlgorithm: .sha256)
+        await keyCollection.add(rsa: key, digestAlgorithm: .sha256)
         for _ in benchmark.scaledIterations {
             _ = try await keyCollection.sign(payload)
         }
@@ -42,7 +42,7 @@ let benchmarks = {
     Benchmark("EdDSA") { benchmark in
         let key = try EdDSA.PrivateKey()
         let keyCollection = JWTKeyCollection()
-        keyCollection.add(eddsa: key)
+        await keyCollection.add(eddsa: key)
         for _ in benchmark.scaledIterations {
             _ = try await keyCollection.sign(payload)
         }
