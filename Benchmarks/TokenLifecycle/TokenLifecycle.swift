@@ -25,7 +25,7 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let key = ES256PrivateKey()
             let keyCollection = JWTKeyCollection()
-            keyCollection.add(ecdsa: key)
+            await keyCollection.add(ecdsa: key)
             let token = try await keyCollection.sign(payload)
             _ = try await keyCollection.verify(token, as: Payload.self)
         }
@@ -35,7 +35,7 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let key = try ES256PrivateKey(pem: ecdsaPrivateKey)
             let keyCollection = JWTKeyCollection()
-            keyCollection.add(ecdsa: key)
+            await keyCollection.add(ecdsa: key)
             let token = try await keyCollection.sign(payload)
             _ = try await keyCollection.verify(token, as: Payload.self)
         }
@@ -45,7 +45,7 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let key = try Insecure.RSA.PrivateKey(pem: rsaPrivateKey)
             let keyCollection = JWTKeyCollection()
-            keyCollection.add(rsa: key, digestAlgorithm: .sha256)
+            await keyCollection.add(rsa: key, digestAlgorithm: .sha256)
             let token = try await keyCollection.sign(payload)
             _ = try await keyCollection.verify(token, as: Payload.self)
         }
@@ -55,7 +55,7 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey()
             let keyCollection = JWTKeyCollection()
-            keyCollection.add(eddsa: key)
+            await keyCollection.add(eddsa: key)
             let token = try await keyCollection.sign(payload)
             _ = try await keyCollection.verify(token, as: Payload.self)
         }
@@ -65,7 +65,7 @@ let benchmarks = {
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519)
             let keyCollection = JWTKeyCollection()
-            keyCollection.add(eddsa: key)
+            await keyCollection.add(eddsa: key)
             let token = try await keyCollection.sign(payload)
             _ = try await keyCollection.verify(token, as: Payload.self)
         }
