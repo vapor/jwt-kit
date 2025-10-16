@@ -1,5 +1,7 @@
 // snippet.KEY_COLLECTION
 import JWTKit
+// snippet.MLDSA_IMPORT
+@_spi(PostQuantum) import JWTKit
 
 #if !canImport(Darwin)
 import FoundationEssentials
@@ -109,6 +111,16 @@ do {
     // Add RSA with SHA-512 and PSS padding algorithm
     await keys.add(pss: key, digestAlgorithm: .sha512)
     // snippet.end
+}
+
+do {
+    // snippet.MLDSA
+    // Initialize an MLDSA key with its seed
+    let seedRepresentation = Data("...".utf8)
+    let privateKey = try MLDSA87PrivateKey(seedRepresentation: seedRepresentation)
+
+    // Add private key to the key collection
+    await keys.add(mldsa: privateKey)
 }
 
 extension DataProtocol {

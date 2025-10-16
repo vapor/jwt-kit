@@ -159,6 +159,21 @@ You can create an EdDSA key using its coordinates:
 
 @Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: EDDSA)
 
+## MLDSA
+
+Hidden behind the `@_spi(PostQuantum)` flag, JWTKit supports MLDSA (Module-Lattice-Based Digital Signature Algorithm), a post-quantum signature scheme based on the CRYSTALS-DILITHIUM algorithm. It is currently behind an SPI flag because, while the MLDSA signature scheme is [standardized by NIST](https://nvlpubs.nist.gov/nistpubs/fips/nist.fips.204.pdf), its [usage in JWT](https://www.ietf.org/archive/id/draft-ietf-cose-dilithium-04.html) is still in draft state, and, while unlikely, may change before being finalized. Therefore JWTKit reserves the ability to make breaking changes to this API without until the usage of MLDSA in JWT is finalized.
+
+> Note:
+> MLDSA is only available on macOS 26+.
+
+Currently, to use MLDSA, you must import JWTKit with the `@_spi(PostQuantum)` flag enabled:
+
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: MLDSA_IMPORT)
+
+Then you can choose whether to use MLDSA65 or MLDSA87. Use them as follows:
+
+@Snippet(path: "jwt-kit/Snippets/JWTKitExamples", slice: MLDSA)
+
 ## RSA
 
 RSA is an asymmetric algorithm. It uses a public key to verify tokens and a private key to sign them.
