@@ -16,7 +16,7 @@
 </p>
 <br>
 
-🔑 JSON Web Token signing and verification (HMAC, RSA, PSS, ECDSA, EdDSA) using SwiftCrypto.
+🔑 JSON Web Token signing and verification (HMAC, ECDSA, EdDSA, MLDSA, RSA, PSS) using SwiftCrypto.
 
 ### Supported Platforms
 
