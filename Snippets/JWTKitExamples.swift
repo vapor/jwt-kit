@@ -121,6 +121,7 @@ do {
 
     // Add private key to the key collection
     await keys.add(mldsa: privateKey)
+    // snippet.end
 }
 
 extension DataProtocol {
