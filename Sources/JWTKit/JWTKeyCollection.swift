@@ -50,8 +50,7 @@ public actor JWTKeyCollection: Sendable {
     /// - Returns: Self for chaining.
     @discardableResult
     func add(_ signer: JWTSigner, for kid: JWKIdentifier? = nil) -> Self {
-        let signer = JWTSigner(
-            algorithm: signer.algorithm, parser: signer.parser, serializer: signer.serializer)
+        let signer = JWTSigner(algorithm: signer.algorithm, parser: signer.parser, serializer: signer.serializer)
 
         if let kid {
             if self.storage[kid] != nil {
@@ -106,8 +105,7 @@ public actor JWTKeyCollection: Sendable {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK(reason: "Missing KID")
         }
-        let signer = try JWKSigner(
-            jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
+        let signer = try JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
 
         self.storage[kid] = .jwk(signer)
         switch (self.default, isDefault) {

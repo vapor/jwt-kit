@@ -1,3 +1,6 @@
+// snippet.MLDSA_IMPORT
+@_spi(PostQuantum) import JWTKit
+// snippet.end
 // snippet.KEY_COLLECTION
 import JWTKit
 
@@ -109,6 +112,19 @@ do {
     // Add RSA with SHA-512 and PSS padding algorithm
     await keys.add(pss: key, digestAlgorithm: .sha512)
     // snippet.end
+}
+
+if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
+    do {
+        // snippet.MLDSA
+        // Initialize an MLDSA key with its seed
+        let seedRepresentation = Data("...".utf8)
+        let privateKey = try MLDSA87PrivateKey(seedRepresentation: seedRepresentation)
+
+        // Add private key to the key collection
+        await keys.add(mldsa: privateKey)
+        // snippet.end
+    }
 }
 
 extension DataProtocol {
