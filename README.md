@@ -72,8 +72,8 @@ The following algorithms, as defined in [RFC 7518 § 3](https://www.rfc-editor.o
 | `ES384` | `ECDSA384` | P‑384 + SHA‑384 |
 | `ES512` | `ECDSA512` | P‑521 + SHA‑512 |
 | `EdDSA` | `EdDSA` | Ed25519 |
-| `MLDSA_65` | `MLDSA65` | MLDSA with parameter set 65 |
-| `MLDSA_87` | `MLDSA87` | MLDSA with parameter set 87 |
+| `ML-DSA-65` | `MLDSA65` | MLDSA with parameter set 65 |
+| `ML-DSA-87` | `MLDSA87` | MLDSA with parameter set 87 |
 | `none` | `None`|  No signature / MAC |
 
 ## Vapor
