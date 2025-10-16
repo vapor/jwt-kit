@@ -33,21 +33,23 @@ JWTKit provides APIs for signing and verifying JSON Web Tokens, as specified by 
 The following algorithms, as defined in [RFC 7518 § 3](https://www.rfc-editor.org/rfc/rfc7518.html#section-3) and [RFC 8037 § 3](https://www.rfc-editor.org/rfc/rfc8037.html#section-3), are supported for both signing and verification:
 
 | JWS | Algorithm | Description |
-| :-------------: | :-------------: | :----- |
-| HS256 | HMAC256 | HMAC with SHA-256 |
-| HS384 | HMAC384 | HMAC with SHA-384 |
-| HS512 | HMAC512 | HMAC with SHA-512 |
-| RS256 | RSA256 | RSASSA-PKCS1-v1_5 with SHA-256 |
-| RS384 | RSA384 | RSASSA-PKCS1-v1_5 with SHA-384 |
-| RS512 | RSA512 | RSASSA-PKCS1-v1_5 with SHA-512 |
-| PS256 | RSA256PSS | RSASSA-PSS with SHA-256 |
-| PS384 | RSA384PSS | RSASSA-PSS with SHA-384 |
-| PS512 | RSA512PSS | RSASSA-PSS with SHA-512 |
-| ES256 | ECDSA256 | ECDSA with curve P-256 and SHA-256 |
-| ES384 | ECDSA384 | ECDSA with curve P-384 and SHA-384 |
-| ES512 | ECDSA512 | ECDSA with curve P-521 and SHA-512 |
-| EdDSA | EdDSA | EdDSA with Ed25519 |
-| none | None | No digital signature or MAC |
+| :---: | :---: | --- |
+| `HS256` | `HMAC256` | HMAC with SHA‑256 |
+| `HS384` | `HMAC384` | HMAC with SHA‑384 |
+| `HS512` | `HMAC512` | HMAC with SHA‑512 |
+| `RS256` | `RSA256` | RSASSA‑PKCS1‑v1_5 + SHA‑256 |
+| `RS384` | `RSA384` | RSASSA‑PKCS1‑v1_5 + SHA‑384 |
+| `RS512` | `RSA512` | RSASSA‑PKCS1‑v1_5 + SHA‑512 |
+| `PS256` | `RSA256PSS` | RSASSA‑PSS + SHA‑256 |
+| `PS384` | `RSA384PSS` | RSASSA‑PSS + SHA‑384 |
+| `PS512` | `RSA512PSS` | RSASSA‑PSS + SHA‑512 |
+| `ES256` | `ECDSA256` | P‑256 + SHA‑256 |
+| `ES384` | `ECDSA384` | P‑384 + SHA‑384 |
+| `ES512` | `ECDSA512` | P‑521 + SHA‑512 |
+| `EdDSA` | `EdDSA` | Ed25519 |
+| `MLDSA_65` | `MLDSA65` | MLDSA with parameter set 65 |
+| `MLDSA_87` | `MLDSA87` | MLDSA with parameter set 87 |
+| `none` | `None`|  No signature / MAC |
 
 ## Vapor
 
