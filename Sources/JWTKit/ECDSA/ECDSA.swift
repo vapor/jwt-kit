@@ -16,6 +16,14 @@ public protocol ECDSAKey: Sendable {
     var parameters: ECDSAParameters? { get }
 }
 
+public protocol ECDSAEnclaveKey: Sendable {
+    associatedtype EnclaveCurve: ECDSAEnclaveCurveType
+    associatedtype Curve: ECDSACurveType
+
+    var curve: ECDSACurve { get }
+    var parameters: ECDSAParameters? { get }
+}
+
 extension ECDSA {
     public struct PublicKey<Curve>: ECDSAKey, Equatable where Curve: ECDSACurveType {
         typealias Signature = Curve.Signature
@@ -193,6 +201,34 @@ extension ECDSA {
         /// - Returns: A new ``ECDSA.PrivateKey`` instance with the generated key.
         public init() {
             self.backing = PrivateKey()
+        }
+
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.parameters?.x == rhs.parameters?.x && lhs.parameters?.y == rhs.parameters?.y
+        }
+    }
+
+    public struct EnclavePrivateKey<EnclaveCurve, Curve>: ECDSAEnclaveKey, Equatable where EnclaveCurve: ECDSAEnclaveCurveType, Curve: ECDSACurveType {
+        public typealias PrivateKey = EnclaveCurve.PrivateKey
+        typealias Signature = PrivateKey.Signature
+
+        public private(set) var curve: ECDSACurve = EnclaveCurve.curve
+
+        public var parameters: ECDSAParameters? {
+            self.publicKey.parameters
+        }
+
+        var backing: PrivateKey
+
+        public var publicKey: PublicKey<Curve> {
+            try! .init(backing: self.backing.publicKey)
+        }
+
+        /// Creates an ``ECDSA.EnclavePrivateKey`` instance from SwiftCrypto SecureEnclave PrivateKey.
+        ///
+        /// - Parameter backing: The SwiftCrypto SecureEnclave PrivateKey.
+        public init(backing: PrivateKey) {
+            self.backing = backing
         }
 
         public static func == (lhs: Self, rhs: Self) -> Bool {
