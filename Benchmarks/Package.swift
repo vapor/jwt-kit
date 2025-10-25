@@ -17,6 +17,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "JWTKit", package: "jwt-kit"),
+                .target(name: "Utilities"),
             ],
             path: "Signing",
             plugins: [
@@ -28,6 +29,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "JWTKit", package: "jwt-kit"),
+                .target(name: "Utilities"),
             ],
             path: "Verifying",
             plugins: [
@@ -39,11 +41,16 @@ let package = Package(
             dependencies: [
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "JWTKit", package: "jwt-kit"),
+                .target(name: "Utilities"),
             ],
             path: "TokenLifecycle",
             plugins: [
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
+        ),
+        .target(
+            name: "Utilities",
+            path: "Utilities"
         ),
     ]
 )
