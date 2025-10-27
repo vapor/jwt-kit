@@ -33,6 +33,15 @@ extension EdDSA {
             self.curve = .ed25519
         }
 
+        /// Creates an ``EdDSA.PublicKey`` instance using the provided PEM 
+        /// (Privacy Enhanced Mail) representation.
+        /// 
+        /// - Parameter pem: The PEM representation of the public key.
+        public init(pem string: String) throws {
+            self.backing = try .init(pemRepresentation: string)
+            self.curve = .ed25519
+        }
+
         /// Creates an ``EdDSA.PublicKey`` instance using the public key x-coordinate and specified curve.
         ///
         /// This init allows for the creation of an ``EdDSA.PublicKey`` using the x-coordinate of the public key.
@@ -61,8 +70,14 @@ extension EdDSA {
             self.init(backing: key)
         }
 
+        /// Raw bytes representation of the public key.
         public var rawRepresentation: Data {
             self.backing.rawRepresentation
+        }
+
+        /// PEM (Privacy Enhanced Mail) representation of the public key.
+        public var pemRepresentation: String {
+            self.backing.pemRepresentation
         }
     }
 }
@@ -92,6 +107,15 @@ extension EdDSA {
                 }
 
             self.init(backing: key)
+        }
+
+        /// Creates an ``EdDSA.PrivateKey`` instance using the provided PEM 
+        /// (Privacy Enhanced Mail) representation.
+        /// 
+        /// - Parameter pem: The PEM representation of the private key.
+        public init(pem string: String) throws {
+            self.backing = try .init(pemRepresentation: string)
+            self.curve = .ed25519
         }
 
         /// Creates an ``EdDSA.PrivateKey`` instance using the provided private key.
@@ -132,12 +156,19 @@ extension EdDSA {
             self.init(backing: key)
         }
 
+        /// ``EdDSA.PublicKey`` associated with this private key.
         public var publicKey: PublicKey {
             .init(backing: self.backing.publicKey)
         }
 
+        /// Raw bytes representation of the private key.
         public var rawRepresentation: Data {
             self.backing.rawRepresentation
+        }
+
+        /// PEM (Privacy Enhanced Mail) representation of the public key.
+        public var pemRepresentation: String {
+            self.backing.pemRepresentation
         }
     }
 }
