@@ -51,7 +51,7 @@ let package = Package(
         .target(
             name: "Utilities",
             dependencies: [
-                .product(name: "JWTKit", package: "jwt-kit"),
+                .product(name: "JWTKit", package: "jwt-kit")
             ],
             path: "Utilities"
         ),
