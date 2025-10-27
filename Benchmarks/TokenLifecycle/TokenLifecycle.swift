@@ -1,6 +1,7 @@
 import Benchmark
 import Foundation
-import JWTKit
+@_spi(PostQuantum) import JWTKit
+import Utilities
 
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
@@ -70,14 +71,27 @@ let benchmarks = {
             _ = try await keyCollection.verify(token, as: Payload.self)
         }
     }
-}
 
-struct Payload: JWTPayload {
-    let name: String
-    let admin: Bool
+    if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
+        Benchmark("MLDSA65") { benchmark in
+            for _ in benchmark.scaledIterations {
+                let key = try MLDSA65PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519)
+                let keyCollection = JWTKeyCollection()
+                await keyCollection.add(eddsa: key)
+                let token = try await keyCollection.sign(payload)
+                _ = try await keyCollection.verify(token, as: Payload.self)
+            }
+        }
 
-    func verify(using signer: some JWTAlgorithm) async throws {
-        // nothing to verify
+        Benchmark("MLDSA87") { benchmark in
+            for _ in benchmark.scaledIterations {
+                let key = try MLDSA87PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519)
+                let keyCollection = JWTKeyCollection()
+                await keyCollection.add(eddsa: key)
+                let token = try await keyCollection.sign(payload)
+                _ = try await keyCollection.verify(token, as: Payload.self)
+            }
+        }
     }
 }
 
