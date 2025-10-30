@@ -143,7 +143,7 @@ struct EdDSATests {
     func signingAndVerifyingWithPEM() async throws {
         let signingKeyCollection = try await JWTKeyCollection()
             .add(eddsa: EdDSA.PrivateKey(pem: eddsaPrivateKeyPEM))
-        
+
         let verificationKeyCollection = try await JWTKeyCollection()
             .add(eddsa: EdDSA.PublicKey(pem: eddsaPublicKeyPEM))
 

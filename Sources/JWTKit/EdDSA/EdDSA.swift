@@ -33,9 +33,9 @@ extension EdDSA {
             self.curve = .ed25519
         }
 
-        /// Creates an ``EdDSA.PublicKey`` instance using the provided PEM 
+        /// Creates an ``EdDSA.PublicKey`` instance using the provided PEM
         /// (Privacy Enhanced Mail) representation.
-        /// 
+        ///
         /// - Parameter pem: The PEM representation of the public key.
         public init(pem string: String) throws {
             self.backing = try .init(pemRepresentation: string)
@@ -113,9 +113,9 @@ extension EdDSA {
             self.init(backing: key)
         }
 
-        /// Creates an ``EdDSA.PrivateKey`` instance using the provided PEM 
+        /// Creates an ``EdDSA.PrivateKey`` instance using the provided PEM
         /// (Privacy Enhanced Mail) representation.
-        /// 
+        ///
         /// - Parameter pem: The PEM representation of the private key.
         public init(pem string: String) throws {
             self.backing = try .init(pemRepresentation: string)
