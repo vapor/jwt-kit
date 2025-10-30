@@ -22,7 +22,7 @@ let benchmarks = {
         ]
     )
 
-    Benchmark("ES256 Generated") { benchmark in
+    Benchmark("ES256-Generated") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = ES256PrivateKey()
             let keyCollection = JWTKeyCollection()
@@ -32,7 +32,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("ES256 PEM") { benchmark in
+    Benchmark("ES256-PEM") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try ES256PrivateKey(pem: ecdsaPrivateKey)
             let keyCollection = JWTKeyCollection()
@@ -42,7 +42,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("RSA PEM") { benchmark in
+    Benchmark("RSA-PEM") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try Insecure.RSA.PrivateKey(pem: rsaPrivateKey)
             let keyCollection = JWTKeyCollection()
@@ -52,7 +52,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("EdDSA Generated") { benchmark in
+    Benchmark("EdDSA-Generated") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey()
             let keyCollection = JWTKeyCollection()
@@ -62,7 +62,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("EdDSA Coordinates") { benchmark in
+    Benchmark("EdDSA-Coordinates") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519)
             let keyCollection = JWTKeyCollection()
@@ -75,19 +75,9 @@ let benchmarks = {
     if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
         Benchmark("MLDSA65") { benchmark in
             for _ in benchmark.scaledIterations {
-                let key = try MLDSA65PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519)
+                let key = try MLDSA65PrivateKey(seedRepresentation: Data(fromHexEncodedString: mldsa65PrivateKeySeed)!)
                 let keyCollection = JWTKeyCollection()
-                await keyCollection.add(eddsa: key)
-                let token = try await keyCollection.sign(payload)
-                _ = try await keyCollection.verify(token, as: Payload.self)
-            }
-        }
-
-        Benchmark("MLDSA87") { benchmark in
-            for _ in benchmark.scaledIterations {
-                let key = try MLDSA87PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519)
-                let keyCollection = JWTKeyCollection()
-                await keyCollection.add(eddsa: key)
+                await keyCollection.add(mldsa: key)
                 let token = try await keyCollection.sign(payload)
                 _ = try await keyCollection.verify(token, as: Payload.self)
             }
@@ -139,3 +129,4 @@ let rsaPrivateKey = """
 
 let eddsaPublicKeyBase64Url = "0ZcEvMCSYqSwR8XIkxOoaYjRQSAO8frTMSCpNbUl4lE"
 let eddsaPrivateKeyBase64Url = "d1H3_dcg0V3XyAuZW2TE5Z3rhY20M-4YAfYu_HUQd8w"
+let mldsa65PrivateKeySeed = "70cefb9aed5b68e018b079da8284b9d5cad5499ed9c265ff73588005d85c225c"
