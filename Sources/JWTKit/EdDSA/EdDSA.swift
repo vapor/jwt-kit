@@ -19,7 +19,7 @@ extension EdDSA {
     ///
     /// In JWT, EdDSA public keys are represented as a single x-coordinate and are used for verifying signatures.
     /// Currently, only the ``EdDSACurve/ed25519`` curve is supported.
-    public struct PublicKey: EdDSAKey {
+    public struct PublicKey: EdDSAKey, Equatable {
         let backing: Curve25519.Signing.PublicKey
         let curve: EdDSACurve
 
@@ -30,6 +30,15 @@ extension EdDSA {
         /// - Parameter backing: The SwiftCrypto ``Curve25519.Signing.PublicKey``
         public init(backing: Curve25519.Signing.PublicKey) {
             self.backing = backing
+            self.curve = .ed25519
+        }
+
+        /// Creates an ``EdDSA.PublicKey`` instance using the provided PEM
+        /// (Privacy Enhanced Mail) representation.
+        ///
+        /// - Parameter pem: The PEM representation of the public key.
+        public init(pem string: String) throws {
+            self.backing = try .init(pemRepresentation: string)
             self.curve = .ed25519
         }
 
@@ -61,8 +70,18 @@ extension EdDSA {
             self.init(backing: key)
         }
 
+        /// Raw bytes representation of the public key.
         public var rawRepresentation: Data {
             self.backing.rawRepresentation
+        }
+
+        /// PEM (Privacy Enhanced Mail) representation of the public key.
+        public var pemRepresentation: String {
+            self.backing.pemRepresentation
+        }
+
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.backing.derRepresentation == rhs.backing.derRepresentation
         }
     }
 }
@@ -72,7 +91,7 @@ extension EdDSA {
     ///
     /// In JWT, EdDSA private keys are represented as a pair of x-coordinate and private key (d) and are used for signing.
     /// Currently, only the ``Curve/ed25519`` curve is supported.
-    public struct PrivateKey: EdDSAKey {
+    public struct PrivateKey: EdDSAKey, Equatable {
         let backing: Curve25519.Signing.PrivateKey
         let curve: EdDSACurve
 
@@ -92,6 +111,15 @@ extension EdDSA {
                 }
 
             self.init(backing: key)
+        }
+
+        /// Creates an ``EdDSA.PrivateKey`` instance using the provided PEM
+        /// (Privacy Enhanced Mail) representation.
+        ///
+        /// - Parameter pem: The PEM representation of the private key.
+        public init(pem string: String) throws {
+            self.backing = try .init(pemRepresentation: string)
+            self.curve = .ed25519
         }
 
         /// Creates an ``EdDSA.PrivateKey`` instance using the provided private key.
@@ -132,12 +160,23 @@ extension EdDSA {
             self.init(backing: key)
         }
 
+        /// ``EdDSA.PublicKey`` associated with this private key.
         public var publicKey: PublicKey {
             .init(backing: self.backing.publicKey)
         }
 
+        /// Raw bytes representation of the private key.
         public var rawRepresentation: Data {
             self.backing.rawRepresentation
+        }
+
+        /// PEM (Privacy Enhanced Mail) representation of the public key.
+        public var pemRepresentation: String {
+            self.backing.pemRepresentation
+        }
+
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.backing.derRepresentation == rhs.backing.derRepresentation
         }
     }
 }
