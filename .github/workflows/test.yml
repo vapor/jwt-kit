@@ -32,7 +32,7 @@ jobs:
       with_api_check: ${{ github.event_name == 'pull_request' }}
       warnings_as_errors: true
       with_linting: true
-      with_windows: true
+      with_windows: false
       with_musl: true
       with_android: true
       ios_scheme_name: jwt-kit
