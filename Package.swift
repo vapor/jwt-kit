@@ -13,7 +13,7 @@ let package = Package(
         .library(name: "JWTKit", targets: ["JWTKit"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.1.0"),
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.15.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
     ],

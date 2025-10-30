@@ -19,7 +19,7 @@ extension EdDSA {
     ///
     /// In JWT, EdDSA public keys are represented as a single x-coordinate and are used for verifying signatures.
     /// Currently, only the ``EdDSACurve/ed25519`` curve is supported.
-    public struct PublicKey: EdDSAKey {
+    public struct PublicKey: EdDSAKey, Equatable {
         let backing: Curve25519.Signing.PublicKey
         let curve: EdDSACurve
 
@@ -79,6 +79,10 @@ extension EdDSA {
         public var pemRepresentation: String {
             self.backing.pemRepresentation
         }
+
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.backing.derRepresentation == rhs.backing.derRepresentation
+        }
     }
 }
 
@@ -87,7 +91,7 @@ extension EdDSA {
     ///
     /// In JWT, EdDSA private keys are represented as a pair of x-coordinate and private key (d) and are used for signing.
     /// Currently, only the ``Curve/ed25519`` curve is supported.
-    public struct PrivateKey: EdDSAKey {
+    public struct PrivateKey: EdDSAKey, Equatable {
         let backing: Curve25519.Signing.PrivateKey
         let curve: EdDSACurve
 
@@ -169,6 +173,10 @@ extension EdDSA {
         /// PEM (Privacy Enhanced Mail) representation of the public key.
         public var pemRepresentation: String {
             self.backing.pemRepresentation
+        }
+
+        public static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.backing.derRepresentation == rhs.backing.derRepresentation
         }
     }
 }
