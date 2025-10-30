@@ -31,7 +31,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("RSA") { benchmark in
+    Benchmark("RS256") { benchmark in
         let key = try Insecure.RSA.PrivateKey(pem: rsaPrivateKey)
         let keyCollection = JWTKeyCollection()
         await keyCollection.add(rsa: key, digestAlgorithm: .sha256)
