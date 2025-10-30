@@ -22,7 +22,7 @@ let benchmarks = {
         ]
     )
 
-    Benchmark("ES256 Generated") { benchmark in
+    Benchmark("ES256-Generated") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = ES256PrivateKey()
             let keyCollection = JWTKeyCollection()
@@ -32,7 +32,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("ES256 PEM") { benchmark in
+    Benchmark("ES256-PEM") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try ES256PrivateKey(pem: ecdsaPrivateKey)
             let keyCollection = JWTKeyCollection()
@@ -42,7 +42,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("RSA PEM") { benchmark in
+    Benchmark("RSA-PEM") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try Insecure.RSA.PrivateKey(pem: rsaPrivateKey)
             let keyCollection = JWTKeyCollection()
@@ -52,7 +52,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("EdDSA Generated") { benchmark in
+    Benchmark("EdDSA-Generated") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey()
             let keyCollection = JWTKeyCollection()
@@ -62,7 +62,7 @@ let benchmarks = {
         }
     }
 
-    Benchmark("EdDSA Coordinates") { benchmark in
+    Benchmark("EdDSA-Coordinates") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = try EdDSA.PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519)
             let keyCollection = JWTKeyCollection()
