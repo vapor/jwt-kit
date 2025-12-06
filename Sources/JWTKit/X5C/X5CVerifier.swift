@@ -148,8 +148,7 @@ public struct X5CVerifier: Sendable {
         let parser = DefaultJWTParser(jsonDecoder: jsonDecoder)
         let (header, payload, _) = try parser.parse(token, as: Payload.self)
 
-        // Ensure the algorithm used is ES256, as it's the only supported one (for now)
-        guard let headerAlg = header.alg, headerAlg == "ES256" else {
+        guard let rawAlg = header.alg, let headerAlg = JWK.Algorithm(rawValue: rawAlg) else {
             throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: header.alg))")
         }
 
@@ -201,9 +200,29 @@ public struct X5CVerifier: Sendable {
         }
 
         // Assuming the chain is valid, verify the token was signed by the valid certificate
-        let ecdsaKey = try ES256PublicKey(certificate: certificates[0].serializeAsPEM().pemString)
-        let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
+        //let ecdsaKey = try ES256PublicKey(certificate: certificates[0].serializeAsPEM().pemString)
+        //let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
+        let signer = try getSigner(for: headerAlg, certificate: certificates[0], parser: parser)
 
         return try await signer.verify(token)
+    }
+}
+
+extension X5CVerifier {
+    func getSigner(for alg: JWK.Algorithm, certificate: Certificate, parser: any JWTParser) throws -> JWTSigner {
+        let pem = try certificate.serializeAsPEM().pemString
+        switch alg {
+        case .eddsa:
+            let eddsaKey = try EdDSA.PublicKey(pem: pem)
+            return JWTSigner(algorithm: EdDSASigner(key: eddsaKey), parser: parser)
+        case .es256:
+            let ecdsaKey = try ES256PublicKey(certificate: pem)
+            return JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
+        case .es384:
+            let ecdsaKey = try ES384PublicKey(certificate: pem)
+            return JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
+        default:
+            throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: alg))")
+        }
     }
 }
