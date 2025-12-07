@@ -221,6 +221,9 @@ extension X5CVerifier {
         case .es384:
             let ecdsaKey = try ES384PublicKey(certificate: pem)
             return JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
+        case .es512:
+            let ecdsaKey = try ES512PublicKey(certificate: pem)
+            return JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
         default:
             throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: alg))")
         }
