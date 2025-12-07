@@ -332,6 +332,70 @@ struct X5CTests {
         }
     }
 
+    @Test("Test signing with EdDSA x5c chain")
+    func signWithEdDSAX5CChain() async throws {
+        let caKey = try EdDSA.PrivateKey()
+        let caPrivateKey = try Certificate.PrivateKey(pemEncoded: caKey.pemRepresentation)
+        let caSubjectName = try DistinguishedName {
+            CommonName("CA")
+        }
+        let caCert = try Certificate(
+            version: .v3,
+            serialNumber: .init(),
+            publicKey: caPrivateKey.publicKey,
+            notValidBefore: Date(),
+            notValidAfter: Date().addingTimeInterval(3600),
+            issuer: caSubjectName,
+            subject: caSubjectName,
+            extensions: try Certificate.Extensions {
+                Critical(BasicConstraints.isCertificateAuthority(maxPathLength: nil))
+                Critical(KeyUsage(digitalSignature: true, keyCertSign: true))
+            },
+            issuerPrivateKey: caPrivateKey
+        )
+
+        let key = try EdDSA.PrivateKey()
+        let privateKey = try Certificate.PrivateKey(pemEncoded: key.pemRepresentation)
+        let subjectName = try DistinguishedName {
+            CommonName("Signer")
+        }
+        let cert = try Certificate(
+            version: .v3,
+            serialNumber: .init(),
+            publicKey: privateKey.publicKey,
+            notValidBefore: Date(),
+            notValidAfter: Date().addingTimeInterval(3600),
+            issuer: caSubjectName,
+            subject: subjectName,
+            extensions: try Certificate.Extensions {
+                Critical(KeyUsage(digitalSignature: true, keyCertSign: true))
+            },
+            issuerPrivateKey: caPrivateKey
+        )
+
+        let keyCollection = await JWTKeyCollection()
+            .add(eddsa: key)
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+
+        let caCerts = try [caCert.serializeAsPEM().pemString]
+        let certs = try [cert.serializeAsPEM().pemString]
+        let header: JWTHeader = ["x5c": .array(certs.map(JWTHeaderField.string))]
+        let token = try await keyCollection.sign(payload, header: header)
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+
+        let x5c = try #require(parsed.header.x5c)
+        let verifier = try X5CVerifier(rootCertificates: caCerts)
+        await #expect(throws: Never.self) {
+            try await verifier.verifyJWS(token, as: TestPayload.self)
+        }
+    }
+
     // MARK: Private
 
     private func getPEMString(from der: String) throws -> String {
