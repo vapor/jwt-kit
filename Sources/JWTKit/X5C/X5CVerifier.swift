@@ -200,8 +200,6 @@ public struct X5CVerifier: Sendable {
         }
 
         // Assuming the chain is valid, verify the token was signed by the valid certificate
-        //let ecdsaKey = try ES256PublicKey(certificate: certificates[0].serializeAsPEM().pemString)
-        //let signer = JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
         let signer = try getSigner(for: headerAlg, certificate: certificates[0], parser: parser)
 
         return try await signer.verify(token)
@@ -210,20 +208,19 @@ public struct X5CVerifier: Sendable {
 
 extension X5CVerifier {
     func getSigner(for alg: JWK.Algorithm, certificate: Certificate, parser: any JWTParser) throws -> JWTSigner {
-        let pem = try certificate.serializeAsPEM().pemString
         switch alg {
-        case .eddsa:
-            let eddsaKey = try EdDSA.PublicKey(pem: pem)
-            return JWTSigner(algorithm: EdDSASigner(key: eddsaKey), parser: parser)
         case .es256:
-            let ecdsaKey = try ES256PublicKey(certificate: pem)
+            let ecdsaKey = try ES256PublicKey(certificate: certificate.serializeAsPEM().pemString)
             return JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
         case .es384:
-            let ecdsaKey = try ES384PublicKey(certificate: pem)
+            let ecdsaKey = try ES384PublicKey(certificate: certificate.serializeAsPEM().pemString)
             return JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
         case .es512:
-            let ecdsaKey = try ES512PublicKey(certificate: pem)
+            let ecdsaKey = try ES512PublicKey(certificate: certificate.serializeAsPEM().pemString)
             return JWTSigner(algorithm: ECDSASigner(key: ecdsaKey), parser: parser)
+        case .eddsa:
+            let eddsaKey = try EdDSA.PublicKey(pem: certificate.publicKey.serializeAsPEM().pemString)
+            return JWTSigner(algorithm: EdDSASigner(key: eddsaKey), parser: parser)
         default:
             throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: alg))")
         }
