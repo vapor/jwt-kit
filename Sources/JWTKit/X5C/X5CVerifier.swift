@@ -149,7 +149,7 @@ public struct X5CVerifier: Sendable {
         let (header, payload, _) = try parser.parse(token, as: Payload.self)
 
         guard let rawAlg = header.alg, let headerAlg = JWK.Algorithm(rawValue: rawAlg) else {
-            throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: header.alg))")
+            throw JWTError.unsupportedAlgorithm(alg: header.alg)
         }
 
         // Ensure the x5c header parameter is present and not empty
@@ -222,7 +222,7 @@ extension X5CVerifier {
             let eddsaKey = try EdDSA.PublicKey(pem: certificate.publicKey.serializeAsPEM().pemString)
             return JWTSigner(algorithm: EdDSASigner(key: eddsaKey), parser: parser)
         default:
-            throw JWTError.invalidX5CChain(reason: "Unsupported algorithm: \(String(describing: alg))")
+            throw JWTError.unsupportedAlgorithm(alg: alg.rawValue)
         }
     }
 }
