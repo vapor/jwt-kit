@@ -11,9 +11,17 @@ import Foundation
 /// This actor provides methods to manage multiple keys. It can be used to verify and decode JWTs, as well as to sign and encode JWTs.
 /// It also facilitates the encoding and decoding of JWTs using custom or default JSON encoders and decoders.
 public actor JWTKeyCollection: Sendable {
-    private enum Signer {
+    private enum Signer: Equatable {
         case jwt(JWTSigner)
         case jwk(JWKSigner)
+
+        static func == (lhs: JWTKeyCollection.Signer, rhs: JWTKeyCollection.Signer) -> Bool {
+            switch (lhs, rhs) {
+            case (.jwt(let lhsSigner), .jwt(let rhsSigner)): lhsSigner === rhsSigner
+            case (.jwk(let lhsSigner), .jwk(let rhsSigner)): lhsSigner === rhsSigner
+            default: false
+            }
+        }
     }
 
     private var storage: [JWKIdentifier: Signer]
@@ -67,6 +75,40 @@ public actor JWTKeyCollection: Sendable {
             self.default = .jwt(signer)
         }
         return self
+    }
+
+    /// Removes the key with the selected KID from the collection.
+    /// If the default matches, that one is also removed.
+    /// - Parameter kid: The KID identifying the signer to the collection.
+    /// - Returns: True if the key was found and removed, false otherwise.
+    @discardableResult
+    public func remove(kid: JWKIdentifier) -> Bool {
+        let value = self.storage.removeValue(forKey: kid)
+        if value == self.default {
+            self.default = nil
+        }
+        return value != nil
+    }
+
+    /// Removes the default signer.
+    /// - Returns: True if the default signer was found and removed, false otherwise.
+    @discardableResult
+    public func removeDefault() -> Bool {
+        if self.default != nil {
+            self.default = nil
+            return true
+        }
+        return false
+    }
+
+    /// Removes all keys from the collection except the ones defined in the `kids` parameter.
+    /// - Parameter kids: The KIDs that should be kept after removal.
+    /// - Parameter withDefault: Whether to remove the default signer too. Defaults to true.
+    public func removeAll(except kids: [JWKIdentifier] = [], withDefault: Bool = true) {
+        let kidsToKeep = Set(kids)
+        for kid in storage.keys where !kidsToKeep.contains(kid) {
+            self.remove(kid: kid)
+        }
     }
 
     /// Adds a `JWKS` (JSON Web Key Set) to the collection by decoding a JSON string.
