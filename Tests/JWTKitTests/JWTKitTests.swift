@@ -941,11 +941,43 @@ struct JWTKitTests {
         _ = try await keys.verify(token4, as: TestPayload.self)
 
         // v1 and v3 no longer work
-        await #expect(throws: JWTError.noKeyProvided.self) {
+        await #expect(throws: JWTError.noKeyProvided) {
             _ = try await keys.verify(token1, as: TestPayload.self)
         }
-        await #expect(throws: JWTError.noKeyProvided.self) {
+        await #expect(throws: JWTError.noKeyProvided) {
             _ = try await keys.verify(token3, as: TestPayload.self)
+        }
+    }
+
+    @Test("RemoveAll including default")
+    func testRemoveAllWithDefault() async throws {
+        let keys = await JWTKeyCollection()
+            .add(hmac: "key-0", digestAlgorithm: .sha256)
+            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "key-2", digestAlgorithm: .sha256, kid: "v2")
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Test",
+            admin: false,
+            exp: .init(value: Date().addingTimeInterval(3600))
+        )
+
+        let token0 = try await keys.sign(payload)
+        let token1 = try await keys.sign(payload, kid: "v1")
+        let token2 = try await keys.sign(payload, kid: "v2")
+
+        await keys.removeAll(except: ["v2"], includingDefault: true)
+
+        // v2 still works
+        _ = try await keys.verify(token2, as: TestPayload.self)
+
+        // v0 and v1 no longer work
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keys.verify(token0, as: TestPayload.self)
+        }
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keys.verify(token1, as: TestPayload.self)
         }
     }
 }

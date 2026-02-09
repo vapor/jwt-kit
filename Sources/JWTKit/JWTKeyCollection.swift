@@ -103,11 +103,14 @@ public actor JWTKeyCollection: Sendable {
 
     /// Removes all keys from the collection except the ones defined in the `kids` parameter.
     /// - Parameter kids: The KIDs that should be kept after removal.
-    /// - Parameter withDefault: Whether to remove the default signer too. Defaults to true.
-    public func removeAll(except kids: [JWKIdentifier] = [], withDefault: Bool = true) {
+    /// - Parameter includingDefault: Whether to remove the default signer too. Defaults to true.
+    /// - Note: If `includingDefault` is set to `true` but the KID of the default key is in the exception list,
+    /// the key will be cleared from the default but kept in the collection.
+    public func removeAll(except kids: [JWKIdentifier] = [], includingDefault: Bool = true) {
         let kidsToKeep = Set(kids)
-        for kid in storage.keys where !kidsToKeep.contains(kid) {
-            self.remove(kid: kid)
+        self.storage = self.storage.filter { kidsToKeep.contains($0.key) }
+        if includingDefault {  // N.B.: We assume that includingDefault == true means remove it even if it's in the exception list.
+            self.default = nil
         }
     }
 
