@@ -906,7 +906,7 @@ struct JWTKitTests {
         let token = try await keys.sign(payload)
         _ = try await keys.verify(token, as: TestPayload.self)
 
-        let removed = await keys.removeDefault()
+        let removed = await keys.clearDefault()
         #expect(removed == true)
 
         await #expect(throws: JWTError.noKeyProvided) {
@@ -967,7 +967,7 @@ struct JWTKitTests {
         let token1 = try await keys.sign(payload, kid: "v1")
         let token2 = try await keys.sign(payload, kid: "v2")
 
-        await keys.removeAll(except: ["v2"], includingDefault: true)
+        await keys.removeAll(except: ["v2"], clearingDefault: true)
 
         // v2 still works
         _ = try await keys.verify(token2, as: TestPayload.self)

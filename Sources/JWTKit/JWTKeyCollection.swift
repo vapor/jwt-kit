@@ -93,7 +93,7 @@ public actor JWTKeyCollection: Sendable {
     /// Removes the default signer.
     /// - Returns: True if the default signer was found and removed, false otherwise.
     @discardableResult
-    public func removeDefault() -> Bool {
+    public func clearDefault() -> Bool {
         if self.default != nil {
             self.default = nil
             return true
@@ -102,16 +102,20 @@ public actor JWTKeyCollection: Sendable {
     }
 
     /// Removes all keys from the collection except the ones defined in the `kids` parameter.
-    /// - Parameter kids: The KIDs that should be kept after removal.
-    /// - Parameter includingDefault: Whether to remove the default signer too. Defaults to true.
-    /// - Note: If `includingDefault` is set to `true` but the KID of the default key is in the exception list,
-    /// the key will be cleared from the default but kept in the collection.
-    public func removeAll(except kids: [JWKIdentifier] = [], includingDefault: Bool = true) {
+    /// - Parameter kids: The KIDs that should be kept during removal.
+    /// - Parameter clearingDefault: If true, clears the default signer regardless of whether
+    ///                   its KID is in the exception list. If false, preserves the default signer.
+    /// - Returns: The number of keys removed from storage.
+    @discardableResult
+    public func removeAll(except kids: [JWKIdentifier] = [], clearingDefault: Bool = true) -> Int {
         let kidsToKeep = Set(kids)
         self.storage = self.storage.filter { kidsToKeep.contains($0.key) }
-        if includingDefault {  // N.B.: We assume that includingDefault == true means remove it even if it's in the exception list.
+        let originalCount = self.storage.count
+        if clearingDefault {
             self.default = nil
         }
+
+        return originalCount - self.storage.count
     }
 
     /// Adds a `JWKS` (JSON Web Key Set) to the collection by decoding a JSON string.
