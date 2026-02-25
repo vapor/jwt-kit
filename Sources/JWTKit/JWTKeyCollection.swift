@@ -91,6 +91,7 @@ public actor JWTKeyCollection: Sendable {
     }
 
     /// Removes the default signer.
+    /// The signer might still exist in the collection as non-default one.
     /// - Returns: True if the default signer was found and removed, false otherwise.
     @discardableResult
     public func clearDefault() -> Bool {
@@ -104,7 +105,8 @@ public actor JWTKeyCollection: Sendable {
     /// Removes all keys from the collection except the ones defined in the `kids` parameter.
     /// - Parameter kids: The KIDs that should be kept during removal.
     /// - Parameter clearingDefault: If true, clears the default signer regardless of whether
-    ///                   its KID is in the exception list. If false, preserves the default signer.
+    ///                     its KID is in the exception list, however keeping it in the collection if it's
+    ///                     KID is defined in the exception list. If false, preserves the default signer.
     /// - Returns: The number of keys removed from storage.
     @discardableResult
     public func removeAll(except kids: [JWKIdentifier] = [], clearingDefault: Bool = true) -> Int {
