@@ -281,7 +281,7 @@ struct X5CTests {
     @Test("Test signing with invalid x5c chain")
     func signWithInvalidX5CChain() async throws {
         let keyCollection = try await JWTKeyCollection().add(
-            ecdsa: ES256PrivateKey(backing: x5cLeafCertKeys[JWK.Algorithm.es256]!)
+            ecdsa: ES256PrivateKey(pem: x5cLeafCertKeys[JWK.Algorithm.es256]!.serializeAsPEM().pemString)
         )
 
         let payload = TestPayload(
@@ -312,11 +312,11 @@ struct X5CTests {
         let keyCollection = JWTKeyCollection()
         switch alg {
         case .es256:
-            try await keyCollection.add(ecdsa: ES256PrivateKey(backing: x5cLeafCertKeys[alg]!))
+            try await keyCollection.add(ecdsa: ES256PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
         case .es384:
-            try await keyCollection.add(ecdsa: ES384PrivateKey(backing: x5cLeafCertKeys[alg]!))
+            try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
         case .es512:
-            try await keyCollection.add(ecdsa: ES512PrivateKey(backing: x5cLeafCertKeys[alg]!))
+            try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
         default:
             return
         }
@@ -340,7 +340,7 @@ struct X5CTests {
         }
     }
 
-    /*@Test("Test signing with EdDSA x5c chain")
+    @Test("Test signing with EdDSA x5c chain")
     func signWithEdDSAX5CChain() async throws {
         let keyCollection = try await JWTKeyCollection()
             .add(
@@ -364,7 +364,7 @@ struct X5CTests {
         await #expect(throws: Never.self) {
             try await verifier.verifyJWS(token, as: TestPayload.self)
         }
-    }*/
+    }
 
     // MARK: Private
 
@@ -414,31 +414,18 @@ let missingLeafAndIntermediateToken = """
     eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsIng1YyI6WyJNSUlDaVRDQ0FpK2dBd0lCQWdJVUFRbm5penpuXC9oSXJKQnkzdFBHXC9Cc1Q4emR3d0NnWUlLb1pJemowRUF3SXdnWmt4Q3pBSkJnTlZCQVlUQWxWVE1SRXdEd1lEVlFRSURBaE9aWGNnV1c5eWF6RVJNQThHQTFVRUJ3d0lUbVYzSUZsdmNtc3hEakFNQmdOVkJBb01CVlpoY0c5eU1SUXdFZ1lEVlFRTERBdEZibWRwYm1WbGNtbHVaekVXTUJRR0ExVUVBd3dOVm1Gd2IzSWdVbTl2ZENCRFFURW1NQ1FHQ1NxR1NJYjNEUUVKQVJZWFlXUnRhVzVBZG1Gd2IzSXVaWGhoYlhCc1pTNWpiMjB3SGhjTk1qWXdNakE1TVRJeE5URTJXaGNOTXpZd01qQTNNVEl4TlRFMldqQ0JtVEVMTUFrR0ExVUVCaE1DVlZNeEVUQVBCZ05WQkFnTUNFNWxkeUJaYjNKck1SRXdEd1lEVlFRSERBaE9aWGNnV1c5eWF6RU9NQXdHQTFVRUNnd0ZWbUZ3YjNJeEZEQVNCZ05WQkFzTUMwVnVaMmx1WldWeWFXNW5NUll3RkFZRFZRUUREQTFXWVhCdmNpQlNiMjkwSUVOQk1TWXdKQVlKS29aSWh2Y05BUWtCRmhkaFpHMXBia0IyWVhCdmNpNWxlR0Z0Y0d4bExtTnZiVEJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCQXRtQW9kUGZhbEo2bEJ3ak90d1VXXC9uMGM5MnRCV0R0T2RiK1NnSFVIS2JxNXZYcmxtRHdrY2plNDRmWGdVYkgwZmNcL1d0TFwvNnc1cHE1NVViek5DMmVqVXpCUk1CMEdBMVVkRGdRV0JCUjVKNURyWmZ1SjF2Nlp3c1hjYlN1QUZES3grakFmQmdOVkhTTUVHREFXZ0JSNUo1RHJaZnVKMXY2WndzWGNiU3VBRkRLeCtqQVBCZ05WSFJNQkFmOEVCVEFEQVFIXC9NQW9HQ0NxR1NNNDlCQU1DQTBnQU1FVUNJUUR0RnlkYkJoWUl4M1kxY1RvM09qelpadnNFalpRYVwvMXlIR3lrXC91QVwvalwvd0lnTWVKU054UURMVEdMdkhvWVp4dHFPNGkya2MrWjNLZWRaMGtpK1ppNEZrMD0iXX0.eyJjb29sIjp0cnVlfQ.nBm2ew-bknfjH8DyHdLJOL4I7T6gJtvxEpLypg6jel1ELz2eYQxljNr6l1ra83W1IEi9lSNFAYeq9mR3uPVwWg
     """
 
-/*let x5cLeafCertKeys: [JWK.Algorithm:Certificate.PrivateKey] = try! [
+let x5cLeafCertKeys: [JWK.Algorithm:Certificate.PrivateKey] = try! [
     .es256: Certificate.PrivateKey(pemEncoded: ES256PrivateKey().pemRepresentation),
     .es384: Certificate.PrivateKey(pemEncoded: ES384PrivateKey().pemRepresentation),
     .es512: Certificate.PrivateKey(pemEncoded: ES512PrivateKey().pemRepresentation),
     .eddsa: Certificate.PrivateKey(pemEncoded: EdDSA.PrivateKey().pemRepresentation),
-]*/
-
-let x5cLeafCertKeys: [JWK.Algorithm: any ECDSAPrivateKey] = [
-    .es256: Crypto.P256.Signing.PrivateKey(),
-    .es384: Crypto.P384.Signing.PrivateKey(),
-    .es512: Crypto.P521.Signing.PrivateKey(),
-    //.es256: ES256PrivateKey(),
-    //.es384: ES384PrivateKey(),
-    //.es512: ES512PrivateKey(),
 ]
-
-/*let x5cLeafCertKeys3: [JWK.Algorithm: EdDSA.PrivateKey] = [
-    .eddsa: try! .init(curve: .ed25519)
-]*/
 
 let x5cCerts: [JWK.Algorithm:[String]] = [
     .es256: getChain(alg: .es256),
     .es384: getChain(alg: .es384),
     .es512: getChain(alg: .es512),
-    //.eddsa: getChain(alg: .eddsa),
+    .eddsa: getChain(alg: .eddsa),
 ]
 
 private func getChain(alg: JWK.Algorithm) -> [String] {
@@ -447,19 +434,19 @@ private func getChain(alg: JWK.Algorithm) -> [String] {
         Certificate(
             version: .v3,
             serialNumber: .init(),
-            publicKey: .init(pemEncoded: x5cLeafCertKeys[alg]!.publicKey.pemRepresentation),
+            publicKey: x5cLeafCertKeys[alg]!.publicKey,
             notValidBefore: Date(),
             notValidAfter: Date().addingTimeInterval(3600),
             issuer: try DistinguishedName { CommonName("Intermediate") },
             subject: try DistinguishedName { CommonName("Leaf") },
             extensions: .init(),
-            issuerPrivateKey: .init(pemEncoded: x5cLeafCertKeys[alg]!.pemRepresentation)
+            issuerPrivateKey: x5cLeafCertKeys[alg]!
         ).serializeAsPEM().pemString,
         // Intermediate
         Certificate(
             version: .v3,
             serialNumber: .init(),
-            publicKey: .init(pemEncoded: x5cLeafCertKeys[alg]!.publicKey.pemRepresentation),
+            publicKey: x5cLeafCertKeys[alg]!.publicKey,
             notValidBefore: Date(),
             notValidAfter: Date().addingTimeInterval(3600),
             issuer: try DistinguishedName { CommonName("CA") },
@@ -467,13 +454,13 @@ private func getChain(alg: JWK.Algorithm) -> [String] {
             extensions: try Certificate.Extensions {
                 Critical(BasicConstraints.isCertificateAuthority(maxPathLength: nil))
             },
-            issuerPrivateKey: .init(pemEncoded: x5cLeafCertKeys[alg]!.pemRepresentation)
+            issuerPrivateKey: x5cLeafCertKeys[alg]!
         ).serializeAsPEM().pemString,
         // CA
         Certificate(
             version: .v3,
             serialNumber: .init(),
-            publicKey: .init(pemEncoded: x5cLeafCertKeys[alg]!.publicKey.pemRepresentation),
+            publicKey: x5cLeafCertKeys[alg]!.publicKey,
             notValidBefore: Date(),
             notValidAfter: Date().addingTimeInterval(3600),
             issuer: try DistinguishedName { CommonName("CA") },
@@ -481,7 +468,7 @@ private func getChain(alg: JWK.Algorithm) -> [String] {
             extensions: try Certificate.Extensions {
                 Critical(BasicConstraints.isCertificateAuthority(maxPathLength: nil))
             },
-            issuerPrivateKey: .init(pemEncoded: x5cLeafCertKeys[alg]!.pemRepresentation)
+            issuerPrivateKey: x5cLeafCertKeys[alg]!
         ).serializeAsPEM().pemString,
     ]
 }
