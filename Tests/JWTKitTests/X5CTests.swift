@@ -278,11 +278,19 @@ struct X5CTests {
         }
     }
 
-    @Test("Test signing with invalid x5c chain")
-    func signWithInvalidX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection().add(
-            ecdsa: ES256PrivateKey(pem: x5cLeafCertKeys[JWK.Algorithm.es256]!.serializeAsPEM().pemString)
-        )
+    @Test("Test signing with invalid x5c chain", arguments: [JWK.Algorithm.es256, .es384, .es512])
+    func signWithInvalidX5CChain(_ alg: JWK.Algorithm) async throws {
+        let keyCollection = JWTKeyCollection()
+        switch alg {
+        case .es256:
+            try await keyCollection.add(ecdsa: ES256PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .es384:
+            try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .es512:
+            try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        default:
+            return
+        }
 
         let payload = TestPayload(
             sub: "vapor",
