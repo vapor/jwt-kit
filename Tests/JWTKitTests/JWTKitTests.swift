@@ -852,6 +852,134 @@ struct JWTKitTests {
         #expect(header.field1 == nil)
         #expect(header.field2 == .string("value2"))
     }
+
+    @Test("Remove single key by kid")
+    func testRemoveSingleKey() async throws {
+        let keys = await JWTKeyCollection()
+            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "key-2", digestAlgorithm: .sha256, kid: "v2")
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Test",
+            admin: false,
+            exp: .init(value: Date().addingTimeInterval(3600))
+        )
+
+        let token1 = try await keys.sign(payload, kid: "v1")
+        let token2 = try await keys.sign(payload, kid: "v2")
+
+        _ = try await keys.verify(token1, as: TestPayload.self)
+        _ = try await keys.verify(token2, as: TestPayload.self)
+
+        let removed = await keys.remove(kid: "v1")
+        #expect(removed == true)
+
+        _ = try await keys.verify(token2, as: TestPayload.self)
+
+        await #expect(throws: JWTError.self) {
+            _ = try await keys.verify(token1, as: TestPayload.self)
+        }
+    }
+
+    @Test("Remove non-existent key returns false")
+    func testRemoveNonExistentKey() async throws {
+        let keys = await JWTKeyCollection()
+            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
+
+        let removed = await keys.remove(kid: "non-existent")
+        #expect(removed == false)
+    }
+
+    @Test("Remove default key clears default")
+    func testRemoveDefaultKey() async throws {
+        let keys = await JWTKeyCollection()
+            .add(hmac: "key-1", digestAlgorithm: .sha256)  // No kid = default
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Test",
+            admin: false,
+            exp: .init(value: Date().addingTimeInterval(3600))
+        )
+
+        let token = try await keys.sign(payload)
+        _ = try await keys.verify(token, as: TestPayload.self)
+
+        let removed = await keys.clearDefault()
+        #expect(removed == true)
+
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keys.sign(payload)
+        }
+    }
+
+    @Test("RemoveAll except specified keys")
+    func testRemoveAllExcept() async throws {
+        let keys = await JWTKeyCollection()
+            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "key-2", digestAlgorithm: .sha256, kid: "v2")
+            .add(hmac: "key-3", digestAlgorithm: .sha256, kid: "v3")
+            .add(hmac: "key-4", digestAlgorithm: .sha256, kid: "v4")
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Test",
+            admin: false,
+            exp: .init(value: Date().addingTimeInterval(3600))
+        )
+
+        let token1 = try await keys.sign(payload, kid: "v1")
+        let token2 = try await keys.sign(payload, kid: "v2")
+        let token3 = try await keys.sign(payload, kid: "v3")
+        let token4 = try await keys.sign(payload, kid: "v4")
+
+        await keys.removeAll(except: ["v2", "v4"])
+
+        // v2 and v4 still work
+        _ = try await keys.verify(token2, as: TestPayload.self)
+        _ = try await keys.verify(token4, as: TestPayload.self)
+
+        // v1 and v3 no longer work
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keys.verify(token1, as: TestPayload.self)
+        }
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keys.verify(token3, as: TestPayload.self)
+        }
+    }
+
+    @Test("RemoveAll including default")
+    func testRemoveAllWithDefault() async throws {
+        let keys = await JWTKeyCollection()
+            .add(hmac: "key-0", digestAlgorithm: .sha256)
+            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "key-2", digestAlgorithm: .sha256, kid: "v2")
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Test",
+            admin: false,
+            exp: .init(value: Date().addingTimeInterval(3600))
+        )
+
+        let token0 = try await keys.sign(payload)
+        let token1 = try await keys.sign(payload, kid: "v1")
+        let token2 = try await keys.sign(payload, kid: "v2")
+
+        await keys.removeAll(except: ["v2"], clearingDefault: true)
+
+        // v2 still works
+        _ = try await keys.verify(token2, as: TestPayload.self)
+
+        // v0 and v1 no longer work
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keys.verify(token0, as: TestPayload.self)
+        }
+        await #expect(throws: JWTError.noKeyProvided) {
+            _ = try await keys.verify(token1, as: TestPayload.self)
+        }
+    }
 }
 
 let microsoftJWKS = """
