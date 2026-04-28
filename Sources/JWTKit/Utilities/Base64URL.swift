@@ -6,8 +6,8 @@ import Foundation
 
 extension String {
     package func base64URLDecodedData() -> Data? {
-        var base64URL = replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
+        var base64URL = replacing("-", with: "+")
+            .replacing("_", with: "/")
 
         base64URL.append(contentsOf: "===".prefix((4 - (base64URL.count & 3)) & 3))
 
