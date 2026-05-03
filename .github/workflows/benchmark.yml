@@ -8,6 +8,9 @@ on:
         description: "The commit SHA to run the benchmarks against."
   push:
     branches: [main]
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   benchmark:
