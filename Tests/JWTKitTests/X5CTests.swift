@@ -278,7 +278,7 @@ struct X5CTests {
         }
     }
 
-    @Test("Test signing with invalid x5c chain", arguments: [JWK.Algorithm.es256, .es384, .es512])
+    @Test("Test signing with invalid x5c chain", arguments: [JWK.Algorithm.es256, .es384, .es512, .rs256, .ps256, .rs384, .ps384, .rs512, .ps512])
     func signWithInvalidX5CChain(_ alg: JWK.Algorithm) async throws {
         let keyCollection = JWTKeyCollection()
         switch alg {
@@ -288,6 +288,21 @@ struct X5CTests {
             try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
         case .es512:
             try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .rs256, .ps256:
+            try await keyCollection.add(
+                rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha256
+            )
+        case .rs384, .ps384:
+            try await keyCollection.add(
+                rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha384
+            )
+        case .rs512, .ps512:
+            try await keyCollection.add(
+                rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha512
+            )
         default:
             return
         }
@@ -315,7 +330,7 @@ struct X5CTests {
         }
     }
 
-    @Test("Test signing with ES x5c chain", arguments: [JWK.Algorithm.es256, .es384, .es512])
+    @Test("Test signing with ES, RS, PS x5c chains", arguments: [JWK.Algorithm.es256, .es384, .es512, .rs256, .ps256, .rs384, .ps384, .rs512, .ps512])
     func signWithESX5CChain(_ alg: JWK.Algorithm) async throws {
         let keyCollection = JWTKeyCollection()
         switch alg {
@@ -325,6 +340,21 @@ struct X5CTests {
             try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
         case .es512:
             try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .rs256, .ps256:
+            try await keyCollection.add(
+                rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha256
+            )
+        case .rs384, .ps384:
+            try await keyCollection.add(
+                rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha384
+            )
+        case .rs512, .ps512:
+            try await keyCollection.add(
+                rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha512
+            )
         default:
             return
         }
@@ -427,6 +457,12 @@ let x5cLeafCertKeys: [JWK.Algorithm: Certificate.PrivateKey] = try! [
     .es384: Certificate.PrivateKey(pemEncoded: ES384PrivateKey().pemRepresentation),
     .es512: Certificate.PrivateKey(pemEncoded: ES512PrivateKey().pemRepresentation),
     .eddsa: Certificate.PrivateKey(pemEncoded: EdDSA.PrivateKey().pemRepresentation),
+    .rs256: Certificate.PrivateKey(pemEncoded: Insecure.RSA.PrivateKey(backing: .init(keySize: .bits2048)).pemRepresentation),
+    .ps256: Certificate.PrivateKey(pemEncoded: Insecure.RSA.PrivateKey(backing: .init(keySize: .bits2048)).pemRepresentation),
+    .rs384: Certificate.PrivateKey(pemEncoded: Insecure.RSA.PrivateKey(backing: .init(keySize: .bits2048)).pemRepresentation),
+    .ps384: Certificate.PrivateKey(pemEncoded: Insecure.RSA.PrivateKey(backing: .init(keySize: .bits2048)).pemRepresentation),
+    .rs512: Certificate.PrivateKey(pemEncoded: Insecure.RSA.PrivateKey(backing: .init(keySize: .bits2048)).pemRepresentation),
+    .ps512: Certificate.PrivateKey(pemEncoded: Insecure.RSA.PrivateKey(backing: .init(keySize: .bits2048)).pemRepresentation),
 ]
 
 let x5cCerts: [JWK.Algorithm: [String]] = [
@@ -434,6 +470,12 @@ let x5cCerts: [JWK.Algorithm: [String]] = [
     .es384: getChain(alg: .es384),
     .es512: getChain(alg: .es512),
     .eddsa: getChain(alg: .eddsa),
+    .rs256: getChain(alg: .rs256),
+    .ps256: getChain(alg: .ps256),
+    .rs384: getChain(alg: .rs384),
+    .ps384: getChain(alg: .ps384),
+    .rs512: getChain(alg: .rs512),
+    .ps512: getChain(alg: .ps512),
 ]
 
 private func getChain(alg: JWK.Algorithm) -> [String] {
