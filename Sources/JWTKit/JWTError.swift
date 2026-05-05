@@ -21,6 +21,7 @@ public struct JWTError: Error, Sendable, Equatable {
             case invalidX5CChain
             case invalidHeaderField
             case unsupportedCurve
+            case unsupportedAlgorithm
             case generic
         }
 
@@ -43,6 +44,7 @@ public struct JWTError: Error, Sendable, Equatable {
         public static let invalidX5CChain = Self(.invalidX5CChain)
         public static let invalidHeaderField = Self(.invalidHeaderField)
         public static let unsupportedCurve = Self(.unsupportedCurve)
+        public static let unsupportedAlgorithm = Self(.unsupportedAlgorithm)
         public static let generic = Self(.generic)
 
         public var description: String {
@@ -59,6 +61,7 @@ public struct JWTError: Error, Sendable, Equatable {
         fileprivate let identifier: String?
         fileprivate let failedClaim: (any JWTClaim)?
         fileprivate var curve: (any ECDSACurveType)?
+        fileprivate var algorithm: String?
 
         init(
             errorType: ErrorType,
@@ -68,7 +71,8 @@ public struct JWTError: Error, Sendable, Equatable {
             kid: JWKIdentifier? = nil,
             identifier: String? = nil,
             failedClaim: (any JWTClaim)? = nil,
-            curve: (any ECDSACurveType)? = nil
+            curve: (any ECDSACurveType)? = nil,
+            algorithm: String? = nil
         ) {
             self.errorType = errorType
             self.name = name
@@ -78,6 +82,7 @@ public struct JWTError: Error, Sendable, Equatable {
             self.identifier = identifier
             self.failedClaim = failedClaim
             self.curve = curve
+            self.algorithm = algorithm
         }
 
         static func == (lhs: JWTError.Backing, rhs: JWTError.Backing) -> Bool {
@@ -146,6 +151,10 @@ public struct JWTError: Error, Sendable, Equatable {
 
     public static func unsupportedCurve(curve: any ECDSACurveType) -> Self {
         .init(backing: .init(errorType: .unsupportedCurve, curve: curve))
+    }
+
+    public static func unsupportedAlgorithm(alg: String?) -> Self {
+        .init(backing: .init(errorType: .unsupportedAlgorithm, algorithm: alg))
     }
 
     public static func generic(identifier: String, reason: String) -> Self {

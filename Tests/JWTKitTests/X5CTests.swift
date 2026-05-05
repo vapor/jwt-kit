@@ -9,6 +9,8 @@ import FoundationEssentials
 import Foundation
 #endif
 
+import Crypto
+
 /// Test the x5c verification abilities of JWTSigners.
 ///
 /// In these tests, there are 4 certificates:
@@ -276,38 +278,19 @@ struct X5CTests {
         }
     }
 
-    @Test("Test signing with x5c chain")
-    func signWithX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection()
-            .add(
-                ecdsa: ES256PrivateKey(pem: x5cLeafCertKey)
-            )
-
-        let payload = TestPayload(
-            sub: "vapor",
-            name: "Foo",
-            admin: false,
-            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
-        )
-        let header: JWTHeader = ["x5c": .array(x5cCerts.map(JWTHeaderField.string))]
-        let token = try await keyCollection.sign(payload, header: header)
-        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
-
-        let x5c = try #require(parsed.header.x5c)
-        let pemCerts = try x5c.map(getPEMString)
-        #expect(pemCerts == x5cCerts)
-        let verifier = try X5CVerifier(rootCertificates: [x5cCerts.last!])
-        await #expect(throws: Never.self) {
-            try await verifier.verifyJWS(token, as: TestPayload.self)
+    @Test("Test signing with invalid x5c chain", arguments: [JWK.Algorithm.es256, .es384, .es512])
+    func signWithInvalidX5CChain(_ alg: JWK.Algorithm) async throws {
+        let keyCollection = JWTKeyCollection()
+        switch alg {
+        case .es256:
+            try await keyCollection.add(ecdsa: ES256PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .es384:
+            try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .es512:
+            try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        default:
+            return
         }
-    }
-
-    @Test("Test signing with invalid x5c chain")
-    func signWithInvalidX5CChain() async throws {
-        let keyCollection = try await JWTKeyCollection()
-            .add(
-                ecdsa: ES256PrivateKey(pem: x5cLeafCertKey)
-            )
 
         let payload = TestPayload(
             sub: "vapor",
@@ -317,7 +300,7 @@ struct X5CTests {
         )
 
         // Remove the intermediate cert from the chain
-        let certs = x5cCerts.enumerated().filter { $0.offset != 1 }.map { $0.element }
+        let certs = x5cCerts[.es256]!.enumerated().filter { $0.offset != 1 }.map { $0.element }
 
         let header: JWTHeader = ["x5c": .array(certs.map(JWTHeaderField.string))]
         let token = try await keyCollection.sign(payload, header: header)
@@ -328,6 +311,65 @@ struct X5CTests {
         #expect(pemCerts == certs)
         let verifier = try X5CVerifier(rootCertificates: [certs.last!])
         await #expect(throws: (any Error).self) {
+            try await verifier.verifyJWS(token, as: TestPayload.self)
+        }
+    }
+
+    @Test("Test signing with ES x5c chain", arguments: [JWK.Algorithm.es256, .es384, .es512])
+    func signWithESX5CChain(_ alg: JWK.Algorithm) async throws {
+        let keyCollection = JWTKeyCollection()
+        switch alg {
+        case .es256:
+            try await keyCollection.add(ecdsa: ES256PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .es384:
+            try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        case .es512:
+            try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
+        default:
+            return
+        }
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let header: JWTHeader = ["x5c": .array(x5cCerts[alg]!.map(JWTHeaderField.string))]
+        let token = try await keyCollection.sign(payload, header: header)
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+
+        let x5c = try #require(parsed.header.x5c)
+        let pemCerts = try x5c.map(getPEMString)
+        #expect(pemCerts == x5cCerts[alg]!)
+        let verifier = try X5CVerifier(rootCertificates: [x5cCerts[alg]!.last!])
+        await #expect(throws: Never.self) {
+            try await verifier.verifyJWS(token, as: TestPayload.self)
+        }
+    }
+
+    @Test("Test signing with EdDSA x5c chain")
+    func signWithEdDSAX5CChain() async throws {
+        let keyCollection = try await JWTKeyCollection()
+            .add(
+                eddsa: EdDSA.PrivateKey(pem: x5cLeafCertKeys[.eddsa]!.serializeAsPEM().pemString)
+            )
+
+        let payload = TestPayload(
+            sub: "vapor",
+            name: "Foo",
+            admin: false,
+            exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000))
+        )
+        let header: JWTHeader = ["x5c": .array(x5cCerts[.eddsa]!.map(JWTHeaderField.string))]
+        let token = try await keyCollection.sign(payload, header: header)
+        let parsed = try DefaultJWTParser().parse(token.bytes, as: TestPayload.self)
+
+        let x5c = try #require(parsed.header.x5c)
+        let pemCerts = try x5c.map(getPEMString)
+        #expect(pemCerts == x5cCerts[.eddsa]!)
+        let verifier = try X5CVerifier(rootCertificates: [x5cCerts[.eddsa]!.last!])
+        await #expect(throws: Never.self) {
             try await verifier.verifyJWS(token, as: TestPayload.self)
         }
     }
@@ -380,70 +422,64 @@ let missingLeafAndIntermediateToken = """
     eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsIng1YyI6WyJNSUlDaVRDQ0FpK2dBd0lCQWdJVUFRbm5penpuXC9oSXJKQnkzdFBHXC9Cc1Q4emR3d0NnWUlLb1pJemowRUF3SXdnWmt4Q3pBSkJnTlZCQVlUQWxWVE1SRXdEd1lEVlFRSURBaE9aWGNnV1c5eWF6RVJNQThHQTFVRUJ3d0lUbVYzSUZsdmNtc3hEakFNQmdOVkJBb01CVlpoY0c5eU1SUXdFZ1lEVlFRTERBdEZibWRwYm1WbGNtbHVaekVXTUJRR0ExVUVBd3dOVm1Gd2IzSWdVbTl2ZENCRFFURW1NQ1FHQ1NxR1NJYjNEUUVKQVJZWFlXUnRhVzVBZG1Gd2IzSXVaWGhoYlhCc1pTNWpiMjB3SGhjTk1qWXdNakE1TVRJeE5URTJXaGNOTXpZd01qQTNNVEl4TlRFMldqQ0JtVEVMTUFrR0ExVUVCaE1DVlZNeEVUQVBCZ05WQkFnTUNFNWxkeUJaYjNKck1SRXdEd1lEVlFRSERBaE9aWGNnV1c5eWF6RU9NQXdHQTFVRUNnd0ZWbUZ3YjNJeEZEQVNCZ05WQkFzTUMwVnVaMmx1WldWeWFXNW5NUll3RkFZRFZRUUREQTFXWVhCdmNpQlNiMjkwSUVOQk1TWXdKQVlKS29aSWh2Y05BUWtCRmhkaFpHMXBia0IyWVhCdmNpNWxlR0Z0Y0d4bExtTnZiVEJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCQXRtQW9kUGZhbEo2bEJ3ak90d1VXXC9uMGM5MnRCV0R0T2RiK1NnSFVIS2JxNXZYcmxtRHdrY2plNDRmWGdVYkgwZmNcL1d0TFwvNnc1cHE1NVViek5DMmVqVXpCUk1CMEdBMVVkRGdRV0JCUjVKNURyWmZ1SjF2Nlp3c1hjYlN1QUZES3grakFmQmdOVkhTTUVHREFXZ0JSNUo1RHJaZnVKMXY2WndzWGNiU3VBRkRLeCtqQVBCZ05WSFJNQkFmOEVCVEFEQVFIXC9NQW9HQ0NxR1NNNDlCQU1DQTBnQU1FVUNJUUR0RnlkYkJoWUl4M1kxY1RvM09qelpadnNFalpRYVwvMXlIR3lrXC91QVwvalwvd0lnTWVKU054UURMVEdMdkhvWVp4dHFPNGkya2MrWjNLZWRaMGtpK1ppNEZrMD0iXX0.eyJjb29sIjp0cnVlfQ.nBm2ew-bknfjH8DyHdLJOL4I7T6gJtvxEpLypg6jel1ELz2eYQxljNr6l1ra83W1IEi9lSNFAYeq9mR3uPVwWg
     """
 
-let x5cCerts = [
-    """
-    -----BEGIN CERTIFICATE-----
-    MIICfDCCAiOgAwIBAgIUQq08RjZSnzsJyBVyjdR4GXunmSQwCgYIKoZIzj0EAwIw
-    gaExCzAJBgNVBAYTAlVTMREwDwYDVQQIDAhOZXcgWW9yazERMA8GA1UEBwwITmV3
-    IFlvcmsxDjAMBgNVBAoMBVZhcG9yMRQwEgYDVQQLDAtFbmdpbmVlcmluZzEeMBwG
-    A1UEAwwVVmFwb3IgSW50ZXJtZWRpYXRlIENBMSYwJAYJKoZIhvcNAQkBFhdhZG1p
-    bkB2YXBvci5leGFtcGxlLmNvbTAeFw0yNjAyMDkxMjE1MTZaFw0yNzAyMDkxMjE1
-    MTZaMIGWMQswCQYDVQQGEwJVUzERMA8GA1UECAwITmV3IFlvcmsxETAPBgNVBAcM
-    CE5ldyBZb3JrMQ4wDAYDVQQKDAVWYXBvcjEUMBIGA1UECwwLRW5naW5lZXJpbmcx
-    EzARBgNVBAMMClZhcG9yIExlYWYxJjAkBgkqhkiG9w0BCQEWF2FkbWluQHZhcG9y
-    LmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEX+K7LVaVjOzq
-    pSwN+zjcCqT8f2z2Xu3PN/lcFkawb2EDrQzB4+b3ekGXeqRfEg7lcE0tzvxiVewE
-    OSp3RVKozKNCMEAwHQYDVR0OBBYEFJQvP+IGb3hGWemgdpKWpwDOUvNQMB8GA1Ud
-    IwQYMBaAFAYvOFnEn7Q8SnkABt0c8RKbQUJyMAoGCCqGSM49BAMCA0cAMEQCIBqh
-    pFnPLQvGcw7dau2IOtZlJykMgb4ZQB0jn0Ahx5JHAiA9tpqVlTukRR2xc3WjVQ84
-    6GKPqdIL/n/2NUoCcIxFaQ==
-    -----END CERTIFICATE-----
-    """,
-    """
-    -----BEGIN CERTIFICATE-----
-    MIICjjCCAjSgAwIBAgIUWKpZXpbQTnlmjk8MMGMpu1ZkdocwCgYIKoZIzj0EAwIw
-    gZkxCzAJBgNVBAYTAlVTMREwDwYDVQQIDAhOZXcgWW9yazERMA8GA1UEBwwITmV3
-    IFlvcmsxDjAMBgNVBAoMBVZhcG9yMRQwEgYDVQQLDAtFbmdpbmVlcmluZzEWMBQG
-    A1UEAwwNVmFwb3IgUm9vdCBDQTEmMCQGCSqGSIb3DQEJARYXYWRtaW5AdmFwb3Iu
-    ZXhhbXBsZS5jb20wHhcNMjYwMjA5MTIxNTE2WhcNMzEwMjA4MTIxNTE2WjCBoTEL
-    MAkGA1UEBhMCVVMxETAPBgNVBAgMCE5ldyBZb3JrMREwDwYDVQQHDAhOZXcgWW9y
-    azEOMAwGA1UECgwFVmFwb3IxFDASBgNVBAsMC0VuZ2luZWVyaW5nMR4wHAYDVQQD
-    DBVWYXBvciBJbnRlcm1lZGlhdGUgQ0ExJjAkBgkqhkiG9w0BCQEWF2FkbWluQHZh
-    cG9yLmV4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKaibmBqa
-    o74l8plmiX6/zKZA6F0FygASjxv67LmeCh53jboHdBdJcdKZtpcXmXLjmcURTlKS
-    4jw3KTnx2r+tpKNQME4wDAYDVR0TBAUwAwEB/zAdBgNVHQ4EFgQUBi84WcSftDxK
-    eQAG3RzxEptBQnIwHwYDVR0jBBgwFoAUeSeQ62X7idb+mcLF3G0rgBQysfowCgYI
-    KoZIzj0EAwIDSAAwRQIgBTlE2kjU8vQAzWs/sPkyqMVHbcMgk1Fhzu1RqhG9WOIC
-    IQCxVakbiontxz0ZeSzKXSllDodW6YhfiMlmSHVIk00bAQ==
-    -----END CERTIFICATE-----
-    """,
-    """
-    -----BEGIN CERTIFICATE-----
-    MIICiTCCAi+gAwIBAgIUAQnnizzn/hIrJBy3tPG/BsT8zdwwCgYIKoZIzj0EAwIw
-    gZkxCzAJBgNVBAYTAlVTMREwDwYDVQQIDAhOZXcgWW9yazERMA8GA1UEBwwITmV3
-    IFlvcmsxDjAMBgNVBAoMBVZhcG9yMRQwEgYDVQQLDAtFbmdpbmVlcmluZzEWMBQG
-    A1UEAwwNVmFwb3IgUm9vdCBDQTEmMCQGCSqGSIb3DQEJARYXYWRtaW5AdmFwb3Iu
-    ZXhhbXBsZS5jb20wHhcNMjYwMjA5MTIxNTE2WhcNMzYwMjA3MTIxNTE2WjCBmTEL
-    MAkGA1UEBhMCVVMxETAPBgNVBAgMCE5ldyBZb3JrMREwDwYDVQQHDAhOZXcgWW9y
-    azEOMAwGA1UECgwFVmFwb3IxFDASBgNVBAsMC0VuZ2luZWVyaW5nMRYwFAYDVQQD
-    DA1WYXBvciBSb290IENBMSYwJAYJKoZIhvcNAQkBFhdhZG1pbkB2YXBvci5leGFt
-    cGxlLmNvbTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABAtmAodPfalJ6lBwjOtw
-    UW/n0c92tBWDtOdb+SgHUHKbq5vXrlmDwkcje44fXgUbH0fc/WtL/6w5pq55UbzN
-    C2ejUzBRMB0GA1UdDgQWBBR5J5DrZfuJ1v6ZwsXcbSuAFDKx+jAfBgNVHSMEGDAW
-    gBR5J5DrZfuJ1v6ZwsXcbSuAFDKx+jAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49
-    BAMCA0gAMEUCIQDtFydbBhYIx3Y1cTo3OjzZZvsEjZQa/1yHGyk/uA/j/wIgMeJS
-    NxQDLTGLvHoYZxtqO4i2kc+Z3KedZ0ki+Zi4Fk0=
-    -----END CERTIFICATE-----
-    """,
+let x5cLeafCertKeys: [JWK.Algorithm: Certificate.PrivateKey] = try! [
+    .es256: Certificate.PrivateKey(pemEncoded: ES256PrivateKey().pemRepresentation),
+    .es384: Certificate.PrivateKey(pemEncoded: ES384PrivateKey().pemRepresentation),
+    .es512: Certificate.PrivateKey(pemEncoded: ES512PrivateKey().pemRepresentation),
+    .eddsa: Certificate.PrivateKey(pemEncoded: EdDSA.PrivateKey().pemRepresentation),
 ]
 
-let x5cLeafCertKey = """
-    -----BEGIN EC PRIVATE KEY-----
-    MHcCAQEEII3IvhB0iWEU8xIjMWbktVbeQ+K6458CjKjJvhuR13a5oAoGCCqGSM49
-    AwEHoUQDQgAEX+K7LVaVjOzqpSwN+zjcCqT8f2z2Xu3PN/lcFkawb2EDrQzB4+b3
-    ekGXeqRfEg7lcE0tzvxiVewEOSp3RVKozA==
-    -----END EC PRIVATE KEY-----
-    """
+let x5cCerts: [JWK.Algorithm: [String]] = [
+    .es256: getChain(alg: .es256),
+    .es384: getChain(alg: .es384),
+    .es512: getChain(alg: .es512),
+    .eddsa: getChain(alg: .eddsa),
+]
+
+private func getChain(alg: JWK.Algorithm) -> [String] {
+    return try! [
+        // Leaf
+        Certificate(
+            version: .v3,
+            serialNumber: .init(),
+            publicKey: x5cLeafCertKeys[alg]!.publicKey,
+            notValidBefore: Date(),
+            notValidAfter: Date().addingTimeInterval(3600),
+            issuer: try DistinguishedName { CommonName("Intermediate") },
+            subject: try DistinguishedName { CommonName("Leaf") },
+            extensions: .init(),
+            issuerPrivateKey: x5cLeafCertKeys[alg]!
+        ).serializeAsPEM().pemString,
+        // Intermediate
+        Certificate(
+            version: .v3,
+            serialNumber: .init(),
+            publicKey: x5cLeafCertKeys[alg]!.publicKey,
+            notValidBefore: Date(),
+            notValidAfter: Date().addingTimeInterval(3600),
+            issuer: try DistinguishedName { CommonName("CA") },
+            subject: try DistinguishedName { CommonName("Intermediate") },
+            extensions: try Certificate.Extensions {
+                Critical(BasicConstraints.isCertificateAuthority(maxPathLength: nil))
+            },
+            issuerPrivateKey: x5cLeafCertKeys[alg]!
+        ).serializeAsPEM().pemString,
+        // CA
+        Certificate(
+            version: .v3,
+            serialNumber: .init(),
+            publicKey: x5cLeafCertKeys[alg]!.publicKey,
+            notValidBefore: Date(),
+            notValidAfter: Date().addingTimeInterval(3600),
+            issuer: try DistinguishedName { CommonName("CA") },
+            subject: try DistinguishedName { CommonName("CA") },
+            extensions: try Certificate.Extensions {
+                Critical(BasicConstraints.isCertificateAuthority(maxPathLength: nil))
+            },
+            issuerPrivateKey: x5cLeafCertKeys[alg]!
+        ).serializeAsPEM().pemString,
+    ]
+}
 
 let rootCA = try! Certificate(
     derEncoded: Array(
@@ -485,3 +521,5 @@ private struct TokenPayload: JWTPayload {
     }
 }
 #endif  // canImport(Testing)
+
+extension JWK.Algorithm: Hashable {}
