@@ -278,7 +278,9 @@ struct X5CTests {
         }
     }
 
-    @Test("Test signing with invalid x5c chain", arguments: [JWK.Algorithm.es256, .es384, .es512, .rs256, .ps256, .rs384, .ps384, .rs512, .ps512])
+    @Test(
+        "Test signing with invalid x5c chain",
+        arguments: [JWK.Algorithm.es256, .es384, .es512, .rs256, .ps256, .rs384, .ps384, .rs512, .ps512])
     func signWithInvalidX5CChain(_ alg: JWK.Algorithm) async throws {
         let keyCollection = JWTKeyCollection()
         switch alg {
@@ -345,7 +347,9 @@ struct X5CTests {
         }
     }
 
-    @Test("Test signing with ES, RS, PS x5c chains", arguments: [JWK.Algorithm.es256, .es384, .es512, .rs256, .ps256, .rs384, .ps384, .rs512, .ps512])
+    @Test(
+        "Test signing with ES, RS, PS x5c chains",
+        arguments: [JWK.Algorithm.es256, .es384, .es512, .rs256, .ps256, .rs384, .ps384, .rs512, .ps512])
     func signWithX5CChain(_ alg: JWK.Algorithm) async throws {
         let keyCollection = JWTKeyCollection()
         switch alg {
