@@ -288,19 +288,34 @@ struct X5CTests {
             try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
         case .es512:
             try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
-        case .rs256, .ps256:
+        case .rs256:
             try await keyCollection.add(
                 rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
                 digestAlgorithm: .sha256
             )
-        case .rs384, .ps384:
+        case .ps256:
+            try await keyCollection.add(
+                pss: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha256
+            )
+        case .rs384:
             try await keyCollection.add(
                 rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
                 digestAlgorithm: .sha384
             )
-        case .rs512, .ps512:
+        case .ps384:
+            try await keyCollection.add(
+                pss: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha384
+            )
+        case .rs512:
             try await keyCollection.add(
                 rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha512
+            )
+        case .ps512:
+            try await keyCollection.add(
+                pss: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
                 digestAlgorithm: .sha512
             )
         default:
@@ -331,7 +346,7 @@ struct X5CTests {
     }
 
     @Test("Test signing with ES, RS, PS x5c chains", arguments: [JWK.Algorithm.es256, .es384, .es512, .rs256, .ps256, .rs384, .ps384, .rs512, .ps512])
-    func signWithESX5CChain(_ alg: JWK.Algorithm) async throws {
+    func signWithX5CChain(_ alg: JWK.Algorithm) async throws {
         let keyCollection = JWTKeyCollection()
         switch alg {
         case .es256:
@@ -340,19 +355,34 @@ struct X5CTests {
             try await keyCollection.add(ecdsa: ES384PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
         case .es512:
             try await keyCollection.add(ecdsa: ES512PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString))
-        case .rs256, .ps256:
+        case .rs256:
             try await keyCollection.add(
                 rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
                 digestAlgorithm: .sha256
             )
-        case .rs384, .ps384:
+        case .ps256:
+            try await keyCollection.add(
+                pss: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha256
+            )
+        case .rs384:
             try await keyCollection.add(
                 rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
                 digestAlgorithm: .sha384
             )
-        case .rs512, .ps512:
+        case .ps384:
+            try await keyCollection.add(
+                pss: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha384
+            )
+        case .rs512:
             try await keyCollection.add(
                 rsa: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
+                digestAlgorithm: .sha512
+            )
+        case .ps512:
+            try await keyCollection.add(
+                pss: Insecure.RSA.PrivateKey(pem: x5cLeafCertKeys[alg]!.serializeAsPEM().pemString),
                 digestAlgorithm: .sha512
             )
         default:
