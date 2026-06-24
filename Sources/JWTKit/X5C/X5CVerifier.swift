@@ -221,6 +221,39 @@ extension X5CVerifier {
         case .eddsa:
             let eddsaKey = try EdDSA.PublicKey(pem: certificate.publicKey.serializeAsPEM().pemString)
             return JWTSigner(algorithm: EdDSASigner(key: eddsaKey), parser: parser)
+        case .rs256, .ps256:
+            let rsaKey = try Insecure.RSA.PublicKey(pem: certificate.publicKey.serializeAsPEM().pemString)
+            return JWTSigner(
+                algorithm: RSASigner(
+                    key: rsaKey,
+                    algorithm: .sha256,
+                    name: "",
+                    padding: alg == .rs256 ? .insecurePKCS1v1_5 : .PSS
+                ),
+                parser: parser
+            )
+        case .rs384, .ps384:
+            let rsaKey = try Insecure.RSA.PublicKey(pem: certificate.publicKey.serializeAsPEM().pemString)
+            return JWTSigner(
+                algorithm: RSASigner(
+                    key: rsaKey,
+                    algorithm: .sha384,
+                    name: "",
+                    padding: alg == .rs384 ? .insecurePKCS1v1_5 : .PSS
+                ),
+                parser: parser
+            )
+        case .rs512, .ps512:
+            let rsaKey = try Insecure.RSA.PublicKey(pem: certificate.publicKey.serializeAsPEM().pemString)
+            return JWTSigner(
+                algorithm: RSASigner(
+                    key: rsaKey,
+                    algorithm: .sha512,
+                    name: "",
+                    padding: alg == .rs512 ? .insecurePKCS1v1_5 : .PSS
+                ),
+                parser: parser
+            )
         default:
             throw JWTError.unsupportedAlgorithm(alg: alg.rawValue)
         }
