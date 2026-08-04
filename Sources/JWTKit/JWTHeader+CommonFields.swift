@@ -30,12 +30,9 @@ extension JWTHeader {
     /// The `crit` (Critical) Header Parameter indicates that extensions to standard JWT specifications
     /// are being used and must be understood and processed.
     public var crit: [String]? {
-        get {
-            if case .array(let array) = self[dynamicMember: "crit"] {
-                return array.compactMap { $0.asString }
-            }
-            return nil
-        }
+        /// Returns `nil` if any element isn't a string, rather than dropping it. RFC 7515
+        /// defines this as an array of strings, so a mixed array is malformed, not partly usable.
+        get { try? self[dynamicMember: "crit"]?.asArray(of: String.self) }
         set {
             let arrayField = newValue?.map { JWTHeaderField.string($0) }
             self[dynamicMember: "crit"] = arrayField.map { .array($0) }
@@ -59,12 +56,9 @@ extension JWTHeader {
     /// The `x5c` (X.509 Certificate Chain) Header Parameter contains a chain of one or more PKIX certificates.
     /// Each string in the array is a base64-encoded (Section 4 of [RFC4648] - not base64url-encoded) DER [ITU.X690.1994] PKIX certificate value.
     public var x5c: [String]? {
-        get {
-            if case .array(let array) = self[dynamicMember: "x5c"] {
-                return array.compactMap { $0.asString }
-            }
-            return nil
-        }
+        /// Returns `nil` if any element isn't a string, rather than dropping it. Silently
+        /// shortening a certificate chain is worse than rejecting a malformed one.
+        get { try? self[dynamicMember: "x5c"]?.asArray(of: String.self) }
         set {
             let arrayField = newValue?.map { JWTHeaderField.string($0) }
             self[dynamicMember: "x5c"] = arrayField.map { .array($0) }
