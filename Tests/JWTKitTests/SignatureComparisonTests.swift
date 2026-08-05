@@ -4,14 +4,22 @@ import Testing
 
 @Suite("Signature comparison")
 struct SignatureComparisonTests {
-
     struct Payload: JWTPayload, Equatable {
         var sub: String
         func verify(using _: some JWTAlgorithm) throws {}
     }
 
     static func keys(_ digest: DigestAlgorithm) async -> JWTKeyCollection {
-        await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: digest)
+        switch digest {
+        case .sha256:
+            await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: digest)
+        case .sha384:
+            await JWTKeyCollection().add(hmac: "a-valid-string-secret-that-is-at-least-384-bits-long", digestAlgorithm: digest)
+        case .sha512:
+            await JWTKeyCollection().add(
+                hmac: "a-valid-string-secret-that-is-at-least-512-bits-long-which-is-very-long", digestAlgorithm: digest)
+        default: fatalError()
+        }
     }
 
     @Test("Valid signatures verify", arguments: [DigestAlgorithm.sha256, .sha384, .sha512])
@@ -32,7 +40,7 @@ struct SignatureComparisonTests {
         let last = parts[2].removeLast()
         parts[2].append(last == "A" ? "B" : "A")
 
-        await #expect(throws: (any Error).self) {
+        await #expect(throws: JWTError.signatureVerificationFailed) {
             _ = try await keys.verify(parts.joined(separator: "."), as: Payload.self)
         }
     }
@@ -54,7 +62,7 @@ struct SignatureComparisonTests {
     func wrongKeyOrDigestRejected() async throws {
         let token = try await Self.keys(.sha256).sign(Payload(sub: "1234567890"))
 
-        let otherSecret = await JWTKeyCollection().add(hmac: "other", digestAlgorithm: .sha256)
+        let otherSecret = await JWTKeyCollection().add(hmac: "another-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         await #expect(throws: (any Error).self) {
             _ = try await otherSecret.verify(token, as: Payload.self)
         }
