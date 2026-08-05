@@ -27,4 +27,10 @@ struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {
     func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
         Array(HMAC<SHAType>.authenticationCode(for: plaintext, using: self.key))
     }
+
+    /// Compare using Swift Crypto
+    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
+        HMAC<SHAType>.isValidAuthenticationCode(
+            Array(signature), authenticating: plaintext, using: self.key)
+    }
 }

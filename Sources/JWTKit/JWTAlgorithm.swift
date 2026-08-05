@@ -41,22 +41,16 @@ public protocol JWTAlgorithm: Sendable {
 extension JWTAlgorithm {
     /// See ``JWTAlgorithm``.
     func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
-        // create test signature
         let check = try sign(plaintext)
+        let candidate = Array(signature)
 
-        // byte-by-byte comparison to avoid timing attacks
-        var match = true
-        for (a, b) in zip(check, signature) {
-            if a != b {
-                match = false
-            }
-        }
+        guard check.count == candidate.count else { return false }
 
-        // finally, if the counts match then we can accept the result
-        if check.count == signature.count {
-            return match
-        } else {
-            return false
+        // Accumulate the differences to ensure we always run in constant time
+        var difference: UInt8 = 0
+        for (a, b) in zip(check, candidate) {
+            difference |= a ^ b
         }
+        return difference == 0
     }
 }
