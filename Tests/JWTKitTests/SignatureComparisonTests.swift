@@ -36,9 +36,11 @@ struct SignatureComparisonTests {
         let token = try await keys.sign(Payload(sub: "1234567890"))
         var parts = token.split(separator: ".").map(String.init)
 
-        // Flip the last character of the signature to something else in the alphabet.
-        let last = parts[2].removeLast()
-        parts[2].append(last == "A" ? "B" : "A")
+        // Flip the first character of the signature to something else in the alphabet.
+        // The first character is used because the last one may be a padding character
+        // that doesn't decode to any data, so verification would succeed.
+        let first = parts[2].removeFirst()
+        parts[2].insert(first == "A" ? "B" : "A", at: parts[2].startIndex)
 
         await #expect(throws: JWTError.signatureVerificationFailed) {
             _ = try await keys.verify(parts.joined(separator: "."), as: Payload.self)
