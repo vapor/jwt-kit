@@ -13,7 +13,7 @@ struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {
     init(key: SymmetricKey) {
         assert(
             key.bitCount >= SHAType.Digest.byteCount * 8,
-            "Key should be at least as large as the hash output: \(SHAType.Digest.byteCount) bytes"
+            "Key should be at least as large as the hash output: \(SHAType.Digest.byteCount) bytes. This will become a precondition in a future release."
         )
         self.key = key
         switch SHAType.self {
