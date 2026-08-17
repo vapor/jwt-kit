@@ -1,6 +1,6 @@
 import Crypto
 import Foundation
-@_spi(PostQuantum) import JWTKit
+import JWTKit
 import Testing
 
 @Suite("MLDSA Tests")

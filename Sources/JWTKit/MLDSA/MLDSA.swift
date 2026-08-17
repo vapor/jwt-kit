@@ -6,7 +6,6 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@_spi(PostQuantum)
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 public enum MLDSA: Sendable {}
 

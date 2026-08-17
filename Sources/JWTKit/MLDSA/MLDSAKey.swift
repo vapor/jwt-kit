@@ -4,13 +4,11 @@ import FoundationEssentials
 import Foundation
 #endif
 
-@_spi(PostQuantum)
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 public protocol MLDSAKey: Sendable {
     associatedtype MLDSAType: JWTKit.MLDSAType
 }
 
-@_spi(PostQuantum)
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 public protocol MLDSAPublicKey: Sendable {
     associatedtype MLDSAType
@@ -23,7 +21,6 @@ public protocol MLDSAPublicKey: Sendable {
     ) -> Bool
 }
 
-@_spi(PostQuantum)
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 public protocol MLDSAPrivateKey: Sendable {
     associatedtype MLDSAType
