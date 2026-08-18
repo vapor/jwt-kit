@@ -1,6 +1,3 @@
-// snippet.MLDSA_IMPORT
-@_spi(PostQuantum) import JWTKit
-// snippet.end
 // snippet.KEY_COLLECTION
 import JWTKit
 

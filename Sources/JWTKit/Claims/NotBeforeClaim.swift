@@ -22,11 +22,8 @@ public struct NotBeforeClaim: JWTUnixEpochClaim, Equatable {
 
     /// Throws an error if the claim's date is earlier than current date.
     public func verifyNotBefore(currentDate: Date = .init()) throws {
-        switch value.compare(currentDate) {
-        case .orderedDescending:
+        guard value < currentDate else {
             throw JWTError.claimVerificationFailure(failedClaim: self, reason: "too soon")
-        case .orderedAscending, .orderedSame:
-            break
         }
     }
 }

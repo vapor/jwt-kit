@@ -22,7 +22,7 @@ struct MLDSASigner<Key: MLDSAKey>: JWTAlgorithm, Sendable {
             self.privateKey = nil
             self.publicKey = key
         default:
-            fatalError()
+            fatalError("Unexpected key type: \(type(of: key))")
         }
     }
 

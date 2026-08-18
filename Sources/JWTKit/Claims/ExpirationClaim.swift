@@ -22,11 +22,8 @@ public struct ExpirationClaim: JWTUnixEpochClaim, Equatable {
 
     /// Throws an error if the claim's date is later than current date.
     public func verifyNotExpired(currentDate: Date = .init()) throws {
-        switch self.value.compare(currentDate) {
-        case .orderedAscending, .orderedSame:
+        guard currentDate < value else {
             throw JWTError.claimVerificationFailure(failedClaim: self, reason: "expired")
-        case .orderedDescending:
-            break
         }
     }
 }

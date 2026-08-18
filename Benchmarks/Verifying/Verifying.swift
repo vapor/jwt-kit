@@ -1,6 +1,6 @@
 import Benchmark
 import Foundation
-@_spi(PostQuantum) import JWTKit
+import JWTKit
 import Utilities
 
 let benchmarks = {
