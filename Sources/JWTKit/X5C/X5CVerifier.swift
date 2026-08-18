@@ -148,7 +148,15 @@ public struct X5CVerifier: Sendable {
         let parser = DefaultJWTParser(jsonDecoder: jsonDecoder)
         let (header, payload, _) = try parser.parse(token, as: Payload.self)
 
-        guard let rawAlg = header.alg, let headerAlg = JWK.Algorithm(rawValue: rawAlg) else {
+        guard
+            let rawAlg = header.alg,
+            let headerAlg = JWK.Algorithm(rawValue: rawAlg)  // This can never be nil
+        else {
+            throw JWTError.unsupportedAlgorithm(alg: header.alg)
+        }
+
+        // We can only verify known algorithms so let's check beforehand
+        if case .unknown = headerAlg.backing {
             throw JWTError.unsupportedAlgorithm(alg: header.alg)
         }
 

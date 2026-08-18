@@ -6,18 +6,6 @@ import Testing
 /// Covers the key material storage behind ``JWK`` and the flat members kept over it.
 @Suite("JWK Tests")
 struct JWKTests {
-    /// Describes the result of turning a JWK into a signer, so it can be asserted as a value.
-    static func outcome(_ body: () throws -> (any JWTAlgorithm)?) -> String {
-        do {
-            guard let algorithm = try body() else { return "nil" }
-            return "algorithm(\(algorithm.name))"
-        } catch let error as JWTError {
-            return "error(\(error.reason ?? "-"))"
-        } catch {
-            return "error(\(error))"
-        }
-    }
-
     static var documentedOutcomes: [(name: String, json: String, outcome: String)] {
         [
             (
@@ -61,6 +49,41 @@ struct JWKTests {
                 "error(Missing ECDSA coordinates)"
             ),
             (
+                "EC public key",
+                #"{"kty":"EC","alg":"ES384","kid":"a","crv":"P-384","x":"\#(ecdsaP384X)","y":"\#(ecdsaP384Y)"}"#,
+                "algorithm(ES384)"
+            ),
+            (
+                "EC with no crv",
+                #"{"kty":"EC","alg":"ES384","kid":"a","x":"\#(ecdsaP384X)","y":"\#(ecdsaP384Y)"}"#,
+                "algorithm(ES384)"
+            ),
+            (
+                "EC with a non-EC alg",
+                #"{"kty":"EC","alg":"RS256","kid":"a","crv":"P-384","x":"\#(ecdsaP384X)","y":"\#(ecdsaP384Y)"}"#,
+                "nil"
+            ),
+            (
+                "EC with an unknown curve",
+                #"{"kty":"EC","alg":"ES256","kid":"a","crv":"secp256k1","x":"AQAB","y":"AQAB"}"#,
+                "error(Invalid ECDSA curve)"
+            ),
+            (
+                "EC with an unknown curve and no alg",
+                #"{"kty":"EC","kid":"a","crv":"secp256k1","x":"AQAB","y":"AQAB"}"#,
+                "error(Invalid ECDSA curve)"
+            ),
+            (
+                "EC with an EdDSA curve",
+                #"{"kty":"EC","alg":"ES256","kid":"a","crv":"Ed25519","x":"AQAB","y":"AQAB"}"#,
+                "error(Invalid ECDSA curve)"
+            ),
+            (
+                "EC with another algorithm's curve",
+                #"{"kty":"EC","alg":"ES256","kid":"a","crv":"P-384","x":"\#(ecdsaP384X)","y":"\#(ecdsaP384Y)"}"#,
+                "error(Invalid ECDSA curve)"
+            ),
+            (
                 "OKP public key",
                 #"{"kty":"OKP","alg":"EdDSA","kid":"a","crv":"Ed25519","x":"\#(eddsaPublicKeyBase64Url)"}"#,
                 "algorithm(EdDSA)"
@@ -94,9 +117,20 @@ struct JWKTests {
     }
 
     @Test("Each key produces the outcome it always has", arguments: documentedOutcomes)
-    func documentedOutcomesHold(testCase: (name: String, json: String, outcome: String)) throws {
-        let key = try JWK(json: testCase.json)
-        #expect(Self.outcome { try key.getKey() } == testCase.outcome, "\(testCase.name)")
+    func documentedOutcomesHold(name: String, json: String, outcome: String) throws {
+        func runOutcome(_ body: () throws -> (any JWTAlgorithm)?) -> String {
+            do {
+                guard let algorithm = try body() else { return "nil" }
+                return "algorithm(\(algorithm.name))"
+            } catch let error as JWTError {
+                return "error(\(error.reason ?? "-"))"
+            } catch {
+                return "error(\(error))"
+            }
+        }
+
+        let key = try JWK(json: json)
+        #expect(runOutcome { try key.getKey() } == outcome, "\(name)")
     }
 
     @Test("The corpus exercises success, nil and failure")
@@ -114,37 +148,32 @@ struct JWKTests {
             let key = try JWK(json: testCase.json)
             let encoded = try JSONEncoder().encode(key)
 
-            let original = try JSONSerialization.jsonObject(with: Data(testCase.json.utf8)) as? [String: String]
-            let roundTripped = try JSONSerialization.jsonObject(with: encoded) as? [String: String]
+            let original = try JSONDecoder().decode([String: String].self, from: Data(testCase.json.utf8))
+            let roundTripped = try JSONDecoder().decode([String: String].self, from: encoded)
 
             #expect(original == roundTripped, "\(testCase.name)")
         }
     }
 
-    // MARK: - Unrecognised values
+    static let unknowns = [
+        (#"{"kty":"AKP","alg":"ML-DSA-65","kid":"pq","x":"AQAB"}"#, "kty", "AKP"),
+        (#"{"kty":"EC","alg":"ES256K","kid":"a","crv":"P-256","x":"AQAB","y":"AQAB"}"#, "alg", "ES256K"),
+        (#"{"kty":"EC","alg":"ES256","kid":"a","crv":"secp256k1","x":"AQAB","y":"AQAB"}"#, "crv", "secp256k1"),
+    ]
 
-    @Test("An unrecognised kty, alg or crv doesn't fail decoding")
-    func unknownValuesAreTolerated() throws {
-        let unknowns = [
-            (#"{"kty":"AKP","alg":"ML-DSA-65","kid":"pq","x":"AQAB"}"#, "kty", "AKP"),
-            (#"{"kty":"EC","alg":"ES256K","kid":"a","crv":"P-256","x":"AQAB","y":"AQAB"}"#, "alg", "ES256K"),
-            (#"{"kty":"EC","alg":"ES256","kid":"a","crv":"secp256k1","x":"AQAB","y":"AQAB"}"#, "crv", "secp256k1"),
-        ]
+    @Test("An unrecognised kty, alg or crv doesn't fail decoding", arguments: unknowns)
+    func unknownValuesAreTolerated(json: String, member: String, rawValue: String) throws {
+        let key = try JWK(json: json)
 
-        for (json, member, rawValue) in unknowns {
-            let key = try JWK(json: json)
-
-            switch member {
-            case "kty": #expect(key.keyType.rawValue == rawValue)
-            case "alg": #expect(key.algorithm?.rawValue == rawValue)
-            default: #expect(key.curve?.rawValue == rawValue)
-            }
-
-            // The value survives a round trip rather than being erased.
-            let encoded = try JSONEncoder().encode(key)
-            let object = try JSONSerialization.jsonObject(with: encoded) as? [String: String]
-            #expect(object?[member] == rawValue, "\(member) should survive a round trip")
+        switch member {
+        case "kty": #expect(key.keyType.rawValue == rawValue)
+        case "alg": #expect(key.algorithm?.rawValue == rawValue)
+        default: #expect(key.curve?.rawValue == rawValue)
         }
+
+        let encoded = try JSONEncoder().encode(key)
+        let object = try JSONSerialization.jsonObject(with: encoded) as? [String: String]
+        #expect(object?[member] == rawValue, "\(member) should survive a round trip")
     }
 
     @Test("A key type JWTKit doesn't model is inert rather than fatal")
@@ -180,6 +209,23 @@ struct JWKTests {
         #expect(encoded?["kty"] == "AKP")
         #expect(encoded?["alg"] == "ES256K")
         #expect(encoded?["crv"] == "secp256k1")
+    }
+
+    @Test("Members outside a complete key's type are discarded")
+    func crossTypeMembersAreDiscarded() throws {
+        var key = JWK.rsa(.rs256, identifier: "a", modulus: rsaModulus, exponent: "AQAB")
+        key.x = "AQAB"
+        #expect(key.x == nil)
+
+        let mixed = try JWK(json: #"{"kty":"RSA","kid":"a","n":"\#(rsaModulus)","e":"AQAB","crv":"P-256"}"#)
+        #expect(mixed.curve == nil)
+        let reencoded = try JSONDecoder().decode([String: String].self, from: JSONEncoder().encode(mixed))
+        #expect(reencoded["crv"] == nil)
+
+        var incomplete = try JWK(json: #"{"kty":"RSA","kid":"a","n":"\#(rsaModulus)","crv":"P-256"}"#)
+        #expect(incomplete.curve == .ecdsa(.p256))
+        incomplete.x = "AQAB"
+        #expect(incomplete.x == "AQAB")
     }
 
     @Test("Switching between storages")
@@ -242,3 +288,7 @@ struct JWKTests {
         }
     }
 }
+
+/// A P-384 public key's coordinates, base64url encoded.
+let ecdsaP384X = "0tu_H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT-hHd0ufc_OwjEbqilsYnTdm"
+let ecdsaP384Y = "RWRZz-tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4-sU8uWegwjd72sBK6axj7"

@@ -42,48 +42,64 @@ public struct JWK: Codable, Sendable {
     /// `n` Modulus.
     ///
     /// Represented as the base64url encoding of the value's unsigned big endian representation as an octet sequence.
+    ///
+    /// Carried by RSA keys: on a complete key of another type it reads as `nil` and setting it is discarded.
     public var modulus: String? {
         get { self.parameters.members.modulus }
         set { self.updateMembers { $0.modulus = newValue } }
     }
 
     /// `e` Exponent.
+    ///
+    /// Carried by RSA keys: on a complete key of another type it reads as `nil` and setting it is discarded.
     public var exponent: String? {
         get { self.parameters.members.exponent }
         set { self.updateMembers { $0.exponent = newValue } }
     }
 
     /// `d` Private exponent.
+    ///
+    /// Carried by every key type: the private exponent of an RSA key, or the private key of an EC or OKP key.
     public var privateExponent: String? {
         get { self.parameters.members.privateExponent }
         set { self.updateMembers { $0.privateExponent = newValue } }
     }
 
     /// `p` First prime factor.
+    ///
+    /// Carried by RSA keys: on a complete key of another type it reads as `nil` and setting it is discarded.
     public var prime1: String? {
         get { self.parameters.members.prime1 }
         set { self.updateMembers { $0.prime1 = newValue } }
     }
 
     /// `q` Second prime factor.
+    ///
+    /// Carried by RSA keys: on a complete key of another type it reads as `nil` and setting it is discarded.
     public var prime2: String? {
         get { self.parameters.members.prime2 }
         set { self.updateMembers { $0.prime2 = newValue } }
     }
 
     /// `x` coordinate.
+    ///
+    /// Carried by EC and OKP keys: on a complete key of another type it reads as `nil` and setting it is discarded.
     public var x: String? {
         get { self.parameters.members.x }
         set { self.updateMembers { $0.x = newValue } }
     }
 
     /// `y` coordinate.
+    ///
+    /// Carried by EC keys: on a complete key of another type it reads as `nil` and setting it is discarded.
     public var y: String? {
         get { self.parameters.members.y }
         set { self.updateMembers { $0.y = newValue } }
     }
 
     /// `crv` curve.
+    ///
+    /// Carried by EC and OKP keys: on a complete key of another type it reads as `nil` and setting it is discarded.
     public var curve: Curve? {
         get { self.parameters.members.curve }
         set { self.updateMembers { $0.curve = newValue } }

@@ -1,6 +1,6 @@
 extension JWK {
     /// The `alg` (algorithm) parameter identifies the algorithm intended for use with the key.
-    /// Unkown algorithms are preserved.
+    /// Unknown algorithms are preserved.
     public struct Algorithm: Codable, RawRepresentable, Equatable, Sendable {
         public typealias RawValue = String
 
@@ -76,7 +76,7 @@ extension JWK {
         /// RSA with OAEP
         public static let rsaOAEP = Self(backing: .rsaOAEP)
 
-        /// Represents a algorithm JWTKit doesn't recognise, preserving its name.
+        /// Represents an algorithm JWTKit doesn't recognise, preserving its name.
         public static func unknown(_ rawValue: String) -> Self { .init(backing: .unknown(rawValue)) }
 
         init(backing: Backing) {

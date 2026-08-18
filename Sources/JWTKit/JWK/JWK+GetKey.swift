@@ -69,18 +69,38 @@ extension JWK {
     }
 
     private static func signer(for ec: EC, algorithm: Algorithm?) throws -> (any JWTAlgorithm)? {
+        // If `crv` is present, it must match the key's curve
+        let declaredCurve: ECDSACurve?
+        switch ec.curve?.backing {
+        case .ecdsa(let curve):
+            declaredCurve = curve
+        case nil:
+            declaredCurve = nil
+        case .eddsa, .unknown:
+            throw JWTError.invalidJWK(reason: "Invalid ECDSA curve")
+        }
+
+        func validateCurve(_ expected: ECDSACurve) throws {
+            if let declaredCurve, declaredCurve != expected {
+                throw JWTError.invalidJWK(reason: "Invalid ECDSA curve")
+            }
+        }
+
         switch algorithm?.backing {
         case .es256:
+            try validateCurve(.p256)
             if let privateKey = ec.privateKey {
                 return try ECDSASigner(key: ES256PrivateKey(key: privateKey))
             }
             return try ECDSASigner(key: ES256PublicKey(parameters: (ec.x, ec.y)))
         case .es384:
+            try validateCurve(.p384)
             if let privateKey = ec.privateKey {
                 return try ECDSASigner(key: ES384PrivateKey(key: privateKey))
             }
             return try ECDSASigner(key: ES384PublicKey(parameters: (ec.x, ec.y)))
         case .es512:
+            try validateCurve(.p521)
             if let privateKey = ec.privateKey {
                 return try ECDSASigner(key: ES512PrivateKey(key: privateKey))
             }
