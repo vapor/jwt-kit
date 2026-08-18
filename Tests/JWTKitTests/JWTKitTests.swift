@@ -45,11 +45,11 @@ struct JWTKitTests {
         }
 
         let keyCollection = await JWTKeyCollection()
-            .add(hmac: "secret", digestAlgorithm: .sha256)
+            .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
 
         do {
             let jwt =
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.lS5lpwfRNSZDvpGQk6x5JI1g40gkYCOWqbc3J_ghowo"
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2YXBvciIsImV4cCI6NjQwOTIyMTEyMDAsImFkbWluIjp0cnVlfQ.023MpwVrTea_vZ7uzgZGN1dB-XK88BSC0oyLnQDbxSI"
             let payload = try await keyCollection.verify(jwt, as: TestPayload.self)
             #expect(payload.admin == true)
         }
@@ -69,9 +69,9 @@ struct JWTKitTests {
     @Test("Test Parsing")
     func parse() async throws {
         let data =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.Ks7KcdjrlUTYaSNeAO5SzBla_sFCHkUh4vvJYn6q29U"
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5fQ.V3lYmAufL5fTJdyfMBcyEBBVW8ID3VZQOjuXx7MMzGg"
 
-        let test = try await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let test = try await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
             .verify(data, as: TestPayload.self)
 
         #expect(test.name == "John Doe")
@@ -100,10 +100,10 @@ struct JWTKitTests {
     @Test("Test Expiration")
     func expired() async throws {
         let data =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MX0.-x_DAYIg4R4R9oZssqgWyJP_oWO1ESj8DgKrGCk7i5o"
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwiZXhwIjoxLCJuYW1lIjoiSm9obiBEb2UiLCJzdWIiOiIxMjM0NTY3ODkwIn0.bYNZS2F1wCl60yOAL2wYpfMHltZM4BMQnEjjdBnuOmM"
 
         do {
-            _ = try await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+            _ = try await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
                 .verify(data, as: TestPayload.self)
         } catch let error as JWTError {
             #expect(error.errorType == .claimVerificationFailure)
@@ -117,9 +117,9 @@ struct JWTKitTests {
     @Test("Test Expiration Decoding")
     func expirationDecoding() async throws {
         let data =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwMDAwMDAwMDB9.JgCO_GqUQnbS0z2hCxJLE9Tpt5SMoZObHBxzGBWuTYQ"
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwMDAwMDAwMDB9.Aa64X3DI-9DwBJcBiviZxDX-tMLgbSGramzT4XInD_I"
 
-        let test = try await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let test = try await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
             .verify(data, as: ExpirationPayload.self)
         #expect(test.exp.value == Date(timeIntervalSince1970: 2_000_000_000))
     }
@@ -127,10 +127,10 @@ struct JWTKitTests {
     @Test("Test Signing")
     func sign() async throws {
         let data =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImZvbyJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6OTk5OTk5OTk5OTk5OTl9.Gf7leJ8i30LmMI7GBTpWDMXV60y1wkTOCOBudP9v9ms"
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwiZXhwIjo5OTk5OTk5OTk5OTk5OSwibmFtZSI6IkpvaG4gRG9lIiwic3ViIjoiMTIzNDU2Nzg5MCJ9.f90RL65oqClbSXw9JezmnMkS0IpsXo43za3iHE5MEqs"
         let keyCollection = await JWTKeyCollection()
             .add(
-                hmac: "bar",
+                hmac: "a-string-secret-at-least-256-bits-long",
                 digestAlgorithm: .sha256,
                 kid: "foo"
             )
@@ -456,7 +456,7 @@ struct JWTKitTests {
 
         let keyCollection = await JWTKeyCollection()
             .add(
-                hmac: "secret",
+                hmac: "a-string-secret-at-least-256-bits-long",
                 digestAlgorithm: .sha256,
                 parser: CustomParser(),
                 serializer: CustomSerializer()
@@ -511,7 +511,7 @@ struct JWTKitTests {
     }
 
     func testCustomHeaderFields() async throws {
-        let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let keyCollection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
 
         let payload = TestPayload(
             sub: "vapor",
@@ -552,7 +552,7 @@ struct JWTKitTests {
         let keyCollection = await JWTKeyCollection()
             .add(
                 hmac: .init(key: .init(size: .bits256)),
-                digestAlgorithm: .sha384
+                digestAlgorithm: .sha256
             )
 
         let payload = TestPayload(
@@ -602,7 +602,7 @@ struct JWTKitTests {
 
     @Test("Test Custom Openbanking Header Fields")
     func sampleOpenbankingHeader() async throws {
-        let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let keyCollection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
 
         // https://openbanking.atlassian.net/wiki/spaces/DZ/pages/937656404/Read+Write+Data+API+Specification+-+v3.1
         let customFields: JWTHeader = [
@@ -674,7 +674,7 @@ struct JWTKitTests {
 
     @Test("Test Custom Object Header")
     func customObjectHeader() async throws {
-        let keyCollection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let keyCollection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let customFields: JWTHeader = [
             "kid": "some-kid",
             "foo": ["bar": "baz"],
@@ -697,7 +697,7 @@ struct JWTKitTests {
     @Test("Test signing with iterating keys key collection")
     func testKeyCollectionIteration() async throws {
         let hmacToken = """
-            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.GW-OvOyauZXQeFuzFHRFL7saTXJrudGQ_qHtpbVWW9Y
+            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6dHJ1ZSwiZXhwIjoyMDAwMDAwMDAwLCJuYW1lIjoiSm9obiBEb2UiLCJzdWIiOiIxMjM0NTY3ODkwIn0.dnDfvqV1v8z6NI4Pn-QMU2XIIrI8baoiTd2-mqd5snc
             """
         let ecdsaToken = """
             eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImV4cCI6MjAwMDAwMDAwMH0.bxLwoupZk9MW5Ys650FNn1CpedHBOPKLf9dRVjmETs3KUn4VIfcxSIK7tOEEeuExgpKssRxYEMpLlFyY6jsLRg
@@ -714,7 +714,7 @@ struct JWTKitTests {
         )
 
         let keyCollection = await JWTKeyCollection()
-            .add(hmac: "secret", digestAlgorithm: .sha256, kid: "hmac")
+            .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "hmac")
             .add(ecdsa: ecdsaPrivateKey, kid: "ecdsa")
 
         let hmacVerified = try await keyCollection.verify(hmacToken, as: TestPayload.self)
@@ -856,8 +856,8 @@ struct JWTKitTests {
     @Test("Remove single key by kid")
     func testRemoveSingleKey() async throws {
         let keys = await JWTKeyCollection()
-            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
-            .add(hmac: "key-2", digestAlgorithm: .sha256, kid: "v2")
+            .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "another-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v2")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -885,7 +885,7 @@ struct JWTKitTests {
     @Test("Remove non-existent key returns false")
     func testRemoveNonExistentKey() async throws {
         let keys = await JWTKeyCollection()
-            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v1")
 
         let removed = await keys.remove(kid: "non-existent")
         #expect(removed == false)
@@ -894,7 +894,7 @@ struct JWTKitTests {
     @Test("Remove default key clears default")
     func testRemoveDefaultKey() async throws {
         let keys = await JWTKeyCollection()
-            .add(hmac: "key-1", digestAlgorithm: .sha256)  // No kid = default
+            .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)  // No kid = default
 
         let payload = TestPayload(
             sub: "vapor",
@@ -917,10 +917,10 @@ struct JWTKitTests {
     @Test("RemoveAll except specified keys")
     func testRemoveAllExcept() async throws {
         let keys = await JWTKeyCollection()
-            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
-            .add(hmac: "key-2", digestAlgorithm: .sha256, kid: "v2")
-            .add(hmac: "key-3", digestAlgorithm: .sha256, kid: "v3")
-            .add(hmac: "key-4", digestAlgorithm: .sha256, kid: "v4")
+            .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "another-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v2")
+            .add(hmac: "third-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v3")
+            .add(hmac: "fourth-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v4")
 
         let payload = TestPayload(
             sub: "vapor",
@@ -952,9 +952,9 @@ struct JWTKitTests {
     @Test("RemoveAll including default")
     func testRemoveAllWithDefault() async throws {
         let keys = await JWTKeyCollection()
-            .add(hmac: "key-0", digestAlgorithm: .sha256)
-            .add(hmac: "key-1", digestAlgorithm: .sha256, kid: "v1")
-            .add(hmac: "key-2", digestAlgorithm: .sha256, kid: "v2")
+            .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
+            .add(hmac: "another-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v1")
+            .add(hmac: "third-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "v2")
 
         let payload = TestPayload(
             sub: "vapor",

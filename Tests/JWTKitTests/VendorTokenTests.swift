@@ -32,7 +32,7 @@ struct VendorTokenTests {
             nonce: "nonceValue"
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
@@ -62,7 +62,7 @@ struct VendorTokenTests {
             nonce: "nonceValue"
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
@@ -97,7 +97,7 @@ struct VendorTokenTests {
             nonce: "nonceValue"
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
@@ -127,7 +127,7 @@ struct VendorTokenTests {
             realUserStatus: .likelyReal
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
@@ -152,7 +152,7 @@ struct VendorTokenTests {
             realUserStatus: .likelyReal
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
@@ -190,7 +190,7 @@ struct VendorTokenTests {
             version: "2.0"
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
@@ -221,7 +221,7 @@ struct VendorTokenTests {
             version: "2.0"
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
@@ -257,7 +257,7 @@ struct VendorTokenTests {
             version: "2.0"
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
@@ -291,7 +291,7 @@ struct VendorTokenTests {
             )
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
@@ -320,7 +320,7 @@ struct VendorTokenTests {
             )
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
@@ -354,7 +354,7 @@ struct VendorTokenTests {
             )
         )
 
-        let collection = await JWTKeyCollection().add(hmac: "secret", digestAlgorithm: .sha256)
+        let collection = await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
         let jwt = try await collection.sign(token)
 
         await #expect(
