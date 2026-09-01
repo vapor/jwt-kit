@@ -201,7 +201,7 @@ struct X5CTests {
         do {
             payload = try await verifier.verifyJWS(token, as: StoreKitPayload.self, jsonDecoder: jsonDecoder)
         } catch {
-            Issue.record("Failed with error: \(error.localizedDescription)")
+            Issue.record("Failed with error: \(error)")
         }
 
         let data = try #require(payload).data

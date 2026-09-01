@@ -2,12 +2,12 @@
 import Testing
 import JWTKit
 import X509
+import Crypto
 
 #if !canImport(Darwin)
 import FoundationEssentials
 #else
 import Foundation
-import Crypto
 #endif
 
 @Suite("JWTKit Tests")
