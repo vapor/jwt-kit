@@ -10,6 +10,8 @@ import Foundation
 #endif
 
 import Crypto
+import SwiftASN1
+import CryptoExtras
 
 /// Test the x5c verification abilities of JWTSigners.
 ///

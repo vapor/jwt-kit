@@ -1,4 +1,4 @@
-import Crypto
+public import Crypto
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLDSA87.PublicKey: MLDSAPublicKey {

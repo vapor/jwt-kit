@@ -1,4 +1,4 @@
-@preconcurrency import Crypto
+import Crypto
 
 #if !canImport(Darwin)
 import FoundationEssentials

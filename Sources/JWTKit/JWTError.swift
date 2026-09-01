@@ -56,7 +56,7 @@ public struct JWTError: Error, Sendable, Equatable {
         fileprivate let errorType: ErrorType
         fileprivate let name: String?
         fileprivate let reason: String?
-        fileprivate let underlying: Error?
+        fileprivate let underlying: (any Error)?
         fileprivate let kid: JWKIdentifier?
         fileprivate let identifier: String?
         fileprivate let failedClaim: (any JWTClaim)?
@@ -67,7 +67,7 @@ public struct JWTError: Error, Sendable, Equatable {
             errorType: ErrorType,
             name: String? = nil,
             reason: String? = nil,
-            underlying: Error? = nil,
+            underlying: (any Error)? = nil,
             kid: JWKIdentifier? = nil,
             identifier: String? = nil,
             failedClaim: (any JWTClaim)? = nil,
@@ -113,7 +113,7 @@ public struct JWTError: Error, Sendable, Equatable {
         .init(backing: .init(errorType: .claimVerificationFailure, reason: reason, failedClaim: failedClaim))
     }
 
-    public static func signingAlgorithmFailure(_ error: Error) -> Self {
+    public static func signingAlgorithmFailure(_ error: any Error) -> Self {
         .init(backing: .init(errorType: .signingAlgorithmFailure, underlying: error))
     }
 

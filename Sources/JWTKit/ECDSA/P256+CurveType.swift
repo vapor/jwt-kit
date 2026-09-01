@@ -1,9 +1,10 @@
-import Crypto
+public import Crypto
+import X509
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 extension P256: ECDSACurveType {

@@ -1,7 +1,7 @@
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// The "nbf" (not before) claim identifies the time before which the JWT

@@ -1,7 +1,7 @@
 #if !canImport(Darwin)
-import FoundationEssentials
+package import FoundationEssentials
 #else
-import Foundation
+package import Foundation
 #endif
 
 extension String {

@@ -12,14 +12,14 @@ jobs:
       contents: read
     if: ${{ !(github.event.pull_request.draft || false) }}
     runs-on: ubuntu-latest
-    container: swift:noble
+    container: swift:6.3-noble
     steps:
       - name: Check out JWTKit
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: jwt-kit
       - name: Check out JWT provider
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: vapor/jwt
           path: jwt
@@ -32,15 +32,14 @@ jobs:
     permissions:
       contents: read
     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
+    secrets: inherit
     with:
-      with_api_check: ${{ github.event_name == 'pull_request' }}
-      warnings_as_errors: true
-      with_linting: true
-      with_windows: false
       with_musl: true
       with_android: true
+      with_linting: true
+      with_windows: true
+      with_wasm: true
       ios_scheme_name: jwt-kit
-    secrets: inherit
 
   submit-dependencies:
     permissions:
@@ -48,3 +47,10 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     uses: vapor/ci/.github/workflows/submit-deps.yml@main
     secrets: inherit
+
+  foundation-linking:
+    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@main
+    permissions:
+      contents: read
+    with:
+      swift_image: swift:6.3-noble

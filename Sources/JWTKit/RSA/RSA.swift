@@ -1,11 +1,12 @@
 import Crypto
-import CryptoExtras
+public import CryptoExtras
+import SwiftASN1
 import X509
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 extension Insecure {

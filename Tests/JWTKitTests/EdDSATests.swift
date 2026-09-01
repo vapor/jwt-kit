@@ -1,6 +1,11 @@
 #if canImport(Testing)
 import Testing
 import JWTKit
+#if !canImport(Darwin)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite("EdDSA Tests")
 struct EdDSATests {

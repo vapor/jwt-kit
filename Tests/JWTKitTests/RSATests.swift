@@ -2,6 +2,11 @@
 import Testing
 import JWTKit
 import CryptoExtras
+#if !canImport(Darwin)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 @Suite("RSA Tests")
 struct RSATests {

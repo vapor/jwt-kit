@@ -43,7 +43,7 @@ extension JWTMultiValueClaim {
     ///   in a list of more than one. This implementation behaves according to
     ///   the semantics of the particular `Collection` type used as its value;
     ///   `Array` will preserve ordering and duplicates, `Set` will not.
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
 
         do {
@@ -70,7 +70,7 @@ extension JWTMultiValueClaim {
     /// - Warning: If the claim has zero values, this implementation will encode
     ///   an inefficient zero-element representation. See the notes regarding
     ///   this on `init(from decoder:)` above.
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
 
         switch self.value.first {
@@ -100,7 +100,7 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
     var currentIndex: Int = 0
 
     /// We are our own unkeyed decoding container.
-    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    func unkeyedContainer() throws -> any UnkeyedDecodingContainer {
         return self
     }
 
@@ -137,7 +137,7 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
     // user info and we just fail instantly if asked for anything other than an unnested unkeyed container. The count
     // of the unkeyed container is always exactly one.
 
-    var codingPath: [CodingKey] = []
+    var codingPath: [any CodingKey] = []
     var userInfo: [CodingUserInfoKey: Any] = [:]
     var isAtEnd: Bool { currentIndex != 0 }
     var count: Int? = 1
@@ -146,7 +146,7 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
         throw self.unsupportedError
     }
 
-    func singleValueContainer() throws -> SingleValueDecodingContainer {
+    func singleValueContainer() throws -> any SingleValueDecodingContainer {
         throw self.unsupportedError
     }
 
@@ -154,11 +154,11 @@ private struct CollectionOfOneDecoder<T>: Decoder, UnkeyedDecodingContainer wher
         throw self.unsupportedError
     }
 
-    mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
+    mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
         throw self.unsupportedError
     }
 
-    mutating func superDecoder() throws -> Decoder {
+    mutating func superDecoder() throws -> any Decoder {
         throw self.unsupportedError
     }
 }
