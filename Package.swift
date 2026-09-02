@@ -40,7 +40,8 @@ let package = Package(
 
 var swiftSettings: [SwiftSetting] {
     [
-        .treatAllWarnings(as: .error),
+        // Re-enable this on all platforms once we drop iOS 15, where JSONEn/Decoder are not Sendable
+        .treatAllWarnings(as: .error, .when(platforms: [.macOS, .linux, .windows, .android, .wasi, .openbsd])),
         .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),

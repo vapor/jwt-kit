@@ -38,7 +38,8 @@ jobs:
       with_android: true
       with_linting: true
       with_windows: true
-      with_wasm: true
+      # Re-enable when SwiftCrypto builds on WASM
+      # with_wasm: true
       ios_scheme_name: jwt-kit
 
   submit-dependencies:
@@ -49,7 +50,7 @@ jobs:
     secrets: inherit
 
   foundation-linking:
-    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@main
+    uses: vapor/ci/.github/workflows/check-foundation-linking.yml@727bb2695c01ea0876b91d1ba2ee139c0a0f64f7
     permissions:
       contents: read
     with:
