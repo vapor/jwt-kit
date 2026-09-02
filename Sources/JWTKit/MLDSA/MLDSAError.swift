@@ -1,4 +1,4 @@
 enum MLDSAError: Error {
     case noPrivateKey
-    case failedToSign(Error)
+    case failedToSign(any Error)
 }

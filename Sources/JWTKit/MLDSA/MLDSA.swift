@@ -1,9 +1,9 @@
 import CryptoExtras
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Namespace for the MLDSA (Module-Lattice-Based Digital Signature Algorithm) signing algorithm.

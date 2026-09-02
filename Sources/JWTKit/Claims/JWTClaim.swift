@@ -21,13 +21,13 @@ extension JWTClaim where Value == String, Self: ExpressibleByStringLiteral {
 
 extension JWTClaim {
     /// See `Decodable`.
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let single = try decoder.singleValueContainer()
         try self.init(value: single.decode(Value.self))
     }
 
     /// See `Encodable`.
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var single = encoder.singleValueContainer()
         try single.encode(value)
     }

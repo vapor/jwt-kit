@@ -23,11 +23,11 @@ struct ExamplePayload: JWTPayload {
 
 // snippet.KEY_COLLECTION_ADD_HS256
 // Registers an HS256 (HMAC-SHA-256) signer.
-await keys.add(hmac: "secret", digestAlgorithm: .sha256)
+await keys.add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
 
 // snippet.KEY_COLLECTION_ADD_HS256_KID
 // Registers an HS256 (HMAC-SHA-256) signer with a key identifier.
-await keys.add(hmac: "secret", digestAlgorithm: .sha256, kid: "my-key")
+await keys.add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, kid: "my-key")
 
 // snippet.KEY_COLLECTION_CREATE_ES256
 let ecdsaPublicKey = "-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----"
@@ -127,17 +127,17 @@ if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
 extension DataProtocol {
     func base64URLDecodedBytes() -> [UInt8] {
         let string = String(decoding: self, as: UTF8.self)
-            .replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
+            .replacing("-", with: "+")
+            .replacing("_", with: "/")
         let padding = string.count % 4 == 0 ? "" : String(repeating: "=", count: 4 - string.count % 4)
         return [UInt8](Data(base64Encoded: string + padding) ?? Data())
     }
 
     func base64URLEncodedBytes() -> [UInt8] {
         Data(self).base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+            .replacing("+", with: "-")
+            .replacing("/", with: "_")
+            .replacing("=", with: "")
             .utf8
             .map { UInt8($0) }
     }
@@ -185,7 +185,9 @@ struct CustomParser: JWTParser {
 do {
     // snippet.CUSTOM_SIGNING
     let keyCollection = await JWTKeyCollection()
-        .add(hmac: "secret", digestAlgorithm: .sha256, parser: CustomParser(), serializer: CustomSerializer())
+        .add(
+            hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, parser: CustomParser(), serializer: CustomSerializer()
+        )
 
     let payload = ExamplePayload(sub: "vapor", exp: .init(value: .init(timeIntervalSince1970: 2_000_000_000)), admin: false)
 
@@ -205,7 +207,7 @@ do {
     let serializer = DefaultJWTSerializer(jsonEncoder: encoder)
 
     let keyCollection = await JWTKeyCollection()
-        .add(hmac: "secret", digestAlgorithm: .sha256, parser: parser, serializer: serializer)
+        .add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256, parser: parser, serializer: serializer)
     // snippet.end
     _ = keyCollection
 }

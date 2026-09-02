@@ -1,10 +1,11 @@
 import Crypto
+import SwiftASN1
 import X509
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 public enum ECDSA: Sendable {}

@@ -1,3 +1,5 @@
+import CryptoExtras
+
 actor JWKSigner: Sendable {
     let jwk: JWK
     let parser: any JWTParser

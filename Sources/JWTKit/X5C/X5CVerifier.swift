@@ -1,9 +1,11 @@
-@_spi(FixedExpiryValidationTime) import X509
+import CryptoExtras
+import SwiftASN1
+@_spi(FixedExpiryValidationTime) public import X509
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// An object for verifying JWS tokens that contain the `x5c` header parameter
@@ -60,7 +62,7 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [String],
-        policy: () throws -> some VerifierPolicy = { RFC5280Policy() }
+        policy: sending () throws -> some VerifierPolicy = { RFC5280Policy() }
     ) async throws -> X509.CertificateValidationResult {
         let certificates = try certificates.map { try Certificate(pemEncoded: $0) }
         return try await verifyChain(certificates: certificates, policy: policy)
@@ -74,7 +76,7 @@ public struct X5CVerifier: Sendable {
     /// - Returns: A `X509.VerificationResult` indicating the result of the verification.
     public func verifyChain(
         certificates: [Certificate],
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { RFC5280Policy() }
+        @PolicyBuilder policy: sending () throws -> some VerifierPolicy = { RFC5280Policy() }
     ) async throws -> X509.CertificateValidationResult {
         let untrustedChain = CertificateStore(certificates)
         var verifier = try Verifier(rootCertificates: trustedStore, policy: policy)
@@ -141,7 +143,7 @@ public struct X5CVerifier: Sendable {
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
-        @PolicyBuilder policy: () throws -> some VerifierPolicy = { EmptyPolicy() }
+        @PolicyBuilder policy: sending () throws -> some VerifierPolicy = { EmptyPolicy() }
     ) async throws -> Payload
     where Payload: JWTPayload {
         // Parse the JWS header to get the header
@@ -183,7 +185,7 @@ public struct X5CVerifier: Sendable {
         let date: Date
         // Some JWT implementations have the sign date in the payload.
         // If it's such a payload, we'll use that date for validation
-        if let validationTimePayload = payload as? ValidationTimePayload {
+        if let validationTimePayload = payload as? any ValidationTimePayload {
             date = validationTimePayload.signedDate
         } else {
             date = Date()

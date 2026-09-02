@@ -51,6 +51,15 @@ The following algorithms, as defined in [RFC 7518 § 3](https://www.rfc-editor.o
 | `ML-DSA-87` | `MLDSA87` | MLDSA with parameter set 87 |
 | `none` | `None`|  No signature / MAC |
 
+### Essentials
+
+@Links(visualStyle: detailedGrid) {
+    - ``JWTKeyCollection``
+    - ``JWTPayload``
+    - ``JWK``
+    - ``JWKS``
+}
+
 ## Vapor
 
 The [vapor/jwt](https://github.com/vapor/jwt) package provides first-class integration with Vapor and is recommended for all Vapor projects which want to use JWTKit.

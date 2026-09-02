@@ -1,7 +1,7 @@
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// A protocol defining the requirements for payloads that include a validation time.

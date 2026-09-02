@@ -1,9 +1,10 @@
+import SwiftASN1
 import X509
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 public protocol JWTSerializer: Sendable {
@@ -12,7 +13,7 @@ public protocol JWTSerializer: Sendable {
 }
 
 extension JWTSerializer {
-    public func makeHeader(from header: JWTHeader, key: JWTAlgorithm) async throws -> JWTHeader {
+    public func makeHeader(from header: JWTHeader, key: any JWTAlgorithm) async throws -> JWTHeader {
         var newHeader = header
 
         newHeader.alg = newHeader.alg ?? key.name
@@ -53,9 +54,9 @@ extension JWTSerializer {
 }
 
 public struct DefaultJWTSerializer: JWTSerializer {
-    public var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+    public var jsonEncoder: any JWTJSONEncoder = .defaultForJWT
 
-    public init(jsonEncoder: JWTJSONEncoder = .defaultForJWT) {
+    public init(jsonEncoder: any JWTJSONEncoder = .defaultForJWT) {
         self.jsonEncoder = jsonEncoder
     }
 

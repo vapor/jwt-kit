@@ -1,9 +1,10 @@
-import Crypto
+public import Crypto
+import CryptoExtras
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// Namespace for the EdDSA (Edwards-curve Digital Signature Algorithm) signing algorithm.

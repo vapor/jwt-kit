@@ -30,14 +30,14 @@ extension JWTHeader: ExpressibleByDictionaryLiteral {
 }
 
 extension JWTHeader: Codable {
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         for (key, value) in self.fields {
             try container.encode(value, forKey: .custom(name: key))
         }
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         self.fields = try Set(container.allKeys)
