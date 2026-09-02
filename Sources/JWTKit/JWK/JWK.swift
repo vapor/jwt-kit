@@ -2,6 +2,7 @@
 import FoundationEssentials
 #else
 import Foundation
+#endif
 
 /// A JSON Web Key.
 ///
