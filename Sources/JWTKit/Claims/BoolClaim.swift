@@ -18,7 +18,7 @@ public struct BoolClaim: JWTClaim, Equatable, ExpressibleByStringLiteral, Expres
         self.value = value
     }
 
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let single = try decoder.singleValueContainer()
 
         do {

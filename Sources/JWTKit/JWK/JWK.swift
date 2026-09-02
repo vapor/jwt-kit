@@ -1,5 +1,8 @@
-import struct Foundation.Data
-import class Foundation.JSONDecoder
+#if !canImport(Darwin)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 
 /// A JSON Web Key.
 ///

@@ -10,6 +10,8 @@ import Foundation
 #endif
 
 import Crypto
+import SwiftASN1
+import CryptoExtras
 
 /// Test the x5c verification abilities of JWTSigners.
 ///
@@ -199,7 +201,7 @@ struct X5CTests {
         do {
             payload = try await verifier.verifyJWS(token, as: StoreKitPayload.self, jsonDecoder: jsonDecoder)
         } catch {
-            Issue.record("Failed with error: \(error.localizedDescription)")
+            Issue.record("Failed with error: \(error)")
         }
 
         let data = try #require(payload).data

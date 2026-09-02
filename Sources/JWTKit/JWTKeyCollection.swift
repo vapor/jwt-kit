@@ -1,9 +1,9 @@
-import Logging
+public import Logging
 
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 /// A collection of JWT and JWK signers for handling JSON Web Tokens (JWTs).

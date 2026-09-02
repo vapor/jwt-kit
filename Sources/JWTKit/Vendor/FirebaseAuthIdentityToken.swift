@@ -1,7 +1,7 @@
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 public struct FirebaseAuthIdentityToken: JWTPayload {

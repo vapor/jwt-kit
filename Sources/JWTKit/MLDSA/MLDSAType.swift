@@ -1,4 +1,4 @@
-import Crypto
+public import Crypto
 
 /// An MLDSA parameter set, which determines the strength of the keys and signatures it produces.
 ///

@@ -117,7 +117,7 @@ extension AppleIdentityToken {
             self.rawValue = rawValue
         }
 
-        public init(from decoder: Decoder) throws {
+        public init(from decoder: any Decoder) throws {
             let value = try decoder.singleValueContainer().decode(Status.self)
             switch value {
             case .unsupported: self = .unsupported
@@ -126,7 +126,7 @@ extension AppleIdentityToken {
             }
         }
 
-        public func encode(to encoder: Encoder) throws {
+        public func encode(to encoder: any Encoder) throws {
             var container = encoder.singleValueContainer()
             switch self {
             case .unsupported: try container.encode(Status.unsupported)

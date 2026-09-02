@@ -1,11 +1,11 @@
 #if !canImport(Darwin)
-import FoundationEssentials
+public import FoundationEssentials
 #else
-import Foundation
+public import Foundation
 #endif
 
 public protocol JWTParser: Sendable {
-    var jsonDecoder: JWTJSONDecoder { get set }
+    var jsonDecoder: any JWTJSONDecoder { get set }
     func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (
         header: JWTHeader, payload: Payload, signature: Data
     ) where Payload: JWTPayload
@@ -44,9 +44,9 @@ extension JWTParser {
 }
 
 public struct DefaultJWTParser: JWTParser {
-    public var jsonDecoder: JWTJSONDecoder = .defaultForJWT
+    public var jsonDecoder: any JWTJSONDecoder = .defaultForJWT
 
-    public init(jsonDecoder: JWTJSONDecoder = .defaultForJWT) {
+    public init(jsonDecoder: any JWTJSONDecoder = .defaultForJWT) {
         self.jsonDecoder = jsonDecoder
     }
 

@@ -11,7 +11,7 @@
 <a href="LICENSE"><img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License"></a>
 <a href="https://github.com/vapor/jwt-kit/actions/workflows/test.yml"><img src="https://img.shields.io/github/actions/workflow/status/vapor/jwt-kit/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration"></a>
 <a href="https://codecov.io/github/vapor/jwt-kit"><img src="https://img.shields.io/codecov/c/github/vapor/jwt-kit?style=plastic&logo=codecov&label=codecov"></a>
-<a href="https://swift.org"><img src="https://design.vapor.codes/images/swift60up.svg" alt="Swift 6.0+"></a>
+<a href="https://swift.org"><img src="https://design.vapor.codes/images/swift62up.svg" alt="Swift 6.2+"></a>
 <a href="https://www.swift.org/sswg/incubation-process.html"><img src="https://design.vapor.codes/images/sswg-graduated.svg" alt="SSWG Incubation Level: Graduated"></a>
 </p>
 <br>
@@ -20,7 +20,7 @@
 
 ### Supported Platforms
 
-JWTKit supports all platforms supported by Swift 6 and later.
+JWTKit supports all platforms supported by Swift 6.2 and later.
 
 ### Installation
 

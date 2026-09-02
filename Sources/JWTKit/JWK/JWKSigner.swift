@@ -1,3 +1,5 @@
+import CryptoExtras
+
 actor JWKSigner: Sendable {
     let jwk: JWK
     let parser: any JWTParser
@@ -41,7 +43,7 @@ extension JWK {
                 throw JWTError.invalidJWK(reason: "Missing RSA primitives")
             }
 
-            let rsaKey: RSAKey =
+            let rsaKey: any RSAKey =
                 if let privateExponent = self.privateExponent {
                     if let prime1, let prime2 {
                         try Insecure.RSA.PrivateKey(

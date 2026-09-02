@@ -2,6 +2,7 @@
 import Testing
 import JWTKit
 import X509
+import Crypto
 
 #if !canImport(Darwin)
 import FoundationEssentials
@@ -257,8 +258,8 @@ struct JWTKitTests {
             try await keyCollection.getKey()
         }
 
-        let a: JWTAlgorithm
-        let b: JWTAlgorithm
+        let a: any JWTAlgorithm
+        let b: any JWTAlgorithm
 
         do {
             a = try await keyCollection.getKey(for: "a")
@@ -414,7 +415,7 @@ struct JWTKitTests {
     @Test("Test B64 Custom Serialising")
     func customSerialisingWithB64Header() async throws {
         struct CustomSerializer: JWTSerializer {
-            var jsonEncoder: JWTJSONEncoder = .defaultForJWT
+            var jsonEncoder: any JWTJSONEncoder = .defaultForJWT
 
             func serialize(_ payload: some JWTPayload, header: JWTHeader) throws -> Data {
                 if header.b64?.asBool == true {
@@ -426,7 +427,7 @@ struct JWTKitTests {
         }
 
         struct CustomParser: JWTParser {
-            var jsonDecoder: JWTJSONDecoder = .defaultForJWT
+            var jsonDecoder: any JWTJSONDecoder = .defaultForJWT
 
             func parse<Payload>(_ token: some DataProtocol, as _: Payload.Type) throws -> (
                 header: JWTHeader, payload: Payload, signature: Data

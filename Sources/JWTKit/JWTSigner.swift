@@ -6,7 +6,7 @@ import Foundation
 
 /// A JWT signer.
 final class JWTSigner: Sendable {
-    let algorithm: JWTAlgorithm
+    let algorithm: any JWTAlgorithm
 
     let parser: any JWTParser
     let serializer: any JWTSerializer
