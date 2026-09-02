@@ -127,17 +127,17 @@ if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
 extension DataProtocol {
     func base64URLDecodedBytes() -> [UInt8] {
         let string = String(decoding: self, as: UTF8.self)
-            .replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
+            .replacing("-", with: "+")
+            .replacing("_", with: "/")
         let padding = string.count % 4 == 0 ? "" : String(repeating: "=", count: 4 - string.count % 4)
         return [UInt8](Data(base64Encoded: string + padding) ?? Data())
     }
 
     func base64URLEncodedBytes() -> [UInt8] {
         Data(self).base64EncodedString()
-            .replacingOccurrences(of: "+", with: "-")
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "=", with: "")
+            .replacing("+", with: "-")
+            .replacing("/", with: "_")
+            .replacing("=", with: "")
             .utf8
             .map { UInt8($0) }
     }
