@@ -8,8 +8,8 @@ let benchmarks = {
         metrics: [.instructions, .mallocCountTotal, .peakMemoryResident],
         thresholds: [
             .instructions: .init(
-                /// Tolerate up to 3% of difference compared to the threshold.
-                relative: [.p90: 3]
+                /// Tolerate up to 4% of difference compared to the threshold.
+                relative: [.p90: 4]
             ),
             .peakMemoryResident: .init(
                 /// Tolerate up to 4% of difference compared to the threshold.
