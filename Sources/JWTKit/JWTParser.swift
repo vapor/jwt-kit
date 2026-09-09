@@ -15,7 +15,13 @@ extension JWTParser {
     public func getTokenParts(_ token: some DataProtocol) throws -> (
         header: ArraySlice<UInt8>, payload: ArraySlice<UInt8>, signature: ArraySlice<UInt8>
     ) {
-        let tokenParts = token.copyBytes().split(
+        try getTokenParts(Array(token))
+    }
+
+    func getTokenParts(_ token: [UInt8]) throws -> (
+        header: ArraySlice<UInt8>, payload: ArraySlice<UInt8>, signature: ArraySlice<UInt8>
+    ) {
+        let tokenParts = token.split(
             separator: .period, omittingEmptySubsequences: false
         )
 
@@ -28,15 +34,16 @@ extension JWTParser {
 }
 
 extension JWTParser {
-    func parseHeader(_ token: some DataProtocol) throws -> JWTHeader {
-        let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
+    func parseHeader(_ token: [UInt8]) throws -> JWTHeader {
+        let tokenParts = token.split(separator: .period, omittingEmptySubsequences: false)
 
         guard tokenParts.count == 3 else {
             throw JWTError.malformedToken(reason: "Token parts count is not 3.")
         }
 
         do {
-            return try jsonDecoder.decode(JWTHeader.self, from: .init(tokenParts[0].base64URLDecodedBytes()))
+            let decoded = try tokenParts[0].base64URLDecodedBytes()
+            return try jsonDecoder.decode(JWTHeader.self, from: Data(decoded))
         } catch {
             throw JWTError.malformedToken(reason: "Couldn't decode header from JWT with error: \(String(describing: error)).")
         }
@@ -55,29 +62,28 @@ public struct DefaultJWTParser: JWTParser {
     ) where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
-        let header: JWTHeader
-        let payload: Payload
-        let signature: Data
+        let headerBytes: [UInt8]
+        let payloadBytes: [UInt8]
 
-        func isUTF8(_ bytes: [UInt8]) -> Bool {
-            String(bytes: bytes, encoding: .utf8) != nil
-        }
-
-        let headerBytes = encodedHeader.base64URLDecodedBytes()
-        let payloadBytes = encodedPayload.base64URLDecodedBytes()
-
-        guard isUTF8(headerBytes) && isUTF8(payloadBytes) else {
+        do {
+            headerBytes = try encodedHeader.base64URLDecodedBytes()
+            payloadBytes = try encodedPayload.base64URLDecodedBytes()
+        } catch {
             throw JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded.")
         }
+
+        let header: JWTHeader
+        let payload: Payload
+        let signature: [UInt8]
 
         do {
             header = try jsonDecoder.decode(JWTHeader.self, from: .init(headerBytes))
             payload = try jsonDecoder.decode(Payload.self, from: .init(payloadBytes))
-            signature = Data(encodedSignature.base64URLDecodedBytes())
+            signature = try encodedSignature.base64URLDecodedBytes()
         } catch {
             throw JWTError.malformedToken(reason: "Couldn't decode JWT with error: \(String(describing: error))")
         }
 
-        return (header: header, payload: payload, signature: signature)
+        return (header: header, payload: payload, signature: Data(signature))
     }
 }

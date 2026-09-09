@@ -275,7 +275,7 @@ public actor JWTKeyCollection: Sendable {
         iteratingKeys: Bool = false
     ) async throws -> Payload
     where Payload: JWTPayload {
-        let header = try defaultJWTParser.parseHeader(token)
+        let header = try defaultJWTParser.parseHeader(Array(token))
         let kid = header.kid.flatMap { JWKIdentifier(string: $0) }
         var signer = try await self.getSigner(for: kid, alg: header.alg)
 
@@ -293,6 +293,15 @@ public actor JWTKeyCollection: Sendable {
             throw error
         }
     }
+
+    //    @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *)
+    //    public func verify<Payload>(
+    //        _ token: UTF8Span,
+    //        as _: Payload.Type = Payload.self,
+    //        iteratingKeys: Bool = false
+    //    ) async throws -> Payload where Payload: JWTPayload {
+    //        let header =
+    //    }
 
     /// Signs a JWT payload and returns the JWT string.
     ///

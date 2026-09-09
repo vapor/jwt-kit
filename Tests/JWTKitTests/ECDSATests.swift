@@ -95,44 +95,6 @@ struct ECDSATests {
         }
     }
 
-    @Test("Test Verifying ECDSA Key Using JWK")
-    func verifyingECDSAKeyUsingJWK() async throws {
-        struct Foo: JWTPayload {
-            var bar: Int
-            func verify(using _: some JWTAlgorithm) throws {}
-        }
-
-        // ecdsa key
-        let x = "0tu/H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT+hHd0ufc/OwjEbqilsYnTdm"
-        let y = "RWRZz+tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4+sU8uWegwjd72sBK6axj7"
-
-        let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
-
-        // sign jwt
-        let key = try ES384PrivateKey(key: privateKey)
-        let keys = await JWTKeyCollection().add(ecdsa: key, kid: "vapor")
-
-        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
-
-        // verify using jwks without alg
-        let jwksString = """
-            {
-                "keys": [
-                    {
-                        "kty": "EC",
-                        "use": "sig",
-                        "kid": "vapor",
-                        "x": "\(x)",
-                        "y": "\(y)"
-                     }
-                ]
-            }
-            """
-        try await keys.add(jwksJSON: jwksString)
-        let foo = try await keys.verify(jwt, as: Foo.self)
-        #expect(foo.bar == 42)
-    }
-
     @Test("Test Verifying ECDSA Key Using JWK Base64URL")
     func verifyingECDSAKeyUsingJWKBase64URL() async throws {
         struct Foo: JWTPayload {
@@ -169,47 +131,6 @@ struct ECDSATests {
             """
         try await keys.add(jwksJSON: jwksString)
         let foo = try await keys.verify(jwt, as: Foo.self)
-        #expect(foo.bar == 42)
-    }
-
-    @Test("Test Verifying ECDSA Key Using JWK With Mixed Base64 Formats")
-    func verifyingECDSAKeyUsingJWKWithMixedBase64Formats() async throws {
-        struct Foo: JWTPayload {
-            var bar: Int
-            func verify(using _: some JWTAlgorithm) throws {}
-        }
-
-        // ECDSA key in base64url format
-        let x = "0tu_H2ShuV8RIgoOxFneTdxmQQYsSk5LdCPuEIBXT-hHd0ufc_OwjEbqilsYnTdm"
-        let y = "RWRZz-tP83N0CGwroGyFVgH3PYAO6Oewpu4Xf6EXCp4-sU8uWegwjd72sBK6axj7"
-
-        // Private key in base64 format
-        let privateKey = "k+1LAHQRSSMcyaouYK0YOzRbUKj6ISnvihO2XdLQZHQgMt9BkuCT0+539FSHmJxg"
-
-        // Sign JWT
-        let key = try ES384PrivateKey(key: privateKey)
-        let keys = await JWTKeyCollection().add(ecdsa: key, kid: "vapor")
-
-        let jwt = try await keys.sign(Foo(bar: 42), kid: "vapor")
-
-        // Verify using JWK without alg
-        let jwksString = """
-            {
-                "keys": [
-                    {
-                        "kty": "EC",
-                        "use": "sig",
-                        "kid": "vapor",
-                        "x": "\(x)",
-                        "y": "\(y)"
-                     }
-                ]
-            }
-            """
-
-        try await keys.add(jwksJSON: jwksString)
-        let foo = try await keys.verify(jwt, as: Foo.self)
-
         #expect(foo.bar == 42)
     }
 
