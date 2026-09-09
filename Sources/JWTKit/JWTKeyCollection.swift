@@ -294,15 +294,6 @@ public actor JWTKeyCollection: Sendable {
         }
     }
 
-    //    @available(macOS 26.0, iOS 26.0, watchOS 26.0, tvOS 26.0, *)
-    //    public func verify<Payload>(
-    //        _ token: UTF8Span,
-    //        as _: Payload.Type = Payload.self,
-    //        iteratingKeys: Bool = false
-    //    ) async throws -> Payload where Payload: JWTPayload {
-    //        let header =
-    //    }
-
     /// Signs a JWT payload and returns the JWT string.
     ///
     /// - Parameters:
