@@ -5,8 +5,12 @@ import Utilities
 
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
-        metrics: [.peakMemoryResident, .mallocCountTotal],
+        metrics: [.instructions, .mallocCountTotal, .peakMemoryResident],
         thresholds: [
+            .instructions: .init(
+                /// Tolerate up to 1% of difference compared to the threshold.
+                relative: [.p90: 1],
+            ),
             .peakMemoryResident: .init(
                 /// Tolerate up to 4% of difference compared to the threshold.
                 relative: [.p90: 4],
