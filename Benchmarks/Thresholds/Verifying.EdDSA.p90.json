@@ -1,4 +1,5 @@
 {
-  "mallocCountTotal": 239,
-  "peakMemoryResident": 27000000
+  "mallocCountTotal": 212,
+  "peakMemoryResident": 26000000,
+  "instructions": 1312000
 }

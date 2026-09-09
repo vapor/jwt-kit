@@ -3,10 +3,20 @@ import Foundation
 import JWTKit
 import Utilities
 
+private var mldsaSigningThresholds: [BenchmarkMetric: BenchmarkThresholds] {
+    var thresholds = Benchmark.defaultConfiguration.thresholds ?? [:]
+    thresholds[.instructions] = .init(relative: [.p90: 15])
+    return thresholds
+}
+
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
-        metrics: [.peakMemoryResident, .mallocCountTotal],
+        metrics: [.instructions, .mallocCountTotal, .peakMemoryResident],
         thresholds: [
+            .instructions: .init(
+                /// Tolerate up to 4% of difference compared to the threshold.
+                relative: [.p90: 4]
+            ),
             .peakMemoryResident: .init(
                 /// Tolerate up to 4% of difference compared to the threshold.
                 relative: [.p90: 4],
@@ -50,7 +60,7 @@ let benchmarks = {
     }
 
     if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
-        Benchmark("MLDSA65") { benchmark in
+        Benchmark("MLDSA65", configuration: .init(thresholds: mldsaSigningThresholds)) { benchmark in
             let seed = Data(fromHexEncodedString: mldsa65PrivateKeySeed)!
             let key = try MLDSA65PrivateKey(seedRepresentation: seed)
             let keyCollection = await JWTKeyCollection().add(mldsa: key)
