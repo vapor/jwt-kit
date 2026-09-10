@@ -30,6 +30,7 @@ public enum JWTHeaderField: Hashable, Sendable, Codable {
 
         do {
             self = try .string(container.decode(String.self))
+            return
         } catch DecodingError.typeMismatch {}
 
         // This is a bit of a hack to correctly differentiate between integers and doubles
