@@ -154,8 +154,8 @@ struct RSATests {
     func getPublicKeyPrimitives() async throws {
         let publicKey = try Insecure.RSA.PublicKey(modulus: modulus, exponent: publicExponent)
         let (keyModulus, keyExponent) = try publicKey.getKeyPrimitives()
-        try #expect(keyModulus == Data(modulus.base64URLDecodedBytes()))
-        try #expect(keyExponent == Data(publicExponent.base64URLDecodedBytes()))
+        #expect(try keyModulus == Data(modulus.base64URLDecodedBytes()))
+        #expect(try keyExponent == Data(publicExponent.base64URLDecodedBytes()))
     }
 
     @Test("Test RSA Certificate verification")
