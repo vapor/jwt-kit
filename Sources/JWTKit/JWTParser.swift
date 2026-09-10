@@ -50,9 +50,9 @@ public struct DefaultJWTParser: JWTParser {
         self.jsonDecoder = jsonDecoder
     }
 
-    public func parse<Payload>(_ token: some DataProtocol, as: Payload.Type) throws -> (
-        header: JWTHeader, payload: Payload, signature: Data
-    ) where Payload: JWTPayload {
+    public func parse<Payload>(
+        _ token: some DataProtocol, as: Payload.Type
+    ) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
         let header: JWTHeader
@@ -79,5 +79,20 @@ public struct DefaultJWTParser: JWTParser {
         }
 
         return (header: header, payload: payload, signature: signature)
+    }
+
+    func parsePayload<Payload>(
+        _ encodedPayload: ArraySlice<UInt8>, as: Payload.Type
+    ) throws -> Payload where Payload: JWTPayload {
+        let payload: Payload
+        let payloadBytes = encodedPayload.base64URLDecodedBytes()
+
+        do {
+            payload = try jsonDecoder.decode(Payload.self, from: .init(payloadBytes))
+        } catch {
+            throw JWTError.malformedToken(reason: "Couldn't decode JWT payload with error: \(String(describing: error))")
+        }
+
+        return payload
     }
 }
