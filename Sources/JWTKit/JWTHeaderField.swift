@@ -4,7 +4,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
+public enum JWTHeaderField: Hashable, Sendable, Codable {
     case null
     case bool(Bool)
     case int(Int)
@@ -29,7 +29,7 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
         }
 
         do {
-            self = try .bool(container.decode(Bool.self))
+            self = try .string(container.decode(String.self))
             return
         } catch DecodingError.typeMismatch {}
 
@@ -45,12 +45,7 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
         } catch DecodingError.typeMismatch {}
 
         do {
-            self = try .string(container.decode(String.self))
-            return
-        } catch DecodingError.typeMismatch {}
-
-        do {
-            self = try .array(container.decode([Self].self))
+            self = try .bool(container.decode(Bool.self))
             return
         } catch DecodingError.typeMismatch {}
 
@@ -59,8 +54,12 @@ public indirect enum JWTHeaderField: Hashable, Sendable, Codable {
             return
         } catch DecodingError.typeMismatch {}
 
-        throw DecodingError.dataCorruptedError(
-            in: container, debugDescription: "No valid JSON type found.")
+        do {
+            self = try .array(container.decode([Self].self))
+            return
+        } catch DecodingError.typeMismatch {}
+
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "No valid JSON type found.")
     }
 
     public func encode(to encoder: any Encoder) throws {
