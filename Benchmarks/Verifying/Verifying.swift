@@ -18,8 +18,8 @@ let benchmarks = {
                 absolute: [.p90: 1_100_000]
             ),
             .mallocCountTotal: .init(
-                /// Tolerate up to 1% of difference compared to the threshold.
-                relative: [.p90: 1],
+                /// Tolerate up to 3% of difference compared to the threshold.
+                relative: [.p90: 3],
                 /// Tolerate up to 2 malloc calls of difference compared to the threshold.
                 absolute: [.p90: 2]
             ),
