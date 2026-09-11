@@ -27,6 +27,14 @@ final class JWTSigner: Sendable {
 
     func verify<Payload>(_ token: some DataProtocol) async throws -> Payload where Payload: JWTPayload {
         let (encodedHeader, encodedPayload, encodedSignature) = try parser.getTokenParts(token)
+        return try await verify(encodedHeader: encodedHeader, encodedPayload: encodedPayload, encodedSignature: encodedSignature)
+    }
+
+    func verify<Payload>(
+        encodedHeader: ArraySlice<UInt8>,
+        encodedPayload: ArraySlice<UInt8>,
+        encodedSignature: ArraySlice<UInt8>
+    ) async throws -> Payload where Payload: JWTPayload {
         let data = encodedHeader + [.period] + encodedPayload
         let signature = try encodedSignature.base64URLDecodedBytes()
 
@@ -34,7 +42,15 @@ final class JWTSigner: Sendable {
             throw JWTError.signatureVerificationFailed
         }
 
-        let (_, payload, _) = try parser.parse(token, as: Payload.self)
+        let payload: Payload
+        if let defaultParser = parser as? DefaultJWTParser {
+            payload = try defaultParser.parsePayload(encodedPayload, as: Payload.self)
+        } else {
+            // We have to rebuild it here to use custom parsers
+            // but most people won't have a custom parser anyway
+            let wholeToken = data + [.period] + encodedSignature
+            payload = try parser.parse(wholeToken, as: Payload.self).payload
+        }
 
         try await payload.verify(using: algorithm)
         return payload
