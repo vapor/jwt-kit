@@ -29,9 +29,9 @@ struct EdDSATests {
     @Test("Test EdDSA Public and Private")
     func edDSAPublicPrivate() async throws {
         let signingCollection = try await JWTKeyCollection()
-            .add(eddsa: EdDSA.PrivateKey(d: eddsaPrivateKeyBase64, curve: .ed25519))
+            .add(eddsa: EdDSA.PrivateKey(d: eddsaPrivateKeyBase64Url, curve: .ed25519))
         let verifyingCollection = try await JWTKeyCollection()
-            .add(eddsa: EdDSA.PublicKey(x: eddsaPublicKeyBase64, curve: .ed25519))
+            .add(eddsa: EdDSA.PublicKey(x: eddsaPublicKeyBase64Url, curve: .ed25519))
 
         let payload = TestPayload(
             sub: "vapor",
@@ -46,39 +46,6 @@ struct EdDSATests {
         #expect(verifiedPayload == payload)
     }
 
-    @Test("Test Verifying EdDSA Key Using JWK")
-    func verifyingEdDSAKeyUsingJWK() async throws {
-        // ecdsa key in base64 format
-        let x = eddsaPublicKeyBase64
-        let d = eddsaPrivateKeyBase64
-
-        // sign JWT
-        let keyCollection = try await JWTKeyCollection()
-            .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
-
-        let jwt = try await keyCollection.sign(Foo(bar: 42))
-
-        // verify using jwks
-        let jwksString = """
-            {
-                "keys": [
-                    {
-                        "kty": "OKP",
-                        "crv": "Ed25519",
-                        "use": "sig",
-                        "kid": "vapor",
-                        "x": "\(x)",
-                        "d": "\(d)"
-                    }
-                ]
-            }
-            """
-
-        try await keyCollection.add(jwksJSON: jwksString)
-        let foo = try await keyCollection.verify(jwt, as: Foo.self)
-        #expect(foo.bar == 42)
-    }
-
     @Test("Test Verifying EdDSA Key Using JWK Base64URL")
     func verifyingEdDSAKeyUsingJWKBase64URL() async throws {
         let x = eddsaPublicKeyBase64Url
@@ -89,39 +56,6 @@ struct EdDSATests {
             .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
 
         let jwt = try await keyCollection.sign(Foo(bar: 42))
-
-        // verify using jwks
-        let jwksString = """
-            {
-                "keys": [
-                    {
-                        "kty": "OKP",
-                        "crv": "Ed25519",
-                        "use": "sig",
-                        "kid": "vapor",
-                        "x": "\(x)",
-                        "d": "\(d)"
-                    }
-                ]
-            }
-            """
-
-        try await keyCollection.add(jwksJSON: jwksString)
-        let foo = try await keyCollection.verify(jwt, as: Foo.self)
-        #expect(foo.bar == 42)
-    }
-
-    @Test("Test Verifying EdDSA Key Using JWK with Mixed Base64 Formats")
-    func verifyingEdDSAKeyUsingJWKWithMixedBase64Formats() async throws {
-        // eddsa key in base64url format
-        let x = eddsaPublicKeyBase64Url
-        let d = eddsaPrivateKeyBase64
-
-        // sign JWT
-        let keyCollection = try await JWTKeyCollection()
-            .add(eddsa: EdDSA.PrivateKey(d: d, curve: .ed25519), kid: "vapor")
-
-        let jwt = try await keyCollection.sign(Foo(bar: 42), kid: "vapor")
 
         // verify using jwks
         let jwksString = """
@@ -174,8 +108,6 @@ struct EdDSATests {
     }
 }
 
-let eddsaPublicKeyBase64 = "0ZcEvMCSYqSwR8XIkxOoaYjRQSAO8frTMSCpNbUl4lE="
-let eddsaPrivateKeyBase64 = "d1H3/dcg0V3XyAuZW2TE5Z3rhY20M+4YAfYu/HUQd8w="
 let eddsaPublicKeyBase64Url = "0ZcEvMCSYqSwR8XIkxOoaYjRQSAO8frTMSCpNbUl4lE"
 let eddsaPrivateKeyBase64Url = "d1H3_dcg0V3XyAuZW2TE5Z3rhY20M-4YAfYu_HUQd8w"
 

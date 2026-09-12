@@ -387,9 +387,10 @@ struct JWTKitTests {
             )
         let token = try await keyCollection.sign(payload)
         #expect(
-            (token.split(separator: ".").dropFirst(1).first
+            try
+                (token.split(separator: ".").dropFirst(1).first
                 .map {
-                    String(decoding: Data($0.utf8).base64URLDecodedBytes(), as: UTF8.self)
+                    try String(decoding: $0.utf8.base64URLDecodedBytes(), as: UTF8.self)
                 } ?? "")
                 .contains(#""exp":""#)
         )
@@ -434,22 +435,26 @@ struct JWTKitTests {
             ) where Payload: JWTPayload {
                 let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
 
+                let decodedHeader = try encodedHeader.base64URLDecodedBytes()
+
                 let header = try jsonDecoder.decode(
                     JWTHeader.self,
-                    from: .init(encodedHeader.base64URLDecodedBytes())
+                    from: .init(decodedHeader)
                 )
+
+                let decodedPayload = try encodedPayload.base64URLDecodedBytes()
 
                 let payload =
                     if header.b64?.asBool ?? true {
                         try self.jsonDecoder.decode(
                             Payload.self,
-                            from: .init(encodedPayload.base64URLDecodedBytes())
+                            from: .init(decodedPayload)
                         )
                     } else {
                         try self.jsonDecoder.decode(Payload.self, from: .init(encodedPayload))
                     }
 
-                let signature = Data(encodedSignature.base64URLDecodedBytes())
+                let signature = try Data(encodedSignature.base64URLDecodedBytes())
 
                 return (header: header, payload: payload, signature: signature)
             }

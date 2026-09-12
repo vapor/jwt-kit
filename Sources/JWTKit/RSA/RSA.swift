@@ -153,11 +153,18 @@ extension Insecure.RSA {
             modulus: String,
             exponent: String
         ) throws {
-            guard let n = modulus.base64URLDecodedData() else {
+            let n: [UInt8]
+            let e: [UInt8]
+
+            do {
+                n = try modulus.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
             }
 
-            guard let e = exponent.base64URLDecodedData() else {
+            do {
+                e = try exponent.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
             }
 
@@ -281,15 +288,25 @@ extension Insecure.RSA {
             exponent: String,
             privateExponent: String
         ) throws {
-            guard let n = modulus.base64URLDecodedData() else {
+            let n: [UInt8]
+            let e: [UInt8]
+            let d: [UInt8]
+
+            do {
+                n = try modulus.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
             }
 
-            guard let e = exponent.base64URLDecodedData() else {
+            do {
+                e = try exponent.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
             }
 
-            guard let d = privateExponent.base64URLDecodedData() else {
+            do {
+                d = try privateExponent.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
             }
 
@@ -304,23 +321,39 @@ extension Insecure.RSA {
             prime1: String,
             prime2: String
         ) throws {
-            guard let n = modulus.base64URLDecodedData() else {
+            let n: [UInt8]
+            let e: [UInt8]
+            let d: [UInt8]
+            let p: [UInt8]
+            let q: [UInt8]
+
+            do {
+                n = try modulus.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url modulus")
             }
 
-            guard let e = exponent.base64URLDecodedData() else {
+            do {
+                e = try exponent.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url exponent")
             }
 
-            guard let d = privateExponent.base64URLDecodedData() else {
+            do {
+                d = try privateExponent.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url private exponent")
             }
 
-            guard let p = prime1.base64URLDecodedData() else {
+            do {
+                p = try prime1.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url p")
             }
 
-            guard let q = prime2.base64URLDecodedData() else {
+            do {
+                q = try prime2.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "RSAKey", reason: "Unable to decode base64url q")
             }
 

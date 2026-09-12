@@ -36,7 +36,7 @@ final class JWTSigner: Sendable {
         encodedSignature: ArraySlice<UInt8>
     ) async throws -> Payload where Payload: JWTPayload {
         let data = encodedHeader + [.period] + encodedPayload
-        let signature = encodedSignature.base64URLDecodedBytes()
+        let signature = try encodedSignature.base64URLDecodedBytes()
 
         guard try algorithm.verify(signature, signs: data) else {
             throw JWTError.signatureVerificationFailed

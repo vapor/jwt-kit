@@ -47,8 +47,9 @@ extension JWTSerializer {
         let signingInput = try await makeSigningInput(payload: payload, header: header, key: key)
 
         let signatureData = try key.sign(signingInput)
+        let encodedSignature = signatureData.base64URLEncodedBytes()
 
-        let bytes = signingInput + [.period] + signatureData.base64URLEncodedBytes()
+        let bytes = signingInput + [.period] + encodedSignature
         return String(decoding: bytes, as: UTF8.self)
     }
 }
