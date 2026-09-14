@@ -32,6 +32,14 @@ let benchmarks = {
         ]
     )
 
+    Benchmark("HS256") { benchmark in
+        for _ in benchmark.scaledIterations {
+            let keyCollection = await JWTKeyCollection().add(hmac: HMACKey(from: TestKeys.hmacSecret), digestAlgorithm: .sha256)
+            let token = try await keyCollection.sign(payload)
+            _ = try await keyCollection.verify(token, as: Payload.self)
+        }
+    }
+
     Benchmark("ES256-Generated") { benchmark in
         for _ in benchmark.scaledIterations {
             let key = ES256PrivateKey()
