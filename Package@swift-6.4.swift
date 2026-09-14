@@ -1,4 +1,4 @@
-// swift-tools-version:6.2
+// swift-tools-version:6.4
 import PackageDescription
 
 let package = Package(
@@ -40,6 +40,8 @@ let package = Package(
 
 var swiftSettings: [SwiftSetting] {
     [
+        // Re-enable this on all platforms once we drop iOS 15, where JSONEn/Decoder are not Sendable
+        .treatAllWarnings(as: .error, .when(platforms: [.macOS, .linux, .windows, .android, .wasi, .openbsd])),
         .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),
