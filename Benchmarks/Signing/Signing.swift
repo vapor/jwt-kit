@@ -32,6 +32,14 @@ let benchmarks = {
         ]
     )
 
+    Benchmark("HS256") { benchmark in
+        let keyCollection = await JWTKeyCollection().add(hmac: hmacKey, digestAlgorithm: .sha256)
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            _ = try await keyCollection.sign(payload)
+        }
+    }
+
     Benchmark("ES256") { benchmark in
         let key = ES256PrivateKey()
         let keyCollection = JWTKeyCollection()
@@ -72,6 +80,7 @@ let benchmarks = {
 }
 
 let payload = Payload(name: "Kyle", admin: true)
+let hmacKey = HMACKey(from: "a-very-long-secret-key-of-at-least-32-bytes!!")
 
 let ecdsaPrivateKey = """
     -----BEGIN PRIVATE KEY-----

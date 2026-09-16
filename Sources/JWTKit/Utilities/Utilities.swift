@@ -21,6 +21,6 @@ extension DataProtocol {
 
 extension UInt8 {
     static var period: UInt8 {
-        return Character(".").asciiValue!
+        UInt8(ascii: ".")
     }
 }
