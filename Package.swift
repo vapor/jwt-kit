@@ -16,7 +16,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.1.0"),
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.15.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
-        .package(url: "https://github.com/swift-extras/swift-extras-base64", from: "1.0.0"),
+        .package(url: "https://github.com/ptoffy/swift-extras-base64", branch: "overhaul"),
     ],
     targets: [
         .target(

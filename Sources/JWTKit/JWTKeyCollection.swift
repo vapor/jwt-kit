@@ -275,23 +275,19 @@ public actor JWTKeyCollection: Sendable {
         iteratingKeys: Bool = false
     ) async throws -> Payload
     where Payload: JWTPayload {
-        let tokenParts = try defaultJWTParser.getTokenParts(Array(token))
+        let tokenParts = try TokenParts(Array(token))
         let headerFields = try defaultJWTParser.parseVerificationFields(from: tokenParts.header)
         let kid = headerFields.kid.flatMap { JWKIdentifier(string: $0) }
         var signer = try await self.getSigner(for: kid, alg: headerFields.alg)
 
         do {
-            return try await signer.verify(
-                encodedHeader: tokenParts.header, encodedPayload: tokenParts.payload, encodedSignature: tokenParts.signature
-            )
+            return try await signer.verify(tokenParts)
         } catch {
             if iteratingKeys == true {
                 for (_kid, _) in self.storage where _kid != kid {
                     do {
                         signer = try await self.getSigner(for: _kid, alg: headerFields.alg)
-                        return try await signer.verify(
-                            encodedHeader: tokenParts.header, encodedPayload: tokenParts.payload, encodedSignature: tokenParts.signature
-                        )
+                        return try await signer.verify(tokenParts)
                     } catch {}
                 }
             }
