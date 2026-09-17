@@ -25,19 +25,22 @@ public protocol ECDSASignature: Sendable {
     var rawRepresentation: Data { get set }
 }
 
-public protocol ECDSAPrivateKey: Sendable {
-    associatedtype PublicKey: ECDSAPublicKey
-    associatedtype Signature: ECDSASignature
+public protocol ECDSAPrivateKey: ECDSAEnclavePrivateKey {
     init(compactRepresentable: Bool)
     init(x963Representation: some ContiguousBytes) throws
     init(rawRepresentation: some ContiguousBytes) throws
     init(pemRepresentation: String) throws
     init<Bytes>(derRepresentation: Bytes) throws where Bytes: RandomAccessCollection, Bytes.Element == UInt8
-    var publicKey: PublicKey { get }
     var rawRepresentation: Data { get }
     var x963Representation: Data { get }
     var derRepresentation: Data { get }
     var pemRepresentation: String { get }
+}
+
+public protocol ECDSAEnclavePrivateKey: Sendable {
+    associatedtype PublicKey: ECDSAPublicKey
+    associatedtype Signature: ECDSASignature
+    var publicKey: PublicKey { get }
     func signature(for data: some Digest) throws -> Signature
 }
 
