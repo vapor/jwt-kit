@@ -31,9 +31,13 @@ extension Span where Element == UInt8 {
 
 extension Array where Element == UInt8 {
     package mutating func appendBase64URLEncoded(_ bytes: Span<UInt8>) {
+        #if compiler(>=6.3)
         append(addingCapacity: Base64.base64URLEncodedLength(bytesCount: bytes.count)) { output in
             Base64.encode(bytes: bytes, into: &output, options: base64URLEncoding)
         }
+        #else
+        append(contentsOf: Base64.encodeToBytes(bytes: bytes, options: base64URLEncoding))
+        #endif
     }
 }
 
