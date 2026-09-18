@@ -15,28 +15,17 @@ extension JWTParser {
     public func getTokenParts(_ token: some DataProtocol) throws -> (
         header: ArraySlice<UInt8>, payload: ArraySlice<UInt8>, signature: ArraySlice<UInt8>
     ) {
-        let tokenParts = token.copyBytes().split(
-            separator: .period, omittingEmptySubsequences: false
-        )
-
-        guard tokenParts.count == 3 else {
-            throw JWTError.malformedToken(reason: "Token is not split in 3 parts")
-        }
-
-        return (tokenParts[0], tokenParts[1], tokenParts[2])
+        let parts = try TokenParts(Array(token))
+        return (parts.header, parts.payload, parts.signature)
     }
 }
 
 extension JWTParser {
-    func parseHeader(_ token: some DataProtocol) throws -> JWTHeader {
-        let tokenParts = token.copyBytes().split(separator: .period, omittingEmptySubsequences: false)
-
-        guard tokenParts.count == 3 else {
-            throw JWTError.malformedToken(reason: "Token parts count is not 3.")
-        }
+    func parseHeader(_ token: [UInt8]) throws -> JWTHeader {
+        let parts = try TokenParts(token)
 
         do {
-            return try jsonDecoder.decode(JWTHeader.self, from: .init(tokenParts[0].base64URLDecodedBytes()))
+            return try jsonDecoder.decode(JWTHeader.self, from: parts.header.span.base64URLDecodedData())
         } catch {
             throw JWTError.malformedToken(reason: "Couldn't decode header from JWT with error: \(String(describing: error)).")
         }
@@ -53,42 +42,41 @@ public struct DefaultJWTParser: JWTParser {
     public func parse<Payload>(
         _ token: some DataProtocol, as: Payload.Type
     ) throws -> (header: JWTHeader, payload: Payload, signature: Data) where Payload: JWTPayload {
-        let (encodedHeader, encodedPayload, encodedSignature) = try getTokenParts(token)
+        let parts = try TokenParts(Array(token))
 
-        let header: JWTHeader
-        let payload: Payload
-        let signature: Data
+        let headerData: Data
+        let payloadData: Data
 
-        func isUTF8(_ bytes: [UInt8]) -> Bool {
-            String(bytes: bytes, encoding: .utf8) != nil
-        }
-
-        let headerBytes = encodedHeader.base64URLDecodedBytes()
-        let payloadBytes = encodedPayload.base64URLDecodedBytes()
-
-        guard isUTF8(headerBytes) && isUTF8(payloadBytes) else {
+        do {
+            headerData = try parts.header.span.base64URLDecodedData()
+            payloadData = try parts.payload.span.base64URLDecodedData()
+        } catch {
             throw JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded.")
         }
 
+        let header: JWTHeader
+        let payload: Payload
+        let signature: [UInt8]
+
         do {
-            header = try jsonDecoder.decode(JWTHeader.self, from: .init(headerBytes))
-            payload = try jsonDecoder.decode(Payload.self, from: .init(payloadBytes))
-            signature = Data(encodedSignature.base64URLDecodedBytes())
+            header = try jsonDecoder.decode(JWTHeader.self, from: headerData)
+            payload = try jsonDecoder.decode(Payload.self, from: payloadData)
+            signature = try parts.signature.span.base64URLDecodedBytes()
         } catch {
             throw JWTError.malformedToken(reason: "Couldn't decode JWT with error: \(String(describing: error))")
         }
 
-        return (header: header, payload: payload, signature: signature)
+        return (header: header, payload: payload, signature: Data(signature))
     }
 
     func parsePayload<Payload>(
         _ encodedPayload: ArraySlice<UInt8>, as: Payload.Type
     ) throws -> Payload where Payload: JWTPayload {
         let payload: Payload
-        let payloadBytes = encodedPayload.base64URLDecodedBytes()
+        let payloadData = try encodedPayload.span.base64URLDecodedData()
 
         do {
-            payload = try jsonDecoder.decode(Payload.self, from: .init(payloadBytes))
+            payload = try jsonDecoder.decode(Payload.self, from: payloadData)
         } catch {
             throw JWTError.malformedToken(reason: "Couldn't decode JWT payload with error: \(String(describing: error))")
         }

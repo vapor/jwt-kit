@@ -1,81 +1,62 @@
+package import ExtrasBase64
+
 #if !canImport(Darwin)
 package import FoundationEssentials
 #else
 package import Foundation
 #endif
 
-extension String {
-    package func base64URLDecodedData() -> Data? {
-        var data = Data(self.utf8)
-        data.base64URLUnescape()
-        return Data(base64Encoded: data)
+private let base64URLEncoding: Base64.EncodingOptions = [.base64UrlAlphabet, .omitPaddingCharacter]
+private let base64URLDecoding: Base64.DecodingOptions = [.base64UrlAlphabet, .omitPaddingCharacter]
+
+extension Base64 {
+    package static func base64URLEncodedLength(bytesCount: Int) -> Int {
+        encodedLength(bytesCount: bytesCount, options: base64URLEncoding)
     }
 }
 
-extension DataProtocol {
-    package func base64URLDecodedBytes() -> [UInt8] {
-        Data(base64Encoded: Data(copyBytes()).base64URLUnescaped())?.copyBytes() ?? []
+extension Span where Element == UInt8 {
+    package func base64URLDecodedBytes() throws -> [UInt8] {
+        try Base64.decode(bytes: self, options: base64URLDecoding)
     }
 
+    package func base64URLDecodedData() throws -> Data {
+        var data = Data(count: Base64.decodedLength(bytesCount: count))
+        var output = data.mutableSpan
+        let decodedCount = try Base64.decode(bytes: self, into: &output, options: base64URLDecoding)
+        data.count = decodedCount
+        return data
+    }
+}
+
+extension Array where Element == UInt8 {
+    package mutating func appendBase64URLEncoded(_ bytes: Span<UInt8>) {
+        #if compiler(>=6.3)
+        append(addingCapacity: Base64.base64URLEncodedLength(bytesCount: bytes.count)) { output in
+            Base64.encode(bytes: bytes, into: &output, options: base64URLEncoding)
+        }
+        #else
+        append(contentsOf: Base64.encodeToBytes(bytes: bytes, options: base64URLEncoding))
+        #endif
+    }
+}
+
+extension Collection where Element == UInt8 {
     package func base64URLEncodedBytes() -> [UInt8] {
-        Data(copyBytes()).base64EncodedData().base64URLEscaped().copyBytes()
+        Base64.encodeToBytes(bytes: self, options: base64URLEncoding)
+    }
+
+    package func base64URLEncodedString() -> String {
+        Base64.encodeToString(bytes: self, options: base64URLEncoding)
+    }
+
+    package func base64URLDecodedBytes() throws -> [UInt8] {
+        try Base64.decode(bytes: self, options: base64URLDecoding)
     }
 }
 
-// MARK: Data Escape
-
-extension Data {
-    /// Converts base64-url encoded data to a base64 encoded data.
-    ///
-    /// https://tools.ietf.org/html/rfc4648#page-7
-    fileprivate mutating func base64URLUnescape() {
-        for idx in self.indices {
-            switch self[idx] {
-            case 0x2D:  // -
-                self[idx] = 0x2B  // +
-            case 0x5F:  // _
-                self[idx] = 0x2F  // /
-            default: break
-            }
-        }
-        /// https://stackoverflow.com/questions/43499651/decode-base64url-to-base64-swift
-        let padding = count % 4
-        if padding > 0 {
-            self += Data(repeating: 0x3D, count: 4 - count % 4)
-        }
-    }
-
-    /// Converts base64 encoded data to a base64-url encoded data.
-    ///
-    /// https://tools.ietf.org/html/rfc4648#page-7
-    fileprivate mutating func base64URLEscape() {
-        for idx in self.indices {
-            switch self[idx] {
-            case 0x2B:  // +
-                self[idx] = 0x2D  // -
-            case 0x2F:  // /
-                self[idx] = 0x5F  // _
-            default: break
-            }
-        }
-        self = split(separator: 0x3D).first ?? .init()
-    }
-
-    /// Converts base64-url encoded data to a base64 encoded data.
-    ///
-    /// https://tools.ietf.org/html/rfc4648#page-7
-    fileprivate func base64URLUnescaped() -> Data {
-        var data = self
-        data.base64URLUnescape()
-        return data
-    }
-
-    /// Converts base64 encoded data to a base64-url encoded data.
-    ///
-    /// https://tools.ietf.org/html/rfc4648#page-7
-    fileprivate func base64URLEscaped() -> Data {
-        var data = self
-        data.base64URLEscape()
-        return data
+extension String {
+    package func base64URLDecodedBytes() throws -> [UInt8] {
+        try self.utf8.base64URLDecodedBytes()
     }
 }

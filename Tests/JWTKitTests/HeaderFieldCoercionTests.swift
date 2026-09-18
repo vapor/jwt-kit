@@ -45,10 +45,7 @@ struct HeaderFieldCoercionTests {
     @Test("Mixed-type values are rejected when parsed from a token")
     func mixedValuesFromToken() throws {
         func b64(_ s: String) -> String {
-            Data(s.utf8).base64EncodedString()
-                .replacingOccurrences(of: "+", with: "-")
-                .replacingOccurrences(of: "/", with: "_")
-                .replacingOccurrences(of: "=", with: "")
+            Array(s.utf8).base64URLEncodedString()
         }
         struct Payload: JWTPayload {
             var sub: String?
