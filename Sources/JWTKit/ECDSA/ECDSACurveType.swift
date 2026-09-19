@@ -24,3 +24,12 @@ public protocol ECDSACurveType: Sendable {
     static var curve: ECDSACurve { get }
     static var byteRanges: (x: Range<Int>, y: Range<Int>) { get }
 }
+
+public protocol ECDSAEnclaveCurveType: Sendable {
+    associatedtype Signature: ECDSASignature
+    associatedtype PrivateKey: ECDSAEnclavePrivateKey
+    associatedtype SigningAlgorithm: ECDSASigningAlgorithm
+
+    static var curve: ECDSACurve { get }
+    static var byteRanges: (x: Range<Int>, y: Range<Int>) { get }
+}
