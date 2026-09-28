@@ -26,8 +26,8 @@ extension ECDSA {
 
         public var parameters: ECDSAParameters? {
             // 0x04 || x || y
-            let x = self.backing.x963Representation[Curve.byteRanges.x].base64EncodedString()
-            let y = self.backing.x963Representation[Curve.byteRanges.y].base64EncodedString()
+            let x = self.backing.x963Representation[Curve.byteRanges.x].base64URLEncodedString()
+            let y = self.backing.x963Representation[Curve.byteRanges.y].base64URLEncodedString()
             return (x, y)
         }
 
@@ -100,10 +100,13 @@ extension ECDSA {
         /// - Note:
         ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
         public init(parameters: ECDSAParameters) throws {
-            guard
-                let x = parameters.x.base64URLDecodedData(),
-                let y = parameters.y.base64URLDecodedData()
-            else {
+            let x: [UInt8]
+            let y: [UInt8]
+
+            do {
+                x = try parameters.x.base64URLDecodedBytes()
+                y = try parameters.y.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "ecCoordinates", reason: "Unable to interpret x or y as base64 encoded data")
             }
             self.backing = try PublicKey(x963Representation: [0x04] + x + y)
@@ -182,11 +185,14 @@ extension ECDSA {
         /// - Note:
         ///   The ``ECDSAParameters`` tuple is assumed to have x and y properties that are base64 URL encoded strings representing the respective coordinates of an ECDSA public key.
         public init(key: String) throws {
-            guard let keyData = key.base64URLDecodedData() else {
+            let decodedKey: [UInt8]
+            do {
+                decodedKey = try key.base64URLDecodedBytes()
+            } catch {
                 throw JWTError.generic(identifier: "ECDSAKey Creation", reason: "Unable to interpret private key data as base64URL")
             }
 
-            self.backing = try PrivateKey(rawRepresentation: [UInt8](keyData))
+            self.backing = try PrivateKey(rawRepresentation: decodedKey)
         }
 
         /// Generates a new ECDSA key.

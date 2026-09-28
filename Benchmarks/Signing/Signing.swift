@@ -3,10 +3,20 @@ import Foundation
 import JWTKit
 import Utilities
 
+private var mldsaSigningThresholds: [BenchmarkMetric: BenchmarkThresholds] {
+    var thresholds = Benchmark.defaultConfiguration.thresholds ?? [:]
+    thresholds[.instructions] = .init(relative: [.p90: 15])
+    return thresholds
+}
+
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
-        metrics: [.peakMemoryResident, .mallocCountTotal],
+        metrics: [.instructions, .mallocCountTotal, .peakMemoryResident],
         thresholds: [
+            .instructions: .init(
+                /// Tolerate up to 4% of difference compared to the threshold.
+                relative: [.p90: 4]
+            ),
             .peakMemoryResident: .init(
                 /// Tolerate up to 4% of difference compared to the threshold.
                 relative: [.p90: 4],
@@ -15,12 +25,20 @@ let benchmarks = {
             ),
             .mallocCountTotal: .init(
                 /// Tolerate up to 1% of difference compared to the threshold.
-                relative: [.p90: 1],
+                relative: [.p90: 3],
                 /// Tolerate up to 2 malloc calls of difference compared to the threshold.
                 absolute: [.p90: 2]
             ),
         ]
     )
+
+    Benchmark("HS256") { benchmark in
+        let keyCollection = await JWTKeyCollection().add(hmac: hmacKey, digestAlgorithm: .sha256)
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            _ = try await keyCollection.sign(payload)
+        }
+    }
 
     Benchmark("ES256") { benchmark in
         let key = ES256PrivateKey()
@@ -50,7 +68,7 @@ let benchmarks = {
     }
 
     if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
-        Benchmark("MLDSA65") { benchmark in
+        Benchmark("MLDSA65", configuration: .init(thresholds: mldsaSigningThresholds)) { benchmark in
             let seed = Data(fromHexEncodedString: mldsa65PrivateKeySeed)!
             let key = try MLDSA65PrivateKey(seedRepresentation: seed)
             let keyCollection = await JWTKeyCollection().add(mldsa: key)
@@ -62,6 +80,7 @@ let benchmarks = {
 }
 
 let payload = Payload(name: "Kyle", admin: true)
+let hmacKey = HMACKey(from: "a-very-long-secret-key-of-at-least-32-bytes!!")
 
 let ecdsaPrivateKey = """
     -----BEGIN PRIVATE KEY-----

@@ -7,7 +7,7 @@ import Foundation
 #endif
 
 struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {
-    let key: SymmetricKey
+    private let keyedMAC: HMAC<SHAType>
     let name: String
 
     init(key: SymmetricKey) {
@@ -15,7 +15,7 @@ struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {
             key.bitCount >= SHAType.Digest.byteCount * 8,
             "Key should be at least as large as the hash output: \(SHAType.Digest.byteCount) bytes. This will become a precondition in a future release."
         )
-        self.key = key
+        self.keyedMAC = HMAC<SHAType>(key: key)
         switch SHAType.self {
         case is SHA256.Type:
             self.name = "HS256"
@@ -29,12 +29,8 @@ struct HMACSigner<SHAType>: JWTAlgorithm where SHAType: HashFunction {
     }
 
     func sign(_ plaintext: some DataProtocol) throws -> [UInt8] {
-        Array(HMAC<SHAType>.authenticationCode(for: plaintext, using: self.key))
-    }
-
-    /// Compare using Swift Crypto
-    func verify(_ signature: some DataProtocol, signs plaintext: some DataProtocol) throws -> Bool {
-        HMAC<SHAType>.isValidAuthenticationCode(
-            Array(signature), authenticating: plaintext, using: self.key)
+        var mac = self.keyedMAC
+        mac.update(data: plaintext)
+        return unsafe mac.finalize().withUnsafeBytes { unsafe [UInt8]($0) }
     }
 }

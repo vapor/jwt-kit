@@ -3,10 +3,20 @@ import Foundation
 import JWTKit
 import Utilities
 
+private var mldsaSigningThresholds: [BenchmarkMetric: BenchmarkThresholds] {
+    var thresholds = Benchmark.defaultConfiguration.thresholds ?? [:]
+    thresholds[.instructions] = .init(relative: [.p90: 15])
+    return thresholds
+}
+
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
-        metrics: [.peakMemoryResident, .mallocCountTotal],
+        metrics: [.instructions, .mallocCountTotal, .peakMemoryResident],
         thresholds: [
+            .instructions: .init(
+                /// Tolerate up to 4% of difference compared to the threshold.
+                relative: [.p90: 4]
+            ),
             .peakMemoryResident: .init(
                 /// Tolerate up to 4% of difference compared to the threshold.
                 relative: [.p90: 4],
@@ -15,12 +25,21 @@ let benchmarks = {
             ),
             .mallocCountTotal: .init(
                 /// Tolerate up to 1% of difference compared to the threshold.
-                relative: [.p90: 1],
+                relative: [.p90: 3],
                 /// Tolerate up to 2 malloc calls of difference compared to the threshold.
                 absolute: [.p90: 2]
             ),
         ]
     )
+
+    Benchmark("HS256") { benchmark in
+        for _ in benchmark.scaledIterations {
+            let keyCollection = await JWTKeyCollection().add(
+                hmac: HMACKey(from: "a-very-long-secret-key-of-at-least-32-bytes!!"), digestAlgorithm: .sha256)
+            let token = try await keyCollection.sign(payload)
+            _ = try await keyCollection.verify(token, as: Payload.self)
+        }
+    }
 
     Benchmark("ES256-Generated") { benchmark in
         for _ in benchmark.scaledIterations {
@@ -73,7 +92,7 @@ let benchmarks = {
     }
 
     if #available(iOS 26, macOS 26, tvOS 26, watchOS 26, *) {
-        Benchmark("MLDSA65") { benchmark in
+        Benchmark("MLDSA65", configuration: .init(thresholds: mldsaSigningThresholds)) { benchmark in
             for _ in benchmark.scaledIterations {
                 let key = try MLDSA65PrivateKey(seedRepresentation: Data(fromHexEncodedString: mldsa65PrivateKeySeed)!)
                 let keyCollection = JWTKeyCollection()

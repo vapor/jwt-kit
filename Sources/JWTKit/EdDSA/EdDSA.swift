@@ -55,17 +55,16 @@ extension EdDSA {
         /// - Throws:
         ///   - ``EdDSAError/publicKeyMissing`` if the x-coordinate data is missing or cannot be properly converted.
         public init(x: String, curve: EdDSACurve) throws {
-            guard
-                let xData = x.base64URLDecodedData(),
-                !xData.isEmpty
-            else {
+            let decodedX = try x.base64URLDecodedBytes()
+
+            guard !decodedX.isEmpty else {
                 throw EdDSAError.publicKeyMissing
             }
 
             let key =
                 switch curve.backing {
                 case .ed25519:
-                    try Curve25519.Signing.PublicKey(rawRepresentation: xData)
+                    try Curve25519.Signing.PublicKey(rawRepresentation: decodedX)
                 }
 
             self.init(backing: key)
@@ -145,17 +144,16 @@ extension EdDSA {
         /// - Throws:
         ///   - ``EdDSAError/privateKeyMissing`` if the private key data is missing or cannot be properly converted.
         public init(d: String, curve: EdDSACurve) throws {
-            guard
-                let dData = d.base64URLDecodedData(),
-                !dData.isEmpty
-            else {
+            let decodedD = try d.base64URLDecodedBytes()
+
+            guard !decodedD.isEmpty else {
                 throw EdDSAError.privateKeyMissing
             }
 
             let key =
                 switch curve.backing {
                 case .ed25519:
-                    try Curve25519.Signing.PrivateKey(rawRepresentation: dData)
+                    try Curve25519.Signing.PrivateKey(rawRepresentation: decodedD)
                 }
 
             self.init(backing: key)

@@ -1,3 +1,4 @@
+import ExtrasBase64
 import SwiftASN1
 import X509
 
@@ -34,22 +35,45 @@ extension JWTSerializer {
         return newHeader
     }
 
-    func makeSigningInput(payload: some JWTPayload, header: JWTHeader, key: some JWTAlgorithm) async throws -> Data {
+    func makeSigningInput(payload: some JWTPayload, header: JWTHeader, key: some JWTAlgorithm) async throws -> [UInt8] {
         let header = try await self.makeHeader(from: header, key: key)
-        let encodedHeader = try jsonEncoder.encode(header).base64URLEncodedBytes()
+        let headerJSON = try jsonEncoder.encode(header)
+        let encodedHeaderLength = Base64.base64URLEncodedLength(bytesCount: headerJSON.count)
 
-        let encodedPayload = try self.serialize(payload, header: header)
+        var signingInput = [UInt8]()
 
-        return encodedHeader + [.period] + encodedPayload
+        if let serializer = self as? DefaultJWTSerializer {
+            // Encode the payload straight into the buffer instead of going through
+            // the `Data` that `serialize(_:header:)` has to return.
+            let payloadJSON = try serializer.jsonEncoder.encode(payload)
+            let encodedPayloadLength = Base64.base64URLEncodedLength(bytesCount: payloadJSON.count)
+            signingInput.reserveCapacity(encodedHeaderLength + 1 + encodedPayloadLength + 1 + Self.reservedSignatureLength)
+            signingInput.appendBase64URLEncoded(headerJSON.span)
+            signingInput.append(.period)
+            signingInput.appendBase64URLEncoded(payloadJSON.span)
+        } else {
+            let encodedPayload = try self.serialize(payload, header: header)
+            signingInput.reserveCapacity(encodedHeaderLength + 1 + encodedPayload.count + 1 + Self.reservedSignatureLength)
+            signingInput.appendBase64URLEncoded(headerJSON.span)
+            signingInput.append(.period)
+            signingInput.append(contentsOf: encodedPayload)
+        }
+
+        return signingInput
     }
 
+    /// Room reserved for the encoded signature: a 384-byte (RSA-3072) signature is 512 characters,
+    /// which also covers every HMAC, ECDSA and EdDSA size. Larger signatures grow the buffer once.
+    private static var reservedSignatureLength: Int { 512 }
+
     func sign(_ payload: some JWTPayload, with header: JWTHeader = JWTHeader(), using key: some JWTAlgorithm) async throws -> String {
-        let signingInput = try await makeSigningInput(payload: payload, header: header, key: key)
+        var token = try await makeSigningInput(payload: payload, header: header, key: key)
 
-        let signatureData = try key.sign(signingInput)
+        let signature = try key.sign(token)[...]
 
-        let bytes = signingInput + [.period] + signatureData.base64URLEncodedBytes()
-        return String(decoding: bytes, as: UTF8.self)
+        token.append(.period)
+        token.appendBase64URLEncoded(signature.span)
+        return String(decoding: token, as: UTF8.self)
     }
 }
 

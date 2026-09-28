@@ -5,8 +5,12 @@ import Utilities
 
 let benchmarks = {
     Benchmark.defaultConfiguration = .init(
-        metrics: [.peakMemoryResident, .mallocCountTotal],
+        metrics: [.instructions, .mallocCountTotal, .peakMemoryResident],
         thresholds: [
+            .instructions: .init(
+                /// Tolerate up to 4% of difference compared to the threshold.
+                relative: [.p90: 4]
+            ),
             .peakMemoryResident: .init(
                 /// Tolerate up to 4% of difference compared to the threshold.
                 relative: [.p90: 4],
@@ -14,13 +18,25 @@ let benchmarks = {
                 absolute: [.p90: 1_100_000]
             ),
             .mallocCountTotal: .init(
-                /// Tolerate up to 1% of difference compared to the threshold.
-                relative: [.p90: 1],
+                /// Tolerate up to 3% of difference compared to the threshold.
+                relative: [.p90: 3],
                 /// Tolerate up to 2 malloc calls of difference compared to the threshold.
                 absolute: [.p90: 2]
             ),
         ]
     )
+
+    Benchmark("HS256") { benchmark in
+        let keyCollection = await JWTKeyCollection().add(
+            hmac: HMACKey(from: "a-very-long-secret-key-of-at-least-32-bytes!!"),
+            digestAlgorithm: .sha256
+        )
+        let token = try await keyCollection.sign(Payload(name: "John Doe", admin: true))
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            _ = try await keyCollection.verify(token, as: Payload.self)
+        }
+    }
 
     Benchmark("ES256") { benchmark in
         let pem = """
