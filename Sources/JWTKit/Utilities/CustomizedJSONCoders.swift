@@ -25,10 +25,22 @@ extension JSONDecoder.DateDecodingStrategy {
 }
 
 extension JSONEncoder.DateEncodingStrategy {
+    /// RFC 7519 Encoder that handles doubles outside the range of representable `Int` values by throwing 
+    /// an `EncodingError` rather than narrowing them to prevent an error when decoding the value back to a `Date`
     public static var integerSecondsSince1970: Self {
         .custom { date, encoder in
+            let seconds = date.timeIntervalSince1970.rounded(.towardZero)
+            guard let integerSeconds = Int(exactly: seconds) else {
+                throw EncodingError.invalidValue(
+                    date,
+                    .init(
+                        codingPath: encoder.codingPath,
+                        debugDescription:
+                            "Date is outside the range representable as an integer number of seconds since 1970."
+                    ))
+            }
             var container = encoder.singleValueContainer()
-            try container.encode(Int(date.timeIntervalSince1970.rounded(.towardZero)))
+            try container.encode(integerSeconds)
         }
     }
 }
