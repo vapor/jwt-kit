@@ -24,7 +24,7 @@ struct FuzzPayload: JWTPayload, Equatable {
 }
 
 private func fuzzKeys() async -> JWTKeyCollection {
-    await JWTKeyCollection().add(hmac: "fuzz-secret", digestAlgorithm: .sha256)
+    await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
 }
 
 /// These are mainly to test that the library doesn't crash

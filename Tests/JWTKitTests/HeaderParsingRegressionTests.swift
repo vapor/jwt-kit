@@ -13,12 +13,16 @@ struct HeaderParsingRegressionTests {
     static let parser = DefaultJWTParser()
 
     static func keys() async -> JWTKeyCollection {
-        await JWTKeyCollection().add(hmac: "test", digestAlgorithm: .sha256)
+        await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
     }
 
     /// Helper to build tokens with dodgy headers to test for crashes when decoding untrusted tokens
     static func token(header json: String) -> String {
         "\(base64URL(json)).\(base64URL(#"{"sub":"1234567890"}"#)).AAAA"
+    }
+
+    static func parseHeader(_ json: String) throws -> JWTHeader {
+        try parser.parse(Array(token(header: json).utf8), as: RegressionPayload.self).header
     }
 
     static func base64URL(_ string: String) -> String { base64URL(Array(string.utf8)) }
@@ -63,12 +67,10 @@ struct HeaderParsingRegressionTests {
             "5e-324",  // Double.leastNonzeroMagnitude
         ]
     )
-    func representableNumericBoundariesParse(_ value: String) async throws {
-        let keys = await Self.keys()
-        let error = await #expect(throws: JWTError.self) {
-            _ = try await keys.verify(Self.token(header: #"{"alg":"HS256","x":\#(value)}"#), as: RegressionPayload.self)
+    func representableNumericBoundariesParse(_ value: String) {
+        #expect(throws: Never.self) {
+            _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(value)}"#)
         }
-        #expect(error?.errorType == .signatureVerificationFailed)
     }
 
     @Test(
@@ -85,10 +87,9 @@ struct HeaderParsingRegressionTests {
             "Infinity", "-Infinity", "NaN", "1e999999999999999999",
         ]
     )
-    func unrepresentableNumericBoundariesAreMalformed(_ value: String) async throws {
-        let keys = await Self.keys()
-        let error = await #expect(throws: JWTError.self) {
-            _ = try await keys.verify(Self.token(header: #"{"alg":"HS256","x":\#(value)}"#), as: RegressionPayload.self)
+    func unrepresentableNumericBoundariesAreMalformed(_ value: String) {
+        let error = #expect(throws: JWTError.self) {
+            _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(value)}"#)
         }
         #expect(error?.errorType == .malformedToken)
     }
@@ -97,48 +98,39 @@ struct HeaderParsingRegressionTests {
         "Nested numeric boundaries behave as at the top level",
         .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-hfm2-66rr-3mcf"),
         arguments: [
-            ("1e300", JWTError.ErrorType.signatureVerificationFailed),
-            ("9223372036854775808", .signatureVerificationFailed),
-            ("-9223372036854775809", .signatureVerificationFailed),
-            ("1e400", .malformedToken),
+            ("1e300", true),
+            ("9223372036854775808", true),
+            ("-9223372036854775809", true),
+            ("1e400", false),
         ]
     )
-    func nestedNumericBoundaries(_ value: String, _ expected: JWTError.ErrorType) async throws {
-        let keys = await Self.keys()
+    func nestedNumericBoundaries(_ value: String, _ isValid: Bool) throws {
         for shape in [#"[\#(value)]"#, #"{"y":\#(value)}"#, #"[[{"y":[\#(value)]}]]"#] {
-            let error = await #expect(throws: JWTError.self) {
-                _ = try await keys.verify(Self.token(header: #"{"alg":"HS256","x":\#(shape)}"#), as: RegressionPayload.self)
+            let header = #"{"alg":"HS256","x":\#(shape)}"#
+            if isValid {
+                #expect(throws: Never.self) { _ = try Self.parseHeader(header) }
+            } else {
+                let error = #expect(throws: JWTError.self) { _ = try Self.parseHeader(header) }
+                #expect(error?.errorType == .malformedToken)
             }
-            #expect(error?.errorType == expected)
         }
     }
 
     @Test("Nesting within limit parses normally", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"), arguments: NestedJSONShape.allCases)
-    func shallowNestingIsFine(_ style: NestedJSONShape) async throws {
-        let keys = await Self.keys()
-        let error = await #expect(throws: JWTError.self) {
-            _ = try await keys.verify(
-                Self.token(header: #"{"alg":"HS256","x":\#(style.json(depth: 8))}"#),
-                as: RegressionPayload.self)
+    func shallowNestingIsFine(_ style: NestedJSONShape) {
+        #expect(throws: Never.self) {
+            _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(style.json(depth: 8))}"#)
         }
-        #expect(error?.errorType == .signatureVerificationFailed)
     }
 
     @Test("Depth limit works correctly", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"), arguments: NestedJSONShape.allCases)
-    func depthLimitBrackets(_ style: NestedJSONShape) async throws {
-        let keys = await Self.keys()
-
-        let accepted = await #expect(throws: JWTError.self) {
-            _ = try await keys.verify(
-                Self.token(header: #"{"alg":"HS256","x":\#(style.json(depth: 25))}"#),
-                as: RegressionPayload.self)
+    func depthLimitBrackets(_ style: NestedJSONShape) {
+        #expect(throws: Never.self) {
+            _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(style.json(depth: 25))}"#)
         }
-        #expect(accepted?.errorType == .signatureVerificationFailed)
 
-        let rejected = await #expect(throws: JWTError.self) {
-            _ = try await keys.verify(
-                Self.token(header: #"{"alg":"HS256","x":\#(style.json(depth: 40))}"#),
-                as: RegressionPayload.self)
+        let rejected = #expect(throws: JWTError.self) {
+            _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(style.json(depth: 40))}"#)
         }
         #expect(rejected?.errorType == .malformedToken)
     }
@@ -165,13 +157,10 @@ struct HeaderParsingRegressionTests {
         .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"),
         arguments: NestedJSONShape.allCases
     )
-    func deepNestingIsBounded(_ style: NestedJSONShape) async throws {
-        let keys = await Self.keys()
+    func deepNestingIsBounded(_ style: NestedJSONShape) {
         for depth in [200, 300, 500] {
-            let error = await #expect(throws: JWTError.self) {
-                _ = try await keys.verify(
-                    Self.token(header: #"{"alg":"HS256","x":\#(style.json(depth: depth))}"#),
-                    as: RegressionPayload.self)
+            let error = #expect(throws: JWTError.self) {
+                _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(style.json(depth: depth))}"#)
             }
             #expect(error?.errorType == .malformedToken)
         }
@@ -182,12 +171,9 @@ struct HeaderParsingRegressionTests {
         .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"),
         arguments: NestedJSONShape.allCases
     )
-    func veryDeepNestingIsRejected(_ style: NestedJSONShape) async throws {
-        let keys = await Self.keys()
-        let error = await #expect(throws: JWTError.self) {
-            _ = try await keys.verify(
-                Self.token(header: #"{"alg":"HS256","x":\#(style.json(depth: 600))}"#),
-                as: RegressionPayload.self)
+    func veryDeepNestingIsRejected(_ style: NestedJSONShape) {
+        let error = #expect(throws: JWTError.self) {
+            _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(style.json(depth: 600))}"#)
         }
         #expect(error?.errorType == .malformedToken)
     }
@@ -252,27 +238,29 @@ struct HeaderParsingRegressionTests {
             #"{"alg":"HS256","x":"\ud800"}"#,  // lone surrogate
         ]
     )
-    func malformedHeaderJSONThrows(_ json: String) async throws {
-        let keys = await Self.keys()
-        let error = await #expect(throws: JWTError.self) {
-            _ = try await keys.verify(Self.token(header: json), as: RegressionPayload.self)
+    func malformedHeaderJSONThrows(_ json: String) {
+        let error = #expect(throws: JWTError.self) {
+            _ = try Self.parseHeader(json)
         }
         #expect(error?.errorType == .malformedToken)
     }
 
     @Test(
-        "Non-string alg values parse and fall back to the default signer",
+        "Algorithm field types have stable verification outcomes",
         arguments: [
-            #"{"alg":123}"#, #"{"alg":[]}"#, #"{"alg":{}}"#, #"{"alg":null}"#,
-            #"{"alg":"HS256","alg":"none"}"#,  // duplicate key
+            (#"{"alg":123}"#, JWTError.ErrorType.malformedToken),
+            (#"{"alg":[]}"#, .malformedToken),
+            (#"{"alg":{}}"#, .malformedToken),
+            (#"{"alg":null}"#, .signatureVerificationFailed),
+            (#"{"alg":"HS256","alg":"none"}"#, .signatureVerificationFailed),  // duplicate key
         ]
     )
-    func nonStringAlgReachesSignatureCheck(_ json: String) async throws {
+    func nonStringAlgReachesSignatureCheck(_ json: String, _ expected: JWTError.ErrorType) async throws {
         let keys = await Self.keys()
         let error = await #expect(throws: JWTError.self) {
             _ = try await keys.verify(Self.token(header: json), as: RegressionPayload.self)
         }
-        #expect(error?.errorType == .signatureVerificationFailed)
+        #expect(error?.errorType == expected)
     }
 
     struct AudiencePayload: JWTPayload {

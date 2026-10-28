@@ -986,6 +986,21 @@ struct JWTKitTests {
             _ = try await keys.verify(token1, as: TestPayload.self)
         }
     }
+
+    @Test("Large numeric header verifies without crashing")
+    func largeNumericHeaderVerifies() async throws {
+        let keys = await JWTKeyCollection().add(
+            hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
+        let payload = TestPayload(
+            sub: "123",
+            name: "vapor",
+            admin: true,
+            exp: .init(value: Date(timeIntervalSince1970: 2_000_000_000)))
+        let token = try await keys.sign(payload, header: ["huge": .decimal(1e300)])
+
+        let verified = try await keys.verify(token, as: TestPayload.self)
+        #expect(verified == payload)
+    }
 }
 
 let microsoftJWKS = """

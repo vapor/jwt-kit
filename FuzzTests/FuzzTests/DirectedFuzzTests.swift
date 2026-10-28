@@ -15,7 +15,7 @@ struct ClaimsFuzzPayload: JWTPayload {
 }
 
 private func directedKeys() async -> JWTKeyCollection {
-    await JWTKeyCollection().add(hmac: "fuzz-secret", digestAlgorithm: .sha256)
+    await JWTKeyCollection().add(hmac: "a-string-secret-at-least-256-bits-long", digestAlgorithm: .sha256)
 }
 
 /// Targeted fuzzing
@@ -176,8 +176,8 @@ struct DirectedFuzzTests {
         let ecdsaKey = ES256PrivateKey()
         let eddsaKey = try EdDSA.PrivateKey(curve: .ed25519)
         let collection = await JWTKeyCollection()
-            .add(hmac: "secret-a", digestAlgorithm: .sha256, kid: "hmac-256")
-            .add(hmac: "secret-b", digestAlgorithm: .sha512, kid: "hmac-512")
+            .add(hmac: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", digestAlgorithm: .sha256, kid: "hmac-256")
+            .add(hmac: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", digestAlgorithm: .sha512, kid: "hmac-512")
             .add(ecdsa: ecdsaKey, kid: "ecdsa")
             .add(eddsa: eddsaKey, kid: "eddsa")
 
