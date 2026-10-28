@@ -91,12 +91,14 @@ public struct X5CVerifier: Sendable {
     /// - Parameters:
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
+    ///   - validationTime: The point in time to validate the certificate chain at.
     /// - Returns: The decoded payload, if verified.
     public func verifyJWS<Payload: JWTPayload>(
         _ token: String,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        validationTime: X5CValidationTime = .currentTime
     ) async throws -> Payload {
-        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
+        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT, validationTime: validationTime)
     }
 
     /// Verify a JWS with the `x5c` header parameter against the trusted root
@@ -106,13 +108,15 @@ public struct X5CVerifier: Sendable {
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
     ///   - jsonDecoder: The JSON decoder to use for decoding the token.
+    ///   - validationTime: The point in time to validate the certificate chain at.
     /// - Returns: The decoded payload, if verified.
     public func verifyJWS<Payload: JWTPayload>(
         _ token: String,
         as _: Payload.Type = Payload.self,
-        jsonDecoder: any JWTJSONDecoder
+        jsonDecoder: any JWTJSONDecoder,
+        validationTime: X5CValidationTime = .currentTime
     ) async throws -> Payload {
-        try await verifyJWS(Array(token.utf8), as: Payload.self, jsonDecoder: jsonDecoder)
+        try await verifyJWS(Array(token.utf8), as: Payload.self, jsonDecoder: jsonDecoder, validationTime: validationTime)
     }
 
     /// Verify a JWS with `x5c` claims against the
@@ -121,13 +125,15 @@ public struct X5CVerifier: Sendable {
     /// - Parameters:
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
+    ///   - validationTime: The point in time to validate the certificate chain at.
     /// - Returns: The decoded payload, if verified.
     public func verifyJWS<Payload>(
         _ token: some DataProtocol,
-        as _: Payload.Type = Payload.self
+        as _: Payload.Type = Payload.self,
+        validationTime: X5CValidationTime = .currentTime
     ) async throws -> Payload
     where Payload: JWTPayload {
-        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT)
+        try await verifyJWS(token, as: Payload.self, jsonDecoder: .defaultForJWT, validationTime: validationTime)
     }
 
     /// Verify a JWS with `x5c` claims against the
@@ -137,12 +143,14 @@ public struct X5CVerifier: Sendable {
     ///   - token: The JWS to verify.
     ///   - payload: The type to decode from the token payload.
     ///   - jsonDecoder: The JSON decoder to use for dcoding the token.
+    ///   - validationTime: The point in time to validate the certificate chain at.
     ///   - policy: The policy to use for verification.
     /// - Returns: The decoded payload, if verified.
     public func verifyJWS<Payload>(
         _ token: some DataProtocol,
         as _: Payload.Type = Payload.self,
         jsonDecoder: any JWTJSONDecoder,
+        validationTime: X5CValidationTime = .currentTime,
         @PolicyBuilder policy: sending () throws -> some VerifierPolicy = { EmptyPolicy() }
     ) async throws -> Payload
     where Payload: JWTPayload {
@@ -175,12 +183,26 @@ public struct X5CVerifier: Sendable {
         let untrustedChain = CertificateStore(certificates.dropFirst())
 
         let date: Date
-        // Some JWT implementations have the sign date in the payload.
-        // If it's such a payload, we'll use that date for validation
-        if let validationTimePayload = payload as? any ValidationTimePayload {
-            date = validationTimePayload.signedDate
-        } else {
+        switch validationTime.backing {
+        case .currentTime:
             date = Date()
+        case .fixed(let fixedDate):
+            date = fixedDate
+        case .signedDate(let maxAge):
+            // Some JWT implementations have the sign date in the payload.
+            // If it's such a payload, we'll use that date for validation.
+            if let validationTimePayload = payload as? any ValidationTimePayload {
+                date = validationTimePayload.signedDate
+                let age = Date().timeIntervalSince(date)
+                guard age >= 0 else {
+                    throw JWTError.invalidX5CChain(reason: "signedDate is in the future")
+                }
+                if let maxAge, age > maxAge {
+                    throw JWTError.invalidX5CChain(reason: "signedDate is further than the allowed maxAge in the past")
+                }
+            } else {
+                date = Date()
+            }
         }
 
         // Setup the verifier using the predefined trusted store

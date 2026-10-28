@@ -199,7 +199,7 @@ struct X5CTests {
 
         var payload: StoreKitPayload?
         do {
-            payload = try await verifier.verifyJWS(token, as: StoreKitPayload.self, jsonDecoder: jsonDecoder)
+            payload = try await verifier.verifyJWS(token, as: StoreKitPayload.self, jsonDecoder: jsonDecoder, validationTime: .signedDate)
         } catch {
             Issue.record("Failed with error: \(error)")
         }
@@ -207,6 +207,100 @@ struct X5CTests {
         let data = try #require(payload).data
         #expect(data.appAppleId == 1234)
         #expect(data.environment == "Sandbox")
+    }
+
+    @Test("Test currentTime validation ignores signedDate")
+    func verifyDefaultValidationTime() async throws {
+        let certs = x5cCerts[.es256]!
+        let leafCert = try x5cLeafCertKeys[.es256]!.serializeAsPEM().pemString
+
+        let keyCollection = try await JWTKeyCollection().add(ecdsa: ES256PrivateKey(pem: leafCert))
+
+        // Backdated to before the leaf certificate was issued
+        let signedDate = Date(timeIntervalSince1970: 1_577_836_800)
+        let payload = SignedDatePayload(signedDate: signedDate)
+        let header: JWTHeader = ["x5c": .array(certs.map(JWTHeaderField.string))]
+        let token = try await keyCollection.sign(payload, header: header)
+        let verifier = try X5CVerifier(rootCertificates: [certs.last!])
+
+        // No validationTime: the backdated signedDate must be ignored
+        let verified = try await verifier.verifyJWS(token, as: SignedDatePayload.self)
+        #expect(verified.signedDate == signedDate)
+
+        // ...as must an explicit .currentTime
+        await #expect(throws: Never.self, "Chain is valid at the current time.") {
+            try await verifier.verifyJWS(token, as: SignedDatePayload.self, validationTime: .currentTime)
+        }
+
+        // ...and the same token fails once the payload's date is opted into
+        let error = await #expect(throws: JWTError.self, "Chain was not valid at signedDate.") {
+            try await verifier.verifyJWS(token, as: SignedDatePayload.self, validationTime: .signedDate)
+        }
+        #expect(error?.errorType == .invalidX5CChain)
+    }
+
+    @Test("Test signedDate maxAge bound")
+    func verifySignedDateMaxAge() async throws {
+        let certs = x5cCerts[.es256]!
+        let leafCert = try x5cLeafCertKeys[.es256]!.serializeAsPEM().pemString
+
+        let keyCollection = try await JWTKeyCollection().add(ecdsa: ES256PrivateKey(pem: leafCert))
+        let header: JWTHeader = ["x5c": .array(certs.map(JWTHeaderField.string))]
+        let verifier = try X5CVerifier(rootCertificates: [certs.last!])
+
+        // The test certificates are only valid for a short window around "now",
+        // so the accepted signedDate must lie inside it
+        let freshPayload = SignedDatePayload(signedDate: Date())
+        let freshToken = try await keyCollection.sign(freshPayload, header: header)
+        await #expect(throws: Never.self, "signedDate within maxAge should be accepted.") {
+            try await verifier.verifyJWS(freshToken, as: SignedDatePayload.self, validationTime: .signedDate(maxAge: 86_400))
+        }
+
+        // Two days old: the maxAge bound is checked before chain validation,
+        // so this is rejected regardless of the certificates' validity window
+        let stalePayload = SignedDatePayload(signedDate: Date().addingTimeInterval(-172_800))
+        let staleToken = try await keyCollection.sign(stalePayload, header: header)
+        let error = await #expect(throws: JWTError.self, "signedDate older than maxAge should be rejected.") {
+            try await verifier.verifyJWS(staleToken, as: SignedDatePayload.self, validationTime: .signedDate(maxAge: 86_400))
+        }
+        #expect(error?.errorType == .invalidX5CChain)
+    }
+
+    @Test("Test future signedDate is rejected")
+    func verifyFutureSignedDate() async throws {
+        // A chain that only becomes valid in a year's time
+        let certs = notYetValidChain(alg: .es256)
+        let leafCert = try x5cLeafCertKeys[.es256]!.serializeAsPEM().pemString
+
+        let keyCollection = try await JWTKeyCollection().add(ecdsa: ES256PrivateKey(pem: leafCert))
+        let header: JWTHeader = ["x5c": .array(certs.map(JWTHeaderField.string))]
+        let verifier = try X5CVerifier(rootCertificates: [certs.last!])
+
+        // signedDate pushed forward into that not-yet-valid window
+        let payload = SignedDatePayload(signedDate: Date().addingTimeInterval(365 * 86_400 + 60))
+        let token = try await keyCollection.sign(payload, header: header)
+
+        for validationTime: X5CValidationTime in [.signedDate, .signedDate(maxAge: 86_400), .currentTime] {
+            let error = await #expect(throws: JWTError.self, "Not-yet-valid chain should be rejected.") {
+                try await verifier.verifyJWS(token, as: SignedDatePayload.self, validationTime: validationTime)
+            }
+            #expect(error?.errorType == .invalidX5CChain)
+        }
+    }
+
+    /// `.fixed` validates the chain at a caller-provided date, regardless of the payload.
+    @Test("Test fixed validation time")
+    func verifyFixedValidationTime() async throws {
+        let error = await #expect(throws: JWTError.self, "Chain was not valid in 2017.") {
+            try await verifier.verifyJWS(
+                validToken, as: TokenPayload.self,
+                validationTime: .fixed(Date(timeIntervalSince1970: 1_500_000_000)))
+        }
+        #expect(error?.errorType == .invalidX5CChain)
+
+        await #expect(throws: Never.self, "Chain is valid at the current time.") {
+            try await verifier.verifyJWS(validToken, as: TokenPayload.self, validationTime: .fixed(Date()))
+        }
     }
 
     @Test("Test init from DER")
@@ -514,15 +608,24 @@ let x5cCerts: [JWK.Algorithm: [String]] = [
     .ps512: getChain(alg: .ps512),
 ]
 
-private func getChain(alg: JWK.Algorithm) -> [String] {
+/// A chain whose certificates only become valid a year from now.
+func notYetValidChain(alg: JWK.Algorithm) -> [String] {
+    getChain(alg: alg, notValidBefore: Date().addingTimeInterval(365 * 86_400))
+}
+
+private func getChain(
+    alg: JWK.Algorithm,
+    notValidBefore: Date = Date()
+) -> [String] {
+    let notValidAfter = notValidBefore.addingTimeInterval(3600)
     return try! [
         // Leaf
         Certificate(
             version: .v3,
             serialNumber: .init(),
             publicKey: x5cLeafCertKeys[alg]!.publicKey,
-            notValidBefore: Date(),
-            notValidAfter: Date().addingTimeInterval(3600),
+            notValidBefore: notValidBefore,
+            notValidAfter: notValidAfter,
             issuer: try DistinguishedName { CommonName("Intermediate") },
             subject: try DistinguishedName { CommonName("Leaf") },
             extensions: .init(),
@@ -533,8 +636,8 @@ private func getChain(alg: JWK.Algorithm) -> [String] {
             version: .v3,
             serialNumber: .init(),
             publicKey: x5cLeafCertKeys[alg]!.publicKey,
-            notValidBefore: Date(),
-            notValidAfter: Date().addingTimeInterval(3600),
+            notValidBefore: notValidBefore,
+            notValidAfter: notValidAfter,
             issuer: try DistinguishedName { CommonName("CA") },
             subject: try DistinguishedName { CommonName("Intermediate") },
             extensions: try Certificate.Extensions {
@@ -547,8 +650,8 @@ private func getChain(alg: JWK.Algorithm) -> [String] {
             version: .v3,
             serialNumber: .init(),
             publicKey: x5cLeafCertKeys[alg]!.publicKey,
-            notValidBefore: Date(),
-            notValidAfter: Date().addingTimeInterval(3600),
+            notValidBefore: notValidBefore,
+            notValidAfter: notValidAfter,
             issuer: try DistinguishedName { CommonName("CA") },
             subject: try DistinguishedName { CommonName("CA") },
             extensions: try Certificate.Extensions {
@@ -597,6 +700,14 @@ private struct TokenPayload: JWTPayload {
             throw JWTError.claimVerificationFailure(failedClaim: self.cool, reason: "not cool")
         }
     }
+}
+
+/// A payload whose `signedDate` is used as the certificate validation time
+/// when the caller opts into `.signedDate`.
+private struct SignedDatePayload: ValidationTimePayload {
+    var signedDate: Date
+
+    func verify(using _: some JWTAlgorithm) async throws {}
 }
 #endif  // canImport(Testing)
 
