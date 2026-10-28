@@ -36,7 +36,10 @@ struct VendorTokenTests {
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
-            try await collection.verify(jwt, as: GoogleIdentityToken.self)
+            try await collection.verify(
+                jwt, as: GoogleIdentityToken.self,
+                expectedAudience: "your-client-id.apps.googleusercontent.com",
+                trustedAuthorizedPresenters: ["another-client-id.apps.googleusercontent.com"])
         }
     }
 
@@ -71,7 +74,10 @@ struct VendorTokenTests {
                 reason: "Token not provided by Google"
             )
         ) {
-            try await collection.verify(jwt, as: GoogleIdentityToken.self)
+            try await collection.verify(
+                jwt, as: GoogleIdentityToken.self,
+                expectedAudience: "your-client-id.apps.googleusercontent.com",
+                trustedAuthorizedPresenters: ["another-client-id.apps.googleusercontent.com"])
         }
     }
 
@@ -106,7 +112,10 @@ struct VendorTokenTests {
                 reason: "Subject claim beyond 255 ASCII characters long."
             )
         ) {
-            try await collection.verify(jwt, as: GoogleIdentityToken.self)
+            try await collection.verify(
+                jwt, as: GoogleIdentityToken.self,
+                expectedAudience: "your-client-id.apps.googleusercontent.com",
+                trustedAuthorizedPresenters: ["another-client-id.apps.googleusercontent.com"])
         }
     }
 
@@ -131,7 +140,7 @@ struct VendorTokenTests {
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
-            try await collection.verify(jwt, as: AppleIdentityToken.self)
+            try await collection.verify(jwt, as: AppleIdentityToken.self, expectedAudience: "your-client-id")
         }
     }
 
@@ -161,7 +170,7 @@ struct VendorTokenTests {
                 reason: "Token not provided by Apple"
             )
         ) {
-            try await collection.verify(jwt, as: AppleIdentityToken.self)
+            try await collection.verify(jwt, as: AppleIdentityToken.self, expectedAudience: "your-client-id")
         }
     }
 
@@ -194,7 +203,7 @@ struct VendorTokenTests {
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
-            try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
+            try await collection.verify(jwt, as: MicrosoftIdentityToken.self, expectedAudience: "your-app-client-id")
         }
     }
 
@@ -230,7 +239,7 @@ struct VendorTokenTests {
                 reason: "Token not provided by Microsoft"
             )
         ) {
-            try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
+            try await collection.verify(jwt, as: MicrosoftIdentityToken.self, expectedAudience: "your-app-client-id")
         }
     }
 
@@ -266,7 +275,7 @@ struct VendorTokenTests {
                 reason: "Token must contain tenant Id"
             )
         ) {
-            try await collection.verify(jwt, as: MicrosoftIdentityToken.self)
+            try await collection.verify(jwt, as: MicrosoftIdentityToken.self, expectedAudience: "your-app-client-id")
         }
     }
 
@@ -295,7 +304,7 @@ struct VendorTokenTests {
         let jwt = try await collection.sign(token)
 
         await #expect(throws: Never.self) {
-            try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self)
+            try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self, expectedAudience: "firprojectname-12345")
         }
     }
 
@@ -329,7 +338,7 @@ struct VendorTokenTests {
                 reason: "Token not provided by Google"
             )
         ) {
-            try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self)
+            try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self, expectedAudience: "firprojectname-12345")
         }
     }
 
@@ -363,7 +372,7 @@ struct VendorTokenTests {
                 reason: "Subject claim beyond 255 ASCII characters long."
             )
         ) {
-            try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self)
+            try await collection.verify(jwt, as: FirebaseAuthIdentityToken.self, expectedAudience: "firprojectname-12345")
         }
     }
 }

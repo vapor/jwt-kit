@@ -1,6 +1,6 @@
 /// - See Also:
 /// [Retrieve the User’s Information from Microsoft Servers](https://docs.microsoft.com/pl-pl/azure/active-directory/develop/id-tokens)
-public struct MicrosoftIdentityToken: JWTPayload {
+public struct MicrosoftIdentityToken: JWTIdentityToken {
     enum CodingKeys: String, CodingKey {
         case nonce, email, name, roles
         case audience = "aud"

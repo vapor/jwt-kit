@@ -214,6 +214,45 @@ let keys = try await JWTKeyCollection().add(jwksJSON: json)
 
 You can now pass JWTs from Apple to the `verify` method. The key identifier (`kid`) in the JWT header will be used to automatically select the correct key for verification. A JWKS may contain any of the key types supported by JWTKit.  
 
+When verifying an Apple, Google, Microsoft, or Firebase identity token, provide the audience assigned to **your application**. A valid provider signature does not establish that the token was issued for your application:
+
+```swift
+let identity = try await keys.verify(
+    token,
+    as: AppleIdentityToken.self,
+    expectedAudience: appleClientID
+)
+```
+
+If one login endpoint accepts several of your client IDs, pass all of them as `expectedAudiences`:
+
+```swift
+let identity = try await keys.verify(
+    token,
+    as: GoogleIdentityToken.self,
+    expectedAudiences: [webClientID, mobileClientID]
+)
+```
+
+The token must name at least one configured client ID in `aud`. Every other audience must also be a configured ID or explicitly listed in `trustedAdditionalAudiences`.
+
+For Google mobile sign-in, a token requested for the backend's server client ID can have `aud` set to that server ID and `azp` set to the mobile client ID. Verify it with `expectedAudience: serverClientID`; the default checks `aud` and does not restrict `azp`. If your application also needs to restrict which mobile clients can present the token, opt in to the Google-only presenter check:
+
+```swift
+let identity = try await keys.verify(
+    token,
+    as: GoogleIdentityToken.self,
+    expectedAudience: serverClientID,
+    trustedAuthorizedPresenters: [mobileClientID]
+)
+```
+
+For Microsoft identity tokens, JWTKit checks that `iss` matches `tid`. If your application accepts only specific tenants, also allowlist the verified `tenantId.value`; `expectedAudience` restricts client IDs, not tenants.
+
+An audience-free call such as `keys.verify(token, as: AppleIdentityToken.self)` verifies the signature and payload claims but does not compare `aud` with your application’s expected audience. Accepting the returned identity token as a login without an audience check is insecure. Pass `expectedAudience` or `expectedAudiences` when verifying identity tokens. The audience-free `JWTIdentityToken` overload is deprecated; calls through a generic `JWTPayload` constraint may not receive a compile-time warning.
+
+When a logger is supplied to `JWTKeyCollection`, successful unchecked identity-token verification also logs a warning once per collection. The default logger is a no-op.
+
 ## HMAC
 
 HMAC is the simplest JWT signing algorithm. It uses a single key that can both sign and verify tokens. The key can be any length.

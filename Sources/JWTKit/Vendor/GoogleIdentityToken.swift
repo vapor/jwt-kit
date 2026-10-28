@@ -1,6 +1,6 @@
 /// - See Also:
 /// [An ID token's payload](https://developers.google.com/identity/protocols/OpenIDConnect#an-id-tokens-payload)
-public struct GoogleIdentityToken: JWTPayload {
+public struct GoogleIdentityToken: JWTIdentityToken {
     enum CodingKeys: String, CodingKey {
         case email, name, picture, locale, nonce, profile
         case issuer = "iss"

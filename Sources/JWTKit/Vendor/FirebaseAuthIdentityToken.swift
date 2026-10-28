@@ -4,7 +4,7 @@ public import FoundationEssentials
 public import Foundation
 #endif
 
-public struct FirebaseAuthIdentityToken: JWTPayload {
+public struct FirebaseAuthIdentityToken: JWTIdentityToken {
     /// Additional Firebase-specific claims
     public struct Firebase: Codable, Sendable {
         enum CodingKeys: String, CodingKey {

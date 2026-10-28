@@ -25,11 +25,17 @@ final class JWTSigner: Sendable {
         try await serializer.sign(payload, with: header, using: self.algorithm)
     }
 
-    func verify<Payload>(_ token: some DataProtocol) async throws -> Payload where Payload: JWTPayload {
-        try await verify(TokenParts(Array(token)))
+    func verify<Payload>(
+        _ token: some DataProtocol,
+        identityValidation: JWTIdentityTokenValidation? = nil
+    ) async throws -> Payload where Payload: JWTPayload {
+        try await verify(TokenParts(Array(token)), identityValidation: identityValidation)
     }
 
-    func verify<Payload>(_ parts: TokenParts) async throws -> Payload where Payload: JWTPayload {
+    func verify<Payload>(
+        _ parts: TokenParts,
+        identityValidation: JWTIdentityTokenValidation? = nil
+    ) async throws -> Payload where Payload: JWTPayload {
         let signature = try parts.signature.span.base64URLDecodedBytes()
 
         guard try algorithm.verify(signature, signs: parts.signingInput) else {
@@ -45,6 +51,9 @@ final class JWTSigner: Sendable {
         }
 
         try await payload.verify(using: algorithm)
+        if let identityValidation, let identityToken = payload as? any JWTIdentityToken {
+            try identityValidation.validate(identityToken)
+        }
         return payload
     }
 }
