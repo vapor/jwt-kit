@@ -113,10 +113,26 @@ struct DirectedFuzzTests {
 
         let encoders: [JSONEncoder] = [
             JSONEncoder(),  // .deferredToDate
-            { let e = JSONEncoder(); e.dateEncodingStrategy = .secondsSince1970; return e }(),
-            { let e = JSONEncoder(); e.dateEncodingStrategy = .millisecondsSince1970; return e }(),
-            { let e = JSONEncoder(); e.dateEncodingStrategy = .iso8601; return e }(),
-            { let e = JSONEncoder(); e.dateEncodingStrategy = .integerSecondsSince1970; return e }(),
+            {
+                let e = JSONEncoder()
+                e.dateEncodingStrategy = .secondsSince1970
+                return e
+            }(),
+            {
+                let e = JSONEncoder()
+                e.dateEncodingStrategy = .millisecondsSince1970
+                return e
+            }(),
+            {
+                let e = JSONEncoder()
+                e.dateEncodingStrategy = .iso8601
+                return e
+            }(),
+            {
+                let e = JSONEncoder()
+                e.dateEncodingStrategy = .integerSecondsSince1970
+                return e
+            }(),
         ]
 
         for _ in 0..<iterations(1_500) {

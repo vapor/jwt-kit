@@ -25,7 +25,7 @@ extension JSONDecoder.DateDecodingStrategy {
 }
 
 extension JSONEncoder.DateEncodingStrategy {
-    /// RFC 7519 Encoder that handles doubles outside the range of representable `Int` values by throwing 
+    /// RFC 7519 Encoder that handles doubles outside the range of representable `Int` values by throwing
     /// an `EncodingError` rather than narrowing them to prevent an error when decoding the value back to a `Date`
     public static var integerSecondsSince1970: Self {
         .custom { date, encoder in

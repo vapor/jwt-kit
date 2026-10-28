@@ -1,6 +1,6 @@
-import Testing
-import JWTKit
 import Foundation
+import JWTKit
+import Testing
 
 @Suite("Header parsing regressions")
 struct HeaderParsingRegressionTests {
@@ -34,7 +34,8 @@ struct HeaderParsingRegressionTests {
             .replacingOccurrences(of: "=", with: "")
     }
 
-    @Test("GHSA-hfm2-66rr-3mcf header value doesn't crash", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-hfm2-66rr-3mcf"))
+    @Test(
+        "GHSA-hfm2-66rr-3mcf header value doesn't crash", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-hfm2-66rr-3mcf"))
     func advisoryProofOfConcept() async throws {
         let keys = await Self.keys()
         let token = "eyJhbGciOiJIUzI1NiIsIngiOjFlMzAwfQ.eyJzdWIiOiIxMjMifQ.invalid"
@@ -116,14 +117,18 @@ struct HeaderParsingRegressionTests {
         }
     }
 
-    @Test("Nesting within limit parses normally", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"), arguments: NestedJSONShape.allCases)
+    @Test(
+        "Nesting within limit parses normally", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"),
+        arguments: NestedJSONShape.allCases)
     func shallowNestingIsFine(_ style: NestedJSONShape) {
         #expect(throws: Never.self) {
             _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(style.json(depth: 8))}"#)
         }
     }
 
-    @Test("Depth limit works correctly", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"), arguments: NestedJSONShape.allCases)
+    @Test(
+        "Depth limit works correctly", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"),
+        arguments: NestedJSONShape.allCases)
     func depthLimitBrackets(_ style: NestedJSONShape) {
         #expect(throws: Never.self) {
             _ = try Self.parseHeader(#"{"alg":"HS256","x":\#(style.json(depth: 25))}"#)
@@ -167,7 +172,7 @@ struct HeaderParsingRegressionTests {
     }
 
     @Test(
-        "Nesting with Foundation's limit", 
+        "Nesting with Foundation's limit",
         .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"),
         arguments: NestedJSONShape.allCases
     )
@@ -268,7 +273,9 @@ struct HeaderParsingRegressionTests {
         func verify(using _: some JWTAlgorithm) throws {}
     }
 
-    @Test("Empty multi-value claims decode rather than crashing", .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"))
+    @Test(
+        "Empty multi-value claims decode rather than crashing",
+        .bug("https://github.com/vapor/jwt-kit/security/advisories/GHSA-jhmq-wqhf-47x2"))
     func emptyMultiValueClaimDecodes() async throws {
         let keys = await Self.keys()
         let token = "\(Self.base64URL(#"{"alg":"HS256"}"#)).\(Self.base64URL(#"{"aud":[]}"#)).AAAA"
