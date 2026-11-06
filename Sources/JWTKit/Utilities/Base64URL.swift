@@ -21,6 +21,15 @@ extension Span where Element == UInt8 {
     }
 
     package func base64URLDecodedData() throws -> Data {
+        // Before OS 26, generic methods using MutableSpan may crash (#266), ExtrasBase64 uses that
+        guard #available(macOS 26, iOS 26, tvOS 26, watchOS 26, visionOS 26, *) else {
+            let bytes = try base64URLDecodedBytes()
+            guard String(bytes: bytes, encoding: .utf8) != nil else {
+                throw JWTError.malformedToken(reason: "Header and payload must be UTF-8 encoded.")
+            }
+            return Data(bytes)
+        }
+
         var data = Data(count: Base64.decodedLength(bytesCount: count))
         var output = data.mutableSpan
         let decodedCount = try Base64.decode(bytes: self, into: &output, options: base64URLDecoding)
