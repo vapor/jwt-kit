@@ -1,7 +1,7 @@
 extension JWK {
     /// The `alg` (algorithm) parameter identifies the algorithm intended for use with the key.
     /// Unknown algorithms are preserved.
-    public struct Algorithm: Codable, RawRepresentable, Equatable, Sendable {
+    public struct Algorithm: Codable, RawRepresentable, Equatable, Hashable, Sendable {
         public typealias RawValue = String
 
         enum Backing: Equatable, Sendable {

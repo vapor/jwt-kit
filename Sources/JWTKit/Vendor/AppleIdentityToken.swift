@@ -1,6 +1,6 @@
 /// - See Also:
 /// [Retrieve the User’s Information from Apple ID Servers](https://developer.apple.com/documentation/signinwithapplerestapi/authenticating_users_with_sign_in_with_apple)
-public struct AppleIdentityToken: JWTPayload {
+public struct AppleIdentityToken: JWTIdentityToken {
     enum CodingKeys: String, CodingKey {
         case nonce, email
         case issuer = "iss"

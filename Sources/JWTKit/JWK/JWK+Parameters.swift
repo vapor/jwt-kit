@@ -7,7 +7,7 @@ extension JWK {
     /// Only the members a key type genuinely requires are non-optional in each case: anything missing
     /// them lands in ``loose(_:)`` instead. Validation stays where it is today, in the code which turns a
     /// key into a signer, so decoding a key set containing one unusable key doesn't fail the whole set.
-    enum Parameters: Sendable {
+    enum Parameters: Equatable, Hashable, Sendable {
         case rsa(RSA)
         case ec(EC)
         case okp(OKP)
@@ -20,7 +20,7 @@ extension JWK {
     }
 
     /// An RSA key. `n` and `e` are always present; the rest are only present on private keys.
-    struct RSA: Sendable, Equatable {
+    struct RSA: Equatable, Hashable, Sendable {
         var modulus: String
         var exponent: String
         var privateExponent: String?
@@ -29,7 +29,7 @@ extension JWK {
     }
 
     /// An elliptic curve key. Both coordinates are always present.
-    struct EC: Sendable, Equatable {
+    struct EC: Equatable, Hashable, Sendable {
         var x: String
         var y: String
         var curve: Curve?
@@ -38,7 +38,7 @@ extension JWK {
     }
 
     /// An octet key pair. The public coordinate is always present.
-    struct OKP: Sendable, Equatable {
+    struct OKP: Equatable, Hashable, Sendable {
         var x: String
         var curve: Curve?
         /// The `d` member, present only on private keys.
@@ -46,7 +46,7 @@ extension JWK {
     }
 
     /// Every member a JWK can carry, with no guarantee that they form a usable key.
-    struct Members: Sendable, Equatable {
+    struct Members: Equatable, Hashable, Sendable {
         var keyType: KeyType
         var modulus: String?
         var exponent: String?

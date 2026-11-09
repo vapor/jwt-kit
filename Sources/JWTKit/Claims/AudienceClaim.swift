@@ -15,7 +15,6 @@ public struct AudienceClaim: JWTMultiValueClaim, Equatable, ExpressibleByStringL
 
     /// See ``JWTClaim``.
     public init(value: [String]) {
-        precondition(!value.isEmpty, "An audience claim must have at least one audience.")
         self.value = value
     }
 

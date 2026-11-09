@@ -25,7 +25,9 @@ extension JWTMultiValueClaim {
     ///   would be the same as having no claim at all, or represent a token
     ///   making the claim but with zero values. For maximal flexibility, this
     ///   implementation accepts an empty unkeyed container (in JSON, `[]`)
-    ///   silently.
+    ///   silently. Conforming types must therefore tolerate an empty value
+    ///   rather than asserting on it, since claims are built from untrusted
+    ///   tokens; see ``AudienceClaim``.
     ///
     /// - Note: It would be preferable to be able to safely decode the empty
     ///   array from a lack of _any_ encoded value. This is precluded by the way

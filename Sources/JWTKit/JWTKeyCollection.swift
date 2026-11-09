@@ -26,6 +26,7 @@ public actor JWTKeyCollection: Sendable {
 
     private var storage: [JWKIdentifier: Signer]
     private var `default`: Signer?
+    private var warnedAboutUnvalidatedIdentityToken = false
 
     public let defaultJWTParser: any JWTParser
     public let defaultJWTSerializer: any JWTSerializer
@@ -275,24 +276,247 @@ public actor JWTKeyCollection: Sendable {
         iteratingKeys: Bool = false
     ) async throws -> Payload
     where Payload: JWTPayload {
+        try await self.verifyToken(token, as: Payload.self, iteratingKeys: iteratingKeys, identityValidation: nil)
+    }
+
+    /// The audience-free verification API remains available for compatibility,
+    /// but callers must check the audience before trusting an identity token.
+    @available(*, deprecated, message: "Identity tokens require an audience check; use expectedAudience or expectedAudiences")
+    public func verify<Payload>(
+        _ token: String,
+        as _: Payload.Type = Payload.self,
+        iteratingKeys: Bool = false
+    ) async throws -> Payload
+    where Payload: JWTIdentityToken {
+        try await self.verifyToken(
+            [UInt8](token.utf8), as: Payload.self, iteratingKeys: iteratingKeys, identityValidation: nil)
+    }
+
+    /// The audience-free verification API remains available for compatibility,
+    /// but callers must check the audience before trusting an identity token.
+    @available(*, deprecated, message: "Identity tokens require an audience check; use expectedAudience or expectedAudiences")
+    public func verify<Payload>(
+        _ token: some DataProtocol & Sendable,
+        as _: Payload.Type = Payload.self,
+        iteratingKeys: Bool = false
+    ) async throws -> Payload
+    where Payload: JWTIdentityToken {
+        try await self.verifyToken(token, as: Payload.self, iteratingKeys: iteratingKeys, identityValidation: nil)
+    }
+
+    /// Verifies a provider identity token for this application.
+    ///
+    /// In addition to signature and provider claim verification, the token must
+    /// name `expectedAudience` in `aud`. Any other audiences must be explicitly
+    /// listed in `trustedAdditionalAudiences`.
+    public func verify<Payload>(
+        _ token: String,
+        as _: Payload.Type = Payload.self,
+        expectedAudience: String,
+        trustedAdditionalAudiences: Set<String> = [],
+        iteratingKeys: Bool = false
+    ) async throws -> Payload
+    where Payload: JWTIdentityToken {
+        try await self.verify(
+            [UInt8](token.utf8),
+            as: Payload.self,
+            expectedAudience: expectedAudience,
+            trustedAdditionalAudiences: trustedAdditionalAudiences,
+            iteratingKeys: iteratingKeys
+        )
+    }
+
+    /// Verifies a provider identity token for this application.
+    /// See the `String` overload for audience requirements.
+    public func verify<Payload>(
+        _ token: some DataProtocol & Sendable,
+        as _: Payload.Type = Payload.self,
+        expectedAudience: String,
+        trustedAdditionalAudiences: Set<String> = [],
+        iteratingKeys: Bool = false
+    ) async throws -> Payload
+    where Payload: JWTIdentityToken {
+        try await self.verify(
+            token,
+            as: Payload.self,
+            expectedAudiences: [expectedAudience],
+            trustedAdditionalAudiences: trustedAdditionalAudiences,
+            iteratingKeys: iteratingKeys
+        )
+    }
+
+    /// Verifies a provider identity token for any of this endpoint's configured client IDs.
+    ///
+    /// At least one `aud` value must be in `expectedAudiences`. Every `aud` value
+    /// must be in `expectedAudiences` or `trustedAdditionalAudiences`.
+    /// An empty sequence or an empty expected client ID is rejected.
+    public func verify<Payload>(
+        _ token: String,
+        as _: Payload.Type = Payload.self,
+        expectedAudiences: some Sequence<String>,
+        trustedAdditionalAudiences: Set<String> = [],
+        iteratingKeys: Bool = false
+    ) async throws -> Payload
+    where Payload: JWTIdentityToken {
+        try await self.verify(
+            [UInt8](token.utf8),
+            as: Payload.self,
+            expectedAudiences: expectedAudiences,
+            trustedAdditionalAudiences: trustedAdditionalAudiences,
+            iteratingKeys: iteratingKeys
+        )
+    }
+
+    /// Verifies a provider identity token for any configured client ID.
+    /// See the `String` overload for audience requirements.
+    public func verify<Payload>(
+        _ token: some DataProtocol & Sendable,
+        as _: Payload.Type = Payload.self,
+        expectedAudiences: some Sequence<String>,
+        trustedAdditionalAudiences: Set<String> = [],
+        iteratingKeys: Bool = false
+    ) async throws -> Payload
+    where Payload: JWTIdentityToken {
+        try await self.verifyToken(
+            token,
+            as: Payload.self,
+            iteratingKeys: iteratingKeys,
+            identityValidation: .init(
+                expectedAudiences: Set(expectedAudiences),
+                trustedAdditionalAudiences: trustedAdditionalAudiences,
+                trustedAuthorizedPresenters: nil
+            )
+        )
+    }
+
+    /// Verifies a Google identity token and additionally restricts its `azp` claim.
+    ///
+    /// Google can issue a token with a server client ID in `aud` and a mobile
+    /// client ID in `azp`. Include that mobile ID in `trustedAuthorizedPresenters`
+    /// when opting in to this check. An empty set accepts only `expectedAudience`.
+    public func verify(
+        _ token: String,
+        as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
+        expectedAudience: String,
+        trustedAdditionalAudiences: Set<String> = [],
+        trustedAuthorizedPresenters: Set<String>,
+        iteratingKeys: Bool = false
+    ) async throws -> GoogleIdentityToken {
+        try await self.verify(
+            [UInt8](token.utf8),
+            as: GoogleIdentityToken.self,
+            expectedAudience: expectedAudience,
+            trustedAdditionalAudiences: trustedAdditionalAudiences,
+            trustedAuthorizedPresenters: trustedAuthorizedPresenters,
+            iteratingKeys: iteratingKeys
+        )
+    }
+
+    /// Verifies a Google identity token and additionally restricts its `azp` claim.
+    /// See the `String` overload for presenter requirements.
+    public func verify(
+        _ token: some DataProtocol & Sendable,
+        as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
+        expectedAudience: String,
+        trustedAdditionalAudiences: Set<String> = [],
+        trustedAuthorizedPresenters: Set<String>,
+        iteratingKeys: Bool = false
+    ) async throws -> GoogleIdentityToken {
+        try await self.verify(
+            token,
+            as: GoogleIdentityToken.self,
+            expectedAudiences: [expectedAudience],
+            trustedAdditionalAudiences: trustedAdditionalAudiences,
+            trustedAuthorizedPresenters: trustedAuthorizedPresenters,
+            iteratingKeys: iteratingKeys
+        )
+    }
+
+    /// Verifies a Google identity token for any configured client ID and
+    /// additionally restricts its `azp` claim to a configured client ID or a
+    /// value in `trustedAuthorizedPresenters`.
+    public func verify(
+        _ token: String,
+        as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
+        expectedAudiences: some Sequence<String>,
+        trustedAdditionalAudiences: Set<String> = [],
+        trustedAuthorizedPresenters: Set<String>,
+        iteratingKeys: Bool = false
+    ) async throws -> GoogleIdentityToken {
+        try await self.verify(
+            [UInt8](token.utf8),
+            as: GoogleIdentityToken.self,
+            expectedAudiences: expectedAudiences,
+            trustedAdditionalAudiences: trustedAdditionalAudiences,
+            trustedAuthorizedPresenters: trustedAuthorizedPresenters,
+            iteratingKeys: iteratingKeys
+        )
+    }
+
+    /// Verifies a Google identity token for any configured client ID and
+    /// additionally restricts its `azp` claim. See the `String` overload.
+    public func verify(
+        _ token: some DataProtocol & Sendable,
+        as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
+        expectedAudiences: some Sequence<String>,
+        trustedAdditionalAudiences: Set<String> = [],
+        trustedAuthorizedPresenters: Set<String>,
+        iteratingKeys: Bool = false
+    ) async throws -> GoogleIdentityToken {
+        try await self.verifyToken(
+            token,
+            as: GoogleIdentityToken.self,
+            iteratingKeys: iteratingKeys,
+            identityValidation: .init(
+                expectedAudiences: Set(expectedAudiences),
+                trustedAdditionalAudiences: trustedAdditionalAudiences,
+                trustedAuthorizedPresenters: trustedAuthorizedPresenters
+            )
+        )
+    }
+
+    private func verifyToken<Payload>(
+        _ token: some DataProtocol & Sendable,
+        as _: Payload.Type,
+        iteratingKeys: Bool,
+        identityValidation: JWTIdentityTokenValidation?
+    ) async throws -> Payload
+    where Payload: JWTPayload {
         let tokenParts = try TokenParts(Array(token))
         let headerFields = try defaultJWTParser.parseVerificationFields(from: tokenParts.header)
         let kid = headerFields.kid.flatMap { JWKIdentifier(string: $0) }
         var signer = try await self.getSigner(for: kid, alg: headerFields.alg)
 
         do {
-            return try await signer.verify(tokenParts)
+            let payload: Payload = try await signer.verify(tokenParts, identityValidation: identityValidation)
+            self.warnIfUnvalidatedIdentityToken(Payload.self, identityValidation: identityValidation)
+            return payload
         } catch {
             if iteratingKeys == true {
                 for (_kid, _) in self.storage where _kid != kid {
                     do {
                         signer = try await self.getSigner(for: _kid, alg: headerFields.alg)
-                        return try await signer.verify(tokenParts)
+                        let payload: Payload = try await signer.verify(tokenParts, identityValidation: identityValidation)
+                        self.warnIfUnvalidatedIdentityToken(Payload.self, identityValidation: identityValidation)
+                        return payload
                     } catch {}
                 }
             }
             throw error
         }
+    }
+
+    private func warnIfUnvalidatedIdentityToken<Payload: JWTPayload>(
+        _: Payload.Type,
+        identityValidation: JWTIdentityTokenValidation?
+    ) {
+        guard identityValidation == nil,
+            Payload.self is any JWTIdentityToken.Type,
+            !self.warnedAboutUnvalidatedIdentityToken
+        else { return }
+
+        self.warnedAboutUnvalidatedIdentityToken = true
+        self.logger.warning("Identity token verified without an audience check; use expectedAudience or expectedAudiences")
     }
 
     /// Signs a JWT payload and returns the JWT string.

@@ -25,8 +25,22 @@ jobs:
           path: jwt
       - name: Use local JWTKit
         run: swift package --package-path jwt edit jwt-kit --path ./jwt-kit
-      - name: Run tests with Thread Sanitizer
-        run: swift test --package-path jwt --sanitize=thread
+      - name: Run tests
+        run: swift test --package-path jwt
+
+  fuzz-tests:
+    permissions:
+      contents: read
+    if: ${{ !(github.event.pull_request.draft || false) }}
+    runs-on: ubuntu-latest
+    container: swift:noble
+    env:
+      JWT_FUZZ_SCALE: 5
+    steps:
+      - name: Check out JWTKit
+        uses: actions/checkout@v6
+      - name: Run fuzz tests
+        run: swift test --package-path FuzzTests
 
   unit-tests:
     permissions:

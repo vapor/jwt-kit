@@ -13,7 +13,19 @@ public enum JWTHeaderField: Hashable, Sendable, Codable {
     case array([JWTHeaderField])
     case object([String: JWTHeaderField])
 
+    /// The deepest nesting `init(from:)` will decode before rejecting a header. Prevents stack exhaustion attacks
+    static let maximumDepth = 32
+
     public init(from decoder: any Decoder) throws {
+        guard decoder.codingPath.count <= Self.maximumDepth else {
+            throw DecodingError.dataCorrupted(
+                .init(
+                    codingPath: decoder.codingPath,
+                    debugDescription:
+                        "Header field nesting exceeds the maximum supported depth of \(Self.maximumDepth)."
+                ))
+        }
+
         let container: any SingleValueDecodingContainer
 
         do {
@@ -33,11 +45,10 @@ public enum JWTHeaderField: Hashable, Sendable, Codable {
             return
         } catch DecodingError.typeMismatch {}
 
-        // This is a bit of a hack to correctly differentiate between integers and doubles
         do {
             let doubleValue = try container.decode(Double.self)
-            if doubleValue.truncatingRemainder(dividingBy: 1) == 0 {
-                self = .int(Int(doubleValue))
+            if let int = Int(exactly: doubleValue) {
+                self = .int(int)
             } else {
                 self = .decimal(doubleValue)
             }

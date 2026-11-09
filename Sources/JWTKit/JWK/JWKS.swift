@@ -2,12 +2,18 @@
 ///
 /// A JSON object that represents a set of JWKs.
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
-public struct JWKS: Codable, Sendable {
+public struct JWKS: Codable, Equatable, Sendable {
     /// All JSON Web Keys
     public var keys: [JWK]
 
     public init(keys: [JWK]) {
         self.keys = keys
+    }
+
+    /// Two sets are equal if they hold the same keys, in any order and ignoring duplicates.
+    /// RFC 7517 section 5.1: by default, the order of the keys does not imply a preference.
+    public static func == (lhs: JWKS, rhs: JWKS) -> Bool {
+        Set(lhs.keys) == Set(rhs.keys)
     }
 
     /// Retrieves the desired key from the JSON Web Key Set

@@ -5,7 +5,7 @@ extension JWK {
     /// Key types which JWTKit doesn't recognise are preserved rather than rejected. This is what stops a
     /// single unsupported key from failing the decoding of an entire key set, as RFC 7517 § 5 requires:
     /// *"Implementations SHOULD ignore JWKs within a JWK Set that use `kty` values that are not understood"*.
-    public struct KeyType: Codable, RawRepresentable, Equatable, Sendable {
+    public struct KeyType: Codable, RawRepresentable, Equatable, Hashable, Sendable {
         public typealias RawValue = String
 
         enum Backing: Equatable, Sendable {

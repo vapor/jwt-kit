@@ -1,7 +1,7 @@
 extension JWK {
     /// The `crv` (curve) parameter identifies the cryptographic curve used with the key.
     /// Unknown curves are preserved.
-    public struct Curve: Codable, RawRepresentable, Equatable, Sendable {
+    public struct Curve: Codable, RawRepresentable, Equatable, Hashable, Sendable {
         enum Backing: Sendable {
             case ecdsa(ECDSACurve)
             case eddsa(EdDSACurve)

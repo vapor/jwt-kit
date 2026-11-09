@@ -10,7 +10,7 @@ import Foundation
 /// structure that represents a cryptographic key.
 ///
 /// See more at [RFC 7517](https://tools.ietf.org/html/rfc7517).
-public struct JWK: Codable, Sendable {
+public struct JWK: Codable, Equatable, Hashable, Sendable {
     /// The key material. Everything inside JWTKit works from this rather than the flat members.
     var parameters: Parameters
 
