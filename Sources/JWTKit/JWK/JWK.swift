@@ -7,8 +7,8 @@ import Foundation
 /// A JSON Web Key.
 ///
 /// Read specification (RFC 7517) https://tools.ietf.org/html/rfc7517.
-public struct JWK: Codable, Sendable {
-    public struct Curve: Codable, RawRepresentable, Equatable, Sendable {
+public struct JWK: Codable, Equatable, Hashable, Sendable {
+    public struct Curve: Codable, RawRepresentable, Equatable, Hashable, Sendable {
         let backing: Backing
 
         public var rawValue: String {
@@ -68,7 +68,7 @@ public struct JWK: Codable, Sendable {
     }
 
     /// Supported `kty` key types.
-    public struct KeyType: Codable, RawRepresentable, Equatable, Sendable {
+    public struct KeyType: Codable, RawRepresentable, Equatable, Hashable, Sendable {
         public typealias RawValue = String
 
         let backing: Backing
@@ -117,7 +117,7 @@ public struct JWK: Codable, Sendable {
     public var keyType: KeyType
 
     /// Supported `alg` algorithms
-    public struct Algorithm: Codable, RawRepresentable, Equatable, Sendable {
+    public struct Algorithm: Codable, RawRepresentable, Equatable, Hashable, Sendable {
         public typealias RawValue = String
 
         let backing: Backing
