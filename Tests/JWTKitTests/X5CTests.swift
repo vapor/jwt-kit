@@ -710,5 +710,3 @@ private struct SignedDatePayload: ValidationTimePayload {
     func verify(using _: some JWTAlgorithm) async throws {}
 }
 #endif  // canImport(Testing)
-
-extension JWK.Algorithm: Hashable {}
