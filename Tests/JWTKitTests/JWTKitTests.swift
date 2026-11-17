@@ -947,10 +947,10 @@ struct JWTKitTests {
         _ = try await keys.verify(token4, as: TestPayload.self)
 
         // v1 and v3 no longer work
-        await #expect(throws: JWTError.noKeyProvided) {
+        await #expect(throws: JWTError.unknownKID("v1")) {
             _ = try await keys.verify(token1, as: TestPayload.self)
         }
-        await #expect(throws: JWTError.noKeyProvided) {
+        await #expect(throws: JWTError.unknownKID("v3")) {
             _ = try await keys.verify(token3, as: TestPayload.self)
         }
     }
@@ -982,7 +982,7 @@ struct JWTKitTests {
         await #expect(throws: JWTError.noKeyProvided) {
             _ = try await keys.verify(token0, as: TestPayload.self)
         }
-        await #expect(throws: JWTError.noKeyProvided) {
+        await #expect(throws: JWTError.unknownKID("v1")) {
             _ = try await keys.verify(token1, as: TestPayload.self)
         }
     }

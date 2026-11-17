@@ -180,6 +180,8 @@ public actor JWTKeyCollection: Sendable {
             signer = stored
         } else if let d = self.default {
             signer = d
+        } else if let kid {
+            throw JWTError.unknownKID(kid)
         } else {
             throw JWTError.noKeyProvided
         }
@@ -253,7 +255,7 @@ public actor JWTKeyCollection: Sendable {
     ///   - iteratingKeys: Whether to try verifying the token with all keys in the collection.
     /// - Throws: An error if the token cannot be verified or decoded.
     /// - Returns: The verified and decoded payload of the specified type.
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self,
         iteratingKeys: Bool = false
@@ -270,7 +272,7 @@ public actor JWTKeyCollection: Sendable {
     ///   - iteratingKeys: Whether to try verifying the token with all keys in the collection.
     /// - Throws: An error if the token cannot be verified or decoded.
     /// - Returns: The verified and decoded payload of the specified type.
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: some DataProtocol & Sendable,
         as _: Payload.Type = Payload.self,
         iteratingKeys: Bool = false
@@ -282,7 +284,7 @@ public actor JWTKeyCollection: Sendable {
     /// The audience-free verification API remains available for compatibility,
     /// but callers must check the audience before trusting an identity token.
     @available(*, deprecated, message: "Identity tokens require an audience check; use expectedAudience or expectedAudiences")
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self,
         iteratingKeys: Bool = false
@@ -295,7 +297,7 @@ public actor JWTKeyCollection: Sendable {
     /// The audience-free verification API remains available for compatibility,
     /// but callers must check the audience before trusting an identity token.
     @available(*, deprecated, message: "Identity tokens require an audience check; use expectedAudience or expectedAudiences")
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: some DataProtocol & Sendable,
         as _: Payload.Type = Payload.self,
         iteratingKeys: Bool = false
@@ -309,7 +311,7 @@ public actor JWTKeyCollection: Sendable {
     /// In addition to signature and provider claim verification, the token must
     /// name `expectedAudience` in `aud`. Any other audiences must be explicitly
     /// listed in `trustedAdditionalAudiences`.
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self,
         expectedAudience: String,
@@ -328,7 +330,7 @@ public actor JWTKeyCollection: Sendable {
 
     /// Verifies a provider identity token for this application.
     /// See the `String` overload for audience requirements.
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: some DataProtocol & Sendable,
         as _: Payload.Type = Payload.self,
         expectedAudience: String,
@@ -350,7 +352,7 @@ public actor JWTKeyCollection: Sendable {
     /// At least one `aud` value must be in `expectedAudiences`. Every `aud` value
     /// must be in `expectedAudiences` or `trustedAdditionalAudiences`.
     /// An empty sequence or an empty expected client ID is rejected.
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: String,
         as _: Payload.Type = Payload.self,
         expectedAudiences: some Sequence<String>,
@@ -369,7 +371,7 @@ public actor JWTKeyCollection: Sendable {
 
     /// Verifies a provider identity token for any configured client ID.
     /// See the `String` overload for audience requirements.
-    public func verify<Payload>(
+    public nonisolated func verify<Payload>(
         _ token: some DataProtocol & Sendable,
         as _: Payload.Type = Payload.self,
         expectedAudiences: some Sequence<String>,
@@ -394,7 +396,7 @@ public actor JWTKeyCollection: Sendable {
     /// Google can issue a token with a server client ID in `aud` and a mobile
     /// client ID in `azp`. Include that mobile ID in `trustedAuthorizedPresenters`
     /// when opting in to this check. An empty set accepts only `expectedAudience`.
-    public func verify(
+    public nonisolated func verify(
         _ token: String,
         as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
         expectedAudience: String,
@@ -414,7 +416,7 @@ public actor JWTKeyCollection: Sendable {
 
     /// Verifies a Google identity token and additionally restricts its `azp` claim.
     /// See the `String` overload for presenter requirements.
-    public func verify(
+    public nonisolated func verify(
         _ token: some DataProtocol & Sendable,
         as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
         expectedAudience: String,
@@ -435,7 +437,7 @@ public actor JWTKeyCollection: Sendable {
     /// Verifies a Google identity token for any configured client ID and
     /// additionally restricts its `azp` claim to a configured client ID or a
     /// value in `trustedAuthorizedPresenters`.
-    public func verify(
+    public nonisolated func verify(
         _ token: String,
         as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
         expectedAudiences: some Sequence<String>,
@@ -455,7 +457,7 @@ public actor JWTKeyCollection: Sendable {
 
     /// Verifies a Google identity token for any configured client ID and
     /// additionally restricts its `azp` claim. See the `String` overload.
-    public func verify(
+    public nonisolated func verify(
         _ token: some DataProtocol & Sendable,
         as _: GoogleIdentityToken.Type = GoogleIdentityToken.self,
         expectedAudiences: some Sequence<String>,
@@ -475,7 +477,7 @@ public actor JWTKeyCollection: Sendable {
         )
     }
 
-    private func verifyToken<Payload>(
+    private nonisolated func verifyToken<Payload>(
         _ token: some DataProtocol & Sendable,
         as _: Payload.Type,
         iteratingKeys: Bool,
@@ -489,15 +491,15 @@ public actor JWTKeyCollection: Sendable {
 
         do {
             let payload: Payload = try await signer.verify(tokenParts, identityValidation: identityValidation)
-            self.warnIfUnvalidatedIdentityToken(Payload.self, identityValidation: identityValidation)
+            await self.warnIfUnvalidatedIdentityToken(Payload.self, identityValidation: identityValidation)
             return payload
         } catch {
             if iteratingKeys == true {
-                for (_kid, _) in self.storage where _kid != kid {
+                for (_kid, _) in await self.storage where _kid != kid {
                     do {
                         signer = try await self.getSigner(for: _kid, alg: headerFields.alg)
                         let payload: Payload = try await signer.verify(tokenParts, identityValidation: identityValidation)
-                        self.warnIfUnvalidatedIdentityToken(Payload.self, identityValidation: identityValidation)
+                        await self.warnIfUnvalidatedIdentityToken(Payload.self, identityValidation: identityValidation)
                         return payload
                     } catch {}
                 }
@@ -529,7 +531,7 @@ public actor JWTKeyCollection: Sendable {
     ///   - header: An optional header to include in the JWT.
     /// - Throws: An error if the payload cannot be signed.
     /// - Returns: A signed JWT token string.
-    public func sign(
+    public nonisolated func sign(
         _ payload: some JWTPayload,
         kid: JWKIdentifier? = nil,
         header: JWTHeader = JWTHeader()
