@@ -180,6 +180,8 @@ public actor JWTKeyCollection: Sendable {
             signer = stored
         } else if let d = self.default {
             signer = d
+        } else if let kid {
+            throw JWTError.unknownKID(kid)
         } else {
             throw JWTError.noKeyProvided
         }
