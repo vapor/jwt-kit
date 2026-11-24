@@ -1,53 +1,55 @@
+import CryptoExtras
+
 extension JWK {
     /// Builds the signing algorithm this key describes, or `nil` when the key is well formed but
     /// can't be used with the requested algorithm.
     func getKey(for alg: Algorithm? = nil) throws -> (any JWTAlgorithm)? {
         let algorithm = alg ?? self.algorithm
 
-        switch self.parameters {
-        case .rsa(let rsa):
-            return try Self.signer(for: rsa, algorithm: algorithm)
-        case .ec(let ec):
-            return try Self.signer(for: ec, algorithm: algorithm)
-        case .okp(let okp):
-            return try Self.signer(for: okp, algorithm: algorithm)
-        case .loose(let members):
-            switch members.keyType.backing {
-            case .rsa:
+        switch self.keyType.backing {
+        case .rsa:
+            guard let modulus, let exponent else {
                 throw JWTError.invalidJWK(reason: "Missing RSA primitives")
-            case .ecdsa:
+            }
+            return try self.rsaSigner(modulus: modulus, exponent: exponent, algorithm: algorithm)
+        case .ecdsa:
+            guard let x, let y else {
                 throw JWTError.invalidJWK(reason: "Missing ECDSA coordinates")
-            case .octetKeyPair:
-                guard case .eddsa = members.curve?.backing else {
-                    throw JWTError.invalidJWK(reason: "Invalid EdDSA curve")
-                }
-                return nil
-            case .unknown:
+            }
+            return try self.ecdsaSigner(x: x, y: y, algorithm: algorithm)
+        case .octetKeyPair:
+            guard case .eddsa(let curve) = self.curve?.backing else {
+                throw JWTError.invalidJWK(reason: "Invalid EdDSA curve")
+            }
+            guard let x else {
                 return nil
             }
+            return try self.eddsaSigner(x: x, curve: curve, algorithm: algorithm)
+        case .unknown:
+            return nil
         }
     }
 
-    private static func signer(for rsa: RSA, algorithm: Algorithm?) throws -> (any JWTAlgorithm)? {
-        let key: RSAKey =
-            if let privateExponent = rsa.privateExponent {
-                if let prime1 = rsa.prime1, let prime2 = rsa.prime2 {
+    private func rsaSigner(modulus: String, exponent: String, algorithm: Algorithm?) throws -> (any JWTAlgorithm)? {
+        let key: any RSAKey =
+            if let privateExponent {
+                if let prime1, let prime2 {
                     try Insecure.RSA.PrivateKey(
-                        modulus: rsa.modulus,
-                        exponent: rsa.exponent,
+                        modulus: modulus,
+                        exponent: exponent,
                         privateExponent: privateExponent,
                         prime1: prime1,
                         prime2: prime2
                     )
                 } else {
                     try Insecure.RSA.PrivateKey(
-                        modulus: rsa.modulus,
-                        exponent: rsa.exponent,
+                        modulus: modulus,
+                        exponent: exponent,
                         privateExponent: privateExponent
                     )
                 }
             } else {
-                try Insecure.RSA.PublicKey(modulus: rsa.modulus, exponent: rsa.exponent)
+                try Insecure.RSA.PublicKey(modulus: modulus, exponent: exponent)
             }
 
         return switch algorithm?.backing {
@@ -68,10 +70,10 @@ extension JWK {
         }
     }
 
-    private static func signer(for ec: EC, algorithm: Algorithm?) throws -> (any JWTAlgorithm)? {
+    private func ecdsaSigner(x: String, y: String, algorithm: Algorithm?) throws -> (any JWTAlgorithm)? {
         // If `crv` is present, it must match the key's curve
         let declaredCurve: ECDSACurve?
-        switch ec.curve?.backing {
+        switch self.curve?.backing {
         case .ecdsa(let curve):
             declaredCurve = curve
         case nil:
@@ -89,39 +91,35 @@ extension JWK {
         switch algorithm?.backing {
         case .es256:
             try validateCurve(.p256)
-            if let privateKey = ec.privateKey {
-                return try ECDSASigner(key: ES256PrivateKey(key: privateKey))
+            if let privateExponent {
+                return try ECDSASigner(key: ES256PrivateKey(key: privateExponent))
             }
-            return try ECDSASigner(key: ES256PublicKey(parameters: (ec.x, ec.y)))
+            return try ECDSASigner(key: ES256PublicKey(parameters: (x, y)))
         case .es384:
             try validateCurve(.p384)
-            if let privateKey = ec.privateKey {
-                return try ECDSASigner(key: ES384PrivateKey(key: privateKey))
+            if let privateExponent {
+                return try ECDSASigner(key: ES384PrivateKey(key: privateExponent))
             }
-            return try ECDSASigner(key: ES384PublicKey(parameters: (ec.x, ec.y)))
+            return try ECDSASigner(key: ES384PublicKey(parameters: (x, y)))
         case .es512:
             try validateCurve(.p521)
-            if let privateKey = ec.privateKey {
-                return try ECDSASigner(key: ES512PrivateKey(key: privateKey))
+            if let privateExponent {
+                return try ECDSASigner(key: ES512PrivateKey(key: privateExponent))
             }
-            return try ECDSASigner(key: ES512PublicKey(parameters: (ec.x, ec.y)))
+            return try ECDSASigner(key: ES512PublicKey(parameters: (x, y)))
         default:
             return nil
         }
     }
 
-    private static func signer(for okp: OKP, algorithm: Algorithm?) throws -> (any JWTAlgorithm)? {
-        guard case .eddsa(let curve) = okp.curve?.backing else {
-            throw JWTError.invalidJWK(reason: "Invalid EdDSA curve")
-        }
-
+    private func eddsaSigner(x: String, curve: EdDSACurve, algorithm: Algorithm?) throws -> (any JWTAlgorithm)? {
         guard case .eddsa = algorithm?.backing else {
             return nil
         }
 
-        if let privateKey = okp.privateKey {
-            return try EdDSASigner(key: EdDSA.PrivateKey(d: privateKey, curve: curve))
+        if let privateExponent {
+            return try EdDSASigner(key: EdDSA.PrivateKey(d: privateExponent, curve: curve))
         }
-        return try EdDSASigner(key: EdDSA.PublicKey(x: okp.x, curve: curve))
+        return try EdDSASigner(key: EdDSA.PublicKey(x: x, curve: curve))
     }
 }

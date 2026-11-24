@@ -182,6 +182,20 @@ struct JWKTests {
         #expect(try key.getKey() == nil)
     }
 
+    @Test("A key type JWTKit doesn't model can't become the default or shadow a usable key")
+    func unknownKeyTypeIsIgnoredInSet() async throws {
+        let unknownA = #"{"kty":"AKP","alg":"ML-DSA-65","kid":"a","x":"AQAB"}"#
+        let unknownB = #"{"kty":"AKP","alg":"ML-DSA-65","kid":"b","x":"AQAB"}"#
+        let usable = #"{"kty":"OKP","alg":"EdDSA","kid":"b","crv":"Ed25519","x":"\#(eddsaPublicKeyBase64Url)"}"#
+        let keys = try await JWTKeyCollection().add(jwksJSON: #"{"keys":[\#(unknownA),\#(usable),\#(unknownB)]}"#)
+
+        #expect(try await keys.getKey().name == "EdDSA")
+        #expect(try await keys.getKey(for: "b").name == "EdDSA")
+        await #expect(throws: JWTError.self) {
+            try await JWTKeyCollection().add(jwk: JWK(json: unknownA))
+        }
+    }
+
     @Test("An unrecognised value is preserved wherever it arrives from")
     func unknownValuesArePreserved() throws {
         #expect(JWK.KeyType(rawValue: "AKP") == JWK.KeyType.unknown("AKP"))
@@ -211,81 +225,15 @@ struct JWKTests {
         #expect(encoded?["crv"] == "secp256k1")
     }
 
-    @Test("Members outside a complete key's type are discarded")
-    func crossTypeMembersAreDiscarded() throws {
-        var key = JWK.rsa(.rs256, identifier: "a", modulus: rsaModulus, exponent: "AQAB")
-        key.x = "AQAB"
-        #expect(key.x == nil)
+    @Test("Editing a key keeps every member, whatever the order")
+    func editsKeepEveryMember() throws {
+        var key = JWK.rsa(.es384, identifier: "a", modulus: rsaModulus, exponent: "AQAB")
+        key.x = ecdsaP384X
+        key.y = ecdsaP384Y
+        key.keyType = .ecdsa
 
-        let mixed = try JWK(json: #"{"kty":"RSA","kid":"a","n":"\#(rsaModulus)","e":"AQAB","crv":"P-256"}"#)
-        #expect(mixed.curve == nil)
-        let reencoded = try JSONDecoder().decode([String: String].self, from: JSONEncoder().encode(mixed))
-        #expect(reencoded["crv"] == nil)
-
-        var incomplete = try JWK(json: #"{"kty":"RSA","kid":"a","n":"\#(rsaModulus)","crv":"P-256"}"#)
-        #expect(incomplete.curve == .ecdsa(.p256))
-        incomplete.x = "AQAB"
-        #expect(incomplete.x == "AQAB")
-    }
-
-    @Test("Switching between storages")
-    func switchingBetweenStorages() throws {
-        var key = try JWK(json: #"{"kty":"RSA","alg":"RS256","kid":"a","n":"\#(rsaModulus)","e":"AQAB"}"#)
-        guard case .rsa = key.parameters else {
-            Issue.record("expected a typed RSA key")
-            return
-        }
-
-        // removing a required member demotes the key
-        key.exponent = nil
-        guard case .loose = key.parameters else {
-            Issue.record("expected the key to demote once it lost its exponent")
-            return
-        }
-        #expect(key.exponent == nil)
-
-        // restoring it promotes the key back
-        key.exponent = "AQAB"
-        guard case .rsa = key.parameters else {
-            Issue.record("expected the key to promote once its exponent came back")
-            return
-        }
-        #expect(key.exponent == "AQAB")
-    }
-
-    @Test("Changing the key type re-derives the storage")
-    func changingKeyType() throws {
-        var key = try JWK(json: #"{"kty":"RSA","alg":"RS256","kid":"a","n":"\#(rsaModulus)","e":"AQAB"}"#)
-
-        key.keyType = .octetKeyPair
-        guard case .loose = key.parameters else {
-            Issue.record("an RSA key's members don't make an octet key pair")
-            return
-        }
-        #expect(key.keyType == .octetKeyPair)
-        #expect(key.modulus == rsaModulus, "members should survive the change")
-    }
-
-    @Test("The factories produce typed storage")
-    func factories() throws {
-        guard case .rsa = JWK.rsa(.rs256, identifier: "a", modulus: rsaModulus, exponent: "AQAB").parameters else {
-            Issue.record("expected a typed RSA key")
-            return
-        }
-
-        guard case .loose = JWK.rsa(.rs256, identifier: "a", modulus: nil, exponent: "AQAB").parameters else {
-            Issue.record("expected an incomplete RSA key to stay loose")
-            return
-        }
-
-        guard
-            case .okp = JWK.octetKeyPair(
-                .eddsa, identifier: "a", x: eddsaPublicKeyBase64Url, curve: .ed25519
-            ).parameters
-        else {
-            Issue.record("expected a typed OKP key")
-            return
-        }
+        #expect(try key.getKey()?.name == "ES384")
+        #expect(key.modulus == rsaModulus)
     }
 }
 
