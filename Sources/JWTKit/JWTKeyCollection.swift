@@ -134,12 +134,15 @@ public actor JWTKeyCollection: Sendable {
 
     /// Adds a `JWKS` (JSON Web Key Set) directly to the collection.
     ///
+    /// Keys whose `kty` JWTKit doesn't support are ignored, as per RFC 7517 section 5.
+    ///
     /// - Parameter jwks: A `JWKS` instance.
     /// - Throws: An error if the JWKS cannot be added.
     /// - Returns: Self for chaining.
     @discardableResult
     public func add(jwks: JWKS) throws -> Self {
         for jwk in jwks.keys {
+            if case .unknown = jwk.keyType.backing { continue }
             try self.add(jwk: jwk)
         }
         return self
@@ -150,12 +153,15 @@ public actor JWTKeyCollection: Sendable {
     /// - Parameters:
     ///   - jwk: A `JWK` instance to be added.
     ///   - isDefault: An optional Boolean indicating whether this key should be the default key.
-    /// - Throws: ``JWTError/invalidJWK`` if the JWK cannot be added due to missing key identifier.
+    /// - Throws: ``JWTError/invalidJWK`` if the JWK has no key identifier or a `kty` JWTKit doesn't support.
     /// - Returns: Self for chaining.
     @discardableResult
     public func add(jwk: JWK, isDefault: Bool? = nil) throws -> Self {
         guard let kid = jwk.keyIdentifier else {
             throw JWTError.invalidJWK(reason: "Missing KID")
+        }
+        if case .unknown = jwk.keyType.backing {
+            throw JWTError.invalidJWK(reason: "Unsupported key type \(jwk.keyType.rawValue)")
         }
         let signer = try JWKSigner(jwk: jwk, parser: defaultJWTParser, serializer: defaultJWTSerializer)
 
